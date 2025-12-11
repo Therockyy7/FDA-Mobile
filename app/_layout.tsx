@@ -1,8 +1,8 @@
 import { DarkTheme, DefaultTheme, Theme } from "@react-navigation/native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Stack, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React from "react";
+import React, { useEffect } from "react";
 import { Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 // Import auth store to trigger initialization
@@ -22,16 +22,23 @@ const DARK_THEME: Theme = {
 
 export {
   // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
+  ErrorBoundary
 } from "expo-router";
 
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
   const hasMounted = React.useRef(false);
+  const segments = useSegments();
   const { colorScheme, isDarkColorScheme } = useColorScheme();
   const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
 
+  useEffect(()=> {
+
+      console.log("Path: ", segments[0]);
+  }, [segments])
+ 
+  
   useIsomorphicLayoutEffect(() => {
     if (hasMounted.current) {
       return;
@@ -54,6 +61,10 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen 
+           name="area-detail/[id]" 
+            options={{ title: 'Chi tiết khu vực' }} 
+        />
         </Stack>
       </SafeAreaProvider>
       <StatusBar style="dark" />

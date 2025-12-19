@@ -1,12 +1,12 @@
 
-import React, { useState, useMemo, useCallback } from "react";
+import { useRouter } from "expo-router";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   RefreshControl,
   ScrollView,
   StatusBar,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
 import { EmptyNotificationsState } from "~/features/notifications/components/EmptyNotificationsState";
 import { NotificationCard } from "~/features/notifications/components/NotificationCard";
 import { NotificationFilters } from "~/features/notifications/components/NotificationFilters";

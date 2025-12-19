@@ -162,7 +162,7 @@ export function WaterFlowRoute({
           <Marker
             key={`marker-${route.id}-${index}`}
             coordinate={coord}
-            // anchor={{ x: 0.5, y: 0.5 }}
+            // anchor={{ x: 0.5, y: 1 }}
             // tracksViewChanges={false}
             // zIndex={100}
             

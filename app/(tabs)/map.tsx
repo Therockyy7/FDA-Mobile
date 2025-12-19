@@ -1,18 +1,22 @@
-// app/(tabs)/map.tsx
-import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Animated, StatusBar, View } from "react-native";
-import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  StatusBar,
+  View
+} from "react-native";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Text } from "~/components/ui/text";
 import { FloodZoneCard } from "~/features/map/components/FloodZoneCard";
 import { FloodZoneOverlay } from "~/features/map/components/FloodZoneOverlay";
+import Legend from "~/features/map/components/Legend";
 import { MapControls } from "~/features/map/components/MapControls";
 import { MapHeader } from "~/features/map/components/MapHeader";
-import { MapSearch } from "~/features/map/components/MapSearch";
+import { MapTopControls } from "~/features/map/components/MapTopControls";
 import { RouteDetailCard } from "~/features/map/components/RouteDetailCard";
 import {
-  ViewMode,
-  ViewModeSelector,
-} from "~/features/map/components/ViewModeSelector";
+  RouteDirectionPanel
+} from "~/features/map/components/RouteDirectionPanel";
 import { WaterFlowRoute } from "~/features/map/components/WaterFlowRoute";
 import {
   DANANG_CENTER,
@@ -21,19 +25,73 @@ import {
   FloodRoute,
   FloodZone,
 } from "~/features/map/constants/map-data";
+import { useFloodSelection } from "~/features/map/hooks/useFloodSelection";
+import { useMapCamera } from "~/features/map/hooks/useMapCamera";
+import { useMapDisplay } from "~/features/map/hooks/useMapDisplay";
+import { useRoutingUI } from "~/features/map/hooks/useRoutingUI";
+import { useStreetView } from "~/features/map/hooks/useStreetView";
 
 type MapType = "standard" | "satellite" | "hybrid";
 
 export default function MapScreen() {
-  const mapRef = useRef<MapView>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedZone, setSelectedZone] = useState<FloodZone | null>(null);
-  const [selectedRoute, setSelectedRoute] = useState<FloodRoute | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [region, setRegion] = useState(DANANG_CENTER);
-  const [mapType, setMapType] = useState<MapType>("standard");
-  const [viewMode, setViewMode] = useState<ViewMode>("zones");
-  const slideAnim = useRef(new Animated.Value(300)).current;
+  const [searchQuery, setSearchQuery] = useState("");
+  
+
+  const {
+    mapRef,
+    region,
+    is3DEnabled,
+    camera,
+    onRegionChangeComplete,
+    toggle3DView,
+    rotateCamera,
+    zoomIn,
+    zoomOut,
+    goToMyLocation,
+    setRegion,
+    focusOnZone,
+    focusOnRoute,
+  } = useMapCamera();
+
+  const {
+    selectedZone,
+    setSelectedZone,
+    selectedRoute,
+    setSelectedRoute,
+    showDetailPanels,
+    slideAnim,
+    clearSelection,
+  } = useFloodSelection();
+
+  const {
+    streetViewLocation,
+    setStreetViewLocation,
+    openStreetView,
+    handleMapLongPress,
+  } = useStreetView();
+
+  const {
+    isRoutingUIVisible,
+    openRouting,
+    closeRouting,
+    transportMode,
+    setTransportMode,
+    originLabel,
+    setOriginLabel,
+    destinationText,
+    setDestinationText,
+  } = useRoutingUI();
+
+  const {
+    mapType,
+    viewMode,
+    setViewMode,
+    showLegend,
+    toggleLegend,
+    stats,
+    handleMapTypeChange,
+  } = useMapDisplay();
 
   useEffect(() => {
     setTimeout(() => setIsLoading(false), 600);
@@ -54,9 +112,8 @@ export default function MapScreen() {
         useNativeDriver: true,
       }).start();
     }
-  }, [selectedZone, selectedRoute]);
+  }, [selectedZone, selectedRoute, slideAnim]);
 
-  // Clear selections when switching modes
   useEffect(() => {
     setSelectedZone(null);
     setSelectedRoute(null);
@@ -65,81 +122,12 @@ export default function MapScreen() {
   const handleZonePress = (zone: FloodZone) => {
     setSelectedRoute(null);
     setSelectedZone(zone);
-
-    // Calculate zone center
-    const latSum = zone.coordinates.reduce((sum, coord) => sum + coord.latitude, 0);
-    const lngSum = zone.coordinates.reduce((sum, coord) => sum + coord.longitude, 0);
-    const center = {
-      latitude: latSum / zone.coordinates.length,
-      longitude: lngSum / zone.coordinates.length,
-    };
-
-    mapRef.current?.animateToRegion(
-      {
-        ...center,
-        latitudeDelta: 0.04,
-        longitudeDelta: 0.04,
-      },
-      500
-    );
+    focusOnZone(zone);
   };
-
   const handleRoutePress = (route: FloodRoute) => {
     setSelectedZone(null);
     setSelectedRoute(route);
-
-    // Center on route midpoint
-    const midIndex = Math.floor(route.coordinates.length / 2);
-    const midPoint = route.coordinates[midIndex];
-
-    mapRef.current?.animateToRegion(
-      {
-        latitude: midPoint.latitude,
-        longitude: midPoint.longitude,
-        latitudeDelta: 0.06,
-        longitudeDelta: 0.06,
-      },
-      500
-    );
-  };
-
-  const handleMapTypeChange = () => {
-    const types: MapType[] = ["standard", "satellite", "hybrid"];
-    const currentIndex = types.indexOf(mapType);
-    const nextIndex = (currentIndex + 1) % types.length;
-    setMapType(types[nextIndex]);
-  };
-
-  const handleZoomIn = () => {
-    const newRegion = {
-      ...region,
-      latitudeDelta: region.latitudeDelta * 0.5,
-      longitudeDelta: region.longitudeDelta * 0.5,
-    };
-    mapRef.current?.animateToRegion(newRegion, 300);
-  };
-
-  const handleZoomOut = () => {
-    const newRegion = {
-      ...region,
-      latitudeDelta: Math.min(region.latitudeDelta * 1.5, 0.5),
-      longitudeDelta: Math.min(region.longitudeDelta * 1.5, 0.5),
-    };
-    mapRef.current?.animateToRegion(newRegion, 300);
-  };
-
-  const handleMyLocation = () => {
-    mapRef.current?.animateToRegion(DANANG_CENTER, 600);
-    setSelectedZone(null);
-    setSelectedRoute(null);
-  };
-
-  const getStats = () => {
-    const items = viewMode === "zones" ? FLOOD_ZONES : FLOOD_ROUTES;
-    const safe = items.filter((item) => item.status === "safe").length;
-    const warning = items.filter((item) => item.status === "warning").length;
-    const danger = items.filter((item) => item.status === "danger").length;
-    return { safe, warning, danger };
+    focusOnRoute(route);
   };
 
   return (
@@ -151,8 +139,8 @@ export default function MapScreen() {
       />
 
       <MapHeader
-        stats={getStats()}
-        mapType={mapType}
+        stats={stats}
+        mapType={mapType as MapType}
         onMapTypeChange={handleMapTypeChange}
       />
 
@@ -213,11 +201,16 @@ export default function MapScreen() {
           provider={PROVIDER_GOOGLE}
           style={{ flex: 1 }}
           initialRegion={DANANG_CENTER}
+          camera={is3DEnabled ? camera : undefined}
           onRegionChangeComplete={setRegion}
+          onLongPress={handleMapLongPress}
           showsUserLocation
           showsMyLocationButton={false}
           showsCompass={false}
           showsTraffic={false}
+          showsBuildings={true}
+          pitchEnabled={true}
+          rotateEnabled={true}
           mapType={mapType}
           customMapStyle={
             mapType === "standard"
@@ -236,7 +229,7 @@ export default function MapScreen() {
               : undefined
           }
         >
-          {/* ZONES MODE - Water Areas */}
+          {/* ZONES MODE */}
           {viewMode === "zones" &&
             FLOOD_ZONES.map((zone) => (
               <FloodZoneOverlay
@@ -247,7 +240,7 @@ export default function MapScreen() {
               />
             ))}
 
-          {/* ROUTES MODE - Water on Roads */}
+          {/* ROUTES MODE */}
           {viewMode === "routes" &&
             FLOOD_ROUTES.map((route) => (
               <WaterFlowRoute
@@ -257,110 +250,76 @@ export default function MapScreen() {
                 onPress={() => handleRoutePress(route)}
               />
             ))}
+
+          {/* Street View Marker */}
+          {streetViewLocation && (
+            <Marker
+              coordinate={streetViewLocation}
+              title="Street View"
+              description="Nhấn để xem Street View"
+              pinColor="#F59E0B"
+              onPress={() =>
+                openStreetView(
+                  streetViewLocation.latitude,
+                  streetViewLocation.longitude
+                )
+              }
+            />
+          )}
         </MapView>
 
-        {/* Search Bar */}
-        <View
-          style={{
-            position: "absolute",
-            top: 16,
-            left: 16,
-            right: 16,
-            zIndex: 10,
-          }}
-        >
-          <MapSearch
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onClear={() => setSearchQuery("")}
-          />
-        </View>
-
-        {/* View Mode Selector */}
-        <View
-          style={{
-            position: "absolute",
-            top: 80,
-            left: 16,
-            right: 16,
-            zIndex: 10,
-          }}
-        >
-          <ViewModeSelector mode={viewMode} onModeChange={setViewMode} />
-        </View>
-
-        {/* Legend */}
-        <View
-          style={{
-            position: "absolute",
-            top: 150,
-            right: 16,
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            borderRadius: 16,
-            padding: 12,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 4,
-            minWidth: 120,
-          }}
-        >
-          <Text
+        {!isRoutingUIVisible && (
+          <View
             style={{
-              fontSize: 11,
-              fontWeight: "800",
-              color: "#6B7280",
-              marginBottom: 8,
+              position: "absolute",
+              top: 16,
+              left: 16,
+              right: 16,
+              zIndex: 10,
             }}
           >
-            MỰC NƯỚC
-          </Text>
-          <View style={{ gap: 6 }}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <View
-                style={{
-                  width: 20,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: "#10B981",
-                  marginRight: 8,
-                }}
-              />
-              <Text style={{ fontSize: 11, color: "#374151", fontWeight: "600" }}>
-                {"< 35cm"}
-              </Text>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <View
-                style={{
-                  width: 20,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: "#F59E0B",
-                  marginRight: 8,
-                }}
-              />
-              <Text style={{ fontSize: 11, color: "#374151", fontWeight: "600" }}>
-                35-50cm
-              </Text>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <View
-                style={{
-                  width: 20,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: "#EF4444",
-                  marginRight: 8,
-                }}
-              />
-              <Text style={{ fontSize: 11, color: "#374151", fontWeight: "600" }}>
-                {"> 50cm"}
-              </Text>
-            </View>
+            <MapTopControls
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
           </View>
-        </View>
+        )}
+
+        {/* Legend */}
+        {showLegend && !isRoutingUIVisible && <Legend />}
+
+        {/* Street View Hint */}
+        {streetViewLocation && !isRoutingUIVisible && (
+          <View
+            style={{
+              position: "absolute",
+              top: 260,
+              right: 16,
+              backgroundColor: "rgba(245, 158, 11, 0.95)",
+              borderRadius: 12,
+              padding: 12,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 4,
+              maxWidth: 180,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 11,
+                fontWeight: "700",
+                color: "white",
+                textAlign: "center",
+              }}
+            >
+              📍 Nhấn vào marker màu cam để xem Street View
+            </Text>
+          </View>
+        )}
 
         {/* Map Controls */}
         <View
@@ -371,18 +330,26 @@ export default function MapScreen() {
             zIndex: 10,
           }}
         >
-          {!selectedRoute && 
-            (<MapControls
-              onZoomIn={handleZoomIn}
-              onZoomOut={handleZoomOut}
-              onMyLocation={handleMyLocation}
-            />)
-          }
-         
+          {!selectedRoute && !selectedZone && !isRoutingUIVisible && (
+            <MapControls
+              onZoomIn={zoomIn}
+              onZoomOut={zoomOut}
+              onMyLocation={goToMyLocation}
+              is3DEnabled={is3DEnabled}
+              onToggle3D={toggle3DView}
+              showLegend={showLegend}
+              onShowLegend={toggleLegend}
+              onRotateLeft={() => rotateCamera("left")}
+              onRotateRight={() => rotateCamera("right")}
+              streetViewLocation={streetViewLocation}
+              onClearStreetView={() => setStreetViewLocation(null)}
+              onShowIsRouting={openRouting}
+            />
+          )}
         </View>
 
         {/* Selected Zone Card */}
-        {selectedZone && (
+        {selectedZone && showDetailPanels && (
           <FloodZoneCard
             zone={selectedZone}
             slideAnim={slideAnim}
@@ -391,13 +358,28 @@ export default function MapScreen() {
         )}
 
         {/* Selected Route Card */}
-        {selectedRoute && (
+        {selectedRoute && showDetailPanels && (
           <RouteDetailCard
             route={selectedRoute}
             slideAnim={slideAnim}
             onClose={() => setSelectedRoute(null)}
           />
         )}
+
+        {/* Panel chỉ đường */}
+        <RouteDirectionPanel
+          visible={isRoutingUIVisible}
+          onClose={closeRouting}
+          originLabel={originLabel}
+          destinationText={destinationText}
+          onDestinationChange={setDestinationText}
+          transportMode={transportMode}
+          onModeChange={setTransportMode}
+          onFindRoute={() => {
+            // TODO: geocode destination + chọn route tránh ngập
+            closeRouting;
+          }}
+        />
       </View>
     </View>
   );

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { ScrollView, TouchableOpacity } from "react-native";
+import { ScrollView, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { FilterOption } from "../types/notifications-types";
 
@@ -16,42 +16,62 @@ export function NotificationFilters({
   onFilterChange,
 }: NotificationFiltersProps) {
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}
-      style={{ marginBottom: 16 }}
+    <View
+      style={{
+        paddingVertical: 4,
+        marginBottom: 8,
+        backgroundColor: "white",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 4,
+        alignItems: "center",
+      }}
     >
-      {filters.map((filter) => {
-        const isActive = activeFilter === filter.key;
-        const backgroundColor = isActive
-          ? filter.color || "#3B82F6"
-          : "#F3F4F6";
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          gap: 8,
+          paddingHorizontal: 16,
+        }}
+        // Giới hạn chiều cao để không chiếm full màn
+        style={{ maxHeight: 40 }}
+      >
+        {filters.map((filter) => {
+          const isActive = activeFilter === filter.key;
+          const backgroundColor = isActive
+            ? filter.color || "#3B82F6"
+            : "#F3F4F6";
 
-        return (
-          <TouchableOpacity
-            key={filter.key}
-            onPress={() => onFilterChange(filter.key)}
-            style={{
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              borderRadius: 12,
-              backgroundColor,
-            }}
-            activeOpacity={0.7}
-          >
-            <Text
+          return (
+            <TouchableOpacity
+              key={filter.key}
+              onPress={() => onFilterChange(filter.key)}
               style={{
-                fontSize: 13,
-                fontWeight: "700",
-                color: isActive ? "white" : "#6B7280",
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 999,
+                backgroundColor,
+                alignSelf: "flex-start", // để nút không kéo full height
               }}
+              activeOpacity={0.7}
             >
-              {filter.label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </ScrollView>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: "700",
+                  color: isActive ? "white" : "#6B7280",
+                }}
+              >
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+    </View>
   );
 }
+

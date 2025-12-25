@@ -1,124 +1,122 @@
+// features/auth/stores/auth.store.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AuthError, Session, User } from "@supabase/supabase-js";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { supabase } from "~/lib/supabase";
+
+export interface User {
+  id: string;
+  email: string;
+}
+
+export interface Session {
+  user: User | null;
+}
+
+export interface AuthError {
+  message: string;
+}
+
+type AuthStatus = "checking" | "authenticated" | "unauthenticated";
 
 interface AuthState {
-  // State
   user: User | null;
   session: Session | null;
+  status: AuthStatus;
   loading: boolean;
 
-  // Actions
   signUp: (email: string, password: string) => Promise<{ error?: AuthError }>;
   signIn: (email: string, password: string) => Promise<{ error?: AuthError }>;
   signOut: () => Promise<{ error?: AuthError }>;
   verifyOtp: (email: string, token: string) => Promise<{ error?: AuthError }>;
   resendConfirmation: (email: string) => Promise<{ error?: AuthError }>;
 
-  // Internal actions
   setUser: (user: User | null) => void;
   setSession: (session: Session | null) => void;
   setLoading: (loading: boolean) => void;
+  setStatus: (status: AuthStatus) => void;
+
+  initialize: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
-      // Initial state
+    (set, get) => ({
       user: null,
       session: null,
+      status: "checking",
       loading: true,
 
-      // Actions
-      signUp: async (email: string, password: string) => {
-        try {
-          set({ loading: true });
-          const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              emailRedirectTo: undefined,
-            },
+      initialize: async () => {
+        // chỉ chạy 1 lần lúc app khởi động
+        set({ loading: true, status: "checking" });
+
+        await new Promise((res) => setTimeout(res, 300));
+
+        const { user } = get();
+        if (user) {
+          set({
+            session: { user },
+            status: "authenticated",
+            loading: false,
           });
-          return { error };
-        } catch (error) {
-          return { error: error as AuthError };
-        } finally {
-          set({ loading: false });
+        } else {
+          set({
+            session: null,
+            status: "unauthenticated",
+            loading: false,
+          });
         }
       },
 
-      signIn: async (email: string, password: string) => {
-        try {
-          set({ loading: true });
-          const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-          return { error };
-        } catch (error) {
-          return { error: error as AuthError };
-        } finally {
-          set({ loading: false });
-        }
+      signUp: async (_email, _password) => {
+        await new Promise((res) => setTimeout(res, 300));
+        return { error: undefined };
+      },
+
+      signIn: async (email, _password) => {
+        await new Promise((res) => setTimeout(res, 300));
+        const fakeUser: User = { id: "fake-user-id", email };
+        const fakeSession: Session = { user: fakeUser };
+        set({
+          user: fakeUser,
+          session: fakeSession,
+          status: "authenticated",
+          loading: false,
+        });
+        return { error: undefined };
       },
 
       signOut: async () => {
-        try {
-          set({ loading: true });
-          const { error } = await supabase.auth.signOut();
-          if (!error) {
-            set({ user: null, session: null });
-          }
-          return { error };
-        } catch (error) {
-          return { error: error as AuthError };
-        } finally {
-          set({ loading: false });
-        }
+        await new Promise((res) => setTimeout(res, 200));
+        set({
+          user: null,
+          session: null,
+          status: "unauthenticated",
+          loading: false,
+        });
+        return { error: undefined };
       },
 
-      verifyOtp: async (email: string, token: string) => {
-        try {
-          set({ loading: true });
-          const { error } = await supabase.auth.verifyOtp({
-            email,
-            token,
-            type: "signup",
-          });
-          return { error };
-        } catch (error) {
-          return { error: error as AuthError };
-        } finally {
-          set({ loading: false });
-        }
+      verifyOtp: async () => {
+        await new Promise((res) => setTimeout(res, 200));
+        return { error: undefined };
       },
 
-      resendConfirmation: async (email: string) => {
-        try {
-          const { error } = await supabase.auth.resend({
-            type: "signup",
-            email,
-          });
-          return { error };
-        } catch (error) {
-          return { error: error as AuthError };
-        }
+      resendConfirmation: async () => {
+        await new Promise((res) => setTimeout(res, 200));
+        return { error: undefined };
       },
 
-      // Internal actions
-      setUser: (user: User | null) => set({ user }),
-      setSession: (session: Session | null) =>
+      setUser: (user) => set({ user }),
+      setSession: (session) =>
         set({ session, user: session?.user ?? null }),
-      setLoading: (loading: boolean) => set({ loading }),
+      setLoading: (loading) => set({ loading }),
+      setStatus: (status) => set({ status }),
     }),
     {
       name: "auth-storage",
       storage: createJSONStorage(() => AsyncStorage),
-      // Only persist user and session, not loading state
-      partialize: (state: AuthState) => ({
+      partialize: (state) => ({
         user: state.user,
         session: state.session,
       }),
@@ -126,45 +124,24 @@ export const useAuthStore = create<AuthState>()(
   )
 );
 
-// Selectors for performance
-export const useUser = () => useAuthStore((state: AuthState) => state.user);
-export const useSession = () =>
-  useAuthStore((state: AuthState) => state.session);
-export const useAuthLoading = () =>
-  useAuthStore((state: AuthState) => state.loading);
-export const useSignUp = () => useAuthStore((state: AuthState) => state.signUp);
-export const useSignIn = () => useAuthStore((state: AuthState) => state.signIn);
-export const useSignOut = () =>
-  useAuthStore((state: AuthState) => state.signOut);
-export const useVerifyOtp = () =>
-  useAuthStore((state: AuthState) => state.verifyOtp);
+// ⚠️ Selectors phải trả về giá trị primitive/stable, không tạo object mới
+export const useUser = () => useAuthStore((state) => state.user);
+export const useSession = () => useAuthStore((state) => state.session);
+export const useAuthStatus = () => useAuthStore((state) => state.status);
+export const useAuthLoading = () => useAuthStore((state) => state.loading);
+
+// KHÔNG return object mới trong selector (tránh getSnapshot warning)
+export const useSignUp = () => useAuthStore((state) => state.signUp);
+export const useSignIn = () => useAuthStore((state) => state.signIn);
+export const useSignOut = () => useAuthStore((state) => state.signOut);
+export const useVerifyOtp = () => useAuthStore((state) => state.verifyOtp);
 export const useResendConfirmation = () =>
-  useAuthStore((state: AuthState) => state.resendConfirmation);
+  useAuthStore((state) => state.resendConfirmation);
 
-// Initialize auth state automatically
-const initializeAuth = () => {
-  // Get initial session
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    useAuthStore.setState({
-      session,
-      user: session?.user ?? null,
-      loading: false,
-    });
-  });
-
-  // Listen for auth changes
-  const {
-    data: { subscription },
-  } = supabase.auth.onAuthStateChange((_event, session) => {
-    useAuthStore.setState({
-      session,
-      user: session?.user ?? null,
-      loading: false,
-    });
-  });
-
-  return () => subscription.unsubscribe();
-};
-
-// Auto-initialize when store is imported
-initializeAuth();
+// Nếu cần nhiều action, dùng từng hook riêng, KHÔNG gộp:
+export const useInitializeAuth = () =>
+  useAuthStore((state) => state.initialize);
+export const useSetLoading = () =>
+  useAuthStore((state) => state.setLoading);
+export const useSetStatus = () =>
+  useAuthStore((state) => state.setStatus);

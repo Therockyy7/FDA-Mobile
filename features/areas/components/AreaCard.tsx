@@ -33,6 +33,8 @@ export function AreaCard({
         padding: 20,
         marginBottom: 16,
         borderWidth: 2,
+        
+        borderTopColor: colors.main,
         borderColor: area.isFavorite ? colors.main : "#F3F4F6",
         shadowColor: colors.main,
         shadowOffset: { width: 0, height: 4 },
@@ -41,21 +43,7 @@ export function AreaCard({
         elevation: area.isFavorite ? 8 : 3,
       }}
     >
-      {/* Top Gradient Strip */}
-      <LinearGradient
-        colors={colors.gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 5,
-          borderTopLeftRadius: 18,
-          borderTopRightRadius: 18,
-        }}
-      />
+
 
       {/* Header Section */}
       <View

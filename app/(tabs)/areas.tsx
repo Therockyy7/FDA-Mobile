@@ -1,5 +1,6 @@
 // app/(tabs)/areas.tsx
-import React, { useState, useCallback, useMemo } from "react";
+import { useRouter } from "expo-router";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   LayoutAnimation,
   Platform,
@@ -26,6 +27,7 @@ if (
 }
 
 export default function AreasScreen() {
+  const router = useRouter();
   const [areas, setAreas] = useState<Area[]>(MOCK_AREAS);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedArea, setSelectedArea] = useState<Area | null>(null);
@@ -51,6 +53,7 @@ export default function AreasScreen() {
       lastUpdate: "Vừa xong",
       forecast: "Đang cập nhật...",
       isFavorite: false,
+      type: "personal",
     };
     setAreas((prev) => [newArea, ...prev]);
   }, []);
@@ -114,7 +117,9 @@ export default function AreasScreen() {
               area={area}
               onPress={() => {
                 // TODO: Navigate to detail
-                console.log("View area details:", area.id);
+                console.log("id: ", area.id);
+                
+                router.push(`/area-detail/${area.id}` as any)
               }}
               onMenuPress={() => {
                 setSelectedArea(area);

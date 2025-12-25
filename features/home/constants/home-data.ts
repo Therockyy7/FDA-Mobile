@@ -1,5 +1,9 @@
+// import { MOCK_AREAS } from './../../areas/constants/areas-data';
+// import { MOCK_AREAS } from '~/features/areas/constants/areas-data';
 
-import { Alert, CityStats, MonitoredArea, QuickAction } from "../types/home-types";
+import { Area } from "~/features/areas/types/areas-types";
+import { Alert, CityStats, QuickAction } from "../types/home-types";
+
 
 export const MOCK_ALERT: Alert = {
   level: "danger",
@@ -11,60 +15,62 @@ export const MOCK_ALERT: Alert = {
     "Mực nước tại Sông Hàn đang vượt mức cảnh báo 2. Dự báo mưa lớn kéo dài đến 15h chiều nay.",
 };
 
-export const MOCK_AREAS: MonitoredArea[] = [
-  {
-    id: "1",
-    name: "Quận Hải Châu",
-    district: "Đà Nẵng",
-    status: "danger",
-    statusText: "Nguy hiểm",
-    updatedAt: "2 phút trước",
-    waterLevel: 2.5,
-    warningLevel: 2.0,
-    sensorCount: 5,
-    affectedStreets: ["Đường 2/9", "Nguyễn Văn Linh", "Trần Phú"],
-    rainfall: "85mm/3h",
-  },
-  {
-    id: "2",
-    name: "Quận Sơn Trà",
-    district: "Đà Nẵng",
-    status: "warning",
-    statusText: "Cảnh báo",
-    updatedAt: "5 phút trước",
-    waterLevel: 1.4,
-    warningLevel: 1.5,
-    sensorCount: 4,
-    affectedStreets: ["Võ Nguyên Giáp", "Hoàng Sa"],
-    rainfall: "45mm/3h",
-  },
-  {
-    id: "3",
-    name: "Quận Thanh Khê",
-    district: "Đà Nẵng",
-    status: "warning",
-    statusText: "Nguy cơ thấp",
-    updatedAt: "8 phút trước",
-    waterLevel: 0.9,
-    warningLevel: 1.5,
-    sensorCount: 3,
-    affectedStreets: [],
-    rainfall: "22mm/3h",
-  },
-  {
-    id: "4",
-    name: "Quận Ngũ Hành Sơn",
-    district: "Đà Nẵng",
-    status: "safe",
-    statusText: "An toàn",
-    updatedAt: "10 phút trước",
-    waterLevel: 0.5,
-    warningLevel: 1.5,
-    sensorCount: 3,
-    affectedStreets: [],
-    rainfall: "8mm/3h",
-  },
-];
+// export const MOCK_AREAS: Area[] = AREA_MOCK_AREAS
+
+// export const MOCK_AREAS: MonitoredArea[] = [
+//   {
+//     id: "1",
+//     name: "Quận Hải Châu",
+//     district: "Đà Nẵng",
+//     status: "danger",
+//     statusText: "Nguy hiểm",
+//     updatedAt: "2 phút trước",
+//     waterLevel: 2.5,
+//     warningLevel: 2.0,
+//     sensorCount: 5,
+//     affectedStreets: ["Đường 2/9", "Nguyễn Văn Linh", "Trần Phú"],
+//     rainfall: "85mm/3h",
+//   },
+//   {
+//     id: "2",
+//     name: "Quận Sơn Trà",
+//     district: "Đà Nẵng",
+//     status: "warning",
+//     statusText: "Cảnh báo",
+//     updatedAt: "5 phút trước",
+//     waterLevel: 1.4,
+//     warningLevel: 1.5,
+//     sensorCount: 4,
+//     affectedStreets: ["Võ Nguyên Giáp", "Hoàng Sa"],
+//     rainfall: "45mm/3h",
+//   },
+//   {
+//     id: "3",
+//     name: "Quận Thanh Khê",
+//     district: "Đà Nẵng",
+//     status: "warning",
+//     statusText: "Nguy cơ thấp",
+//     updatedAt: "8 phút trước",
+//     waterLevel: 0.9,
+//     warningLevel: 1.5,
+//     sensorCount: 3,
+//     affectedStreets: [],
+//     rainfall: "22mm/3h",
+//   },
+//   {
+//     id: "4",
+//     name: "Quận Ngũ Hành Sơn",
+//     district: "Đà Nẵng",
+//     status: "safe",
+//     statusText: "An toàn",
+//     updatedAt: "10 phút trước",
+//     waterLevel: 0.5,
+//     warningLevel: 1.5,
+//     sensorCount: 3,
+//     affectedStreets: [],
+//     rainfall: "8mm/3h",
+//   },
+// ];
 
 export const DANANG_STATS: CityStats = {
   cityName: "Đà Nẵng",
@@ -91,7 +97,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
   {
     icon: "location-on",
     label: "Khu vực\ncủa tôi",
-    route: "/my-areas",
+    route: "/areas",
     color: "#06B6D4",
   },
   {

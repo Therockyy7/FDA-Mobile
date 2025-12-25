@@ -7,7 +7,7 @@ const Legend = () => {
       style={{
         position: "absolute",
         top: 150,
-        right: 16,
+        right: 80,
         backgroundColor: "rgba(255, 255, 255, 0.95)",
         borderRadius: 16,
         padding: 12,

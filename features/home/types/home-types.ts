@@ -1,5 +1,7 @@
+import { Area, FloodLevel } from "~/features/areas/types/areas-types";
 
-export type FloodLevel = "safe" | "warning" | "danger" | "critical";
+
+// export type MonitoredArea = Area;
 
 export interface Alert {
   level: FloodLevel;
@@ -8,20 +10,6 @@ export interface Alert {
   time: string;
   date: string;
   description: string;
-}
-
-export interface MonitoredArea {
-  id: string;
-  name: string;
-  district: string;
-  status: FloodLevel;
-  statusText: string;
-  updatedAt: string;
-  waterLevel: number;
-  warningLevel: number;
-  sensorCount: number;
-  affectedStreets: string[];
-  rainfall: string;
 }
 
 export interface CityStats {

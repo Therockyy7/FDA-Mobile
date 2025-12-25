@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Animated,
-  StatusBar,
-  View
-} from "react-native";
+import { ActivityIndicator, StatusBar, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Text } from "~/components/ui/text";
 import { FloodZoneCard } from "~/features/map/components/FloodZoneCard";
@@ -14,9 +9,7 @@ import { MapControls } from "~/features/map/components/MapControls";
 import { MapHeader } from "~/features/map/components/MapHeader";
 import { MapTopControls } from "~/features/map/components/MapTopControls";
 import { RouteDetailCard } from "~/features/map/components/RouteDetailCard";
-import {
-  RouteDirectionPanel
-} from "~/features/map/components/RouteDirectionPanel";
+import { RouteDirectionPanel } from "~/features/map/components/RouteDirectionPanel";
 import { WaterFlowRoute } from "~/features/map/components/WaterFlowRoute";
 import {
   DANANG_CENTER,
@@ -24,6 +17,8 @@ import {
   FLOOD_ZONES,
   FloodRoute,
   FloodZone,
+  MOCK_SENSORS,
+  Sensor,
 } from "~/features/map/constants/map-data";
 import { useFloodSelection } from "~/features/map/hooks/useFloodSelection";
 import { useMapCamera } from "~/features/map/hooks/useMapCamera";
@@ -36,7 +31,6 @@ type MapType = "standard" | "satellite" | "hybrid";
 export default function MapScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  
 
   const {
     mapRef,
@@ -98,23 +92,6 @@ export default function MapScreen() {
   }, []);
 
   useEffect(() => {
-    if (selectedZone || selectedRoute) {
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        tension: 80,
-        friction: 12,
-      }).start();
-    } else {
-      Animated.timing(slideAnim, {
-        toValue: 300,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [selectedZone, selectedRoute, slideAnim]);
-
-  useEffect(() => {
     setSelectedZone(null);
     setSelectedRoute(null);
   }, [viewMode]);
@@ -129,6 +106,120 @@ export default function MapScreen() {
     setSelectedRoute(route);
     focusOnRoute(route);
   };
+
+  // Ray-casting algorithm: kiểm tra điểm trong polygon
+  function isPointInPolygon(
+    point: { latitude: number; longitude: number },
+    polygon: { latitude: number; longitude: number }[]
+  ): boolean {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const xi = polygon[i].latitude;
+      const yi = polygon[i].longitude;
+      const xj = polygon[j].latitude;
+      const yj = polygon[j].longitude;
+
+      const intersect =
+        yi > point.longitude !== yj > point.longitude &&
+        point.latitude < ((xj - xi) * (point.longitude - yi)) / (yj - yi) + xi;
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  }
+
+  // lấy sensors thuộc 1 zone
+  function getSensorsForZone(zoneId: string): Sensor[] {
+    const zone = FLOOD_ZONES.find((z) => z.id === zoneId);
+    if (!zone) return [];
+    return MOCK_SENSORS.filter((sensor) =>
+      isPointInPolygon(
+        { latitude: sensor.latitude, longitude: sensor.longitude },
+        zone.coordinates
+      )
+    );
+  }
+
+  function getStatusColor(status: "safe" | "warning" | "danger") {
+    switch (status) {
+      case "safe":
+        return "#10B981";
+      case "warning":
+        return "#F59E0B";
+      case "danger":
+        return "#EF4444";
+      default:
+        return "#6B7280";
+    }
+  }
+
+  function SensorMarkerBubble({
+    waterLevel,
+    status,
+  }: {
+    waterLevel: number;
+    status: "safe" | "warning" | "danger";
+  }) {
+    const color = getStatusColor(status);
+    return (
+      <View style={{ alignItems: "center" }}>
+        <View
+          style={{
+            backgroundColor: "white",
+            borderRadius: 999,
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            flexDirection: "row",
+            alignItems: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.15,
+            shadowRadius: 3,
+            elevation: 3,
+          }}
+        >
+          <View
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: 5,
+              backgroundColor: color,
+              marginRight: 6,
+            }}
+          />
+          <Text
+            style={{
+              fontSize: 11,
+              fontWeight: "700",
+              color: "#111827",
+            }}
+          >
+            {waterLevel}cm
+          </Text>
+        </View>
+        <View
+          style={{
+            width: 0,
+            height: 0,
+            borderLeftWidth: 5,
+            borderRightWidth: 5,
+            borderTopWidth: 8,
+            borderLeftColor: "transparent",
+            borderRightColor: "transparent",
+            borderTopColor: "white",
+          }}
+        />
+        <View
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: color,
+            marginTop: 1,
+          }}
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
@@ -229,7 +320,7 @@ export default function MapScreen() {
               : undefined
           }
         >
-          {/* ZONES MODE */}
+          {/* ZONES MODE: polygon luôn hiển thị, sensor chỉ hiện khi chọn Zone */}
           {viewMode === "zones" &&
             FLOOD_ZONES.map((zone) => (
               <FloodZoneOverlay
@@ -238,6 +329,26 @@ export default function MapScreen() {
                 isSelected={selectedZone?.id === zone.id}
                 onPress={() => handleZonePress(zone)}
               />
+            ))}
+
+          {/* /* Sensor chỉ của Zone đang chọn */}
+          {viewMode === "zones" &&
+            selectedZone &&
+            getSensorsForZone(selectedZone.id).map((sensor) => (
+              <Marker
+                key={sensor.id}
+                coordinate={{
+                  latitude: sensor.latitude,
+                  longitude: sensor.longitude,
+                }}
+                title={sensor.name}
+                description={`Mực nước: ${sensor.waterLevel}cm - ${sensor.statusText}`}
+              >
+                <SensorMarkerBubble
+                  waterLevel={sensor.waterLevel}
+                  status={sensor.status}
+                />
+              </Marker>
             ))}
 
           {/* ROUTES MODE */}
@@ -325,7 +436,7 @@ export default function MapScreen() {
         <View
           style={{
             position: "absolute",
-            bottom: selectedZone || selectedRoute ? 360 : 140,
+            bottom: selectedZone || selectedRoute ? 160 : 10,
             right: 16,
             zIndex: 10,
           }}

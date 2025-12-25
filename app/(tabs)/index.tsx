@@ -1,6 +1,7 @@
 // app/(tabs)/index.tsx
 import React, { useState } from "react";
 import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
+import { MOCK_AREAS } from "~/features/areas/constants/areas-data";
 import { CityOverviewStats } from "~/features/home/components/CityOverviewStats";
 import { EmergencyAlertBanner } from "~/features/home/components/EmergencyAlertBanner";
 import { HomeHeader } from "~/features/home/components/HomeHeader";
@@ -9,7 +10,7 @@ import { QuickActionsGrid } from "~/features/home/components/QuickActionsGrid";
 import {
   DANANG_STATS,
   MOCK_ALERT,
-  MOCK_AREAS,
+
   QUICK_ACTIONS,
 } from "~/features/home/constants/home-data";
 

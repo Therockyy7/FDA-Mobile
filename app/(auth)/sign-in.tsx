@@ -1,4 +1,4 @@
-import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -10,7 +10,7 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { FacebookLogo, GoogleLogo } from "~/components/icons/SocialLogos";
 
@@ -18,7 +18,6 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Text } from "~/components/ui/text";
 import { useAuthLoading, useSignIn } from "~/features/auth/stores/auth.store";
-import { mapAuthError } from "~/features/auth/utils/auth-errors";
 import { cn } from "~/lib/utils";
 import { signInSchema, type SignInFormData } from "~/lib/validations";
 
@@ -39,7 +38,6 @@ export default function SignInScreen() {
     handleSubmit,
     formState: { isSubmitting, errors },
     setError,
-    
   } = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -57,10 +55,10 @@ export default function SignInScreen() {
     //     message: errorInfo.message,
     //   });
     // } else {
-      // router.replace("/");
+    // router.replace("/");
     // }
 
-    router.push({ pathname: "/(tabs)"});
+    router.push({ pathname: "/(tabs)" });
   };
 
   const handleSignUpNavigation = () => {
@@ -69,7 +67,6 @@ export default function SignInScreen() {
     router.push("/sign-up");
     setTimeout(() => setIsNavigating(false), 1000);
   };
-
 
   const handleSocialLogin = (provider: "google" | "facebook" | "apple") => {
     // Implement social login logic here
@@ -289,7 +286,10 @@ export default function SignInScreen() {
                 </Button>
               </View>
 
-              <TouchableOpacity activeOpacity={0.7}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => router.push("/forgot-password")}
+              >
                 <Text className="text-primary dark:text-accent text-sm font-medium">
                   Quên mật khẩu?
                 </Text>
@@ -334,11 +334,7 @@ export default function SignInScreen() {
                   Đăng nhập bằng Facebook
                 </Text>
               </TouchableOpacity>
-
-            
             </View>
-
-      
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

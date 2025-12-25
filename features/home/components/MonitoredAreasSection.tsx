@@ -4,11 +4,11 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { MonitoredArea } from "../types/home-types";
+import { Area } from "~/features/areas/types/areas-types";
 import { MonitoredAreaCard } from "./MonitoredAreaCard";
 
 interface MonitoredAreasSectionProps {
-  areas: MonitoredArea[];
+  areas: Area[];
   onAddArea?: () => void;
 }
 
@@ -26,7 +26,7 @@ export function MonitoredAreasSection({
           Khu vực đang theo dõi
         </Text>
         <TouchableOpacity
-          onPress={() => router.push("/my-areas" as any)}
+          onPress={() => router.push("/areas" as any)}
           activeOpacity={0.7}
         >
           <Text className="text-sky-600 dark:text-sky-400 text-sm font-medium">

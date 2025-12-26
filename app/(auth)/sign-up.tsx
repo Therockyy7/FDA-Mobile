@@ -14,7 +14,7 @@ import {
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Text } from "~/components/ui/text";
-import { useAuthLoading, useSignUp } from "~/features/auth/stores/auth.store";
+import { useAuthLoading, useSignUp } from "~/features/auth/stores/hooks";
 import { mapAuthError } from "~/features/auth/utils/auth-errors";
 import { cn } from "~/lib/utils";
 import { signUpSchema, type SignUpFormData } from "~/lib/validations";

@@ -1,8 +1,10 @@
+// import { MonitoredArea } from './../types/home-types';
 // import { MOCK_AREAS } from './../../areas/constants/areas-data';
 // import { MOCK_AREAS } from '~/features/areas/constants/areas-data';
 
 import { Area } from "~/features/areas/types/areas-types";
-import { Alert, CityStats, QuickAction } from "../types/home-types";
+import { Alert, CityStats, MonitoredArea, QuickAction } from "../types/home-types";
+import { USER_AREAS } from '~/features/areas/constants/areas-data';
 
 
 export const MOCK_ALERT: Alert = {
@@ -71,6 +73,24 @@ export const MOCK_ALERT: Alert = {
 //     rainfall: "8mm/3h",
 //   },
 // ];
+
+export const HOME_AREAS: MonitoredArea[] = USER_AREAS
+  .filter((a) => a.name.startsWith("Quận"))
+  .map((a: Area): MonitoredArea => ({
+     id: a.id,
+    name: a.name,
+    district: a.district ?? "Đà Nẵng",
+    status: a.status,
+    statusText: a.statusText,
+
+    lastUpdate: a.lastUpdate,   
+    waterLevel: a.waterLevel,
+    maxLevel: a.maxLevel,         
+
+    sensorCount: a.sensorCount ?? 0,
+    affectedStreets: a.affectedStreets ?? [],
+    rainfall: a.rainfall ?? null,
+  }));
 
 export const DANANG_STATS: CityStats = {
   cityName: "Đà Nẵng",

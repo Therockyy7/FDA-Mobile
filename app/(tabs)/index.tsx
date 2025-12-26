@@ -1,7 +1,7 @@
 // app/(tabs)/index.tsx
 import React, { useState } from "react";
 import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
-import { MOCK_AREAS } from "~/features/areas/constants/areas-data";
+
 import { CityOverviewStats } from "~/features/home/components/CityOverviewStats";
 import { EmergencyAlertBanner } from "~/features/home/components/EmergencyAlertBanner";
 import { HomeHeader } from "~/features/home/components/HomeHeader";
@@ -9,8 +9,8 @@ import { MonitoredAreasSection } from "~/features/home/components/MonitoredAreas
 import { QuickActionsGrid } from "~/features/home/components/QuickActionsGrid";
 import {
   DANANG_STATS,
+  HOME_AREAS,
   MOCK_ALERT,
-
   QUICK_ACTIONS,
 } from "~/features/home/constants/home-data";
 
@@ -31,10 +31,8 @@ export default function HomeScreen() {
         translucent
       />
 
-      {/* Header */}
       <HomeHeader notificationCount={3} />
 
-      {/* Scrollable Content */}
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
@@ -43,16 +41,12 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Emergency Alert Banner */}
         <EmergencyAlertBanner alert={MOCK_ALERT} />
 
-        {/* Quick Actions Grid */}
         <QuickActionsGrid actions={QUICK_ACTIONS} />
 
-        {/* Monitored Areas Section */}
-        <MonitoredAreasSection areas={MOCK_AREAS} />
+        <MonitoredAreasSection areas={HOME_AREAS} />
 
-        {/* City Overview Stats */}
         <CityOverviewStats stats={DANANG_STATS} />
       </ScrollView>
     </View>

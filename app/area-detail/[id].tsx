@@ -18,9 +18,10 @@ import {
   AREA_DETAIL_MAP,
   type AreaDetailExtra,
 } from "~/features/areas/constants/area-detail-constants";
-import { MOCK_AREAS } from "~/features/areas/constants/areas-data";
+
 import { getStatusConfig } from "~/features/home/lib/home-utils";
 import type { Area } from "~/features/areas/types/areas-types";
+import { ALL_AREAS } from "~/features/areas/constants/all-areas-data";
 
 interface WaterLevelData {
   value: number;
@@ -43,7 +44,7 @@ export default function AreaDetailScreen() {
   );
 
   const area: Area | undefined = useMemo(
-    () => MOCK_AREAS.find((a) => a.id === id),
+    () => ALL_AREAS.find((a) => a.id === id),
     [id],
   );
 

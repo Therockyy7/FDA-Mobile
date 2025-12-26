@@ -1,4 +1,4 @@
-// app/(tabs)/areas.tsx
+
 import { useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import {
@@ -15,7 +15,8 @@ import { AreaCard } from "~/features/areas/components/AreaCard";
 import { AreaMenuModal } from "~/features/areas/components/AreaMenuModal";
 import { AreasHeader } from "~/features/areas/components/AreasHeader";
 import { EmptyAreasState } from "~/features/areas/components/EmptyAreasState";
-import { MOCK_AREAS } from "~/features/areas/constants/areas-data";
+import { USER_AREAS } from "~/features/areas/constants/areas-data";
+
 import { Area } from "~/features/areas/types/areas-types";
 
 // Enable LayoutAnimation for Android
@@ -28,7 +29,7 @@ if (
 
 export default function AreasScreen() {
   const router = useRouter();
-  const [areas, setAreas] = useState<Area[]>(MOCK_AREAS);
+  const [areas, setAreas] = useState<Area[]>(USER_AREAS);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedArea, setSelectedArea] = useState<Area | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -53,7 +54,6 @@ export default function AreasScreen() {
       lastUpdate: "Vừa xong",
       forecast: "Đang cập nhật...",
       isFavorite: false,
-      type: "personal",
     };
     setAreas((prev) => [newArea, ...prev]);
   }, []);

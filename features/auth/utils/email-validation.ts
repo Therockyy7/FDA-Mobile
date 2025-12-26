@@ -1,4 +1,4 @@
-// Email validation utilities
+
 
 export interface EmailValidationResult {
   isValid: boolean;

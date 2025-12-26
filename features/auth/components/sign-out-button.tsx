@@ -2,7 +2,8 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
-import { useSignOut } from "../stores/auth.store";
+import { useSignOut } from "../stores/hooks";
+
 
 export const SignOutButton = () => {
   const signOut = useSignOut();

@@ -6,9 +6,10 @@ import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { Area } from "~/features/areas/types/areas-types";
 import { MonitoredAreaCard } from "./MonitoredAreaCard";
+import { MonitoredArea } from "../types/home-types";
 
 interface MonitoredAreasSectionProps {
-  areas: Area[];
+  areas: MonitoredArea[];
   onAddArea?: () => void;
 }
 

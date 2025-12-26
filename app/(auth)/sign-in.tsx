@@ -17,13 +17,11 @@ import { FacebookLogo, GoogleLogo } from "~/components/icons/SocialLogos";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Text } from "~/components/ui/text";
-import { useAuthLoading, useSignIn } from "~/features/auth/stores/auth.store";
+import { useAuthLoading, useSignIn } from "~/features/auth/stores/hooks";
 import { cn } from "~/lib/utils";
 import { signInSchema, type SignInFormData } from "~/lib/validations";
 
 type AuthMode = "login" | "register";
-
-// Google Logo Component
 
 export default function SignInScreen() {
   const signIn = useSignIn();
@@ -46,19 +44,24 @@ export default function SignInScreen() {
     },
   });
 
-  const onSignInPress = async (data: SignInFormData) => {
-    // const { error } = await signIn(data.emailAddress, data.password);
+const onSignInPress = async (data: SignInFormData) => {
+    try {
+      
+      await signIn(data.emailAddress, data.password);
 
-    // if (error) {
-    //   const errorInfo = mapAuthError(error);
-    //   setError("root", {
-    //     message: errorInfo.message,
-    //   });
-    // } else {
-    // router.replace("/");
-    // }
+      
+      router.replace("/(tabs)");
+    } catch (err: any) {
+     
+      const message =
+        err?.message ||
+        "Đăng nhập thất bại. Vui lòng kiểm tra email và mật khẩu.";
+      setError("root", { message });
 
-    router.push({ pathname: "/(tabs)" });
+      
+      // const errorInfo = mapAuthError(err);
+      // setError("root", { message: errorInfo.message });
+    }
   };
 
   const handleSignUpNavigation = () => {

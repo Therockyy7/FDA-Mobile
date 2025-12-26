@@ -1,21 +1,12 @@
 // app/(auth)/_layout.tsx
 import { Redirect, Stack } from "expo-router";
-import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
-import {
-  useAuthLoading,
-  useInitializeAuth,
-  useUser,
-} from "~/features/auth/stores/auth.store";
+import { useAuthLoading, useUser } from "~/features/auth/stores/hooks";
+
 
 export default function AuthRoutesLayout() {
   const user = useUser();
   const loading = useAuthLoading();
-  const initialize = useInitializeAuth();
-
-  useEffect(() => {
-    initialize();
-  }, [initialize]);
 
   if (loading) {
     return (

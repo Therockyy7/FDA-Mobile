@@ -3,10 +3,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
-import { Platform } from "react-native";
+import { ActivityIndicator, Platform, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-// Import auth store to trigger initialization
-import "~/features/auth/stores/auth.store";
+import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
+
+import { persistor, store } from "~/app/store";
+
+import { useAppDispatch, useAppSelector } from "~/app/hooks";
+import { initializeAuth } from "~/features/auth/stores/auth.slice";
 import { NAV_THEME } from "~/lib/constants";
 import { useColorScheme } from "~/lib/useColorScheme";
 import "../global.css";
@@ -20,59 +25,90 @@ const DARK_THEME: Theme = {
   colors: NAV_THEME.dark,
 };
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary
-} from "expo-router";
+export { ErrorBoundary } from "expo-router";
 
 const queryClient = new QueryClient();
 
-export default function RootLayout() {
+const useIsomorphicLayoutEffect =
+  Platform.OS === "web" && typeof window === "undefined"
+    ? React.useEffect
+    : React.useLayoutEffect;
+
+
+function RootStack() {
   const hasMounted = React.useRef(false);
   const segments = useSegments();
   const { colorScheme, isDarkColorScheme } = useColorScheme();
   const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
 
-  useEffect(()=> {
+  const dispatch = useAppDispatch();
+  const authLoading = useAppSelector((state) => state.auth.loading);
 
-      console.log("Path: ", segments[0]);
-  }, [segments])
- 
-  
+  useEffect(() => {
+    console.log("Path: ", segments[0]);
+  }, [segments]);
+
   useIsomorphicLayoutEffect(() => {
     if (hasMounted.current) {
       return;
     }
 
     if (Platform.OS === "web") {
-      // Adds the background color to the html element to prevent white background on overscroll.
       document.documentElement.classList.add("bg-background");
     }
     setIsColorSchemeLoaded(true);
     hasMounted.current = true;
   }, []);
 
-  if (!isColorSchemeLoaded) {
-    return null;
+  // gọi initializeAuth khi app start
+  useEffect(() => {
+    dispatch(initializeAuth());
+  }, [dispatch]);
+
+  if (!isColorSchemeLoaded || authLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "#0F172A",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <ActivityIndicator color="#3B82F6" />
+      </View>
+    );
   }
+
   return (
-    <QueryClientProvider client={queryClient}>
+    <>
       <SafeAreaProvider>
+        {/* 
+        <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}> */}
         <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" />
+          
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen 
-           name="area-detail/[id]" 
-            options={{ title: 'Chi tiết khu vực' }} 
-        />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen
+            name="area-detail/[id]"
+            options={{ title: "Chi tiết khu vực" }}
+          />
         </Stack>
+        {/* </ThemeProvider> */}
       </SafeAreaProvider>
-      <StatusBar style="dark" />
-    </QueryClientProvider>
+      <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
+    </>
   );
 }
 
-const useIsomorphicLayoutEffect =
-  Platform.OS === "web" && typeof window === "undefined"
-    ? React.useEffect
-    : React.useLayoutEffect;
+export default function RootLayout() {
+  return (
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <QueryClientProvider client={queryClient}>
+          <RootStack />
+        </QueryClientProvider>
+      </PersistGate>
+    </Provider>
+  );
+}

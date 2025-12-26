@@ -1,21 +1,17 @@
-
 import type { Area } from "../types/areas-types";
 
 export interface AreaDetailExtra {
-  id: Area["id"]; // trùng với Area.id
+  id: Area["id"];
   description?: string;
 
-  // Ngưỡng cảnh báo/nguy hiểm (m)
   warningLevel: number;
   dangerLevel: number;
 
-  // Thời tiết chi tiết
   temperature: number;
   humidity: number;
   windSpeed: number;
   rainfall24h: number;
 
-  // Lịch sử + dự báo mực nước (m)
   history: { time: string; level: number }[];
   forecast: {
     time: string;
@@ -30,26 +26,26 @@ export const AREA_DETAIL_MAP: Record<string, AreaDetailExtra> = {
   "area-1": {
     id: "area-1",
     description: "Nhà riêng tại tuyến đường trung tâm, khu dân cư đông đúc.",
-    warningLevel: 0.3, // 30 cm
-    dangerLevel: 0.5,  // 50 cm
+    warningLevel: 0.3,
+    dangerLevel: 0.5,
     temperature: 28,
     humidity: 65,
     windSpeed: 8,
-    rainfall24h: 5, // từ "5mm/3h" suy ra khá thấp
+    rainfall24h: 5,
     history: [
       { time: "00:00", level: 0.05 },
       { time: "03:00", level: 0.07 },
       { time: "06:00", level: 0.08 },
       { time: "09:00", level: 0.09 },
-      { time: "12:00", level: 0.10 },
-      { time: "15:00", level: 0.10 },
+      { time: "12:00", level: 0.1 },
+      { time: "15:00", level: 0.1 },
     ],
     forecast: [
-      { time: "16:00", level: 0.10, status: "safe", rainfall: 1 },
+      { time: "16:00", level: 0.1, status: "safe", rainfall: 1 },
       { time: "17:00", level: 0.11, status: "safe", rainfall: 1 },
       { time: "18:00", level: 0.12, status: "safe", rainfall: 2 },
       { time: "19:00", level: 0.11, status: "safe", rainfall: 1 },
-      { time: "20:00", level: 0.10, status: "safe", rainfall: 1 },
+      { time: "20:00", level: 0.1, status: "safe", rainfall: 1 },
       { time: "21:00", level: 0.09, status: "safe", rainfall: 0 },
     ],
   },
@@ -59,18 +55,18 @@ export const AREA_DETAIL_MAP: Record<string, AreaDetailExtra> = {
     id: "area-2",
     description:
       "Khuôn viên trường ĐH Bách Khoa, dễ ngập tại các lối ra vào khi mưa lớn.",
-    warningLevel: 0.4, // 40 cm
-    dangerLevel: 0.6,  // 60 cm
+    warningLevel: 0.4,
+    dangerLevel: 0.6,
     temperature: 26,
     humidity: 85,
     windSpeed: 12,
     rainfall24h: 18,
     history: [
-      { time: "00:00", level: 0.30 },
+      { time: "00:00", level: 0.3 },
       { time: "03:00", level: 0.32 },
       { time: "06:00", level: 0.35 },
       { time: "09:00", level: 0.38 },
-      { time: "12:00", level: 0.40 },
+      { time: "12:00", level: 0.4 },
       { time: "15:00", level: 0.42 },
     ],
     forecast: [
@@ -83,11 +79,11 @@ export const AREA_DETAIL_MAP: Record<string, AreaDetailExtra> = {
     ],
   },
 
-  // --- area-hai-chau: Quận Hải Châu ---
+  // --- area-hai-chau: map zone-1 ---
   "area-hai-chau": {
     id: "area-hai-chau",
     description:
-      "Khu trung tâm Quận Hải Châu, mật độ dân cư và giao thông rất cao, dễ ngập khi mưa lớn và triều cường.",
+      "Khu trung tâm Hải Châu, mật độ dân cư và giao thông rất cao, dễ ngập khi mưa lớn và triều cường.",
     warningLevel: 2.0,
     dangerLevel: 3.5,
     temperature: 27,
@@ -112,65 +108,36 @@ export const AREA_DETAIL_MAP: Record<string, AreaDetailExtra> = {
     ],
   },
 
-  // --- area-ngu-hanh-son: Quận Ngũ Hành Sơn ---
-  "area-ngu-hanh-son": {
-    id: "area-ngu-hanh-son",
+  // --- area-song-han: map zone-2 ---
+  "area-song-han": {
+    id: "area-song-han",
     description:
-      "Khu vực ven biển, địa hình thoát nước tốt, ít ghi nhận ngập sâu kéo dài.",
-    warningLevel: 1.5,
-    dangerLevel: 2.5,
-    temperature: 27,
-    humidity: 70,
-    windSpeed: 18,
-    rainfall24h: 8,
-    history: [
-      { time: "00:00", level: 0.3 },
-      { time: "03:00", level: 0.3 },
-      { time: "06:00", level: 0.4 },
-      { time: "09:00", level: 0.4 },
-      { time: "12:00", level: 0.5 },
-      { time: "15:00", level: 0.5 },
-    ],
-    forecast: [
-      { time: "16:00", level: 0.5, status: "safe", rainfall: 2 },
-      { time: "17:00", level: 0.5, status: "safe", rainfall: 2 },
-      { time: "18:00", level: 0.6, status: "safe", rainfall: 3 },
-      { time: "19:00", level: 0.6, status: "safe", rainfall: 2 },
-      { time: "20:00", level: 0.5, status: "safe", rainfall: 1 },
-      { time: "21:00", level: 0.5, status: "safe", rainfall: 0 },
-    ],
-  },
-
-  // --- area-son-tra: Quận Sơn Trà ---
-  "area-son-tra": {
-    id: "area-son-tra",
-    description:
-      "Khu vực ven biển và ven sông Hàn, chịu ảnh hưởng mạnh của triều và gió biển.",
+      "Khu vực dọc Sông Hàn và bờ Đông, chịu ảnh hưởng trực tiếp của mực nước sông và triều cường.",
     warningLevel: 1.5,
     dangerLevel: 2.5,
     temperature: 26,
     humidity: 88,
-    windSpeed: 20,
-    rainfall24h: 45,
+    windSpeed: 18,
+    rainfall24h: 60,
     history: [
-      { time: "00:00", level: 1.1 },
-      { time: "03:00", level: 1.2 },
-      { time: "06:00", level: 1.3 },
-      { time: "09:00", level: 1.3 },
-      { time: "12:00", level: 1.4 },
-      { time: "15:00", level: 1.4 },
+      { time: "00:00", level: 1.4 },
+      { time: "03:00", level: 1.5 },
+      { time: "06:00", level: 1.6 },
+      { time: "09:00", level: 1.7 },
+      { time: "12:00", level: 1.8 },
+      { time: "15:00", level: 1.9 },
     ],
     forecast: [
-      { time: "16:00", level: 1.5, status: "warning", rainfall: 6 },
-      { time: "17:00", level: 1.6, status: "warning", rainfall: 8 },
-      { time: "18:00", level: 1.7, status: "warning", rainfall: 10 },
-      { time: "19:00", level: 1.7, status: "warning", rainfall: 9 },
-      { time: "20:00", level: 1.6, status: "warning", rainfall: 7 },
-      { time: "21:00", level: 1.5, status: "warning", rainfall: 5 },
+      { time: "16:00", level: 2.0, status: "warning", rainfall: 8 },
+      { time: "17:00", level: 2.1, status: "warning", rainfall: 10 },
+      { time: "18:00", level: 2.2, status: "warning", rainfall: 12 },
+      { time: "19:00", level: 2.2, status: "warning", rainfall: 10 },
+      { time: "20:00", level: 2.1, status: "warning", rainfall: 8 },
+      { time: "21:00", level: 2.0, status: "warning", rainfall: 6 },
     ],
   },
 
-  // --- area-thanh-khe: Quận Thanh Khê ---
+  // --- area-thanh-khe: map zone-3 ---
   "area-thanh-khe": {
     id: "area-thanh-khe",
     description:
@@ -199,6 +166,35 @@ export const AREA_DETAIL_MAP: Record<string, AreaDetailExtra> = {
     ],
   },
 
+  // --- area-son-tra-bien: map zone-4 ---
+  "area-son-tra-bien": {
+    id: "area-son-tra-bien",
+    description:
+      "Khu vực ven biển Sơn Trà - Mỹ Khê, địa hình thoát nước tốt, ít ghi nhận ngập sâu kéo dài.",
+    warningLevel: 1.5,
+    dangerLevel: 2.5,
+    temperature: 27,
+    humidity: 70,
+    windSpeed: 18,
+    rainfall24h: 8,
+    history: [
+      { time: "00:00", level: 0.3 },
+      { time: "03:00", level: 0.3 },
+      { time: "06:00", level: 0.4 },
+      { time: "09:00", level: 0.4 },
+      { time: "12:00", level: 0.5 },
+      { time: "15:00", level: 0.5 },
+    ],
+    forecast: [
+      { time: "16:00", level: 0.5, status: "safe", rainfall: 2 },
+      { time: "17:00", level: 0.5, status: "safe", rainfall: 2 },
+      { time: "18:00", level: 0.6, status: "safe", rainfall: 3 },
+      { time: "19:00", level: 0.6, status: "safe", rainfall: 2 },
+      { time: "20:00", level: 0.5, status: "safe", rainfall: 1 },
+      { time: "21:00", level: 0.5, status: "safe", rainfall: 0 },
+    ],
+  },
+
   // --- area-4: Công ty ABC ---
   "area-4": {
     id: "area-4",
@@ -211,7 +207,7 @@ export const AREA_DETAIL_MAP: Record<string, AreaDetailExtra> = {
     windSpeed: 9,
     rainfall24h: 10,
     history: [
-      { time: "00:00", level: 0.10 },
+      { time: "00:00", level: 0.1 },
       { time: "03:00", level: 0.11 },
       { time: "06:00", level: 0.12 },
       { time: "09:00", level: 0.13 },

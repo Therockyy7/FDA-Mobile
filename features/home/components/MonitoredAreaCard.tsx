@@ -6,9 +6,10 @@ import { Text } from "~/components/ui/text";
 import { getStatusConfig } from "../lib/home-utils";
 import { Area } from "~/features/areas/types/areas-types";
 import { cn } from "~/lib/utils";
+import { MonitoredArea } from "../types/home-types";
 
 interface MonitoredAreaCardProps {
-  area: Area;
+  area: MonitoredArea;
 }
 
 export function MonitoredAreaCard({ area }: MonitoredAreaCardProps) {

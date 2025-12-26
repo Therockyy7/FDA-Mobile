@@ -3,6 +3,23 @@ import { Area, FloodLevel } from "~/features/areas/types/areas-types";
 
 // export type MonitoredArea = Area;
 
+export interface MonitoredArea {
+   id: string;
+  name: string;
+  district: string;
+  status: FloodLevel;
+  statusText: string;
+
+  // card đang dùng:
+  lastUpdate: string;   // cho "Cập nhật {area.lastUpdate}"
+  waterLevel: number;   // cm
+  maxLevel: number;     // cm
+
+  sensorCount: number;
+  affectedStreets: string[];
+  rainfall: string | null;
+}
+
 export interface Alert {
   level: FloodLevel;
   title: string;

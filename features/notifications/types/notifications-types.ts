@@ -27,6 +27,7 @@ export interface PriorityConfig {
   darkBgColor: string;
   icon: "alert-circle" | "warning" | "information-circle" | "checkmark-circle";
   label: string;
+  level: string;
 }
 
 export interface FilterOption {

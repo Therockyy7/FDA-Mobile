@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { FacebookLogo, GoogleLogo } from "~/components/icons/SocialLogos";
+import { GoogleLogo } from "~/components/icons/SocialLogos";
 
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -324,19 +324,7 @@ const onSignInPress = async (data: SignInFormData) => {
                 </Text>
               </TouchableOpacity>
 
-              {/* Facebook Login */}
-              <TouchableOpacity
-                onPress={() => handleSocialLogin("facebook")}
-                className="w-full h-14 rounded-lg bg-background-light dark:bg-input-dark border border-border-light dark:border-border-dark flex-row items-center justify-center"
-                activeOpacity={0.7}
-              >
-                <View className="mr-3">
-                  <FacebookLogo />
-                </View>
-                <Text className="text-text-primary-light dark:text-text-primary-dark text-base font-medium">
-                  Đăng nhập bằng Facebook
-                </Text>
-              </TouchableOpacity>
+             
             </View>
           </View>
         </ScrollView>

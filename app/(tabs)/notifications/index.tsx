@@ -2,18 +2,18 @@
 import { useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import {
-  RefreshControl,
-  ScrollView,
-  StatusBar,
-  View,
+    RefreshControl,
+    ScrollView,
+    StatusBar,
+    View,
 } from "react-native";
 import { EmptyNotificationsState } from "~/features/notifications/components/EmptyNotificationsState";
 import { NotificationCard } from "~/features/notifications/components/NotificationCard";
 import { NotificationFilters } from "~/features/notifications/components/NotificationFilters";
 import { NotificationsHeader } from "~/features/notifications/components/NotificationsHeader";
 import {
-  FILTER_OPTIONS,
-  MOCK_NOTIFICATIONS,
+    FILTER_OPTIONS,
+    MOCK_NOTIFICATIONS,
 } from "~/features/notifications/constants/notifications-data";
 import { Notification, NotificationPriority } from "~/features/notifications/types/notifications-types";
 
@@ -62,6 +62,15 @@ export default function NotificationsScreen() {
     [filter, notifications]
   );
 
+  const handleDetailsPress = useCallback((notificationId: string) => {
+    
+    // console.log("View details for notification:", notificationId);
+    router.push({
+        pathname: '/notifications/[id]',
+        params: { id: notificationId }
+    });;
+  }, []);
+
   return (
     <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
       <StatusBar
@@ -101,7 +110,7 @@ export default function NotificationsScreen() {
             <NotificationCard
               key={notification.id}
               notification={notification}
-              onPress={() => markAsRead(notification.id)}
+              onPress={() => handleDetailsPress(notification.id)}
               onMapPress={() => handleMapPress(notification.id)}
               onDirectionsPress={() => handleDirectionsPress(notification.id)}
             />

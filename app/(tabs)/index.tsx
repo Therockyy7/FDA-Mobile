@@ -31,7 +31,7 @@ export default function HomeScreen() {
         translucent
       />
 
-      <HomeHeader notificationCount={3} />
+      <HomeHeader notificationCount={0} />
 
       <ScrollView
         className="flex-1"

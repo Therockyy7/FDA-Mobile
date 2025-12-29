@@ -10,6 +10,7 @@ export const getPriorityConfig = (priority: NotificationPriority): PriorityConfi
       darkBgColor: "#7F1D1D",
       icon: "alert-circle",
       label: "KHẨN CẤP",
+      level: "1"
     },
     high: {
       color: "#F59E0B",
@@ -17,6 +18,7 @@ export const getPriorityConfig = (priority: NotificationPriority): PriorityConfi
       darkBgColor: "#78350F",
       icon: "warning",
       label: "QUAN TRỌNG",
+      level: "2"
     },
     medium: {
       color: "#3B82F6",
@@ -24,6 +26,7 @@ export const getPriorityConfig = (priority: NotificationPriority): PriorityConfi
       darkBgColor: "#1E3A8A",
       icon: "information-circle",
       label: "THÔNG BÁO",
+      level: "3"
     },
     low: {
       color: "#10B981",
@@ -31,6 +34,7 @@ export const getPriorityConfig = (priority: NotificationPriority): PriorityConfi
       darkBgColor: "#065F46",
       icon: "checkmark-circle",
       label: "CẬP NHẬT",
+      level: "4"
     },
   };
   return configs[priority];

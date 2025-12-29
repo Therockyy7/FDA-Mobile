@@ -1,4 +1,4 @@
-import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -298,17 +298,7 @@ export default function SignUpScreen() {
                 </Text>
               </TouchableOpacity>
 
-              {/* Facebook */}
-              <TouchableOpacity
-                onPress={() => handleSocialLogin("facebook")}
-                className="flex-1 h-12 flex-row items-center justify-center gap-3 rounded-lg border border-border-light dark:border-border-dark bg-white dark:bg-transparent active:bg-black/5 dark:active:bg-white/5"
-                activeOpacity={0.7}
-              >
-                <FontAwesome name="facebook" size={24} color="#1877F2" />
-                <Text className="text-sm font-medium text-text-light dark:text-text-dark">
-                  Facebook
-                </Text>
-              </TouchableOpacity>
+              
             </View>
 
             {/* Sign In Link */}

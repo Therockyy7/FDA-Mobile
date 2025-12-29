@@ -15,13 +15,14 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Text } from "~/components/ui/text";
+import { useSignOut } from "~/features/auth/stores/hooks";
 
 export default function ProfileScreen() {
   const router = useRouter();
-
-  // User Info State
+const signOut = useSignOut();
+ // User Info State
   const [fullName, setFullName] = useState("Nguyễn Văn A");
-  const [email, setEmail] = useState("nguyenvana@email.com");
+  const [email] = useState("nguyenvana@email.com");
   const [phone, setPhone] = useState("0901234567");
   const [address, setAddress] = useState("123 Đường Lê Duẩn, Quận Hải Châu");
 
@@ -50,7 +51,22 @@ export default function ProfileScreen() {
       "Bạn có chắc chắn muốn đăng xuất?",
       [
         { text: "Hủy", style: "cancel" },
-        { text: "Đăng xuất", style: "destructive", onPress: () => {} },
+        {
+          text: "Đăng xuất",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await signOut();              // reset user/session trong Redux
+              router.replace("/");    // quay về flow auth
+            } catch (err) {
+              console.log("Logout error", err);
+              Alert.alert(
+                "Lỗi",
+                "Không thể đăng xuất. Vui lòng thử lại."
+              );
+            }
+          },
+        },
       ]
     );
   };

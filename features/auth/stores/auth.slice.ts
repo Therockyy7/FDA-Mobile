@@ -1,13 +1,22 @@
 
-import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { AuthService } from "../services/auth.service";
 
 export interface User {
   id: string;
   email: string;
+  fullName: string;
+  phoneNumber: string;
+  avatarUrl: string;
+  roles: string[];
 }
 
 export interface Session {
   user: User | null;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: string;
 }
 
 export interface AuthError {
@@ -30,29 +39,51 @@ const initialState: AuthState = {
   loading: true,
 };
 
+const ACCESS_TOKEN_KEY = "access_token";
+const REFRESH_TOKEN_KEY = "refresh_token";
+const USER_DATA_KEY = "user_data";
+const EXPIRES_AT_KEY = "expires_at";
+
 const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 
 export const initializeAuth = createAsyncThunk(
   "auth/initialize",
-  async (_, { getState, dispatch }) => {
-    await sleep(300);
+  async (_, { dispatch }) => {
+    const accessToken = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
+    const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
 
-    const state = getState() as { auth: AuthState };
-    const { user } = state.auth;
+    if (!accessToken || !refreshToken) {
+      return { status: "unauthenticated" as AuthStatus };
+    }
 
-    if (user) {
+    try {
+      const res = await AuthService.getProfile(); // /api/v1/auth/me
+      const user: User = res.data;
+
       dispatch(
         setSession({
           user,
+          accessToken,
+          refreshToken,
+          expiresAt: await AsyncStorage.getItem(EXPIRES_AT_KEY) || undefined,
         })
       );
+
       return { status: "authenticated" as AuthStatus };
-    } else {
+    } catch {
+      await AsyncStorage.multiRemove([
+        ACCESS_TOKEN_KEY,
+        REFRESH_TOKEN_KEY,
+        USER_DATA_KEY,
+        EXPIRES_AT_KEY,
+      ]);
       return { status: "unauthenticated" as AuthStatus };
     }
   }
 );
+
+
 
 export const signUp = createAsyncThunk<
   { error?: AuthError },
@@ -66,37 +97,180 @@ export const signUp = createAsyncThunk<
 export const signIn = createAsyncThunk<
   { error?: AuthError },
   { email: string; password: string }
->("auth/signIn", async ({ email }, { dispatch }) => {
-  await sleep(300);
-  const fakeUser: User = { id: "fake-user-id", email };
-  const fakeSession: Session = { user: fakeUser };
-  dispatch(setSession(fakeSession));
-  dispatch(setStatus("authenticated"));
-  dispatch(setLoading(false));
-  return { error: undefined };
+>("auth/signIn", async ({ email, password }, { dispatch, rejectWithValue }) => {
+  try {
+    const res = await AuthService.login({
+      email,
+      password,
+      phoneNumber: "",
+      otpCode: "",
+      deviceInfo: "mobile-app",
+    });
+
+    const {
+      accessToken,
+      refreshToken,
+      expiresAt,
+      user,
+    }: {
+      accessToken: string;
+      refreshToken: string;
+      expiresAt: string;
+      user: User;
+    } = res.data;
+
+    await AsyncStorage.multiSet([
+      [ACCESS_TOKEN_KEY, accessToken],
+      [REFRESH_TOKEN_KEY, refreshToken],
+      [USER_DATA_KEY, JSON.stringify(user)],
+      [EXPIRES_AT_KEY, expiresAt],
+    ]);
+
+    dispatch(
+      setSession({
+        user,
+        accessToken,
+        refreshToken,
+        expiresAt,
+      })
+    );
+    dispatch(setStatus("authenticated"));
+    dispatch(setLoading(false));
+
+    return { error: undefined };
+  } catch (err: any) {
+    const message =
+      err?.response?.data?.message || "Đăng nhập thất bại. Vui lòng thử lại.";
+    return rejectWithValue({ message } as AuthError);
+  }
 });
+
+
+export const verifyPhoneLogin = createAsyncThunk<
+  { error?: AuthError },
+  { phoneNumber: string; otpCode: string }
+>(
+  "auth/verifyPhoneLogin",
+  async ({ phoneNumber, otpCode }, { dispatch, rejectWithValue }) => {
+    try {
+      const res = await AuthService.login({
+        phoneNumber,
+        otpCode,
+        email: "",
+        password: "",
+        deviceInfo: "mobile-app",
+      });
+
+      const {
+        accessToken,
+        refreshToken,
+        expiresAt,
+        user,
+      }: {
+        accessToken: string;
+        refreshToken: string;
+        expiresAt: string;
+        user: User;
+      } = res.data;
+
+      await AsyncStorage.multiSet([
+        [ACCESS_TOKEN_KEY, accessToken],
+        [REFRESH_TOKEN_KEY, refreshToken],
+        [USER_DATA_KEY, JSON.stringify(user)],
+        [EXPIRES_AT_KEY, expiresAt],
+      ]);
+
+      dispatch(
+        setSession({
+          user,
+          accessToken,
+          refreshToken,
+          expiresAt,
+        })
+      );
+      dispatch(setStatus("authenticated"));
+      dispatch(setLoading(false));
+
+      return { error: undefined };
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message ||
+        "Xác thực OTP thất bại. Vui lòng thử lại.";
+      return rejectWithValue({ message } as AuthError);
+    }
+  }
+);
+
+export const signInByGoogle = createAsyncThunk<
+  { error?: AuthError },
+  {
+    accessToken: string;
+    refreshToken: string;
+    expiresAt: string;
+    user: User;
+  }
+>(
+  "auth/signInByGoogle",
+  async (payload, { dispatch, rejectWithValue }) => {
+    try {
+      const { accessToken, refreshToken, expiresAt, user } = payload;
+
+      await AsyncStorage.multiSet([
+        [ACCESS_TOKEN_KEY, accessToken],
+        [REFRESH_TOKEN_KEY, refreshToken],
+        [USER_DATA_KEY, JSON.stringify(user)],
+        [EXPIRES_AT_KEY, expiresAt],
+      ]);
+
+      dispatch(
+        setSession({
+          user,
+          accessToken,
+          refreshToken,
+          expiresAt,
+        })
+      );
+      dispatch(setStatus("authenticated"));
+      dispatch(setLoading(false));
+
+      return { error: undefined };
+    } catch (err: any) {
+      const message =
+        err?.message || "Đăng nhập Google thất bại. Vui lòng thử lại.";
+      return rejectWithValue({ message } as AuthError);
+    }
+  }
+);
+
+
 
 
 export const signOut = createAsyncThunk<{ error?: AuthError }>(
   "auth/signOut",
   async (_, { dispatch }) => {
-    await sleep(200);
+    try {
+      await AuthService.logout(false);
+    } catch {
+      // ignore
+    }
+
+    await AsyncStorage.multiRemove([
+      ACCESS_TOKEN_KEY,
+      REFRESH_TOKEN_KEY,
+      USER_DATA_KEY,
+      EXPIRES_AT_KEY,
+    ]);
+
     dispatch(setUser(null));
-    dispatch(setSession({ user: null }));
+    dispatch(setSession(null));
     dispatch(setStatus("unauthenticated"));
     dispatch(setLoading(false));
     return { error: undefined };
   }
 );
 
+
 // verifyOtp + resendConfirmation mock
-export const verifyOtp = createAsyncThunk<
-  { error?: AuthError },
-  { email: string; token: string }
->("auth/verifyOtp", async () => {
-  await sleep(200);
-  return { error: undefined };
-});
 
 export const resendConfirmation = createAsyncThunk<
   { error?: AuthError },
@@ -137,7 +311,36 @@ const authSlice = createSlice({
       .addCase(initializeAuth.rejected, (state) => {
         state.status = "unauthenticated";
         state.loading = false;
+      })
+      .addCase(signIn.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(signIn.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(signIn.rejected, (state, action) => {
+        state.loading = false;
+      })
+      .addCase(verifyPhoneLogin.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(verifyPhoneLogin.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(verifyPhoneLogin.rejected, (state) => {
+        state.loading = false;
+      })
+      .addCase(signInByGoogle.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(signInByGoogle.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(signInByGoogle.rejected, (state) => {
+        state.loading = false;
       });
+      
+      ;
   },
 });
 

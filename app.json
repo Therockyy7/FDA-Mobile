@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "FDA",
+    "scheme": "fda-mobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -39,6 +39,10 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "googleRedirectPath": "auth/google/callback"
     }
+
   }
 }

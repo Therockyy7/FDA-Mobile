@@ -15,6 +15,7 @@ import { initializeAuth } from "~/features/auth/stores/auth.slice";
 import { NAV_THEME } from "~/lib/constants";
 import { useColorScheme } from "~/lib/useColorScheme";
 import "../global.css";
+import { useGoogleAuthListener } from "~/features/auth/stores/hooks";
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -43,6 +44,8 @@ function RootStack() {
 
   const dispatch = useAppDispatch();
   const authLoading = useAppSelector((state) => state.auth.loading);
+
+    useGoogleAuthListener();
 
   useEffect(() => {
     console.log("Path: ", segments[0]);
@@ -89,10 +92,7 @@ function RootStack() {
           
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="(auth)" />
-          <Stack.Screen
-            name="area-detail/[id]"
-            options={{ title: "Chi tiết khu vực" }}
-          />
+          
         </Stack>
         {/* </ThemeProvider> */}
       </SafeAreaProvider>

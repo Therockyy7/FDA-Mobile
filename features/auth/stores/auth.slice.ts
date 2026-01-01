@@ -39,10 +39,10 @@ const initialState: AuthState = {
   loading: true,
 };
 
-const ACCESS_TOKEN_KEY = "access_token";
-const REFRESH_TOKEN_KEY = "refresh_token";
-const USER_DATA_KEY = "user_data";
-const EXPIRES_AT_KEY = "expires_at";
+const ACCESS_TOKEN_KEY = "";
+const REFRESH_TOKEN_KEY = "";
+const USER_DATA_KEY = "";
+const EXPIRES_AT_KEY = "";
 
 const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 

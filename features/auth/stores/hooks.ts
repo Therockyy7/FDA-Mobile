@@ -55,35 +55,35 @@ export const useSignInByGoogle = () => {
   }) => dispatch(signInByGoogle(params)).unwrap();
 };
 
-export const useGoogleAuthListener = () => {
-  const signInByGoogle = useSignInByGoogle(); // hook wrapper của thunk
+// export const useGoogleAuthListener = () => {
+//   const signInByGoogle = useSignInByGoogle(); // hook wrapper của thunk
 
-  useEffect(() => {
-    const sub = Linking.addEventListener("url", async (event) => {
-      const { path, queryParams } = Linking.parse(event.url);
+//   useEffect(() => {
+//     const sub = Linking.addEventListener("url", async (event) => {
+//       const { path, queryParams } = Linking.parse(event.url);
 
-      if (path === "auth/google/callback" && queryParams) {
-        try {
-          const accessToken = String(queryParams.accessToken || "");
-          const refreshToken = String(queryParams.refreshToken || "");
-          const expiresAt = String(queryParams.expiresAt || "");
-          const userJson = String(queryParams.user || "");
+//       if (path === "auth/google/callback" && queryParams) {
+//         try {
+//           const accessToken = String(queryParams.accessToken || "");
+//           const refreshToken = String(queryParams.refreshToken || "");
+//           const expiresAt = String(queryParams.expiresAt || "");
+//           const userJson = String(queryParams.user || "");
 
-          const user: User = JSON.parse(
-            Buffer.from(userJson, "base64").toString("utf8")
-          );
+//           const user: User = JSON.parse(
+//             Buffer.from(userJson, "base64").toString("utf8")
+//           );
 
-          await signInByGoogle({ accessToken, refreshToken, expiresAt, user });
-          // Sau đây Redux đã authenticated, RootStack sẽ hiển thị (tabs)
-        } catch (e) {
-          console.log("Google callback error", e);
-        }
-      }
-    });
+//           await signInByGoogle({ accessToken, refreshToken, expiresAt, user });
+//           // Sau đây Redux đã authenticated, RootStack sẽ hiển thị (tabs)
+//         } catch (e) {
+//           console.log("Google callback error", e);
+//         }
+//       }
+//     });
 
-    return () => sub.remove();
-  }, [signInByGoogle]);
-};
+//     return () => sub.remove();
+//   }, [signInByGoogle]);
+// };
 
 
 

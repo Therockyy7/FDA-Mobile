@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { useRouter } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -18,6 +18,7 @@ import { Input } from "~/components/ui/input";
 import { Text } from "~/components/ui/text";
 import ModalVerifyOTP from "~/features/auth/components/ModalVerifyOTP";
 import { AuthService } from "~/features/auth/services/auth.service";
+import { signInByGoogle, User } from "~/features/auth/stores/auth.slice";
 import {
   useAuthLoading,
   useSignIn,
@@ -84,27 +85,33 @@ export default function SignInScreen() {
     }
   };
 
-  const handleVerifyOtp = async () => {
-    if (!currentPhone || otp.length < 4) {
-      setOtpError("Vui lòng nhập đủ mã OTP");
-      return;
-    }
+ const handleVerifyOtp = async () => {
+  if (!currentPhone || otp.length < 4) {
+    setOtpError("Vui lòng nhập đủ mã OTP");
+    return;
+  }
 
-    try {
-      setOtpLoading(true);
-      await verifyPhoneLoginFn(currentPhone, otp);
+  try {
+    setOtpLoading(true);
+    console.log("CALL verifyPhoneLoginFn");
+    const result = await verifyPhoneLoginFn(currentPhone, otp);
+    console.log("VERIFY SUCCESS:", result);
 
-      setShowOtpModal(false);
-      setOtp("");
-      router.replace("/(tabs)");
-    } catch (err: any) {
-      const message =
-        err?.message || "Xác thực OTP thất bại. Vui lòng thử lại.";
-      setOtpError(message);
-    } finally {
-      setOtpLoading(false);
-    }
-  };
+    setShowOtpModal(false);
+    setOtp("");
+    router.replace("/(tabs)");
+  } catch (err: any) {
+    console.log("VERIFY ERROR:", err);
+    const message =
+      err?.message ||
+      err?.payload?.message ||           // nếu rejectWithValue
+      "Xác thực OTP thất bại. Vui lòng thử lại.";
+    setOtpError(message);
+  } finally {
+    setOtpLoading(false);
+  }
+};
+
 
   const handleEmailLogin = async (data: FormData) => {
     const email = data.emailAddress?.trim() || "";
@@ -137,20 +144,49 @@ export default function SignInScreen() {
     return handleEmailLogin(data);
   };
 
- const handleSocialLogin = async () => {
+const handleSocialLogin = async () => {
   try {
-    const res = await AuthService.getGoogleAuthUrl();
-    const { authorizationUrl } = res.data; // /api/v1/auth/google trả về
-console.log("authorizationUrl:", res.data.authorizationUrl);
+    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
-    await WebBrowser.openAuthSessionAsync(
-      authorizationUrl,
-      "fda-mobile://auth/google/callback" // redirect URI của app
-    );
-  } catch (e) {
-    console.log("Google login error", e);
+    // Bước 1: mở màn hình chọn tài khoản
+    await GoogleSignin.signIn();
+
+    // Bước 2: lấy token
+    const tokens = await GoogleSignin.getTokens(); // { idToken, accessToken }
+    console.log("Google tokens:", tokens); 
+    const idToken = tokens.idToken;
+    if (!idToken) {
+      throw new Error("Không lấy được idToken từ Google");
+    }
+
+    // Bước 3: gửi idToken cho backend
+    const res = await AuthService.googleMobileLogin({ idToken });
+console.log("Google mobile login response:", res.data);
+    const {
+      accessToken,
+      refreshToken,
+      expiresAt,
+      user,
+    }: {
+      accessToken: string;
+      refreshToken: string;
+      expiresAt: string;
+      user: User;
+    } = res.data;
+
+    // Bước 4: lưu session
+    await dispatch(
+      signInByGoogle({ accessToken, refreshToken, expiresAt, user })
+    ).unwrap();
+
+    // Bước 5: điều hướng
+    router.replace("/(tabs)");
+  } catch (err: any) {
+    console.log("Google mobile login error", err);
+    // TODO: show toast/snackbar
   }
 };
+
 
   const isBusy = loading || isSubmitting;
 

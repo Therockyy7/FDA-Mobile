@@ -13,9 +13,10 @@ interface LoginInput {
 export const AuthService  = {
   login: (form : LoginInput) => 
     apiClient.post('/api/v1/auth/login', form),
-  getGoogleAuthUrl: () =>
-    apiClient.get("/api/v1/auth/google"), // trả { authorizationUrl, state }
-
+ 
+  googleMobileLogin(body: { idToken: string }) {
+    return apiClient.post("/api/v1/auth/google/mobile", body);
+  },
   getProfile: () => apiClient.get('/auth/profile'),
   sendOTP: (phoneNumber: string) => apiClient.post('/api/v1/auth/send-otp', { phoneNumber }),
   logout: async (revokeAllTokens = false) => {

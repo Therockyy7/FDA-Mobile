@@ -28,7 +28,7 @@ const TabsLayout = () => {
       setLoginPromptVisible(true);
     }
   };
-
+console.log("TABS layout, user?", !!user);
   return (
     <>
       <Tabs

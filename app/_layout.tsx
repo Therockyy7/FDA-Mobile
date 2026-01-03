@@ -100,7 +100,7 @@ function RootStack() {
           
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="(auth)" />
-          
+          <Stack.Screen name="community" />
         </Stack>
         {/* </ThemeProvider> */}
       </SafeAreaProvider>

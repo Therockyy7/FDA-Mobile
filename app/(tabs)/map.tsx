@@ -303,6 +303,7 @@ export default function MapScreen() {
           pitchEnabled={true}
           rotateEnabled={true}
           mapType={mapType}
+          onMapReady={() => console.log('Map ready')}
           customMapStyle={
             mapType === "standard"
               ? [

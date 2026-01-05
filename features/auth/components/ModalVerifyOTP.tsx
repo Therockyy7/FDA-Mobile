@@ -1,8 +1,17 @@
-import React from "react";
-import { Modal, View, TouchableOpacity } from "react-native";
-import { Text } from "~/components/ui/text";
-import { Button } from "~/components/ui/button";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import { OtpInput } from "react-native-otp-entry";
+import { Button } from "~/components/ui/button";
+import { Text } from "~/components/ui/text";
 
 interface ModalVerifyOTPProps {
   visible: boolean;
@@ -12,6 +21,7 @@ interface ModalVerifyOTPProps {
   loading: boolean;
   onConfirm: () => void;
   onClose: () => void;
+  onResend?: () => void; // ✅ Thêm prop Resend
   error?: string | null;
 }
 
@@ -23,84 +33,144 @@ const ModalVerifyOTP: React.FC<ModalVerifyOTPProps> = ({
   loading,
   onConfirm,
   onClose,
+  onResend,
   error,
 }) => {
+  // State đếm ngược đơn giản cho nút Resend
+  const [countdown, setCountdown] = useState(30);
+
+  useEffect(() => {
+    let timer: any;
+    if (visible && countdown > 0) {
+      timer = setInterval(() => setCountdown((c) => c - 1), 1000);
+    }
+    return () => clearInterval(timer);
+  }, [visible, countdown]);
+
+  const handleResendClick = () => {
+    if (onResend) {
+      onResend();
+      setCountdown(30); // Reset đếm ngược
+    }
+  };
+
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="fade"
       transparent
       onRequestClose={onClose}
+      statusBarTranslucent
     >
-      <View className="flex-1 bg-black/50 justify-end">
-        <View className="bg-background-light dark:bg-background-dark rounded-t-3xl p-6 pb-10">
-          <View className="items-center mb-4">
-            <View className="h-1 w-12 bg-gray-300 rounded-full mb-4" />
-            <Text className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
-              Nhập mã OTP
-            </Text>
-            <Text className="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-2 text-center">
-              Mã đã được gửi tới số{" "}
-              <Text className="font-semibold">
-                {phone || "SĐT"}
-              </Text>
-            </Text>
-          </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View className="flex-1 bg-black/70 justify-center items-center px-6">
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            className="w-full"
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+          >
+            {/* Main Card Container */}
+            <View className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl items-center w-full">
+              
+              {/* Close Button (X) */}
+              <TouchableOpacity 
+                onPress={onClose}
+                className="absolute top-4 right-4 z-10 p-2 bg-slate-100 dark:bg-slate-800 rounded-full"
+              >
+                <Ionicons name="close" size={20} color="#64748B" />
+              </TouchableOpacity>
 
-          {/* OTP Input */}
-          <View className="items-center my-4">
-            <OtpInput
-              numberOfDigits={6}
-              onTextChange={onChangeOtp}
-              focusColor="#3B82F6"
-              autoFocus
-              type="numeric"
-              blurOnFilled={false}
-              theme={{
-                containerStyle: { width: "100%", justifyContent: "center" },
-                pinCodeContainerStyle: {
-                  borderRadius: 10,
-                  borderWidth: 1,
-                  borderColor: "#E5E7EB",
-                  backgroundColor: "#F9FAFB",
-                },
-                pinCodeTextStyle: { fontSize: 20, fontWeight: "700" },
-                focusedPinCodeContainerStyle: {
-                  borderColor: "#3B82F6",
-                },
-              }}
-            />
-            {error ? (
-      <Text className="text-red-500 text-sm mt-2 text-center">
-        {error}
-      </Text>
-    ) : null}
-          </View>
+              {/* Icon Decoration */}
+              <View className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full items-center justify-center mb-5 mt-2">
+                <Ionicons name="shield-checkmark" size={32} color="#3B82F6" />
+              </View>
 
-          {/* Actions */}
-          <View className="mt-4 gap-3">
-            <Button
-              onPress={onConfirm}
-              disabled={loading || otp.length < 4}
-              className="h-12 rounded-lg bg-primary"
-            >
-              <Text className="text-white font-semibold">
-                {loading ? "Đang xác thực..." : "Xác nhận"}
+              <Text className="text-2xl font-bold text-slate-900 dark:text-white text-center">
+                Xác thực bảo mật
               </Text>
-            </Button>
+              
+              <Text className="text-base text-slate-500 dark:text-slate-400 mt-2 text-center px-2">
+                Nhập mã 6 số chúng tôi vừa gửi tới{"\n"}
+                <Text className="font-bold text-slate-900 dark:text-slate-200 text-lg">
+                  {phone}
+                </Text>
+              </Text>
 
-            <TouchableOpacity
-              onPress={onClose}
-              className="h-12 rounded-lg border border-border-light dark:border-border-dark items-center justify-center"
-              activeOpacity={0.7}
-            >
-              <Text className="text-text-secondary-light dark:text-text-secondary-dark font-medium">
-                Huỷ
-              </Text>
-            </TouchableOpacity>
-          </View>
+              {/* OTP Input */}
+              <View className="w-full my-6">
+                <OtpInput
+                  numberOfDigits={6}
+                  focusColor="#3B82F6"
+                  onTextChange={onChangeOtp}
+                  type="numeric"
+                  theme={{
+                    containerStyle: { width: "100%", justifyContent: "space-between" },
+                    pinCodeContainerStyle: {
+                      width: 44,
+                      height: 50,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: "#CBD5E1",
+                      backgroundColor: "#F8FAFC",
+                    },
+                    pinCodeTextStyle: {
+                      fontSize: 20,
+                      fontWeight: "700",
+                      color: "#0F172A",
+                    },
+                    focusedPinCodeContainerStyle: {
+                      borderColor: "#3B82F6",
+                      backgroundColor: "#EFF6FF",
+                      borderWidth: 2,
+                    },
+                    filledPinCodeContainerStyle: {
+                      borderColor: "#3B82F6",
+                      backgroundColor: "#FFFFFF",
+                    }
+                  }}
+                />
+              </View>
+
+              {/* Error Message */}
+              {error ? (
+                <View className="flex-row items-center mb-4 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg w-full">
+                  <Ionicons name="alert-circle" size={18} color="#EF4444" />
+                  <Text className="text-red-500 text-sm ml-2 font-medium flex-1">
+                    {error}
+                  </Text>
+                </View>
+              ) : null}
+
+              {/* Resend Link inside Modal */}
+              <View className="flex-row items-center justify-center mb-6">
+                <Text className="text-slate-500 text-sm font-medium mr-1">
+                  Chưa nhận được mã?
+                </Text>
+                <TouchableOpacity 
+                  onPress={handleResendClick} 
+                  disabled={countdown > 0}
+                >
+                  <Text className={`text-sm font-bold ${countdown > 0 ? 'text-slate-400' : 'text-blue-600'}`}>
+                    {countdown > 0 ? `Gửi lại sau ${countdown}s` : "Gửi lại ngay"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Action Button */}
+              <Button
+                onPress={onConfirm}
+                disabled={loading || otp.length < 6}
+                className="w-full h-14 rounded-2xl bg-primary shadow-lg shadow-blue-500/30"
+              >
+                <Text className="text-white text-lg font-bold">
+                  {loading ? "Đang xử lý..." : "Xác nhận"}
+                </Text>
+              </Button>
+
+            </View>
+          </KeyboardAvoidingView>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };

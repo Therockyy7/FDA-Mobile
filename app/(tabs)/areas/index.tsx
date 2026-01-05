@@ -118,8 +118,11 @@ export default function AreasScreen() {
               onPress={() => {
                 // TODO: Navigate to detail
                 console.log("id: ", area.id);
-                
-                router.push(`/area-detail/${area.id}` as any)
+                router.push({
+                    pathname: '/areas/[id]',
+                    params: { id: area.id }
+                });;
+           
               }}
               onMenuPress={() => {
                 setSelectedArea(area);

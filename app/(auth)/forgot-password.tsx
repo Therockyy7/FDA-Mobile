@@ -37,134 +37,101 @@ export default function ForgotPasswordScreen() {
     setError,
   } = useForm<ForgotFormData>({
     resolver: zodResolver(forgotSchema),
-    defaultValues: {
-      email: "",
-    },
+    defaultValues: { email: "" },
   });
 
   const onSubmit = async (data: ForgotFormData) => {
     try {
       setIsSending(true);
-
       // TODO: gọi API gửi email reset
-      
       await new Promise((r) => setTimeout(r, 1000));
-
       router.back();
     } catch (err: any) {
-      setError("email", {
-        message: "Không thể gửi email khôi phục. Thử lại sau.",
-      });
+      setError("email", { message: "Không thể gửi email khôi phục. Thử lại sau." });
     } finally {
       setIsSending(false);
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background-light dark:bg-background-dark">
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
-      >
-        <ScrollView
-          className="flex-1 mt-5"
-          contentContainerStyle={{ paddingBottom: 32 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header */}
-          <View className="flex-row items-center px-4 pt-4 pb-2">
-            <TouchableOpacity
+    <SafeAreaView className="flex-1 bg-white dark:bg-[#0F172A]">
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
+        <ScrollView contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24 }} showsVerticalScrollIndicator={false}>
+          
+          {/* Back Button */}
+          <View className="pt-4 items-start">
+             <TouchableOpacity
               onPress={() => router.back()}
-              hitSlop={8}
-              className="w-9 h-9 rounded-full items-center justify-center bg-input-light dark:bg-input-dark"
+              className="w-10 h-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800"
+              activeOpacity={0.7}
             >
-              <Ionicons name="chevron-back" size={20} color="#4B5563" />
+              <Ionicons name="arrow-back" size={24} className="text-slate-900 dark:text-white" />
             </TouchableOpacity>
-            <Text className="ml-3 text-lg font-semibold text-text-primary-light dark:text-text-primary-dark">
-              Quên mật khẩu
-            </Text>
           </View>
 
-          {/* Icon + Title */}
-          <View className="items-center pt-8 pb-6 px-6">
-            <View className="h-16 w-16 bg-primary rounded-full items-center justify-center">
-              <Ionicons name="lock-closed-outline" size={32} color="white" />
+          {/* Main Content */}
+          <View className="flex-1 justify-center items-center pb-20">
+            
+            {/* Visual Icon */}
+            <View className="w-24 h-24 bg-blue-50 dark:bg-slate-800 rounded-3xl items-center justify-center mb-8 shadow-sm">
+              <Ionicons name="lock-closed" size={48} color="#3B82F6" />
             </View>
-            <Text className="mt-4 text-2xl font-bold text-text-primary-light dark:text-text-primary-dark text-center">
+
+            <Text className="text-2xl font-bold text-slate-900 dark:text-white text-center mb-2">
               Khôi phục mật khẩu
             </Text>
-            <Text className="mt-2 text-sm text-text-secondary-light dark:text-text-secondary-dark text-center">
-              Nhập email bạn đã đăng ký. Hệ thống sẽ gửi đường dẫn để đặt lại mật khẩu.
+            <Text className="text-base text-slate-500 dark:text-slate-400 text-center mb-10 px-4">
+              Nhập email đã đăng ký. Hệ thống sẽ gửi hướng dẫn đặt lại mật khẩu cho bạn.
             </Text>
-          </View>
 
-          {/* Form */}
-          <View className="px-6 mt-4 gap-4">
-            <View className="gap-2">
-              <Text className="text-text-primary-light dark:text-text-primary-dark text-base font-medium">
-                Email
-              </Text>
-              <Controller
-                control={control}
-                name="email"
-                render={({
-                  field: { onChange, onBlur, value },
-                  fieldState: { error },
-                }) => (
-                  <>
-                    <Input
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      placeholder="Nhập email đã đăng ký"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      className={cn(
-                        "h-14 rounded-lg bg-input-light dark:bg-input-dark border-transparent text-text-primary-light dark:text-text-primary-dark placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark",
-                        error && "border-red-500",
-                      )}
-                    />
-                    {error && (
-                      <Text className="text-red-500 text-sm mt-1">
-                        {error.message}
-                      </Text>
-                    )}
-                  </>
-                )}
-              />
-            </View>
+            {/* Form */}
+            <View className="w-full gap-6">
+              <View>
+                <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 ml-1">
+                  Email
+                </Text>
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                    <View>
+                       <View className={cn(
+                        "flex-row items-center h-14 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4",
+                        error && "border-red-500 bg-red-50 dark:bg-red-900/10"
+                      )}>
+                        <Ionicons name="mail-outline" size={22} color={error ? "#EF4444" : "#64748B"} />
+                        <Input
+                          value={value}
+                          onChangeText={onChange}
+                          onBlur={onBlur}
+                          placeholder="Nhập email của bạn"
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          className="flex-1 h-full ml-3 text-base text-slate-900 dark:text-white border-0 bg-transparent"
+                        />
+                      </View>
+                      {error && <Text className="text-red-500 text-sm mt-1.5 ml-1">{error.message}</Text>}
+                    </View>
+                  )}
+                />
+              </View>
 
-            {/* Button */}
-            <View
-              style={{
-                width: "100%",
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
-                shadowRadius: 8,
-                elevation: 3,
-              }}
-            >
               <Button
                 onPress={handleSubmit(onSubmit)}
                 disabled={isSending}
-                className="w-full h-14 rounded-lg bg-primary active:opacity-90"
+                className="w-full h-14 rounded-xl bg-primary shadow-lg shadow-blue-500/30"
               >
-                <Text className="text-white text-base font-semibold">
-                  {isSending ? "Đang gửi..." : "Gửi liên kết đặt lại mật khẩu"}
+                <Text className="text-white text-lg font-bold">
+                  {isSending ? "Đang gửi..." : "Gửi liên kết"}
                 </Text>
               </Button>
-            </View>
 
-            <TouchableOpacity
-              onPress={() => router.back()}
-              activeOpacity={0.7}
-              className="mt-3 items-center"
-            >
-              <Text className="text-primary dark:text-accent text-sm font-medium">
-                Quay lại đăng nhập
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.back()} className="items-center py-2">
+                <Text className="text-primary font-semibold text-base">
+                  Quay lại đăng nhập
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

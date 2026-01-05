@@ -71,13 +71,20 @@ console.log("TABS layout, user?", !!user);
             tabBarIcon: ({ color, size }) => (
               <Feather name="compass" size={size} color={color} />
             ),
+            // Không cần unmountOnBlur nữa
           }}
           listeners={{
             tabPress: (e: any) => {
+              // 1. Kiểm tra đăng nhập
               if (!isAuthenticated) {
                 e.preventDefault();
                 handleProtectedTabPress();
+                return;
               }
+
+              // 2. Logic Reset về trang chủ Areas khi bấm vào tab
+              // Dòng này ép buộc chuyển hướng về route gốc của tab areas
+              router.replace("/areas"); 
             },
           }}
         />

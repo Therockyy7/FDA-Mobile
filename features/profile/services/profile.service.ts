@@ -1,17 +1,24 @@
 // features/auth/services/auth.service.ts
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiClient } from "~/lib/api-client";
 
 
 
 export const ProfileService = {
-  getProfile: () => apiClient.get("/api/v1/user-profile"),
+  getProfile: (accessToken?: string) => {
+    const config = accessToken 
+      ? { headers: { Authorization: `Bearer ${accessToken}` } } // Nếu có token truyền vào -> Dùng nó
+      : {}; // Nếu không -> Để Interceptor tự lo
+
+    return apiClient.get("/api/v1/user-profile", config);
+  },
   
-  updateProfile: (formData: FormData) => 
-    apiClient.put("/api/v1/user-profile", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }),
+  updateProfile: (data: FormData) => {
+    return apiClient.put("/api/v1/user-profile", data, {
+        headers: {
+            
+            "Content-Type": "multipart/form-data",
+        } as any, 
+    });
+},
 
 };

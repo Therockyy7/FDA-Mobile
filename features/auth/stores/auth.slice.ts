@@ -1,8 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { AuthService, CheckSetPassword } from "../services/auth.service";
 import { ProfileService } from "~/features/profile/services/profile.service";
+import { AuthService } from "../services/auth.service";
 
+// --- TYPES ---
 export interface User {
   id: string;
   email: string;
@@ -29,7 +30,9 @@ export interface AuthState {
   user: User | null;
   session: Session | null;
   status: AuthStatus;
-  loading: boolean;
+  loading: boolean; // Chỉ dùng cho lúc khởi động app (initialize)
+  isNewUser: boolean; // Dùng cho TourGuide
+  error: string | null; // Lưu lỗi global nếu cần
 }
 
 const initialState: AuthState = {
@@ -37,67 +40,90 @@ const initialState: AuthState = {
   session: null,
   status: "checking",
   loading: true,
+  isNewUser: false,
+  error: null,
 };
 
+// --- CONSTANTS ---
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 const USER_DATA_KEY = "user_data";
 const EXPIRES_AT_KEY = "expires_at";
 
-const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+// --- HELPERS ---
+// Hàm phụ trợ để lưu data vào AsyncStorage, tránh viết lặp lại code
+const saveAuthData = async (tokens: { accessToken: string; refreshToken: string; expiresAt: string }, user: User) => {
+  await AsyncStorage.multiSet([
+    [ACCESS_TOKEN_KEY, tokens.accessToken],
+    [REFRESH_TOKEN_KEY, tokens.refreshToken],
+    [EXPIRES_AT_KEY, tokens.expiresAt],
+    [USER_DATA_KEY, JSON.stringify(user)],
+  ]);
+};
 
-// --- 1. Initialize Auth ---
+const clearAuthData = async () => {
+  await AsyncStorage.multiRemove([
+    ACCESS_TOKEN_KEY,
+    REFRESH_TOKEN_KEY,
+    USER_DATA_KEY,
+    EXPIRES_AT_KEY,
+  ]);
+};
+
+// --- THUNKS ---
+
+// 1. Initialize Auth (Khởi động App)
 export const initializeAuth = createAsyncThunk(
   "auth/initialize",
   async (_, { dispatch }) => {
     const accessToken = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
     const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+    const storedUser = await AsyncStorage.getItem(USER_DATA_KEY);
 
     if (!accessToken || !refreshToken) {
-      return { status: "unauthenticated" as AuthStatus };
+      return { isAuthenticated: false, user: null };
     }
 
     try {
-      // Lấy profile mới nhất khi mở app
+      // Ưu tiên lấy từ Storage trước cho nhanh để hiện UI
+      let user = storedUser ? JSON.parse(storedUser) : null;
+      
+      // Sau đó gọi API để update thông tin mới nhất (ngầm)
       const res = await ProfileService.getProfile();
-      const profile = res.data.profile as User;
+      user = res.data.profile as User;
+      
+      // Cập nhật lại user mới nhất vào storage
+      await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
 
-      dispatch(
-        setSession({
-          user: profile,
-          accessToken,
-          refreshToken,
-          expiresAt:
-            (await AsyncStorage.getItem(EXPIRES_AT_KEY)) || undefined,
-        })
-      );
-
-      return { status: "authenticated" as AuthStatus };
+      return { 
+        isAuthenticated: true, 
+        user, 
+        accessToken, 
+        refreshToken,
+        expiresAt: (await AsyncStorage.getItem(EXPIRES_AT_KEY)) || undefined
+      };
     } catch {
-      await AsyncStorage.multiRemove([
-        ACCESS_TOKEN_KEY,
-        REFRESH_TOKEN_KEY,
-        USER_DATA_KEY,
-        EXPIRES_AT_KEY,
-      ]);
-      return { status: "unauthenticated" as AuthStatus };
+      await clearAuthData();
+      return { isAuthenticated: false, user: null };
     }
   }
 );
 
-export const signUp = createAsyncThunk<
-  { error?: AuthError },
-  { email: string; password: string }
->("auth/signUp", async () => {
-  await sleep(300);
-  return { error: undefined };
-});
+// Interface trả về chung cho các hành động Login thành công
+interface AuthSuccessPayload {
+  user: User;
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+  isNewUser: boolean;
+}
 
-// --- 2. Sign In (Email + Password) ---
+// 2. Sign In (Email + Password)
 export const signIn = createAsyncThunk<
-  { error?: AuthError },
-  { email: string; password: string }
->("auth/signIn", async ({ email, password }, { dispatch, rejectWithValue }) => {
+  AuthSuccessPayload, // Return Type
+  { email: string; password: string }, // Agrument Type
+  { rejectValue: AuthError } // Config
+>("auth/signIn", async ({ email, password }, { rejectWithValue }) => {
   try {
     const res = await AuthService.loginUnified({
       identifier: email,
@@ -108,402 +134,260 @@ export const signIn = createAsyncThunk<
 
     const { accessToken, refreshToken, expiresAt } = res.data;
 
-    // 1. Lưu Token trước để API sau có thể dùng (nếu interceptor đọc từ storage)
-    await AsyncStorage.multiSet([
-      [ACCESS_TOKEN_KEY, accessToken],
-      [REFRESH_TOKEN_KEY, refreshToken],
-      [EXPIRES_AT_KEY, expiresAt],
-    ]);
-
-    // 2. Gọi Profile Service lấy thông tin User mới nhất
-    const profileRes = await ProfileService.getProfile();
+    // Fetch Profile
+    const profileRes = await ProfileService.getProfile(accessToken);
     const profile = profileRes.data.profile as User;
 
-    // 3. Lưu Profile vào Storage
-    await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(profile));
+    // Save Storage
+    await saveAuthData({ accessToken, refreshToken, expiresAt }, profile);
 
-    // 4. Update Redux
-    dispatch(
-      setSession({
-        user: profile,
-        accessToken,
-        refreshToken,
-        expiresAt,
-      })
-    );
-    dispatch(setStatus("authenticated"));
-    dispatch(setLoading(false));
-
-    return { error: undefined };
+    // Return data for extraReducers
+    return { 
+      user: profile, 
+      accessToken, 
+      refreshToken, 
+      expiresAt, 
+      isNewUser: false 
+    };
   } catch (err: any) {
-    const message =
-      err?.response?.data?.message || "Đăng nhập thất bại. Vui lòng thử lại.";
-    return rejectWithValue({ message } as AuthError);
+    const message = err?.response?.data?.message || "Đăng nhập thất bại.";
+    return rejectWithValue({ message });
   }
 });
 
-// --- 3. Verify Login (Password Variant) ---
+// 3. Verify Login (Password Variant)
 export const verifyLogin = createAsyncThunk<
-  { error?: AuthError },
-  { email: string; otpCode: string; password: string; deviceInfo: string }
->(
-  "auth/verifyLogin",
-  async (
-    { email, otpCode, password, deviceInfo },
-    { dispatch, rejectWithValue }
-  ) => {
-    try {
-      const res = await AuthService.loginUnified({
-        identifier: email,
-        otpCode,
-        password: password,
-        deviceInfo: deviceInfo,
-      });
-
-      const { accessToken, refreshToken, expiresAt } = res.data;
-
-      // 1. Lưu Token
-      await AsyncStorage.multiSet([
-        [ACCESS_TOKEN_KEY, accessToken],
-        [REFRESH_TOKEN_KEY, refreshToken],
-        [EXPIRES_AT_KEY, expiresAt],
-      ]);
-
-      // 2. Fetch Profile
-      const profileRes = await ProfileService.getProfile();
-      const profile = profileRes.data.profile as User;
-
-      // 3. Lưu Profile
-      await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(profile));
-
-      // 4. Dispatch Session
-      dispatch(
-        setSession({
-          user: profile,
-          accessToken,
-          refreshToken,
-          expiresAt,
-        })
-      );
-      dispatch(setStatus("authenticated"));
-      dispatch(setLoading(false));
-
-      return { error: undefined };
-    } catch (err: any) {
-      const message =
-        err?.response?.data?.message ||
-        "Đăng nhập thất bại. Vui lòng thử lại.";
-      return rejectWithValue({ message } as AuthError);
-    }
-  }
-);
-
-// --- 4. Verify Email Login (OTP) ---
-export const verifyEmailLogin = createAsyncThunk<
-  { error?: AuthError },
-  { email: string; otpCode: string }
->(
-  "auth/verifyEmailLogin",
-  async ({ email, otpCode }, { dispatch, rejectWithValue }) => {
-    try {
-      const res = await AuthService.loginUnified({
-        identifier: email,
-        otpCode,
-        password: null,
-        deviceInfo: "mobile-app",
-      });
-
-      const { accessToken, refreshToken, expiresAt } = res.data;
-
-      await AsyncStorage.multiSet([
-        [ACCESS_TOKEN_KEY, accessToken],
-        [REFRESH_TOKEN_KEY, refreshToken],
-        [EXPIRES_AT_KEY, expiresAt],
-      ]);
-
-      const profileRes = await ProfileService.getProfile();
-      const profile = profileRes.data.profile as User;
-
-      await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(profile));
-      
-      dispatch(
-        setSession({
-          user: profile,
-          accessToken,
-          refreshToken,
-          expiresAt,
-        })
-      );
-      dispatch(setStatus("authenticated"));
-      dispatch(setLoading(false));
-
-      return { error: undefined };
-    } catch (err: any) {
-      const message =
-        err?.response?.data?.message ||
-        "Xác thực OTP email thất bại. Vui lòng thử lại.";
-      return rejectWithValue({ message } as AuthError);
-    }
-  }
-);
-
-// --- 5. Verify Phone Login (OTP) ---
-export const verifyPhoneLogin = createAsyncThunk<
-  { error?: AuthError },
-  { phoneNumber: string; otpCode: string }
->(
-  "auth/verifyPhoneLogin",
-  async ({ phoneNumber, otpCode }, { dispatch, rejectWithValue }) => {
-    try {
-      const res = await AuthService.loginUnified({
-        identifier: phoneNumber,
-        otpCode,
-        password: null,
-        deviceInfo: "mobile-app",
-      });
-
-      // Check success flag logic from your original code
-      if (res.data?.success === false) {
-        dispatch(setSession(null));
-        dispatch(setStatus("unauthenticated"));
-        await AsyncStorage.multiRemove([
-          ACCESS_TOKEN_KEY,
-          REFRESH_TOKEN_KEY,
-          USER_DATA_KEY,
-          EXPIRES_AT_KEY,
-        ]);
-        return rejectWithValue({
-          message: res.data.message || "OTP không hợp lệ",
-        } as AuthError);
-      }
-
-      const { accessToken, refreshToken, expiresAt } = res.data;
-
-      if (!accessToken || !refreshToken) {
-        dispatch(setSession(null));
-        dispatch(setStatus("unauthenticated"));
-        await AsyncStorage.multiRemove([
-          ACCESS_TOKEN_KEY,
-          REFRESH_TOKEN_KEY,
-          USER_DATA_KEY,
-          EXPIRES_AT_KEY,
-        ]);
-        return rejectWithValue({
-          message: "OTP không hợp lệ",
-        } as AuthError);
-      }
-
-      // 1. Lưu Token
-      await AsyncStorage.multiSet([
-        [ACCESS_TOKEN_KEY, accessToken],
-        [REFRESH_TOKEN_KEY, refreshToken],
-        [EXPIRES_AT_KEY, expiresAt],
-      ]);
-
-      // 2. Fetch Profile (QUAN TRỌNG: Gọi sau khi đã có token)
-      const profileRes = await ProfileService.getProfile();
-      const profile = profileRes.data.profile as User;
-
-      // 3. Lưu Profile
-      await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(profile));
-
-      // 4. Dispatch Session
-      dispatch(
-        setSession({
-          user: profile,
-          accessToken,
-          refreshToken,
-          expiresAt,
-        })
-      );
-      dispatch(setStatus("authenticated"));
-      dispatch(setLoading(false));
-
-      return { error: undefined };
-    } catch (err: any) {
-      dispatch(setSession(null));
-      dispatch(setStatus("unauthenticated"));
-      await AsyncStorage.multiRemove([
-        ACCESS_TOKEN_KEY,
-        REFRESH_TOKEN_KEY,
-        USER_DATA_KEY,
-        EXPIRES_AT_KEY,
-      ]);
-
-      const message =
-        err?.response?.data?.message ||
-        "Xác thực OTP thất bại. Vui lòng thử lại.";
-      return rejectWithValue({ message } as AuthError);
-    }
-  }
-);
-
-// --- 6. Sign In By Google ---
-export const signInByGoogle = createAsyncThunk<
-  { error?: AuthError },
-  {
-    accessToken: string;
-    refreshToken: string;
-    expiresAt: string;
-    user: User; // User này từ Google trả về, nhưng ta sẽ fetch lại Profile cho chuẩn
-  }
->("auth/signInByGoogle", async (payload, { dispatch, rejectWithValue }) => {
+  AuthSuccessPayload,
+  { email: string; otpCode: string; password: string; deviceInfo: string },
+  { rejectValue: AuthError }
+>("auth/verifyLogin", async (payload, { rejectWithValue }) => {
   try {
-    const { accessToken, refreshToken, expiresAt } = payload;
+    const res = await AuthService.loginUnified({
+      identifier: payload.email,
+      otpCode: payload.otpCode,
+      password: payload.password,
+      deviceInfo: payload.deviceInfo,
+    });
 
-    // 1. Lưu Token
-    await AsyncStorage.multiSet([
-      [ACCESS_TOKEN_KEY, accessToken],
-      [REFRESH_TOKEN_KEY, refreshToken],
-      [EXPIRES_AT_KEY, expiresAt],
-    ]);
-
-    // 2. Fetch Profile từ Server của mình (để lấy roles, id chuẩn của hệ thống)
-    const profileRes = await ProfileService.getProfile();
+    const { accessToken, refreshToken, expiresAt } = res.data;
+    const profileRes = await ProfileService.getProfile(accessToken);
     const profile = profileRes.data.profile as User;
 
-    // 3. Lưu Profile
-    await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(profile));
+    await saveAuthData({ accessToken, refreshToken, expiresAt }, profile);
 
-    // 4. Dispatch Session
-    dispatch(
-      setSession({
-        user: profile,
-        accessToken,
-        refreshToken,
-        expiresAt,
-      })
-    );
-    dispatch(setStatus("authenticated"));
-    dispatch(setLoading(false));
-
-    return { error: undefined };
+    return { 
+      user: profile, 
+      accessToken, 
+      refreshToken, 
+      expiresAt, 
+      isNewUser: false 
+    };
   } catch (err: any) {
-    const message =
-      err?.message || "Đăng nhập Google thất bại. Vui lòng thử lại.";
-    return rejectWithValue({ message } as AuthError);
+    return rejectWithValue({ message: err?.response?.data?.message || "Đăng nhập thất bại." });
   }
 });
 
-export const setPassWord = createAsyncThunk<
-  { error?: AuthError },
-  CheckSetPassword
->("auth/setPassWord", async (form, { dispatch, rejectWithValue }) => {
+// 4. Verify Phone/Email Login (OTP)
+// Gom chung Phone và Email vì logic giống hệt nhau, chỉ khác tham số truyền vào service
+export const verifyOtpLogin = createAsyncThunk<
+  AuthSuccessPayload,
+  { identifier: string; otpCode: string; type: 'email' | 'phone' },
+  { rejectValue: AuthError }
+>("auth/verifyOtpLogin", async ({ identifier, otpCode }, { rejectWithValue }) => {
   try {
-    await AuthService.setPassWord(form);
-    return { error: undefined };
+    const res = await AuthService.loginUnified({
+      identifier,
+      otpCode,
+      password: null,
+      deviceInfo: "mobile-app",
+    });
+
+    // Check trường hợp logic riêng của backend bạn
+    if (res.data?.success === false || !res.data.accessToken) {
+       return rejectWithValue({ message: res.data.message || "OTP không hợp lệ" });
+    }
+
+    const { accessToken, refreshToken, expiresAt } = res.data;
+    const profileRes = await ProfileService.getProfile(accessToken);
+    const profile = profileRes.data.profile as User;
+
+    await saveAuthData({ accessToken, refreshToken, expiresAt }, profile);
+
+    // Giả sử logic check new user nằm ở đây, tạm thời để false hoặc lấy từ res.data nếu có
+    return { 
+      user: profile, 
+      accessToken, 
+      refreshToken, 
+      expiresAt, 
+      isNewUser: res.data.isNewUser || false // Lấy từ response nếu có
+    };
   } catch (err: any) {
-    const message =
-      err?.response?.data?.message ||
-      "Đặt mật khẩu thất bại. Vui lòng thử lại.";
-    return rejectWithValue({ message } as AuthError);
+    return rejectWithValue({ message: err?.response?.data?.message || "Xác thực OTP thất bại." });
   }
 });
 
-export const signOut = createAsyncThunk<{ error?: AuthError }>(
+// 5. Sign In By Google
+export const signInByGoogle = createAsyncThunk<
+  AuthSuccessPayload,
+  { accessToken: string; refreshToken: string; expiresAt: string; user: User; isNewUser?: boolean },
+  { rejectValue: AuthError }
+>("auth/signInByGoogle", async (payload, { rejectWithValue }) => {
+  try {
+    const { accessToken, refreshToken, expiresAt, isNewUser } = payload;
+
+    await saveAuthData({ accessToken, refreshToken, expiresAt }, payload.user);
+
+
+    const profileRes = await ProfileService.getProfile(accessToken);
+    const fullProfile = profileRes.data.profile as User;
+
+    await AsyncStorage.setItem("user_data", JSON.stringify(fullProfile));
+
+    return { 
+      user: fullProfile, 
+      accessToken, 
+      refreshToken, 
+      expiresAt,
+      isNewUser: isNewUser || false 
+    };
+  } catch (err: any) {
+    console.error("Redux Google Login Error:", err);
+    return rejectWithValue({ message: "Không thể lấy thông tin người dùng." });
+  }
+}); 
+
+// 6. Sign Out
+export const signOut = createAsyncThunk(
   "auth/signOut",
   async (_, { dispatch }) => {
-    try {
-      await AuthService.logout(false);
-    } catch {
-      // ignore
-    }
-
-    await AsyncStorage.multiRemove([
-      ACCESS_TOKEN_KEY,
-      REFRESH_TOKEN_KEY,
-      USER_DATA_KEY,
-      EXPIRES_AT_KEY,
-    ]);
-
-    dispatch(setUser(null));
-    dispatch(setSession(null));
-    dispatch(setStatus("unauthenticated"));
-    dispatch(setLoading(false));
-    return { error: undefined };
+    try { await AuthService.logout(false); } catch { /* ignore */ }
+    await clearAuthData();
+    return;
   }
 );
 
-export const resendConfirmation = createAsyncThunk<
-  { error?: AuthError },
-  { email: string }
->("auth/resendConfirmation", async () => {
-  await sleep(200);
-  return { error: undefined };
+export const resendOtp = createAsyncThunk<
+  void,
+  { identifier: string }, // Chỉ cần identifier (email hoặc phone)
+  { rejectValue: AuthError }
+>("auth/resendOtp", async ({ identifier }, { rejectWithValue }) => {
+  try {
+   
+    await AuthService.sendOTP(identifier);
+
+    return;
+  } catch (err: any) {
+    return rejectWithValue({ 
+      message: err?.response?.data?.message || "Gửi lại mã thất bại. Vui lòng thử lại." 
+    });
+  }
 });
 
+const handleLoginSuccess = (state: AuthState, action: PayloadAction<AuthSuccessPayload>) => {
+  state.status = "authenticated";
+  state.user = action.payload.user;
+  state.session = {
+    user: action.payload.user,
+    accessToken: action.payload.accessToken,
+    refreshToken: action.payload.refreshToken,
+    expiresAt: action.payload.expiresAt,
+  };
+  state.isNewUser = action.payload.isNewUser;
+  state.error = null;
+};
+
+// 2. Helper xử lý khi đăng nhập thất bại (SỬA LẠI)
+// ⚠️ Thay đổi: Tham số thứ 2 đổi từ "action" thành "error" (AuthError | undefined)
+// Lý do: Để khớp với cách gọi "handleLoginError(state, action.payload)"
+const handleLoginError = (state: AuthState, error: AuthError | undefined) => {
+   state.error = error?.message || "Lỗi xác thực không xác định";
+   // Lưu ý: Không set status = 'unauthenticated' ở đây 
+   // để tránh việc App tự động chuyển màn hình khi đang nhập liệu sai
+};
+
+// --- SLICE ---
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
     setUser(state, action: PayloadAction<User | null>) {
-      state.user = action.payload;
+      const newUser = action.payload;
+      state.user = newUser;
+    
+      if (state.session) {
+        state.session.user = newUser;
+      }
     },
     setSession(state, action: PayloadAction<Session | null>) {
       state.session = action.payload;
       state.user = action.payload?.user ?? null;
-    },
-    setLoading(state, action: PayloadAction<boolean>) {
-      state.loading = action.payload;
+      if (action.payload?.user) state.status = "authenticated";
     },
     setStatus(state, action: PayloadAction<AuthStatus>) {
       state.status = action.payload;
     },
+    // ✅ Action quan trọng cho TourGuide
+    finishOnboarding: (state) => {
+        state.isNewUser = false;
+    }
   },
   extraReducers: (builder) => {
+    // --- 1. INITIALIZE ---
     builder
       .addCase(initializeAuth.pending, (state) => {
         state.loading = true;
         state.status = "checking";
       })
       .addCase(initializeAuth.fulfilled, (state, action) => {
-        state.status = action.payload.status;
         state.loading = false;
+        if (action.payload.isAuthenticated) {
+          state.status = "authenticated";
+          state.user = action.payload.user;
+          state.session = {
+            user: action.payload.user,
+            accessToken: action.payload.accessToken,
+            refreshToken: action.payload.refreshToken,
+            expiresAt: action.payload.expiresAt,
+          };
+        } else {
+          state.status = "unauthenticated";
+          state.user = null;
+          state.session = null;
+        }
       })
       .addCase(initializeAuth.rejected, (state) => {
-        state.status = "unauthenticated";
         state.loading = false;
-      })
-      // Các case khác comment loading như yêu cầu cũ
-      .addCase(signIn.pending, (state) => {
-        // state.loading = true;
-      })
-      .addCase(signIn.fulfilled, (state) => {
-        // state.loading = false;
-      })
-      .addCase(signIn.rejected, (state) => {
-        // state.loading = false;
-      })
-      .addCase(verifyPhoneLogin.pending, (state) => {
-        // state.loading = true;
-      })
-      .addCase(verifyPhoneLogin.fulfilled, (state) => {
-        // state.loading = false;
-      })
-      .addCase(verifyPhoneLogin.rejected, (state) => {
-        // state.loading = false;
-      })
-      .addCase(verifyEmailLogin.pending, (state) => {
-        // state.loading = true;
-      })
-      .addCase(verifyEmailLogin.fulfilled, (state) => {
-        // state.loading = false;
-      })
-      .addCase(verifyEmailLogin.rejected, (state) => {
-        // state.loading = false;
-      })
-      .addCase(signInByGoogle.pending, (state) => {
-        // state.loading = true;
-      })
-      .addCase(signInByGoogle.fulfilled, (state) => {
-        // state.loading = false;
-      })
-      .addCase(signInByGoogle.rejected, (state) => {
-        // state.loading = false;
+        state.status = "unauthenticated";
       });
+
+    // --- 2. LOGIN ACTIONS (Sử dụng Helper đã sửa) ---
+    builder
+      // SignIn (Password)
+      .addCase(signIn.fulfilled, handleLoginSuccess)
+      .addCase(signIn.rejected, (state, action) => handleLoginError(state, action.payload))
+      
+      // VerifyLogin (Password + OTP)
+      .addCase(verifyLogin.fulfilled, handleLoginSuccess)
+      .addCase(verifyLogin.rejected, (state, action) => handleLoginError(state, action.payload))
+
+      // VerifyOtpLogin (Phone/Email)
+      .addCase(verifyOtpLogin.fulfilled, handleLoginSuccess)
+      .addCase(verifyOtpLogin.rejected, (state, action) => handleLoginError(state, action.payload))
+
+      // Google
+      .addCase(signInByGoogle.fulfilled, handleLoginSuccess)
+      .addCase(signInByGoogle.rejected, (state, action) => handleLoginError(state, action.payload));
+
+    // --- 3. LOGOUT ---
+    builder.addCase(signOut.fulfilled, (state) => {
+      state.user = null;
+      state.session = null;
+      state.status = "unauthenticated";
+      state.isNewUser = false;
+    });
   },
 });
 
-export const { setUser, setSession, setLoading, setStatus } = authSlice.actions;
-
+// Export Actions & Reducer
+export const {setUser, setSession, setStatus, finishOnboarding } = authSlice.actions;
 export default authSlice.reducer;

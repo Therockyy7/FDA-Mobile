@@ -197,10 +197,11 @@ export default function SignInScreen() {
                 className="flex-row items-center justify-center h-16 rounded-2xl border border-slate-200 bg-white shadow-sm active:bg-slate-50"
                 activeOpacity={0.8}
               >
-                <Image 
-                  source={{ uri: "https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" }}
-                  style={{ width: 26, height: 26, marginRight: 12 }}
-                  resizeMode="contain"
+                <Ionicons 
+                    name="logo-google" 
+                    size={26} 
+                    color="#DB4437" // Màu đỏ đặc trưng của Google
+                    style={{ marginRight: 12 }} 
                 />
                 <Text className="text-slate-700 text-lg font-bold">
                   Tiếp tục với Google

@@ -1,20 +1,21 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
-import { Alert, ScrollView, StatusBar } from "react-native";
+import { Alert, Platform, ScrollView, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ModalChangePassword from "~/features/auth/components/ModalChangePassword";
-// ✅ Import Modal mới
+
 import ModalConfirmLogout from "~/features/auth/components/ModalConfirmLogout";
 
 import { AuthService } from "~/features/auth/services/auth.service";
 import { setUser } from "~/features/auth/stores/auth.slice";
-import { useSignOut, useUser } from "~/features/auth/stores/hooks";
+
 import { ProfileService } from "~/features/profile/services/profile.service";
 
 import { useRouter } from "expo-router";
 import { useAppDispatch } from "~/app/hooks";
+import { useSignOut, useUser } from "~/features/auth/stores/hooks";
 import AppSettingsSection from "~/features/profile/components/AppSettingsSection";
 import NotificationSettingsSection from "~/features/profile/components/NotificationSettingsSection";
 import OtherSettingsSection from "~/features/profile/components/OtherSettingsSection";
@@ -88,7 +89,7 @@ const router = useRouter();
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.7,
+      quality: 0.3,
     });
 
     if (!result.canceled) {
@@ -96,41 +97,66 @@ const router = useRouter();
     }
   };
 
-  const handleSaveChanges = async () => {
+
+// Trong ProfileScreen.tsx
+
+const handleSaveChanges = async () => {
     try {
       setIsUpdating(true);
       const formData = new FormData();
-      formData.append("fullName", fullName);
 
+      // 1. FullName
+      formData.append("fullName", fullName.trim());
+
+      // 2. AvatarUrl (✅ BỔ SUNG: Gửi lại URL cũ nếu có)
+      // Nếu user không chọn ảnh mới (newAvatarUri là null), ta cần gửi lại avatarUrl cũ 
+      // để Backend biết là "tôi muốn giữ nguyên ảnh cũ".
+      formData.append("avatarUrl", user?.avatarUrl || "");
+
+      // 3. AvatarFile (Chỉ gửi khi có ảnh mới)
       if (newAvatarUri) {
-        const filename = newAvatarUri.split('/').pop() || "avatar.jpg";
+        // Xử lý path cho Android
+        const uri = Platform.OS === "android" && !newAvatarUri.startsWith("file://")
+            ? `file://${newAvatarUri}`
+            : newAvatarUri;
+
+        const filename = uri.split('/').pop() || "avatar.jpg";
         const match = /\.(\w+)$/.exec(filename);
         const type = match ? `image/${match[1]}` : `image/jpeg`;
 
         formData.append("avatarFile", {
-          uri: newAvatarUri,
+          uri: uri,
           name: filename,
           type: type,
         } as any);
       }
 
+      // 4. Gọi API
       const res = await ProfileService.updateProfile(formData);
 
       if (res.data.success) {
         const updatedProfile = res.data.profile;
+        
         dispatch(setUser(updatedProfile));
         await AsyncStorage.setItem("user_data", JSON.stringify(updatedProfile));
+        
         setNewAvatarUri(null);
         Alert.alert("Thành công", "Cập nhật hồ sơ thành công!");
       }
     } catch (err: any) {
-      console.error("Update Profile Error:", err);
-      const message = err?.response?.data?.message || "Không thể cập nhật hồ sơ.";
+      console.error("API Error:", err);
+      // Log response data để debug lỗi server trả về
+      if (err.response) {
+          console.log("Server data:", err.response.data);
+          console.log("Server status:", err.response.status);
+      }
+      
+      const message = err?.response?.data?.message || "Lỗi cập nhật. Vui lòng thử lại.";
       Alert.alert("Lỗi", message);
     } finally {
       setIsUpdating(false);
     }
-  };
+};
 
 
   const handleConfirmLogout = async () => {

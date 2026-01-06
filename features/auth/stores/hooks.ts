@@ -1,102 +1,106 @@
-
-import { useSelector, useDispatch } from "react-redux";
-
+import { unwrapResult } from "@reduxjs/toolkit";
+import { useAppDispatch, useAppSelector } from "~/app/hooks"; // ✅ Dùng hook typed của dự án
 import {
   signIn,
-  signUp,
   signOut,
-  verifyPhoneLogin,
-  resendConfirmation,
-  AuthStatus,
-  User,
   signInByGoogle,
+  verifyOtpLogin, // ✅ Import thunk gộp mới
+  verifyLogin,
+  User,
+  AuthStatus,
+  finishOnboarding,
+  resendOtp, // ✅ Import action tắt TourGuide
 } from "./auth.slice";
-import { AppDispatch, RootState } from "~/app/store";
-import { useEffect } from "react";
-import * as Linking from "expo-linking";
 
-export const useUser = () =>
-  useSelector((state: RootState) => state.auth.user);
+// --- 1. SELECTORS (Lấy dữ liệu) ---
 
-export const useSession = () =>
-  useSelector((state: RootState) => state.auth.session);
+export const useUser = () => 
+  useAppSelector((state) => state.auth.user);
 
-export const useAuthStatus = (): AuthStatus =>
-  useSelector((state: RootState) => state.auth.status);
+export const useSession = () => 
+  useAppSelector((state) => state.auth.session);
 
-export const useAuthLoading = () =>
-  useSelector((state: RootState) => state.auth.loading);
+export const useAuthStatus = (): AuthStatus => 
+  useAppSelector((state) => state.auth.status);
 
+export const useAuthLoading = () => 
+  useAppSelector((state) => state.auth.loading);
+
+// ✅ Selector mới: Lấy lỗi Global (nếu cần hiển thị Toast lỗi chung)
+export const useAuthError = () => 
+  useAppSelector((state) => state.auth.error);
+
+// ✅ Selector mới: Kiểm tra User mới cho tính năng TourGuide
+export const useIsNewUser = () => 
+  useAppSelector((state) => state.auth.isNewUser);
+
+
+// --- 2. ACTIONS (Gọi hàm xử lý) ---
+
+// Login bằng Email + Password
 export const useSignIn = () => {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   return (email: string, password: string) =>
     dispatch(signIn({ email, password })).unwrap();
 };
 
-export const useSignUp = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  return (email: string, password: string) =>
-    dispatch(signUp({ email, password })).unwrap();
+// Login bằng Phone + OTP
+export const useVerifyPhoneLogin = () => {
+  const dispatch = useAppDispatch();
+  return (phoneNumber: string, otpCode: string) =>
+    // ✅ Gọi thunk gộp và truyền type="phone"
+    dispatch(verifyOtpLogin({ 
+      identifier: phoneNumber, 
+      otpCode, 
+      type: 'phone' 
+    })).unwrap();
 };
 
-export const useVerifyPhoneLogin = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  return (phoneNumber: string, otpCode: string) =>
-    dispatch(verifyPhoneLogin({ phoneNumber, otpCode })).unwrap();
-}
+// Login bằng Email + OTP (User mới)
+export const useVerifyEmailLogin = () => {
+  const dispatch = useAppDispatch();
+  return (email: string, otpCode: string) =>
+    // ✅ Gọi thunk gộp và truyền type="email"
+    dispatch(verifyOtpLogin({ 
+      identifier: email, 
+      otpCode, 
+      type: 'email' 
+    })).unwrap();
+};
 
+// Login bằng Password + OTP (2FA)
+export const useVerifyLogin = () => {
+  const dispatch = useAppDispatch();
+  return (payload: { email: string; otpCode: string; password: string; deviceInfo: string }) =>
+    dispatch(verifyLogin(payload)).unwrap();
+};
+
+// Login bằng Google
 export const useSignInByGoogle = () => {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   return (params: {
     accessToken: string;
     refreshToken: string;
     expiresAt: string;
     user: User;
+    isNewUser?: boolean; // ✅ Cho phép truyền cờ user mới vào
   }) => dispatch(signInByGoogle(params)).unwrap();
 };
 
-// export const useGoogleAuthListener = () => {
-//   const signInByGoogle = useSignInByGoogle(); // hook wrapper của thunk
-
-//   useEffect(() => {
-//     const sub = Linking.addEventListener("url", async (event) => {
-//       const { path, queryParams } = Linking.parse(event.url);
-
-//       if (path === "auth/google/callback" && queryParams) {
-//         try {
-//           const accessToken = String(queryParams.accessToken || "");
-//           const refreshToken = String(queryParams.refreshToken || "");
-//           const expiresAt = String(queryParams.expiresAt || "");
-//           const userJson = String(queryParams.user || "");
-
-//           const user: User = JSON.parse(
-//             Buffer.from(userJson, "base64").toString("utf8")
-//           );
-
-//           await signInByGoogle({ accessToken, refreshToken, expiresAt, user });
-//           // Sau đây Redux đã authenticated, RootStack sẽ hiển thị (tabs)
-//         } catch (e) {
-//           console.log("Google callback error", e);
-//         }
-//       }
-//     });
-
-//     return () => sub.remove();
-//   }, [signInByGoogle]);
-// };
-
-
-
-
+// Đăng xuất
 export const useSignOut = () => {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   return () => dispatch(signOut()).unwrap();
 };
 
+export const useResendOtp = () => {
+  const dispatch = useAppDispatch();
+  return (identifier: string) => 
+    dispatch(resendOtp({ identifier })).unwrap();
+};
 
-
-export const useResendConfirmation = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  return (email: string) =>
-    dispatch(resendConfirmation({ email })).unwrap();
+// ✅ Hook mới: Tắt trạng thái User mới (Gọi khi xem xong TourGuide)
+export const useFinishOnboarding = () => {
+  const dispatch = useAppDispatch();
+  return () => dispatch(finishOnboarding());
 };

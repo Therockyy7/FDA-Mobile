@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import ModalVerifyOTP from "~/features/auth/components/ModalVerifyOTP";
 import { AuthService } from "~/features/auth/services/auth.service";
-import { verifyPhoneLogin } from "~/features/auth/stores/auth.slice";
+import { verifyOtpLogin } from "~/features/auth/stores/auth.slice";
 import { useAppDispatch } from "../hooks";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -40,7 +40,7 @@ export default function PhoneOtpScreen() {
     setOtpLoading(true);
     setOtpError(null);
     try {
-      await dispatch(verifyPhoneLogin({ phoneNumber: identifier as string, otpCode: otp })).unwrap();
+      await dispatch(verifyOtpLogin({ identifier, otpCode: otp, type: "phone" })).unwrap();
       router.replace("/(tabs)");
     } catch (err: any) {
       setOtpError(err?.message || "Xác thực thất bại.");

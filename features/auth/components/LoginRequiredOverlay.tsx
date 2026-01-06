@@ -32,10 +32,6 @@ export const LoginRequiredOverlay = ({
             <Text style={styles.primaryText}>Đăng nhập</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.secondaryBtn} onPress={onSignUp}>
-            <Text style={styles.secondaryText}>Tạo tài khoản mới</Text>
-          </TouchableOpacity>
-
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
             <Text style={styles.closeText}>Để sau</Text>
           </TouchableOpacity>

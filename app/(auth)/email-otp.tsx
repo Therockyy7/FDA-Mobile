@@ -1,12 +1,12 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Alert, View, StatusBar } from "react-native";
+import { Alert, StatusBar, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import ModalVerifyOTP from "~/features/auth/components/ModalVerifyOTP";
 import { AuthService } from "~/features/auth/services/auth.service";
-import { verifyEmailLogin } from "~/features/auth/stores/auth.slice";
+import { verifyOtpLogin } from "~/features/auth/stores/auth.slice";
 import { useAppDispatch } from "../hooks";
-import { LinearGradient } from "expo-linear-gradient";
 
 export default function EmailOtpScreen() {
   const router = useRouter();
@@ -39,7 +39,7 @@ export default function EmailOtpScreen() {
     setOtpLoading(true);
     setOtpError(null);
     try {
-      await dispatch(verifyEmailLogin({ email: identifier as string, otpCode: otp })).unwrap();
+      await dispatch(verifyOtpLogin({ identifier, otpCode: otp, type: "email" })).unwrap();
       router.replace("/(tabs)");
     } catch (err: any) {
       setOtpError(err?.message || "Xác thực thất bại.");

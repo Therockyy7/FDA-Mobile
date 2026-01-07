@@ -171,7 +171,7 @@ export const verifyLogin = createAsyncThunk<
 
     const { accessToken, refreshToken, expiresAt } = res.data;
     const profileRes = await ProfileService.getProfile(accessToken);
-    const profile = profileRes.data.profile as User;
+    const profile = profileRes.data.profile ;
 
     await saveAuthData({ accessToken, refreshToken, expiresAt }, profile);
 

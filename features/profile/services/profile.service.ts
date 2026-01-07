@@ -19,6 +19,13 @@ export const ProfileService = {
             "Content-Type": "multipart/form-data",
         } as any, 
     });
-},
+  },
 
+  sendPhoneOTP: (phoneNumber: string) => {
+    return apiClient.post("/api/v1/auth/send-otp", { identifier: phoneNumber });
+  },
+
+  updatePhoneNumber: (data: { newPhoneNumber: string; otpCode: string }) => {
+    return apiClient.post("/api/v1/user-profile/update-phoneNumber", data);
+  },
 };

@@ -5,8 +5,8 @@ import { Alert, Platform, ScrollView, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ModalChangePassword from "~/features/auth/components/ModalChangePassword";
-
 import ModalConfirmLogout from "~/features/auth/components/ModalConfirmLogout";
+import ModalVerifyOTP from "~/features/auth/components/ModalVerifyOTP";
 
 import { AuthService } from "~/features/auth/services/auth.service";
 import { setUser } from "~/features/auth/stores/auth.slice";
@@ -22,11 +22,13 @@ import OtherSettingsSection from "~/features/profile/components/OtherSettingsSec
 import ProfileHeader from "~/features/profile/components/ProfileHeader";
 import ProfileInfoSection from "~/features/profile/components/ProfileInfoSection";
 import SaveButton from "~/features/profile/components/SaveButton";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function ProfileScreen() {
   const dispatch = useAppDispatch();
   const signOut = useSignOut();
   const user = useUser();
+  const { isDarkColorScheme, setColorScheme } = useColorScheme();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -41,7 +43,6 @@ export default function ProfileScreen() {
   const [weatherUpdates, setWeatherUpdates] = useState(true);
   const [trafficAlerts, setTrafficAlerts] = useState(false);
   const [weeklyReport, setWeeklyReport] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
@@ -61,12 +62,21 @@ export default function ProfileScreen() {
   const [provider, setProvider] = useState<string>("");
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
-const router = useRouter();
+
+  // Phone OTP Modal State
+  const [originalPhone, setOriginalPhone] = useState<string>("");
+  const [showPhoneOTPModal, setShowPhoneOTPModal] = useState(false);
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const [phoneOtpLoading, setPhoneOtpLoading] = useState(false);
+  const [phoneOtpError, setPhoneOtpError] = useState<string | null>(null);
+
+  const router = useRouter();
   useEffect(() => {
     if (user) {
       setFullName(user.fullName || "");
       setEmail(user.email || "");
       setPhone(user.phoneNumber || "");
+      setOriginalPhone(user.phoneNumber || "");
       
       const userAny = user as any; 
       setCreatedAt(userAny.createdAt || "");
@@ -200,12 +210,62 @@ const handleSaveChanges = async () => {
     }
   };
 
+  // Phone OTP Handlers
+  const handleSendPhoneOTP = async () => {
+    try {
+      setPhoneOtpError(null);
+      await ProfileService.sendPhoneOTP(phone);
+      setShowPhoneOTPModal(true);
+    } catch (err: any) {
+      Alert.alert("Lỗi", err?.response?.data?.message || "Không thể gửi mã OTP.");
+    }
+  };
+
+  const handleVerifyPhoneOTP = async () => {
+    if (phoneOtp.length < 6) {
+      setPhoneOtpError("Vui lòng nhập đủ mã OTP");
+      return;
+    }
+    setPhoneOtpLoading(true);
+    setPhoneOtpError(null);
+    try {
+      const res = await ProfileService.updatePhoneNumber({
+        newPhoneNumber: phone,
+        otpCode: phoneOtp,
+      });
+      if (res.data.success) {
+        const updatedProfile = res.data.profile;
+        dispatch(setUser(updatedProfile));
+        await AsyncStorage.setItem("user_data", JSON.stringify(updatedProfile));
+        setOriginalPhone(phone);
+        setShowPhoneOTPModal(false);
+        setPhoneOtp("");
+        Alert.alert("Thành công", "Số điện thoại đã được cập nhật!");
+      }
+    } catch (err: any) {
+      setPhoneOtpError(err?.response?.data?.message || "Xác thực thất bại.");
+    } finally {
+      setPhoneOtpLoading(false);
+    }
+  };
+
+  const handleResendPhoneOTP = async () => {
+    try {
+      await ProfileService.sendPhoneOTP(phone);
+      setPhoneOtpError(null);
+      setPhoneOtp("");
+      Alert.alert("Thông báo", "Mã xác thực mới đã được gửi!");
+    } catch (err: any) {
+      Alert.alert("Lỗi", "Không thể gửi lại OTP.");
+    }
+  };
+
   const displayAvatar = newAvatarUri || user?.avatarUrl;
   const displayName = fullName || user?.email || "Người dùng";
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
-      <StatusBar barStyle="light-content" backgroundColor="#3B82F6" translucent />
+    <SafeAreaView style={{ flex: 1, backgroundColor: isDarkColorScheme ? "#0F172A" : "#F9FAFB" }}>
+      <StatusBar barStyle={isDarkColorScheme ? "light-content" : "dark-content"} backgroundColor={isDarkColorScheme ? "#1E293B" : "#3B82F6"} translucent />
       
       <ProfileHeader
         displayName={displayName}
@@ -232,6 +292,8 @@ const handleSaveChanges = async () => {
           isEmailVerified={isEmailVerified}
           isPhoneVerified={isPhoneVerified}
           provider={provider}
+          originalPhone={originalPhone}
+          onVerifyPhone={handleSendPhoneOTP}
         />
         
         <NotificationSettingsSection
@@ -242,7 +304,8 @@ const handleSaveChanges = async () => {
         />
         
         <AppSettingsSection
-          darkMode={darkMode} setDarkMode={setDarkMode}
+          darkMode={isDarkColorScheme}
+          setDarkMode={(value) => setColorScheme(value ? 'dark' : 'light')}
           autoRefresh={autoRefresh} setAutoRefresh={setAutoRefresh}
           soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled}
         />
@@ -267,6 +330,23 @@ const handleSaveChanges = async () => {
           loading={isLoggingOut}
           onConfirm={handleConfirmLogout}
           onClose={() => setShowLogoutModal(false)}
+        />
+
+        {/* ✅ Phone OTP Verification Modal */}
+        <ModalVerifyOTP
+          visible={showPhoneOTPModal}
+          phone={phone}
+          otp={phoneOtp}
+          onChangeOtp={setPhoneOtp}
+          loading={phoneOtpLoading}
+          onConfirm={handleVerifyPhoneOTP}
+          onClose={() => {
+            setShowPhoneOTPModal(false);
+            setPhoneOtp("");
+            setPhoneOtpError(null);
+          }}
+          onResend={handleResendPhoneOTP}
+          error={phoneOtpError}
         />
 
       </ScrollView>

@@ -17,6 +17,8 @@ type Props = {
   isEmailVerified?: boolean;
   isPhoneVerified?: boolean;
   provider?: string;
+  originalPhone?: string;
+  onVerifyPhone?: () => void;
 };
 
 const ProfileInfoSection: React.FC<Props> = ({
@@ -30,7 +32,9 @@ const ProfileInfoSection: React.FC<Props> = ({
   onChangePassword,
   isEmailVerified,
   isPhoneVerified,
-  provider
+  provider,
+  originalPhone,
+  onVerifyPhone,
 }) => {
   
   const getProviderName = (p?: string) => {
@@ -142,24 +146,42 @@ const ProfileInfoSection: React.FC<Props> = ({
                     </View>
                 ) : null}
             </View>
-          <TextInput
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-            style={{
-              backgroundColor: "white",
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: "#E5E7EB",
-              paddingHorizontal: 16,
-              paddingVertical: 14,
-              fontSize: 15,
-              fontWeight: "600",
-              color: "#1F2937",
-            }}
-            placeholder="Nhập số điện thoại"
-            placeholderTextColor="#9CA3AF"
-          />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <TextInput
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              style={{
+                flex: 1,
+                backgroundColor: "white",
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: "#E5E7EB",
+                paddingHorizontal: 16,
+                paddingVertical: 14,
+                fontSize: 15,
+                fontWeight: "600",
+                color: "#1F2937",
+              }}
+              placeholder="Nhập số điện thoại"
+              placeholderTextColor="#9CA3AF"
+            />
+            {/* Nút Xác nhận - hiện khi phone thay đổi */}
+            {phone && phone !== originalPhone && onVerifyPhone && (
+              <TouchableOpacity
+                onPress={onVerifyPhone}
+                style={{
+                  backgroundColor: '#3B82F6',
+                  paddingHorizontal: 16,
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={{ color: 'white', fontWeight: '700', fontSize: 14 }}>Xác nhận</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         <View>

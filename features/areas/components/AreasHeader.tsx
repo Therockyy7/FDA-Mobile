@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { Platform, StatusBar, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { useColorScheme } from "~/lib/useColorScheme";
 import { Area } from "../types/areas-types";
 import { AreaStatsRow } from "./AreaStatsRow";
 
@@ -12,6 +13,16 @@ interface AreasHeaderProps {
 }
 
 export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
+  const { isDarkColorScheme } = useColorScheme();
+
+  // Theme colors
+  const colors = {
+    background: isDarkColorScheme ? "#0F172A" : "#FFFFFF",
+    border: isDarkColorScheme ? "#1E293B" : "#E5E7EB",
+    text: isDarkColorScheme ? "#F1F5F9" : "#111827",
+    subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
+  };
+
   const stats = useMemo(() => {
     const safeCount = areas.filter((a) => a.status === "safe").length;
     const warningCount = areas.filter((a) => a.status === "warning").length;
@@ -27,17 +38,12 @@ export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
   return (
     <View
       style={{
-        backgroundColor: "white",
-        paddingTop: Platform.OS === "ios" ? 50 : StatusBar.currentHeight! + 10,
+        backgroundColor: colors.background,
+        paddingTop: Platform.OS === "ios" ? 54 : (StatusBar.currentHeight || 0) + 10,
         paddingBottom: 16,
         paddingHorizontal: 20,
         borderBottomWidth: 1,
-        borderBottomColor: "#E5E7EB",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 4,
+        borderBottomColor: colors.border,
       }}
     >
       <View
@@ -55,7 +61,7 @@ export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
             style={{
               fontSize: 20,
               fontWeight: "800",
-              color: "#111827",
+              color: colors.text,
               letterSpacing: -0.5,
             }}
           >
@@ -80,7 +86,7 @@ export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
             <Text
               style={{
                 fontSize: 12,
-                color: "#6B7280",
+                color: colors.subtext,
                 fontWeight: "600",
               }}
             >
@@ -96,13 +102,8 @@ export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
             height: 44,
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: 22,
+            borderRadius: 14,
             backgroundColor: "#3B82F6",
-            shadowColor: "#3B82F6",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 6,
           }}
           activeOpacity={0.8}
         >

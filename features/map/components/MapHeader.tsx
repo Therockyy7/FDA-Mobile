@@ -1,9 +1,9 @@
 // features/map/components/MapHeader.tsx
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import { Platform, StatusBar, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 type MapType = "standard" | "satellite" | "hybrid";
 
@@ -19,21 +19,27 @@ interface MapHeaderProps {
 
 export function MapHeader({ stats, mapType, onMapTypeChange }: MapHeaderProps) {
   const router = useRouter();
+  const { isDarkColorScheme } = useColorScheme();
+
+  // Theme colors
+  const colors = {
+    background: isDarkColorScheme ? "#0F172A" : "#FFFFFF",
+    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
+    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
+    subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
+    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
+    buttonBg: isDarkColorScheme ? "#1E293B" : "#F1F5F9",
+  };
 
   return (
-    <LinearGradient
-      colors={["#FFFFFF", "#F9FAFB"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
+    <View
       style={{
-        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 50,
-        paddingBottom: 16,
+        backgroundColor: colors.background,
+        paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 8 : 54,
+        paddingBottom: 12,
         paddingHorizontal: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
       }}
     >
       {/* Top Row */}
@@ -53,13 +59,13 @@ export function MapHeader({ stats, mapType, onMapTypeChange }: MapHeaderProps) {
               height: 40,
               alignItems: "center",
               justifyContent: "center",
-              borderRadius: 20,
-              backgroundColor: "#F3F4F6",
+              borderRadius: 12,
+              backgroundColor: colors.buttonBg,
               marginRight: 12,
             }}
             activeOpacity={0.7}
           >
-            <Ionicons name="arrow-back" size={20} color="#1F2937" />
+            <Ionicons name="arrow-back" size={20} color={colors.text} />
           </TouchableOpacity>
 
           <View style={{ flex: 1 }}>
@@ -70,29 +76,58 @@ export function MapHeader({ stats, mapType, onMapTypeChange }: MapHeaderProps) {
                 marginBottom: 2,
               }}
             >
-              <Ionicons name="water" size={20} color="#3B82F6" />
-              <Text
+              <View
                 style={{
-                  fontSize: 20,
-                  fontWeight: "800",
-                  color: "#1F2937",
-                  marginLeft: 6,
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  backgroundColor: "#3B82F6",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: 8,
                 }}
               >
-                Flood Monitor
+                <Ionicons name="water" size={16} color="white" />
+              </View>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "800",
+                  color: colors.text,
+                }}
+              >
+                Bản đồ lũ lụt
               </Text>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Ionicons name="location" size={14} color="#6B7280" />
+              <Ionicons name="location" size={12} color={colors.subtext} />
               <Text
                 style={{
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: "600",
-                  color: "#6B7280",
+                  color: colors.subtext,
                   marginLeft: 4,
                 }}
               >
                 Đà Nẵng City
+              </Text>
+              <View
+                style={{
+                  width: 4,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: "#10B981",
+                  marginHorizontal: 6,
+                }}
+              />
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: "600",
+                  color: "#10B981",
+                }}
+              >
+                Đang cập nhật
               </Text>
             </View>
           </View>
@@ -104,15 +139,10 @@ export function MapHeader({ stats, mapType, onMapTypeChange }: MapHeaderProps) {
           style={{
             width: 40,
             height: 40,
-            borderRadius: 20,
+            borderRadius: 12,
             backgroundColor: "#3B82F6",
             alignItems: "center",
             justifyContent: "center",
-            shadowColor: "#3B82F6",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 4,
           }}
           activeOpacity={0.8}
         >
@@ -124,14 +154,11 @@ export function MapHeader({ stats, mapType, onMapTypeChange }: MapHeaderProps) {
       <View
         style={{
           flexDirection: "row",
-          backgroundColor: "white",
+          backgroundColor: colors.cardBg,
           borderRadius: 16,
           padding: 4,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.06,
-          shadowRadius: 8,
-          elevation: 2,
+          borderWidth: isDarkColorScheme ? 1 : 0,
+          borderColor: colors.border,
         }}
       >
         {/* Safe */}
@@ -141,33 +168,33 @@ export function MapHeader({ stats, mapType, onMapTypeChange }: MapHeaderProps) {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
-            paddingVertical: 10,
-            paddingHorizontal: 12,
-            backgroundColor: "#ECFDF5",
+            paddingVertical: 8,
+            paddingHorizontal: 8,
+            backgroundColor: isDarkColorScheme ? "#064E3B" : "#ECFDF5",
             borderRadius: 12,
             marginRight: 4,
           }}
         >
           <View
             style={{
-              width: 28,
-              height: 28,
-              borderRadius: 14,
+              width: 24,
+              height: 24,
+              borderRadius: 8,
               backgroundColor: "#10B981",
               alignItems: "center",
               justifyContent: "center",
-              marginRight: 8,
+              marginRight: 6,
             }}
           >
-            <Text style={{ fontSize: 14, fontWeight: "900", color: "white" }}>
+            <Text style={{ fontSize: 12, fontWeight: "900", color: "white" }}>
               {stats.safe}
             </Text>
           </View>
           <Text
             style={{
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: "700",
-              color: "#047857",
+              color: isDarkColorScheme ? "#6EE7B7" : "#047857",
             }}
           >
             An toàn
@@ -181,33 +208,33 @@ export function MapHeader({ stats, mapType, onMapTypeChange }: MapHeaderProps) {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
-            paddingVertical: 10,
-            paddingHorizontal: 12,
-            backgroundColor: "#FFFBEB",
+            paddingVertical: 8,
+            paddingHorizontal: 8,
+            backgroundColor: isDarkColorScheme ? "#78350F" : "#FFFBEB",
             borderRadius: 12,
             marginRight: 4,
           }}
         >
           <View
             style={{
-              width: 28,
-              height: 28,
-              borderRadius: 14,
+              width: 24,
+              height: 24,
+              borderRadius: 8,
               backgroundColor: "#F59E0B",
               alignItems: "center",
               justifyContent: "center",
-              marginRight: 8,
+              marginRight: 6,
             }}
           >
-            <Text style={{ fontSize: 14, fontWeight: "900", color: "white" }}>
+            <Text style={{ fontSize: 12, fontWeight: "900", color: "white" }}>
               {stats.warning}
             </Text>
           </View>
           <Text
             style={{
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: "700",
-              color: "#B45309",
+              color: isDarkColorScheme ? "#FCD34D" : "#B45309",
             }}
           >
             Cảnh báo
@@ -221,38 +248,38 @@ export function MapHeader({ stats, mapType, onMapTypeChange }: MapHeaderProps) {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
-            paddingVertical: 10,
-            paddingHorizontal: 12,
-            backgroundColor: "#FEF2F2",
+            paddingVertical: 8,
+            paddingHorizontal: 8,
+            backgroundColor: isDarkColorScheme ? "#7F1D1D" : "#FEF2F2",
             borderRadius: 12,
           }}
         >
           <View
             style={{
-              width: 28,
-              height: 28,
-              borderRadius: 14,
+              width: 24,
+              height: 24,
+              borderRadius: 8,
               backgroundColor: "#EF4444",
               alignItems: "center",
               justifyContent: "center",
-              marginRight: 8,
+              marginRight: 6,
             }}
           >
-            <Text style={{ fontSize: 14, fontWeight: "900", color: "white" }}>
+            <Text style={{ fontSize: 12, fontWeight: "900", color: "white" }}>
               {stats.danger}
             </Text>
           </View>
           <Text
             style={{
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: "700",
-              color: "#DC2626",
+              color: isDarkColorScheme ? "#FCA5A5" : "#DC2626",
             }}
           >
             Nguy hiểm
           </Text>
         </View>
       </View>
-    </LinearGradient>
+    </View>
   );
 }

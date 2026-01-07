@@ -1,8 +1,7 @@
 // features/map/components/WaterFlowRoute.tsx
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useEffect, useMemo, useRef } from "react";
-import { Animated, Easing, View } from "react-native";
+import React, { useMemo } from "react";
+import { View } from "react-native";
 import { Marker, Polyline } from "react-native-maps";
 import { Text } from "~/components/ui/text";
 import { FloodRoute, MOCK_SENSORS } from "../constants/map-data";
@@ -19,36 +18,15 @@ export function WaterFlowRoute({
   isSelected,
   onPress,
 }: WaterFlowRouteProps) {
-  const router = useRouter();
-  const pulseAnim = useRef(new Animated.Value(0)).current;
   const colors = getStatusColor(route.status);
 
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 2000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 0,
-          duration: 2000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, []);
-
-  const getMainColor = (route) => {
-    if (route.status === "danger") return "#EF4444"; // Red 500
+  const getMainColor = () => {
+    if (route.status === "danger") return "#EF4444";
     if (route.status === "warning") return "#F59E0B";
-    return "#3B82F6"; // Blue 500
+    return "#3B82F6";
   };
 
-  const getHighlightColor = (route) => {
+  const getHighlightColor = () => {
     if (route.status === "danger") return "#FECACA";
     if (route.status === "warning") return "#FDE68A";
     return "#BFDBFE";
@@ -56,30 +34,26 @@ export function WaterFlowRoute({
 
   const routeSensors = useMemo(() => {
     if (!route.sensorIds) return [];
-    // Lọc từ MOCK_SENSORS những id nằm trong route.sensorIds
     return MOCK_SENSORS.filter((s) => route.sensorIds?.includes(s.id));
   }, [route.sensorIds]);
 
-  // Tính toán vị trí marker (lấy điểm giữa tuyến đường)
-  const midPointIndex = Math.floor(route.coordinates.length / 2);
-  const midCoordinate =
-    route.coordinates[midPointIndex] || route.coordinates[0];
-
   return (
     <>
+      {/* White border */}
       <Polyline
         coordinates={route.coordinates}
         strokeColor="white"
-        strokeWidth={route.strokeWidth + 4}
+        strokeWidth={(route.strokeWidth || 6) + 4}
         lineJoin="round"
         lineCap="round"
         zIndex={10}
       />
 
+      {/* Main route color */}
       <Polyline
         coordinates={route.coordinates}
-        strokeColor={getMainColor(route)}
-        strokeWidth={route.strokeWidth}
+        strokeColor={getMainColor()}
+        strokeWidth={route.strokeWidth || 6}
         lineJoin="round"
         lineCap="round"
         zIndex={11}
@@ -87,24 +61,27 @@ export function WaterFlowRoute({
         onPress={onPress}
       />
 
+      {/* Inner highlight */}
       <Polyline
         coordinates={route.coordinates}
-        strokeColor={getHighlightColor(route)}
-        strokeWidth={route.strokeWidth * 0.4}
+        strokeColor={getHighlightColor()}
+        strokeWidth={(route.strokeWidth || 6) * 0.4}
         lineJoin="round"
         lineCap="round"
         zIndex={12}
       />
 
+      {/* Flow dots */}
       <Polyline
         coordinates={route.coordinates}
         strokeColor="rgba(255,255,255,0.6)"
-        strokeWidth={route.strokeWidth * 0.4}
+        strokeWidth={(route.strokeWidth || 6) * 0.4}
         lineDashPattern={[15, 25]}
         lineCap="round"
         zIndex={13}
       />
 
+      {/* Selected state */}
       {isSelected && (
         <Polyline
           coordinates={route.coordinates}
@@ -115,9 +92,8 @@ export function WaterFlowRoute({
         />
       )}
 
-
-      {routeSensors.map((sensor, idx) => {
-        // Lấy màu sắc riêng cho từng sensor
+      {/* Compact Sensor Markers */}
+      {routeSensors.map((sensor) => {
         const sensorColors = getStatusColor(sensor.status);
 
         return (
@@ -130,57 +106,38 @@ export function WaterFlowRoute({
             anchor={{ x: 0.5, y: 0.5 }}
             zIndex={20}
           >
-            <View style={{ padding: 6 }}>
-              <Animated.View
+            <View
+              style={{
+                backgroundColor: "white",
+                borderRadius: 10,
+                paddingHorizontal: 3,
+                paddingVertical: 2,
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 1,
+                borderWidth: 1,
+                borderColor: sensorColors.main,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.15,
+                shadowRadius: 3,
+                elevation: 3,
+              }}
+            >
+              <MaterialCommunityIcons
+                name="waves"
+                size={10}
+                color={sensorColors.main}
+              />
+              <Text
                 style={{
-                  transform: [
-                    {
-                      scale: pulseAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [1, 1],
-                      }),
-                    },
-                  ],
+                  fontSize: 10,
+                  fontWeight: "800",
+                  color: "#1F2937",
                 }}
               >
-                <View
-                  style={{
-                    backgroundColor: "white",
-                    borderRadius: 10,
-                    padding: 2,
-                    right: 5,
-                    bottom: 2,
-                    borderWidth: 1.5,
-                    borderColor: sensorColors.main,
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    shadowColor: "#000",
-                    shadowOffset: { width: 10, height: 2 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 3,
-                    elevation: 4,
-                  }}
-                >
-                  <MaterialCommunityIcons
-                    name="waves"
-                    size={10}
-                    color={sensorColors.main}
-                    style={{ marginRight: 3 }}
-                  />
-
-                  <Text
-                    style={{
-                      fontSize: 10,
-                      fontWeight: "800",
-                      color: "#1F2937",
-                      includeFontPadding: false,
-                    }}
-                  >
-                    {sensor.waterLevel}cm
-                  </Text>
-                </View>
-              </Animated.View>
+                {sensor.waterLevel}cm
+              </Text>
             </View>
           </Marker>
         );

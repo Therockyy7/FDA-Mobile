@@ -21,7 +21,7 @@ This boilerplate comes pre-configured with essential tools for routing, state ma
 - **Routing**: [Expo Router](https://docs.expo.dev/router/introduction/)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) via [NativeWind](https://www.nativewind.dev/)
-- **State Management**: [Zustand](https://zustand-demo.pmnd.rs/)
+- **State Management**: [Redux Toolkit]()
 - **Forms**: [React Hook Form](https://react-hook-form.com/)
 - **Linting**: [ESLint](https://eslint.org/)
 - **Formatting**: [Prettier](https://prettier.io/)

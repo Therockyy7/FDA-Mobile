@@ -22,7 +22,6 @@ This boilerplate comes pre-configured with essential tools for routing, state ma
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) via [NativeWind](https://www.nativewind.dev/)
 - **State Management**: [Zustand](https://zustand-demo.pmnd.rs/)
-- **Backend & Database**: [Supabase](https://supabase.io/)
 - **Forms**: [React Hook Form](https://react-hook-form.com/)
 - **Linting**: [ESLint](https://eslint.org/)
 - **Formatting**: [Prettier](https://prettier.io/)

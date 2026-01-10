@@ -9,8 +9,7 @@ This boilerplate comes pre-configured with essential tools for routing, state ma
 - **Expo Router**: A powerful file-system-based router for React Native.
 - **TypeScript**: For type safety and improved developer experience.
 - **Tailwind CSS (NativeWind)**: A utility-first CSS framework for rapid UI development.
-- **Zustand**: A small, fast, and scalable state management solution.
-- **Supabase**: Integrated backend-as-a-service for authentication, database, and storage.
+- **Redux Toolkit**: A scalable state management solution.
 - **React Hook Form**: Performant, flexible, and extensible forms with easy-to-use validation.
 - **Feature-Sliced Design**: A scalable architecture for organizing your codebase.
 - **ESLint & Prettier**: For consistent code style and quality.

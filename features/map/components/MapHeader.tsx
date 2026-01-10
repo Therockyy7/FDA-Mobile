@@ -15,9 +15,10 @@ interface MapHeaderProps {
   };
   mapType: MapType;
   onMapTypeChange: () => void;
+  onShowLayers: () => void;
 }
 
-export function MapHeader({ stats, mapType, onMapTypeChange }: MapHeaderProps) {
+export function MapHeader({ stats, mapType, onMapTypeChange, onShowLayers }: MapHeaderProps) {
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
 
@@ -135,7 +136,7 @@ export function MapHeader({ stats, mapType, onMapTypeChange }: MapHeaderProps) {
 
         {/* Map Type Toggle */}
         <TouchableOpacity
-          onPress={onMapTypeChange}
+          onPress={onShowLayers}
           style={{
             width: 40,
             height: 40,

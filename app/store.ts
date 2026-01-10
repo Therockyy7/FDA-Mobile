@@ -1,20 +1,23 @@
 
-import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import {
-  persistStore,
-  persistReducer,
-  FLUSH,
-  REHYDRATE,
-  PAUSE,
-  PERSIST,
-  PURGE,
-  REGISTER,
+    FLUSH,
+    PAUSE,
+    PERSIST,
+    persistReducer,
+    persistStore,
+    PURGE,
+    REGISTER,
+    REHYDRATE,
 } from "redux-persist";
 
 import authReducer, {
-  AuthState,
+    AuthState,
 } from "../features/auth/stores/auth.slice";
+import mapReducer, {
+    MapState,
+} from "../features/map/stores/map.slice";
 
 const authPersistConfig = {
   key: "auth",
@@ -22,9 +25,15 @@ const authPersistConfig = {
   whitelist: ["user", "session"], 
 };
 
+const mapPersistConfig = {
+  key: "map",
+  storage: AsyncStorage,
+  whitelist: ["settings"], // Only persist settings, not flood data
+};
+
 const rootReducer = combineReducers({
   auth: persistReducer<AuthState>(authPersistConfig, authReducer),
-  // ... các reducer khác nếu có
+  map: persistReducer<MapState>(mapPersistConfig, mapReducer),
 });
 
 export const store = configureStore({

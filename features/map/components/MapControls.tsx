@@ -16,6 +16,7 @@ interface MapControlsProps {
   streetViewLocation?: { latitude: number; longitude: number } | null;
   onClearStreetView?: () => void;
   onShowIsRouting?: () => void;
+  onShowLayers?: () => void; // NEW: Open layer toggle sheet
 }
 
 export function MapControls({
@@ -31,6 +32,7 @@ export function MapControls({
   streetViewLocation,
   onClearStreetView,
   onShowIsRouting,
+  onShowLayers, // NEW
 }: MapControlsProps) {
   return (
     <View style={{ gap: 10, alignItems: "center" }}>

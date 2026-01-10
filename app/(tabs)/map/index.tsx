@@ -1,11 +1,13 @@
 // app/(tabs)/map/index.tsx
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { StatusBar, View } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { Text } from "~/components/ui/text";
+import { FloodSeverityMarkers } from "~/features/map/components/FloodSeverityMarkers";
 import { FloodZoneCard } from "~/features/map/components/FloodZoneCard";
 import { FloodZoneOverlay } from "~/features/map/components/FloodZoneOverlay";
+import { LayerToggleSheet } from "~/features/map/components/LayerToggleSheet";
 import Legend from "~/features/map/components/Legend";
 import { MapControls } from "~/features/map/components/MapControls";
 import { MapHeader } from "~/features/map/components/MapHeader";
@@ -16,25 +18,31 @@ import { RouteDirectionPanel } from "~/features/map/components/RouteDirectionPan
 import { SensorMarker } from "~/features/map/components/SensorMarker";
 import { WaterFlowRoute } from "~/features/map/components/WaterFlowRoute";
 import {
-    DANANG_CENTER,
-    FLOOD_ROUTES,
-    FLOOD_ZONES,
-    FloodRoute,
-    FloodZone,
-    MOCK_SENSORS,
-    Sensor,
+  DANANG_CENTER,
+  FLOOD_ROUTES,
+  FLOOD_ZONES,
+  FloodRoute,
+  FloodZone,
+  MOCK_SENSORS,
+  Sensor,
 } from "~/features/map/constants/map-data";
 import { useFloodSelection } from "~/features/map/hooks/useFloodSelection";
 import { useMapCamera } from "~/features/map/hooks/useMapCamera";
 import { useMapDisplay } from "~/features/map/hooks/useMapDisplay";
+import { useMapLayerSettings } from "~/features/map/hooks/useMapLayerSettings";
 import { useRoutingUI } from "~/features/map/hooks/useRoutingUI";
 import { useStreetView } from "~/features/map/hooks/useStreetView";
+import { debounce } from "~/features/map/lib/map-utils";
 
 type MapType = "standard" | "satellite" | "hybrid";
 
 export default function MapScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showLayerSheet, setShowLayerSheet] = useState(false);
+
+  // Map layer settings hook
+  const { settings, refreshFloodSeverity } = useMapLayerSettings();
 
   const {
     mapRef,
@@ -95,6 +103,22 @@ export default function MapScreen() {
     setTimeout(() => setIsLoading(false), 800);
   }, []);
 
+  // // Initial load of flood severity markers when component mounts
+  // useEffect(() => {
+  //   if (settings.overlays.flood) {
+  //     // Load markers for initial region (DANANG_CENTER)
+  //     const initialBounds = [
+  //       DANANG_CENTER.latitude - DANANG_CENTER.latitudeDelta / 2,
+  //       DANANG_CENTER.longitude - DANANG_CENTER.longitudeDelta / 2,
+  //       DANANG_CENTER.latitude + DANANG_CENTER.latitudeDelta / 2,
+  //       DANANG_CENTER.longitude + DANANG_CENTER.longitudeDelta / 2,
+  //     ].join(',');
+  //     const initialZoom = Math.round(Math.log2(360 / DANANG_CENTER.latitudeDelta));
+  //     console.log('🚀 Initial markers load:', { bounds: initialBounds, zoom: initialZoom });
+  //     refreshFloodSeverity(initialBounds, initialZoom);
+  //   }
+  // }, [settings.overlays.flood, refreshFloodSeverity]);
+
   useEffect(() => {
     setSelectedZone(null);
     setSelectedRoute(null);
@@ -143,6 +167,33 @@ export default function MapScreen() {
     );
   }
 
+  const fetchMarkersInViewPort = useMemo(() => debounce((newRegion: Region) =>{
+    if(!settings.overlays.flood) return;
+
+    const bounds = [
+        newRegion.latitude - newRegion.latitudeDelta / 2,  // minLat
+        newRegion.longitude - newRegion.longitudeDelta / 2, // minLng
+        newRegion.latitude + newRegion.latitudeDelta / 2,  // maxLat
+        newRegion.longitude + newRegion.longitudeDelta / 2, // maxLng
+      ].join(',');
+      // Tính zoom level từ latitudeDelta
+      const zoom = Math.round(Math.log2(360 / newRegion.latitudeDelta));
+      console.log('📍 Fetching markers in viewport:', { bounds, zoom });
+      refreshFloodSeverity(bounds, zoom);
+
+
+  }, 500),
+  [refreshFloodSeverity, settings.overlays.flood]
+)
+
+const handleRegionChange = useCallback(
+  (newRegion: Region) => {
+    onRegionChangeComplete(newRegion);
+    fetchMarkersInViewPort(newRegion);
+  },
+  [onRegionChangeComplete, fetchMarkersInViewPort]
+);
+
   return (
     <View style={{ flex: 1, backgroundColor: "#0F172A" }}>
       <StatusBar
@@ -155,6 +206,7 @@ export default function MapScreen() {
         stats={stats}
         mapType={mapType as MapType}
         onMapTypeChange={handleMapTypeChange}
+        onShowLayers={() => setShowLayerSheet(true)}
       />
 
       <View style={{ flex: 1, position: "relative" }}>
@@ -168,16 +220,16 @@ export default function MapScreen() {
           style={{ flex: 1 }}
           initialRegion={DANANG_CENTER}
           camera={is3DEnabled ? camera : undefined}
-          onRegionChangeComplete={setRegion}
+          onRegionChangeComplete={handleRegionChange}
           onLongPress={handleMapLongPress}
           showsUserLocation
           showsMyLocationButton={false}
           showsCompass={false}
-          showsTraffic={false}
+          showsTraffic={settings.overlays.traffic}
           showsBuildings={true}
           pitchEnabled={true}
           rotateEnabled={true}
-          mapType={mapType}
+          mapType={settings.baseMap === "satellite" ? "satellite" : mapType}
           onMapReady={() => console.log("Map ready")}
           customMapStyle={
             mapType === "standard"
@@ -264,6 +316,9 @@ export default function MapScreen() {
               </View>
             </Marker>
           )}
+
+          {/* Flood Severity Markers from API */}
+          <FloodSeverityMarkers />
         </MapView>
 
         {/* Top Controls */}
@@ -347,6 +402,7 @@ export default function MapScreen() {
               streetViewLocation={streetViewLocation}
               onClearStreetView={() => setStreetViewLocation(null)}
               onShowIsRouting={openRouting}
+              onShowLayers={() => setShowLayerSheet(true)}
             />
           )}
         </View>
@@ -381,6 +437,12 @@ export default function MapScreen() {
           onFindRoute={() => {
             closeRouting;
           }}
+        />
+
+        {/* Layer Toggle Sheet */}
+        <LayerToggleSheet
+          visible={showLayerSheet}
+          onClose={() => setShowLayerSheet(false)}
         />
       </View>
     </View>

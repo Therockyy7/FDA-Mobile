@@ -91,7 +91,7 @@ This approach makes the codebase easier to navigate and maintain as it grows. It
         ```bash
         cp .env.example .env
         ```
-    -   Open the `.env` file and add your Supabase URL and Anon Key. You can find these in your Supabase project's API settings.
+      
 
 4.  **Run the application:**
     ```bash

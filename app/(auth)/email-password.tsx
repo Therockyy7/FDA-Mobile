@@ -1,15 +1,17 @@
+// app/(auth)/email-password.tsx
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import LottieView from "lottie-react-native";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { TouchableOpacity, View, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
-import { Button } from "~/components/ui/button";
+import { KeyboardAvoidingView, Platform, StatusBar, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Input } from "~/components/ui/input";
 import { Text } from "~/components/ui/text";
 import { verifyLogin } from "~/features/auth/stores/auth.slice";
-import { cn } from "~/lib/utils";
+import { useColorScheme } from "~/lib/useColorScheme";
 import { useAppDispatch } from "../hooks";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 type FormData = {
   password: string;
@@ -18,6 +20,7 @@ type FormData = {
 export default function EmailPasswordScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { isDarkColorScheme } = useColorScheme();
   const { identifier, isNewUser } = useLocalSearchParams<{ identifier: string; isNewUser: string }>();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -46,87 +49,195 @@ export default function EmailPasswordScreen() {
 
   const isNew = isNewUser === "true";
 
+  const colors = {
+    background: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
+    cardBg: isDarkColorScheme ? "rgba(30, 58, 95, 0.5)" : "rgba(255, 255, 255, 0.9)",
+    inputBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
+    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
+    subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
+    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
+  };
+
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-[#0F172A]">
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
-        <ScrollView contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, justifyContent: "center" }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <StatusBar barStyle={isDarkColorScheme ? "light-content" : "dark-content"} />
+      
+      {/* Background Gradient */}
+      <LinearGradient
+        colors={isDarkColorScheme ? ["#1E3A5F", "#0F172A"] : ["#3B82F6", "#1D4ED8"]}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, height: 280 }}
+      />
+
+      {/* Lottie Background */}
+      <LottieView
+        source={require("../../assets/animations/rain-storm.json")}
+        autoPlay
+        loop
+        speed={0.3}
+        style={{
+          position: "absolute",
+          top: 0,
+          width: "200%",
+          height: 280,
+          left: "-50%",
+          opacity: 0.15,
+        }}
+      />
+
+      <SafeAreaView style={{ flex: 1 }}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
           
-          <View className="mb-8 items-center">
-            <View className="w-20 h-20 bg-blue-50 dark:bg-slate-800 rounded-full items-center justify-center mb-4">
-              <Ionicons name={isNew ? "lock-open" : "lock-closed"} size={32} color="#3B82F6" />
+          {/* Back Button */}
+          <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 14,
+                backgroundColor: "rgba(255,255,255,0.15)",
+                alignItems: "center",
+                justifyContent: "center",
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.2)",
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chevron-back" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Header */}
+          <View style={{ alignItems: "center", paddingTop: 30, paddingBottom: 40 }}>
+            <View
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 24,
+                backgroundColor: "rgba(255,255,255,0.2)",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 16,
+                borderWidth: 2,
+                borderColor: "rgba(255,255,255,0.3)",
+              }}
+            >
+              <Ionicons name={isNew ? "lock-open" : "lock-closed"} size={36} color="white" />
             </View>
-            <Text className="text-2xl font-bold text-slate-900 dark:text-white text-center">
+            <Text style={{ fontSize: 26, fontWeight: "900", color: "white", textAlign: "center" }}>
               {isNew ? "Thiết lập mật khẩu" : "Chào mừng trở lại!"}
             </Text>
-            <Text className="text-slate-500 dark:text-slate-400 mt-2 text-center text-base">
+            <Text style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", marginTop: 6, fontWeight: "500" }}>
               {identifier}
             </Text>
           </View>
 
-          <View className="gap-6">
-            <View>
-              <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 ml-1">
-                Mật khẩu
+          {/* Form Card */}
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: colors.background,
+              borderTopLeftRadius: 32,
+              borderTopRightRadius: 32,
+              paddingHorizontal: 24,
+              paddingTop: 32,
+            }}
+          >
+            {/* Password Input */}
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{ fontSize: 13, fontWeight: "700", color: colors.subtext, marginBottom: 8, marginLeft: 4 }}>
+                MẬT KHẨU
               </Text>
               <Controller
                 control={control}
                 name="password"
                 render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
                   <View>
-                    <View className={cn(
-                      "flex-row items-center h-14 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4",
-                      error && "border-red-500 bg-red-50 dark:bg-red-900/10"
-                    )}>
-                      <Ionicons name="key-outline" size={20} color={error ? "#EF4444" : "#64748B"} />
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        height: 56,
+                        borderRadius: 16,
+                        backgroundColor: colors.inputBg,
+                        borderWidth: 1.5,
+                        borderColor: error ? "#EF4444" : colors.border,
+                        paddingHorizontal: 16,
+                      }}
+                    >
+                      <Ionicons name="key-outline" size={20} color={error ? "#EF4444" : colors.subtext} />
                       <Input
                         value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
-                        placeholder={isNew ? "Nhập mật khẩu mới" : "Nhập mật khẩu của bạn"}
+                        placeholder={isNew ? "Nhập mật khẩu mới" : "Nhập mật khẩu"}
+                        placeholderTextColor={colors.subtext}
                         secureTextEntry={!showPassword}
-                        className="flex-1 h-full ml-3 text-base text-slate-900 dark:text-white border-0 bg-transparent"
+                        style={{
+                          flex: 1,
+                          height: "100%",
+                          marginLeft: 12,
+                          fontSize: 16,
+                          color: colors.text,
+                          borderWidth: 0,
+                          backgroundColor: "transparent",
+                        }}
                       />
-                      <TouchableOpacity onPress={() => setShowPassword(!showPassword)} className="p-2">
-                        <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#94A3B8" />
+                      <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 8 }}>
+                        <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color={colors.subtext} />
                       </TouchableOpacity>
                     </View>
                     {error && (
-                      <Text className="text-red-500 text-sm mt-1.5 ml-1">{error.message}</Text>
+                      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, marginLeft: 4 }}>
+                        <Ionicons name="alert-circle" size={14} color="#EF4444" />
+                        <Text style={{ color: "#EF4444", fontSize: 13, marginLeft: 6, fontWeight: "500" }}>{error.message}</Text>
+                      </View>
                     )}
                   </View>
                 )}
               />
             </View>
 
+            {/* Forgot Password */}
             {!isNew && (
-              <TouchableOpacity onPress={() => router.push("/(auth)/forgot-password")} className="items-end">
-                <Text className="text-primary font-semibold text-sm">Quên mật khẩu?</Text>
+              <TouchableOpacity onPress={() => router.push("/(auth)/forgot-password")} style={{ alignSelf: "flex-end", marginBottom: 24 }}>
+                <Text style={{ color: "#3B82F6", fontWeight: "600", fontSize: 14 }}>Quên mật khẩu?</Text>
               </TouchableOpacity>
             )}
 
-            <View className="gap-3 mt-4">
-              <Button
-                onPress={handleSubmit(onSubmit)}
-                disabled={isSubmitting}
-                className="w-full h-14 rounded-xl bg-primary shadow-lg shadow-blue-500/30"
+            {/* Submit Button */}
+            <TouchableOpacity
+              onPress={handleSubmit(onSubmit)}
+              disabled={isSubmitting}
+              activeOpacity={0.9}
+              style={{
+                height: 56,
+                borderRadius: 16,
+                overflow: "hidden",
+                opacity: isSubmitting ? 0.7 : 1,
+              }}
+            >
+              <LinearGradient
+                colors={["#3B82F6", "#1D4ED8"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                  gap: 8,
+                }}
               >
-                <Text className="text-white text-lg font-bold">
+                <Ionicons name={isNew ? "person-add" : "log-in"} size={20} color="white" />
+                <Text style={{ color: "white", fontSize: 17, fontWeight: "700" }}>
                   {isSubmitting ? "Đang xử lý..." : (isNew ? "Tạo tài khoản" : "Đăng nhập")}
                 </Text>
-              </Button>
-
-              <Button
-                onPress={() => router.back()}
-                variant="ghost"
-                className="h-14 rounded-xl"
-              >
-                <Text className="text-slate-500 dark:text-slate-400 font-semibold text-base">Quay lại</Text>
-              </Button>
-            </View>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
-
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }

@@ -4,6 +4,42 @@ import React from "react";
 import { View } from "react-native";
 import { Text } from "~/components/ui/text";
 
+// Severity levels based on water level thresholds
+const SEVERITY_LEVELS = [
+  {
+    key: "safe",
+    label: "An toàn",
+    range: "< 1.0m",
+    color: "#22C55E",       // Green
+    bgColor: "#DCFCE7",
+    icon: "checkmark-circle" as const,
+  },
+  {
+    key: "caution",
+    label: "Chú ý",
+    range: "1.0 - 1.9m",
+    color: "#EAB308",       // Yellow
+    bgColor: "#FEF9C3",
+    icon: "information-circle" as const,
+  },
+  {
+    key: "warning",
+    label: "Cảnh báo",
+    range: "2.0 - 2.9m",
+    color: "#F97316",       // Orange
+    bgColor: "#FFEDD5",
+    icon: "alert-circle" as const,
+  },
+  {
+    key: "critical",
+    label: "Nguy hiểm",
+    range: "≥ 3.0m",
+    color: "#EF4444",       // Red
+    bgColor: "#FEE2E2",
+    icon: "warning" as const,
+  },
+];
+
 const Legend = () => {
   return (
     <View
@@ -19,7 +55,7 @@ const Legend = () => {
         shadowOpacity: 0.15,
         shadowRadius: 16,
         elevation: 8,
-        minWidth: 160,
+        minWidth: 170,
         borderWidth: 1,
         borderColor: "#E2E8F0",
       }}
@@ -50,120 +86,45 @@ const Legend = () => {
         </Text>
       </View>
 
-      <View style={{ gap: 10 }}>
-        {/* Safe Level */}
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <View
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 10,
-              backgroundColor: "#ECFDF5",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 10,
-              borderWidth: 1.5,
-              borderColor: "#10B981",
-            }}
-          >
-            <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-          </View>
-          <View>
-            <Text
+      <View style={{ gap: 8 }}>
+        {SEVERITY_LEVELS.map((level) => (
+          <View key={level.key} style={{ flexDirection: "row", alignItems: "center" }}>
+            <View
               style={{
-                fontSize: 12,
-                fontWeight: "700",
-                color: "#10B981",
+                width: 32,
+                height: 32,
+                borderRadius: 10,
+                backgroundColor: level.bgColor,
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: 10,
+                borderWidth: 1.5,
+                borderColor: level.color,
               }}
             >
-              An toàn
-            </Text>
-            <Text
-              style={{
-                fontSize: 10,
-                color: "#64748B",
-              }}
-            >
-              {"< 35cm"}
-            </Text>
+              <Ionicons name={level.icon} size={16} color={level.color} />
+            </View>
+            <View>
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: "700",
+                  color: level.color,
+                }}
+              >
+                {level.label}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 10,
+                  color: "#64748B",
+                }}
+              >
+                {level.range}
+              </Text>
+            </View>
           </View>
-        </View>
-
-        {/* Warning Level */}
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <View
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 10,
-              backgroundColor: "#FFFBEB",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 10,
-              borderWidth: 1.5,
-              borderColor: "#F59E0B",
-            }}
-          >
-            <Ionicons name="alert-circle" size={16} color="#F59E0B" />
-          </View>
-          <View>
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "700",
-                color: "#D97706",
-              }}
-            >
-              Cảnh báo
-            </Text>
-            <Text
-              style={{
-                fontSize: 10,
-                color: "#64748B",
-              }}
-            >
-              35 - 50cm
-            </Text>
-          </View>
-        </View>
-
-        {/* Danger Level */}
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <View
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 10,
-              backgroundColor: "#FEF2F2",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 10,
-              borderWidth: 1.5,
-              borderColor: "#EF4444",
-            }}
-          >
-            <Ionicons name="warning" size={16} color="#EF4444" />
-          </View>
-          <View>
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "700",
-                color: "#DC2626",
-              }}
-            >
-              Nguy hiểm
-            </Text>
-            <Text
-              style={{
-                fontSize: 10,
-                color: "#64748B",
-              }}
-            >
-              {"> 50cm"}
-            </Text>
-          </View>
-        </View>
+        ))}
       </View>
 
       {/* Divider */}
@@ -185,7 +146,7 @@ const Legend = () => {
             marginLeft: 6,
           }}
         >
-          Nhấn vào vùng để xem chi tiết
+          Nhấn vào trạm để xem chi tiết
         </Text>
       </View>
     </View>

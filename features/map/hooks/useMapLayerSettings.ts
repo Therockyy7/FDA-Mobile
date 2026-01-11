@@ -3,12 +3,13 @@ import { useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "~/app/store";
 import {
-    fetchFloodSeverity,
-    loadMapSettings,
-    saveMapSettings,
-    setBaseMap,
-    setOpacity,
-    toggleOverlay,
+  DEFAULT_MAP_SETTINGS,
+  fetchFloodSeverity,
+  loadMapSettings,
+  saveMapSettings,
+  setBaseMap,
+  setOpacity,
+  toggleOverlay,
 } from "../stores/map.slice";
 import type { MapLayerSettings } from "../types/map-layers.types";
 
@@ -19,15 +20,15 @@ export function useMapLayerSettings() {
   const dispatch = useDispatch<AppDispatch>();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Selectors
-  const settings = useSelector((state: RootState) => state.map.settings);
-  const floodSeverity = useSelector((state: RootState) => state.map.floodSeverity);
-  const loading = useSelector((state: RootState) => state.map.loading);
-  const floodLoading = useSelector((state: RootState) => state.map.floodLoading);
-  const settingsLoaded = useSelector((state: RootState) => state.map.settingsLoaded);
-  const error = useSelector((state: RootState) => state.map.error);
+  // Selectors with safe defaults
+  const settings = useSelector((state: RootState) => state.map?.settings ?? DEFAULT_MAP_SETTINGS);
+  const floodSeverity = useSelector((state: RootState) => state.map?.floodSeverity ?? null);
+  const loading = useSelector((state: RootState) => state.map?.loading ?? false);
+  const floodLoading = useSelector((state: RootState) => state.map?.floodLoading ?? false);
+  const settingsLoaded = useSelector((state: RootState) => state.map?.settingsLoaded ?? false);
+  const error = useSelector((state: RootState) => state.map?.error ?? null);
   const isAuthenticated = useSelector(
-    (state: RootState) => state.auth.status === "authenticated"
+    (state: RootState) => state.auth?.status === "authenticated"
   );
 
   // Load settings on mount (if not already loaded)

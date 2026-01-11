@@ -3,8 +3,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { MapService } from "../services/map.service";
 import type {
-    FloodSeverityGeoJSON,
-    MapLayerSettings,
+  FloodSeverityGeoJSON,
+  MapLayerSettings,
 } from "../types/map-layers.types";
 
 // Constants
@@ -146,6 +146,13 @@ const mapSlice = createSlice({
       state,
       action: PayloadAction<keyof MapLayerSettings["overlays"]>
     ) => {
+      if (!state.settings) {
+        state.settings = {
+          ...DEFAULT_MAP_SETTINGS,
+          overlays: { ...DEFAULT_MAP_SETTINGS.overlays },
+          opacity: { ...DEFAULT_MAP_SETTINGS.opacity },
+        };
+      }
       state.settings.overlays[action.payload] =
         !state.settings.overlays[action.payload];
     },
@@ -154,6 +161,13 @@ const mapSlice = createSlice({
      * Set base map type (standard or satellite)
      */
     setBaseMap: (state, action: PayloadAction<MapLayerSettings["baseMap"]>) => {
+      if (!state.settings) {
+        state.settings = {
+          ...DEFAULT_MAP_SETTINGS,
+          overlays: { ...DEFAULT_MAP_SETTINGS.overlays },
+          opacity: { ...DEFAULT_MAP_SETTINGS.opacity },
+        };
+      }
       state.settings.baseMap = action.payload;
     },
 
@@ -167,6 +181,13 @@ const mapSlice = createSlice({
         value: number;
       }>
     ) => {
+      if (!state.settings) {
+        state.settings = {
+          ...DEFAULT_MAP_SETTINGS,
+          overlays: { ...DEFAULT_MAP_SETTINGS.overlays },
+          opacity: { ...DEFAULT_MAP_SETTINGS.opacity },
+        };
+      }
       const { layer, value } = action.payload;
       // Clamp value between 0-100
       state.settings.opacity[layer] = Math.max(0, Math.min(100, value));
@@ -176,7 +197,11 @@ const mapSlice = createSlice({
      * Reset settings to defaults
      */
     resetSettings: (state) => {
-      state.settings = DEFAULT_MAP_SETTINGS;
+      state.settings = {
+        ...DEFAULT_MAP_SETTINGS,
+        overlays: { ...DEFAULT_MAP_SETTINGS.overlays },
+        opacity: { ...DEFAULT_MAP_SETTINGS.opacity },
+      };
     },
 
     /**

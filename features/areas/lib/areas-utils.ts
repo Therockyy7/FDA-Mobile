@@ -22,6 +22,12 @@ export const getStatusConfig = (status: AreaStatus): StatusColors => {
       text: "#DC2626",
       gradient: ["#EF4444", "#DC2626"] as const,
     },
+    critical: {
+      main: "#991B1B",
+      bg: "#FEE2E2",
+      text: "#7F1D1D",
+      gradient: ["#DC2626", "#991B1B"] as const,
+    },
   };
   return configs[status];
 };
@@ -33,6 +39,7 @@ export const getStatusIcon = (
     safe: "shield-checkmark",
     warning: "warning",
     danger: "alert-circle",
+    critical: "nuclear",
   };
   return icons[status];
 };

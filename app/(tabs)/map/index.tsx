@@ -1,10 +1,11 @@
 // app/(tabs)/map/index.tsx
 import { Ionicons } from "@expo/vector-icons";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { StatusBar, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Animated, StatusBar, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { Text } from "~/components/ui/text";
 import { FloodSeverityMarkers } from "~/features/map/components/FloodSeverityMarkers";
+import { FloodStationCard } from "~/features/map/components/FloodStationCard";
 import { FloodZoneCard } from "~/features/map/components/FloodZoneCard";
 import { FloodZoneOverlay } from "~/features/map/components/FloodZoneOverlay";
 import { LayerToggleSheet } from "~/features/map/components/LayerToggleSheet";
@@ -33,6 +34,7 @@ import { useMapLayerSettings } from "~/features/map/hooks/useMapLayerSettings";
 import { useRoutingUI } from "~/features/map/hooks/useRoutingUI";
 import { useStreetView } from "~/features/map/hooks/useStreetView";
 import { debounce } from "~/features/map/lib/map-utils";
+import { FloodSeverityFeature } from "~/features/map/types/map-layers.types";
 
 type MapType = "standard" | "satellite" | "hybrid";
 
@@ -40,6 +42,8 @@ export default function MapScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showLayerSheet, setShowLayerSheet] = useState(false);
+  const [selectedStation, setSelectedStation] = useState<FloodSeverityFeature | null>(null);
+  const stationCardAnim = useRef(new Animated.Value(300)).current;
 
   // Map layer settings hook
   const { settings, refreshFloodSeverity } = useMapLayerSettings();
@@ -103,21 +107,21 @@ export default function MapScreen() {
     setTimeout(() => setIsLoading(false), 800);
   }, []);
 
-  // // Initial load of flood severity markers when component mounts
-  // useEffect(() => {
-  //   if (settings.overlays.flood) {
-  //     // Load markers for initial region (DANANG_CENTER)
-  //     const initialBounds = [
-  //       DANANG_CENTER.latitude - DANANG_CENTER.latitudeDelta / 2,
-  //       DANANG_CENTER.longitude - DANANG_CENTER.longitudeDelta / 2,
-  //       DANANG_CENTER.latitude + DANANG_CENTER.latitudeDelta / 2,
-  //       DANANG_CENTER.longitude + DANANG_CENTER.longitudeDelta / 2,
-  //     ].join(',');
-  //     const initialZoom = Math.round(Math.log2(360 / DANANG_CENTER.latitudeDelta));
-  //     console.log('🚀 Initial markers load:', { bounds: initialBounds, zoom: initialZoom });
-  //     refreshFloodSeverity(initialBounds, initialZoom);
-  //   }
-  // }, [settings.overlays.flood, refreshFloodSeverity]);
+  // Initial load of flood severity markers when component mounts
+  useEffect(() => {
+    if (settings.overlays.flood) {
+      // Load markers for initial region (DANANG_CENTER)
+      const initialBounds = [
+        DANANG_CENTER.latitude - DANANG_CENTER.latitudeDelta / 2,
+        DANANG_CENTER.longitude - DANANG_CENTER.longitudeDelta / 2,
+        DANANG_CENTER.latitude + DANANG_CENTER.latitudeDelta / 2,
+        DANANG_CENTER.longitude + DANANG_CENTER.longitudeDelta / 2,
+      ].join(',');
+      const initialZoom = Math.round(Math.log2(360 / DANANG_CENTER.latitudeDelta));
+      console.log('🚀 Initial markers load:', { bounds: initialBounds, zoom: initialZoom });
+      refreshFloodSeverity(initialBounds, initialZoom);
+    }
+  }, [settings.overlays.flood, refreshFloodSeverity]);
 
   useEffect(() => {
     setSelectedZone(null);
@@ -167,24 +171,23 @@ export default function MapScreen() {
     );
   }
 
-  const fetchMarkersInViewPort = useMemo(() => debounce((newRegion: Region) =>{
-    if(!settings.overlays.flood) return;
+  const fetchMarkersInViewPort = useMemo(() => debounce((newRegion: Region) => {
+    if (!settings.overlays.flood) return;
 
     const bounds = [
-        newRegion.latitude - newRegion.latitudeDelta / 2,  // minLat
-        newRegion.longitude - newRegion.longitudeDelta / 2, // minLng
-        newRegion.latitude + newRegion.latitudeDelta / 2,  // maxLat
-        newRegion.longitude + newRegion.longitudeDelta / 2, // maxLng
-      ].join(',');
-      // Tính zoom level từ latitudeDelta
-      const zoom = Math.round(Math.log2(360 / newRegion.latitudeDelta));
-      console.log('📍 Fetching markers in viewport:', { bounds, zoom });
-      refreshFloodSeverity(bounds, zoom);
-
-
-  }, 500),
+      newRegion.latitude - newRegion.latitudeDelta / 2,  // minLat
+      newRegion.longitude - newRegion.longitudeDelta / 2, // minLng
+      newRegion.latitude + newRegion.latitudeDelta / 2,  // maxLat
+      newRegion.longitude + newRegion.longitudeDelta / 2, // maxLng
+    ].join(',');
+    
+    // Tính zoom level từ latitudeDelta
+    const zoom = Math.round(Math.log2(360 / newRegion.latitudeDelta));
+    console.log('📍 Fetching markers in viewport:', { bounds, zoom });
+    refreshFloodSeverity(bounds, zoom);
+  }, 800),  // Increased debounce for stability
   [refreshFloodSeverity, settings.overlays.flood]
-)
+  );
 
 const handleRegionChange = useCallback(
   (newRegion: Region) => {
@@ -318,7 +321,18 @@ const handleRegionChange = useCallback(
           )}
 
           {/* Flood Severity Markers from API */}
-          <FloodSeverityMarkers />
+          <FloodSeverityMarkers
+            onMarkerPress={(feature) => {
+              setSelectedStation(feature);
+              // Animate card slide in
+              Animated.spring(stationCardAnim, {
+                toValue: 0,
+                useNativeDriver: true,
+                tension: 65,
+                friction: 10,
+              }).start();
+            }}
+          />
         </MapView>
 
         {/* Top Controls */}
@@ -438,6 +452,25 @@ const handleRegionChange = useCallback(
             closeRouting;
           }}
         />
+
+        {/* Flood Station Detail Card */}
+        {selectedStation && (
+          <FloodStationCard
+            station={selectedStation}
+            slideAnim={stationCardAnim}
+            onClose={() => {
+              Animated.timing(stationCardAnim, {
+                toValue: 300,
+                duration: 200,
+                useNativeDriver: true,
+              }).start(() => setSelectedStation(null));
+            }}
+            onViewDetails={() => {
+              console.log('View details for:', selectedStation.properties.stationName);
+              // TODO: Navigate to station detail screen
+            }}
+          />
+        )}
 
         {/* Layer Toggle Sheet */}
         <LayerToggleSheet

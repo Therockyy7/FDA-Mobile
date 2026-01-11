@@ -1,9 +1,11 @@
-
+// features/areas/components/AreaCard.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import LottieView from "lottie-react-native";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { useColorScheme } from "~/lib/useColorScheme";
 import { calculateWaterPercentage, getStatusConfig, getStatusIcon } from "../lib/areas-utils";
 import { Area } from "../types/areas-types";
 
@@ -14,36 +16,85 @@ interface AreaCardProps {
   onFavoriteToggle: () => void;
 }
 
+// Severity thresholds (matching flood severity)
+const getSeverityFromWaterLevel = (waterLevel: number, maxLevel: number) => {
+  const percentage = (waterLevel / maxLevel) * 100;
+  if (percentage >= 80) return "critical";
+  if (percentage >= 60) return "warning";
+  if (percentage >= 40) return "caution";
+  return "safe";
+};
+
 export function AreaCard({
   area,
   onPress,
   onMenuPress,
   onFavoriteToggle,
 }: AreaCardProps) {
-  const colors = getStatusConfig(area.status);
+  const { isDarkColorScheme } = useColorScheme();
+  const statusColors = getStatusConfig(area.status);
   const waterPercentage = calculateWaterPercentage(area.waterLevel, area.maxLevel);
+  const severity = getSeverityFromWaterLevel(area.waterLevel, area.maxLevel);
+
+  // Theme colors
+  const colors = {
+    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
+    cardBorder: isDarkColorScheme ? "#334155" : "#E5E7EB",
+    text: isDarkColorScheme ? "#F1F5F9" : "#111827",
+    subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
+    mutedBg: isDarkColorScheme ? "#0F172A" : "#F9FAFB",
+    divider: isDarkColorScheme ? "#334155" : "#F3F4F6",
+  };
+
+  // Severity-based icon background colors
+  const getSeverityBg = () => {
+    if (isDarkColorScheme) {
+      switch (severity) {
+        case "critical": return "rgba(239, 68, 68, 0.15)";
+        case "warning": return "rgba(249, 115, 22, 0.15)";
+        case "caution": return "rgba(234, 179, 8, 0.15)";
+        default: return "rgba(34, 197, 94, 0.15)";
+      }
+    }
+    return statusColors.bg;
+  };
 
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.9}
       style={{
-        backgroundColor: "white",
+        backgroundColor: colors.cardBg,
         borderRadius: 20,
-        padding: 20,
-        marginBottom: 16,
-        borderWidth: 2,
-        
-        borderTopColor: colors.main,
-        borderColor: area.isFavorite ? colors.main : "#F3F4F6",
-        shadowColor: colors.main,
+        padding: 18,
+        marginBottom: 14,
+        borderWidth: 1.5,
+        borderColor: area.isFavorite ? statusColors.main : colors.cardBorder,
+        shadowColor: statusColors.main,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: area.isFavorite ? 0.15 : 0.05,
         shadowRadius: 12,
         elevation: area.isFavorite ? 8 : 3,
+        overflow: "hidden",
       }}
     >
-
+      {/* Background Lottie for danger/warning status */}
+      {(severity === "critical" || severity === "warning") && (
+        <LottieView
+          source={require("../../../assets/animations/water-rise.json")}
+          autoPlay
+          loop
+          speed={0.3}
+          style={{
+            position: "absolute",
+            width: 100,
+            height: 100,
+            right: -20,
+            bottom: -20,
+            opacity: 0.15,
+          }}
+        />
+      )}
 
       {/* Header Section */}
       <View
@@ -51,8 +102,7 @@ export function AreaCard({
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "flex-start",
-          marginBottom: 16,
-          marginTop: 4,
+          marginBottom: 14,
         }}
       >
         <View style={{ flex: 1, marginRight: 12 }}>
@@ -61,15 +111,15 @@ export function AreaCard({
               flexDirection: "row",
               alignItems: "center",
               gap: 8,
-              marginBottom: 6,
+              marginBottom: 4,
             }}
           >
             <Text
               style={{
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: "800",
-                color: "#111827",
-                letterSpacing: -0.5,
+                color: colors.text,
+                letterSpacing: -0.3,
                 flex: 1,
               }}
               numberOfLines={1}
@@ -80,22 +130,16 @@ export function AreaCard({
               <Ionicons
                 name={area.isFavorite ? "star" : "star-outline"}
                 size={20}
-                color={area.isFavorite ? "#F59E0B" : "#D1D5DB"}
+                color={area.isFavorite ? "#F59E0B" : colors.subtext}
               />
             </TouchableOpacity>
           </View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            <Ionicons name="location" size={14} color="#9CA3AF" />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <Ionicons name="location" size={13} color={colors.subtext} />
             <Text
               style={{
-                fontSize: 13,
-                color: "#6B7280",
+                fontSize: 12,
+                color: colors.subtext,
                 flex: 1,
                 fontWeight: "500",
               }}
@@ -107,29 +151,30 @@ export function AreaCard({
         </View>
 
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          {/* Status Badge */}
           <View
             style={{
-              backgroundColor: colors.bg,
-              paddingHorizontal: 12,
-              paddingVertical: 6,
+              backgroundColor: getSeverityBg(),
+              paddingHorizontal: 10,
+              paddingVertical: 5,
               borderRadius: 10,
               flexDirection: "row",
               alignItems: "center",
-              gap: 5,
+              gap: 4,
               borderWidth: 1,
-              borderColor: `${colors.main}30`,
+              borderColor: `${statusColors.main}30`,
             }}
           >
             <Ionicons
               name={getStatusIcon(area.status)}
-              size={14}
-              color={colors.main}
+              size={12}
+              color={statusColors.main}
             />
             <Text
               style={{
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: "700",
-                color: colors.text,
+                color: statusColors.main,
                 letterSpacing: 0.3,
               }}
             >
@@ -137,21 +182,22 @@ export function AreaCard({
             </Text>
           </View>
 
+          {/* Menu Button */}
           <TouchableOpacity
             onPress={onMenuPress}
             style={{
-              width: 36,
-              height: 36,
+              width: 34,
+              height: 34,
               alignItems: "center",
               justifyContent: "center",
-              borderRadius: 18,
-              backgroundColor: "#F9FAFB",
+              borderRadius: 12,
+              backgroundColor: colors.mutedBg,
               borderWidth: 1,
-              borderColor: "#F3F4F6",
+              borderColor: colors.divider,
             }}
             activeOpacity={0.7}
           >
-            <Ionicons name="ellipsis-horizontal" size={18} color="#6B7280" />
+            <Ionicons name="ellipsis-horizontal" size={16} color={colors.subtext} />
           </TouchableOpacity>
         </View>
       </View>
@@ -159,12 +205,12 @@ export function AreaCard({
       {/* Water Level Display */}
       <View
         style={{
-          backgroundColor: colors.bg,
-          padding: 16,
-          borderRadius: 16,
-          marginBottom: 16,
+          backgroundColor: getSeverityBg(),
+          padding: 14,
+          borderRadius: 14,
+          marginBottom: 14,
           borderWidth: 1,
-          borderColor: `${colors.main}20`,
+          borderColor: `${statusColors.main}20`,
         }}
       >
         <View
@@ -172,78 +218,54 @@ export function AreaCard({
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "baseline",
-            marginBottom: 12,
+            marginBottom: 10,
           }}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "baseline",
-              gap: 6,
-            }}
-          >
+          <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4 }}>
             <Text
               style={{
-                fontSize: 36,
+                fontSize: 32,
                 fontWeight: "900",
-                color: colors.main,
-                letterSpacing: -1.5,
-                lineHeight: 36,
+                color: statusColors.main,
+                letterSpacing: -1,
+                lineHeight: 34,
               }}
             >
               {area.waterLevel}
             </Text>
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: "700",
-                color: colors.text,
-              }}
-            >
+            <Text style={{ fontSize: 14, fontWeight: "700", color: statusColors.text }}>
               cm
             </Text>
           </View>
           <View style={{ alignItems: "flex-end" }}>
-            <Text
-              style={{
-                fontSize: 11,
-                color: colors.text,
-                fontWeight: "600",
-              }}
-            >
+            <Text style={{ fontSize: 10, color: colors.subtext, fontWeight: "600" }}>
               Giới hạn
             </Text>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "700",
-                color: colors.text,
-              }}
-            >
+            <Text style={{ fontSize: 13, fontWeight: "700", color: colors.subtext }}>
               {area.maxLevel}cm
             </Text>
           </View>
         </View>
 
-        {/* Enhanced Progress Bar */}
+        {/* Progress Bar */}
         <View
           style={{
-            height: 10,
-            backgroundColor: "rgba(255,255,255,0.6)",
-            borderRadius: 5,
+            height: 8,
+            backgroundColor: isDarkColorScheme ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.6)",
+            borderRadius: 4,
             overflow: "hidden",
             borderWidth: 1,
-            borderColor: "rgba(0,0,0,0.05)",
+            borderColor: isDarkColorScheme ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
           }}
         >
           <LinearGradient
-            colors={colors.gradient}
+            colors={statusColors.gradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={{
               width: `${waterPercentage}%`,
               height: "100%",
-              borderRadius: 5,
+              borderRadius: 4,
             }}
           />
         </View>
@@ -251,51 +273,24 @@ export function AreaCard({
 
       {/* Weather Info Grid */}
       {(area.temperature || area.humidity || area.rainChance !== undefined) && (
-        <View style={{ flexDirection: "row", gap: 10, marginBottom: 16 }}>
+        <View style={{ flexDirection: "row", gap: 8, marginBottom: 14 }}>
           {area.temperature && (
             <View
               style={{
                 flex: 1,
-                backgroundColor: "#FEF3C7",
-                padding: 12,
+                backgroundColor: isDarkColorScheme ? "rgba(251, 191, 36, 0.1)" : "#FEF3C7",
+                padding: 10,
                 borderRadius: 12,
                 alignItems: "center",
                 borderWidth: 1,
-                borderColor: "#FDE68A",
+                borderColor: isDarkColorScheme ? "rgba(251, 191, 36, 0.2)" : "#FDE68A",
               }}
             >
-              <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: "#FEF3C7",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 6,
-                  borderWidth: 2,
-                  borderColor: "#FCD34D",
-                }}
-              >
-                <Ionicons name="thermometer" size={16} color="#D97706" />
-              </View>
-              <Text
-                style={{
-                  fontSize: 10,
-                  color: "#92400E",
-                  marginBottom: 4,
-                  fontWeight: "600",
-                }}
-              >
+              <Ionicons name="thermometer" size={18} color="#D97706" />
+              <Text style={{ fontSize: 9, color: isDarkColorScheme ? "#FCD34D" : "#92400E", marginTop: 4, fontWeight: "600" }}>
                 Nhiệt độ
               </Text>
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: "800",
-                  color: "#B45309",
-                }}
-              >
+              <Text style={{ fontSize: 16, fontWeight: "800", color: isDarkColorScheme ? "#FBBF24" : "#B45309" }}>
                 {area.temperature}°
               </Text>
             </View>
@@ -305,46 +300,19 @@ export function AreaCard({
             <View
               style={{
                 flex: 1,
-                backgroundColor: "#DBEAFE",
-                padding: 12,
+                backgroundColor: isDarkColorScheme ? "rgba(59, 130, 246, 0.1)" : "#DBEAFE",
+                padding: 10,
                 borderRadius: 12,
                 alignItems: "center",
                 borderWidth: 1,
-                borderColor: "#BFDBFE",
+                borderColor: isDarkColorScheme ? "rgba(59, 130, 246, 0.2)" : "#BFDBFE",
               }}
             >
-              <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: "#DBEAFE",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 6,
-                  borderWidth: 2,
-                  borderColor: "#93C5FD",
-                }}
-              >
-                <Ionicons name="water" size={16} color="#1D4ED8" />
-              </View>
-              <Text
-                style={{
-                  fontSize: 10,
-                  color: "#1E40AF",
-                  marginBottom: 4,
-                  fontWeight: "600",
-                }}
-              >
+              <Ionicons name="water" size={18} color="#3B82F6" />
+              <Text style={{ fontSize: 9, color: isDarkColorScheme ? "#93C5FD" : "#1E40AF", marginTop: 4, fontWeight: "600" }}>
                 Độ ẩm
               </Text>
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: "800",
-                  color: "#1D4ED8",
-                }}
-              >
+              <Text style={{ fontSize: 16, fontWeight: "800", color: isDarkColorScheme ? "#60A5FA" : "#1D4ED8" }}>
                 {area.humidity}%
               </Text>
             </View>
@@ -354,46 +322,19 @@ export function AreaCard({
             <View
               style={{
                 flex: 1,
-                backgroundColor: "#E0E7FF",
-                padding: 12,
+                backgroundColor: isDarkColorScheme ? "rgba(99, 102, 241, 0.1)" : "#E0E7FF",
+                padding: 10,
                 borderRadius: 12,
                 alignItems: "center",
                 borderWidth: 1,
-                borderColor: "#C7D2FE",
+                borderColor: isDarkColorScheme ? "rgba(99, 102, 241, 0.2)" : "#C7D2FE",
               }}
             >
-              <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: "#E0E7FF",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 6,
-                  borderWidth: 2,
-                  borderColor: "#A5B4FC",
-                }}
-              >
-                <Ionicons name="rainy" size={16} color="#4338CA" />
-              </View>
-              <Text
-                style={{
-                  fontSize: 10,
-                  color: "#3730A3",
-                  marginBottom: 4,
-                  fontWeight: "600",
-                }}
-              >
-                Khả năng mưa
+              <Ionicons name="rainy" size={18} color="#6366F1" />
+              <Text style={{ fontSize: 9, color: isDarkColorScheme ? "#A5B4FC" : "#3730A3", marginTop: 4, fontWeight: "600" }}>
+                Mưa
               </Text>
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: "800",
-                  color: "#4338CA",
-                }}
-              >
+              <Text style={{ fontSize: 16, fontWeight: "800", color: isDarkColorScheme ? "#818CF8" : "#4338CA" }}>
                 {area.rainChance}%
               </Text>
             </View>
@@ -404,54 +345,36 @@ export function AreaCard({
       {/* Forecast Section */}
       <View
         style={{
-          backgroundColor: "#F9FAFB",
-          padding: 14,
+          backgroundColor: colors.mutedBg,
+          padding: 12,
           borderRadius: 12,
-          marginBottom: 14,
+          marginBottom: 12,
           borderWidth: 1,
-          borderColor: "#F3F4F6",
+          borderColor: colors.divider,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 10,
         }}
       >
         <View
           style={{
-            flexDirection: "row",
+            width: 32,
+            height: 32,
+            borderRadius: 10,
+            backgroundColor: colors.cardBg,
             alignItems: "center",
-            gap: 10,
+            justifyContent: "center",
           }}
         >
-          <View
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: "white",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Ionicons name="partly-sunny" size={20} color="#6B7280" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                fontSize: 11,
-                color: "#9CA3AF",
-                marginBottom: 2,
-                fontWeight: "600",
-              }}
-            >
-              DỰ BÁO
-            </Text>
-            <Text
-              style={{
-                fontSize: 14,
-                color: "#374151",
-                fontWeight: "600",
-              }}
-            >
-              {area.forecast}
-            </Text>
-          </View>
+          <Ionicons name="partly-sunny" size={18} color={colors.subtext} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 10, color: colors.subtext, marginBottom: 2, fontWeight: "600" }}>
+            DỰ BÁO
+          </Text>
+          <Text style={{ fontSize: 13, color: colors.text, fontWeight: "600" }} numberOfLines={1}>
+            {area.forecast}
+          </Text>
         </View>
       </View>
 
@@ -461,59 +384,42 @@ export function AreaCard({
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingTop: 14,
+          paddingTop: 12,
           borderTopWidth: 1,
-          borderTopColor: "#F3F4F6",
+          borderTopColor: colors.divider,
         }}
       >
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
           <View
             style={{
-              width: 8,
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: colors.main,
+              width: 6,
+              height: 6,
+              borderRadius: 3,
+              backgroundColor: statusColors.main,
             }}
           />
-          <Text
-            style={{
-              fontSize: 12,
-              color: "#9CA3AF",
-              fontWeight: "500",
-            }}
-          >
+          <Text style={{ fontSize: 11, color: colors.subtext, fontWeight: "500" }}>
             Cập nhật {area.lastUpdate}
           </Text>
         </View>
 
         <TouchableOpacity
+          onPress={onPress}
           style={{
             flexDirection: "row",
             alignItems: "center",
-            gap: 6,
-            paddingHorizontal: 14,
-            paddingVertical: 8,
+            gap: 5,
+            paddingHorizontal: 12,
+            paddingVertical: 6,
             borderRadius: 10,
-            backgroundColor: colors.bg,
+            backgroundColor: getSeverityBg(),
             borderWidth: 1,
-            borderColor: `${colors.main}30`,
+            borderColor: `${statusColors.main}30`,
           }}
           activeOpacity={0.7}
         >
-          <Ionicons name="eye" size={16} color={colors.main} />
-          <Text
-            style={{
-              fontSize: 13,
-              fontWeight: "700",
-              color: colors.text,
-            }}
-          >
+          <Ionicons name="eye" size={14} color={statusColors.main} />
+          <Text style={{ fontSize: 12, fontWeight: "700", color: statusColors.main }}>
             Chi tiết
           </Text>
         </TouchableOpacity>

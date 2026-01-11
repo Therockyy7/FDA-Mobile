@@ -1,7 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
-import { Alert, Platform, ScrollView, StatusBar } from "react-native";
+import { Alert, Platform, StatusBar } from "react-native";
+import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ModalChangePassword from "~/features/auth/components/ModalChangePassword";
@@ -29,6 +30,12 @@ export default function ProfileScreen() {
   const signOut = useSignOut();
   const user = useUser();
   const { isDarkColorScheme, setColorScheme } = useColorScheme();
+  
+  // Reanimated shared value for smooth scroll animation (UI thread)
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+  });
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -277,9 +284,15 @@ const handleSaveChanges = async () => {
         role={roles}
         status={status}
         onPickAvatar={handlePickAvatar}
+        scrollY={scrollY}
       />
       
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 120 }}>
+      <Animated.ScrollView 
+        style={{ flex: 1 }} 
+        contentContainerStyle={{ paddingBottom: 120 }}
+        scrollEventThrottle={16}
+        onScroll={scrollHandler}
+      >
         <ProfileInfoSection
           fullName={fullName}
           setFullName={setFullName}
@@ -349,7 +362,7 @@ const handleSaveChanges = async () => {
           error={phoneOtpError}
         />
 
-      </ScrollView>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 }

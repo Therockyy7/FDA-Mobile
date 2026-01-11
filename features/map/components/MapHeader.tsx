@@ -9,9 +9,10 @@ type MapType = "standard" | "satellite" | "hybrid";
 
 interface MapHeaderProps {
   stats: {
-    safe: number;
-    warning: number;
-    danger: number;
+    safe: number;      // < 1.0m
+    caution: number;   // 1.0 - 1.9m
+    warning: number;   // 2.0 - 2.9m
+    critical: number;  // >= 3.0m
   };
   mapType: MapType;
   onMapTypeChange: () => void;
@@ -31,6 +32,50 @@ export function MapHeader({ stats, mapType, onMapTypeChange, onShowLayers }: Map
     border: isDarkColorScheme ? "#334155" : "#E2E8F0",
     buttonBg: isDarkColorScheme ? "#1E293B" : "#F1F5F9",
   };
+
+  // Severity color config
+  const severityConfig = [
+    {
+      key: "safe",
+      label: "An toàn",
+      count: stats.safe,
+      color: "#22C55E",
+      bgLight: "#DCFCE7",
+      bgDark: "#14532D",
+      textLight: "#15803D",
+      textDark: "#86EFAC",
+    },
+    {
+      key: "caution",
+      label: "Chú ý",
+      count: stats.caution,
+      color: "#EAB308",
+      bgLight: "#FEF9C3",
+      bgDark: "#713F12",
+      textLight: "#A16207",
+      textDark: "#FDE047",
+    },
+    {
+      key: "warning",
+      label: "Cảnh báo",
+      count: stats.warning,
+      color: "#F97316",
+      bgLight: "#FFEDD5",
+      bgDark: "#7C2D12",
+      textLight: "#C2410C",
+      textDark: "#FDBA74",
+    },
+    {
+      key: "critical",
+      label: "Nguy hiểm",
+      count: stats.critical,
+      color: "#EF4444",
+      bgLight: "#FEE2E2",
+      bgDark: "#7F1D1D",
+      textLight: "#DC2626",
+      textDark: "#FCA5A5",
+    },
+  ];
 
   return (
     <View
@@ -117,7 +162,7 @@ export function MapHeader({ stats, mapType, onMapTypeChange, onShowLayers }: Map
                   width: 4,
                   height: 4,
                   borderRadius: 2,
-                  backgroundColor: "#10B981",
+                  backgroundColor: "#22C55E",
                   marginHorizontal: 6,
                 }}
               />
@@ -125,7 +170,7 @@ export function MapHeader({ stats, mapType, onMapTypeChange, onShowLayers }: Map
                 style={{
                   fontSize: 11,
                   fontWeight: "600",
-                  color: "#10B981",
+                  color: "#22C55E",
                 }}
               >
                 Đang cập nhật
@@ -134,7 +179,7 @@ export function MapHeader({ stats, mapType, onMapTypeChange, onShowLayers }: Map
           </View>
         </View>
 
-        {/* Map Type Toggle */}
+        {/* Layers Button */}
         <TouchableOpacity
           onPress={onShowLayers}
           style={{
@@ -151,7 +196,7 @@ export function MapHeader({ stats, mapType, onMapTypeChange, onShowLayers }: Map
         </TouchableOpacity>
       </View>
 
-      {/* Stats Bar */}
+      {/* Stats Bar - 4 Severity Levels */}
       <View
         style={{
           flexDirection: "row",
@@ -162,124 +207,48 @@ export function MapHeader({ stats, mapType, onMapTypeChange, onShowLayers }: Map
           borderColor: colors.border,
         }}
       >
-        {/* Safe */}
-        <View
-          style={{
-            flex: 1,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            paddingVertical: 8,
-            paddingHorizontal: 8,
-            backgroundColor: isDarkColorScheme ? "#064E3B" : "#ECFDF5",
-            borderRadius: 12,
-            marginRight: 4,
-          }}
-        >
+        {severityConfig.map((item, index) => (
           <View
+            key={item.key}
             style={{
-              width: 24,
-              height: 24,
-              borderRadius: 8,
-              backgroundColor: "#10B981",
+              flex: 1,
+              flexDirection: "row",
               alignItems: "center",
               justifyContent: "center",
-              marginRight: 6,
+              paddingVertical: 6,
+              paddingHorizontal: 4,
+              backgroundColor: isDarkColorScheme ? item.bgDark : item.bgLight,
+              borderRadius: 10,
+              marginRight: index < severityConfig.length - 1 ? 3 : 0,
             }}
           >
-            <Text style={{ fontSize: 12, fontWeight: "900", color: "white" }}>
-              {stats.safe}
+            <View
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: 7,
+                backgroundColor: item.color,
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: 4,
+              }}
+            >
+              <Text style={{ fontSize: 10, fontWeight: "900", color: "white" }}>
+                {item.count}
+              </Text>
+            </View>
+            <Text
+              style={{
+                fontSize: 9,
+                fontWeight: "700",
+                color: isDarkColorScheme ? item.textDark : item.textLight,
+              }}
+              numberOfLines={1}
+            >
+              {item.label}
             </Text>
           </View>
-          <Text
-            style={{
-              fontSize: 11,
-              fontWeight: "700",
-              color: isDarkColorScheme ? "#6EE7B7" : "#047857",
-            }}
-          >
-            An toàn
-          </Text>
-        </View>
-
-        {/* Warning */}
-        <View
-          style={{
-            flex: 1,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            paddingVertical: 8,
-            paddingHorizontal: 8,
-            backgroundColor: isDarkColorScheme ? "#78350F" : "#FFFBEB",
-            borderRadius: 12,
-            marginRight: 4,
-          }}
-        >
-          <View
-            style={{
-              width: 24,
-              height: 24,
-              borderRadius: 8,
-              backgroundColor: "#F59E0B",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 6,
-            }}
-          >
-            <Text style={{ fontSize: 12, fontWeight: "900", color: "white" }}>
-              {stats.warning}
-            </Text>
-          </View>
-          <Text
-            style={{
-              fontSize: 11,
-              fontWeight: "700",
-              color: isDarkColorScheme ? "#FCD34D" : "#B45309",
-            }}
-          >
-            Cảnh báo
-          </Text>
-        </View>
-
-        {/* Danger */}
-        <View
-          style={{
-            flex: 1,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            paddingVertical: 8,
-            paddingHorizontal: 8,
-            backgroundColor: isDarkColorScheme ? "#7F1D1D" : "#FEF2F2",
-            borderRadius: 12,
-          }}
-        >
-          <View
-            style={{
-              width: 24,
-              height: 24,
-              borderRadius: 8,
-              backgroundColor: "#EF4444",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 6,
-            }}
-          >
-            <Text style={{ fontSize: 12, fontWeight: "900", color: "white" }}>
-              {stats.danger}
-            </Text>
-          </View>
-          <Text
-            style={{
-              fontSize: 11,
-              fontWeight: "700",
-              color: isDarkColorScheme ? "#FCA5A5" : "#DC2626",
-            }}
-          >
-            Nguy hiểm
-          </Text>
-        </View>
+        ))}
       </View>
     </View>
   );

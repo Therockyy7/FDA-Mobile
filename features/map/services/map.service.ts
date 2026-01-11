@@ -37,7 +37,7 @@ const MOCK_FLOOD_SEVERITY_DATA: FloodSeverityGeoJSON = {
       properties: {
         stationId: "550e8400-e29b-41d4-a716-446655440001",
         stationCode: "ST_DN_02",
-        stationName: "Trạm Cầu Rồng",
+        stationName: "Trạm Thuận Phước",
         waterLevel: 0.8,
         unit: "m",
         severity: "safe",
@@ -157,6 +157,7 @@ export const MapService = {
 
       console.log("🌐 Calling API:", url);
       const res = await apiClient.get<FloodSeverityGeoJSON>(url);
+      
       return res.data;
     } catch {
       // Fallback to mock data when API is not available

@@ -2,7 +2,8 @@
 
 This is a comprehensive starter kit for building cross-platform mobile applications using Expo and React Native. It's designed to provide a solid foundation with a modern tech stack and a scalable project structure, allowing you to start developing features right away.
 
-This boilerplate comes pre-configured with essential tools for routing, state management, styling, and data fetching, saving you from the initial setup hassle.
+This boilerplate comes pre-configured with essential tools for routing, state management, styling, and data fetching, saving you from the hassle of initial setup.
+The OPT for Login/SignUp (Phone/Email) is 123456 (this will be fixed in the next version).
 
 ## ✨ Features
 

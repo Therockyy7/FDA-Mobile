@@ -1,10 +1,20 @@
-# Expo Base Starter Kit
+# FDA App
 
-This is a comprehensive starter kit for building cross-platform mobile applications using Expo and React Native. It's designed to provide a solid foundation with a modern tech stack and a scalable project structure, allowing you to start developing features right away.
+FDA App is a cross-platform mobile application built with Expo and React Native, designed to provide flood disaster alerts and community safety information.
 
-This boilerplate comes pre-configured with essential tools for routing, state management, styling, and data fetching, saving you from the initial setup hassle.
+This app comes pre-configured with essential tools for routing, state management, styling, and data fetching.
+
+> **Note:** The OTP for Login/SignUp (Phone/Email) is `123456` (this will be fixed in the next version).
 
 ## ✨ Features
+
+- **Flood Zone Map**: Interactive map displaying flood zones and disaster areas.
+- **Real-time Notifications**: Push notifications for flood alerts and safety warnings.
+- **Community Updates**: Stay connected with community safety information.
+- **User Profile**: Manage your profile and saved areas.
+- **Dark Mode Support**: Built-in support for light and dark themes.
+
+## 🛠️ Tech Features
 
 - **Expo Router**: A powerful file-system-based router for React Native.
 - **TypeScript**: For type safety and improved developer experience.
@@ -14,7 +24,6 @@ This boilerplate comes pre-configured with essential tools for routing, state ma
 - **React Hook Form**: Performant, flexible, and extensible forms with easy-to-use validation.
 - **Feature-Sliced Design**: A scalable architecture for organizing your codebase.
 - **ESLint & Prettier**: For consistent code style and quality.
-- **Dark Mode Support**: Built-in support for light and dark themes.
 
 ## 🥞 Tech Stack
 
@@ -82,8 +91,8 @@ This approach makes the codebase easier to navigate and maintain as it grows. It
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/sawsew467/expo-starter-kit
-    cd expo-starter-kit
+    git clone https://github.com/Therockyy7/FDA-Mobile
+    cd FDA-Mobile
     ```
 
 2.  **Install dependencies:**
@@ -92,14 +101,7 @@ This approach makes the codebase easier to navigate and maintain as it grows. It
     npm install
     ```
 
-3.  **Set up environment variables:**
-    - Copy the example `.env.example` file to a new `.env` file:
-      ```bash
-      cp .env.example .env
-      ```
-    - Open the `.env` file and add your Supabase URL and Anon Key. You can find these in your Supabase project's API settings.
-
-4.  **Run the application:**
+3.  **Run the application:**
 
     ```bash
     npm start

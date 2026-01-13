@@ -5,9 +5,9 @@ import { Animated, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import {
-    FloodSeverityFeature,
-    SEVERITY_COLORS,
-    SEVERITY_LABELS,
+  FloodSeverityFeature,
+  SEVERITY_COLORS,
+  SEVERITY_LABELS,
 } from "../types/map-layers.types";
 
 interface FloodStationCardProps {
@@ -25,9 +25,13 @@ export function FloodStationCard({
 }: FloodStationCardProps) {
   const { isDarkColorScheme } = useColorScheme();
   const { properties } = station;
-  
-  const severityColor = SEVERITY_COLORS[properties.severity] || SEVERITY_COLORS.unknown;
-  const severityLabel = SEVERITY_LABELS[properties.severity] || SEVERITY_LABELS.unknown;
+
+  const severityColor =
+    properties.markerColor ||
+    SEVERITY_COLORS[properties.severity] ||
+    SEVERITY_COLORS.unknown;
+  const severityLabel =
+    SEVERITY_LABELS[properties.severity] || SEVERITY_LABELS.unknown;
 
   const colors = {
     background: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
@@ -41,20 +45,30 @@ export function FloodStationCard({
   const getSeverityIcon = () => {
     switch (properties.severity) {
       case "critical":
-        return { name: "alert-circle" as const, gradient: ["#EF4444", "#DC2626"] };
+        return {
+          name: "alert-circle" as const,
+          gradient: ["#EF4444", "#DC2626"],
+        };
       case "warning":
         return { name: "alert" as const, gradient: ["#F97316", "#EA580C"] };
       case "caution":
-        return { name: "information-circle" as const, gradient: ["#EAB308", "#CA8A04"] };
+        return {
+          name: "information-circle" as const,
+          gradient: ["#EAB308", "#CA8A04"],
+        };
       default:
-        return { name: "checkmark-circle" as const, gradient: ["#22C55E", "#16A34A"] };
+        return {
+          name: "checkmark-circle" as const,
+          gradient: ["#22C55E", "#16A34A"],
+        };
     }
   };
 
   const severityConfig = getSeverityIcon();
 
   // Format last updated time
-  const formatTime = (dateStr: string) => {
+  const formatTime = (dateStr: string | null) => {
+    if (!dateStr) return "Chưa có dữ liệu";
     const date = new Date(dateStr);
     return date.toLocaleString("vi-VN", {
       hour: "2-digit",
@@ -102,11 +116,13 @@ export function FloodStationCard({
               flexDirection: "row",
               justifyContent: "space-between",
               alignItems: "flex-start",
-              marginBottom: 16,
+              marginBottom: 12,
             }}
           >
             {/* Station Info */}
-            <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
+            >
               <View
                 style={{
                   width: 48,
@@ -118,7 +134,11 @@ export function FloodStationCard({
                   marginRight: 12,
                 }}
               >
-                <MaterialCommunityIcons name="water" size={24} color={severityColor} />
+                <MaterialCommunityIcons
+                  name="water"
+                  size={24}
+                  color={severityColor}
+                />
               </View>
               <View style={{ flex: 1 }}>
                 <Text
@@ -155,12 +175,57 @@ export function FloodStationCard({
             </TouchableOpacity>
           </View>
 
+          {/* Location Info - NEW */}
+          {(properties.roadName || properties.locationDesc) && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "flex-start",
+                marginBottom: 12,
+                backgroundColor: colors.cardBg,
+                padding: 10,
+                borderRadius: 10,
+              }}
+            >
+              <Ionicons
+                name="location"
+                size={16}
+                color={colors.subtext}
+                style={{ marginTop: 2 }}
+              />
+              <View style={{ marginLeft: 8, flex: 1 }}>
+                {properties.roadName && (
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "600",
+                      color: colors.text,
+                    }}
+                  >
+                    {properties.roadName}
+                  </Text>
+                )}
+                {properties.locationDesc && (
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: colors.subtext,
+                      marginTop: 2,
+                    }}
+                  >
+                    {properties.locationDesc}
+                  </Text>
+                )}
+              </View>
+            </View>
+          )}
+
           {/* Stats Row */}
           <View
             style={{
               flexDirection: "row",
-              gap: 12,
-              marginBottom: 16,
+              gap: 10,
+              marginBottom: 12,
             }}
           >
             {/* Water Level Card */}
@@ -169,32 +234,42 @@ export function FloodStationCard({
                 flex: 1,
                 backgroundColor: `${severityColor}15`,
                 borderRadius: 14,
-                padding: 14,
+                padding: 12,
                 borderWidth: 1,
                 borderColor: `${severityColor}30`,
               }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginBottom: 4,
+                }}
+              >
                 <Ionicons name="water" size={14} color={severityColor} />
-                <Text style={{ fontSize: 11, color: colors.subtext, marginLeft: 4 }}>
+                <Text
+                  style={{ fontSize: 10, color: colors.subtext, marginLeft: 4 }}
+                >
                   Mực nước
                 </Text>
               </View>
               <View style={{ flexDirection: "row", alignItems: "baseline" }}>
                 <Text
                   style={{
-                    fontSize: 28,
+                    fontSize: 24,
                     fontWeight: "800",
                     color: severityColor,
                   }}
                 >
-                  {typeof properties.waterLevel === 'number' 
-                    ? properties.waterLevel.toFixed(2) 
-                    : properties.waterLevel}
+                  {properties.waterLevel !== null
+                    ? typeof properties.waterLevel === "number"
+                      ? properties.waterLevel.toFixed(1)
+                      : properties.waterLevel
+                    : "N/A"}
                 </Text>
                 <Text
                   style={{
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: "600",
                     color: severityColor,
                     marginLeft: 2,
@@ -205,19 +280,31 @@ export function FloodStationCard({
               </View>
             </View>
 
-            {/* Status Card */}
+            {/* Alert Level Badge - NEW */}
             <View
               style={{
                 flex: 1,
                 backgroundColor: colors.cardBg,
                 borderRadius: 14,
-                padding: 14,
+                padding: 12,
               }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
-                <Ionicons name={severityConfig.name} size={14} color={colors.subtext} />
-                <Text style={{ fontSize: 11, color: colors.subtext, marginLeft: 4 }}>
-                  Trạng thái
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginBottom: 4,
+                }}
+              >
+                <Ionicons
+                  name={severityConfig.name}
+                  size={14}
+                  color={colors.subtext}
+                />
+                <Text
+                  style={{ fontSize: 10, color: colors.subtext, marginLeft: 4 }}
+                >
+                  Cảnh báo
                 </Text>
               </View>
               <View
@@ -225,8 +312,8 @@ export function FloodStationCard({
                   flexDirection: "row",
                   alignItems: "center",
                   backgroundColor: `${severityColor}20`,
-                  paddingHorizontal: 10,
-                  paddingVertical: 6,
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
                   borderRadius: 8,
                   alignSelf: "flex-start",
                 }}
@@ -242,16 +329,93 @@ export function FloodStationCard({
                 />
                 <Text
                   style={{
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: "700",
                     color: severityColor,
                   }}
                 >
-                  {severityLabel}
+                  {properties.alertLevel || severityLabel}
                 </Text>
               </View>
             </View>
           </View>
+
+          {/* Sensor Info Row - NEW */}
+          {(properties.sensorHeight !== null ||
+            properties.distance !== null) && (
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 10,
+                marginBottom: 12,
+              }}
+            >
+              {properties.sensorHeight !== null && (
+                <View
+                  style={{
+                    flex: 1,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: colors.cardBg,
+                    padding: 10,
+                    borderRadius: 10,
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name="arrow-expand-vertical"
+                    size={16}
+                    color={colors.subtext}
+                  />
+                  <View style={{ marginLeft: 8 }}>
+                    <Text style={{ fontSize: 10, color: colors.subtext }}>
+                      Chiều cao cảm biến
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: colors.text,
+                      }}
+                    >
+                      {properties.sensorHeight} {properties.unit}
+                    </Text>
+                  </View>
+                </View>
+              )}
+              {properties.distance !== null && (
+                <View
+                  style={{
+                    flex: 1,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: colors.cardBg,
+                    padding: 10,
+                    borderRadius: 10,
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name="ruler"
+                    size={16}
+                    color={colors.subtext}
+                  />
+                  <View style={{ marginLeft: 8 }}>
+                    <Text style={{ fontSize: 10, color: colors.subtext }}>
+                      Khoảng cách
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: colors.text,
+                      }}
+                    >
+                      {properties.distance} cm
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
 
           {/* Footer Row */}
           <View
@@ -261,12 +425,52 @@ export function FloodStationCard({
               justifyContent: "space-between",
             }}
           >
-            {/* Last Updated */}
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Ionicons name="time-outline" size={14} color={colors.subtext} />
-              <Text style={{ fontSize: 12, color: colors.subtext, marginLeft: 4 }}>
-                Cập nhật: {formatTime(properties.lastUpdated)}
-              </Text>
+            {/* Last Updated + Station Status */}
+            <View>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Ionicons
+                  name="time-outline"
+                  size={14}
+                  color={colors.subtext}
+                />
+                <Text
+                  style={{ fontSize: 11, color: colors.subtext, marginLeft: 4 }}
+                >
+                  {formatTime(properties.measuredAt)}
+                </Text>
+              </View>
+              {properties.stationStatus && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginTop: 4,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: 3,
+                      backgroundColor:
+                        properties.stationStatus === "active"
+                          ? "#22C55E"
+                          : "#EF4444",
+                    }}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      color: colors.subtext,
+                      marginLeft: 4,
+                    }}
+                  >
+                    {properties.stationStatus === "active"
+                      ? "Hoạt động"
+                      : "Ngừng hoạt động"}
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* View Details Button */}
@@ -283,10 +487,17 @@ export function FloodStationCard({
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={{ fontSize: 13, fontWeight: "600", color: "white" }}>
+                <Text
+                  style={{ fontSize: 13, fontWeight: "600", color: "white" }}
+                >
                   Chi tiết
                 </Text>
-                <Ionicons name="chevron-forward" size={14} color="white" style={{ marginLeft: 2 }} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={14}
+                  color="white"
+                  style={{ marginLeft: 2 }}
+                />
               </TouchableOpacity>
             )}
           </View>

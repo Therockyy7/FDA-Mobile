@@ -1,13 +1,14 @@
 // app/(tabs)/map/index.tsx
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, StatusBar, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { Text } from "~/components/ui/text";
+import { AreaCard } from "~/features/map/components/AreaCard";
+import { AreaCircleOverlay } from "~/features/map/components/AreaCircleOverlay";
 import { FloodSeverityMarkers } from "~/features/map/components/FloodSeverityMarkers";
 import { FloodStationCard } from "~/features/map/components/FloodStationCard";
-import { FloodZoneCard } from "~/features/map/components/FloodZoneCard";
-import { FloodZoneOverlay } from "~/features/map/components/FloodZoneOverlay";
 import { LayerToggleSheet } from "~/features/map/components/LayerToggleSheet";
 import Legend from "~/features/map/components/Legend";
 import { MapControls } from "~/features/map/components/MapControls";
@@ -16,14 +17,11 @@ import { MapLoadingOverlay } from "~/features/map/components/MapLoadingOverlay";
 import { MapTopControls } from "~/features/map/components/MapTopControls";
 import { RouteDetailCard } from "~/features/map/components/RouteDetailCard";
 import { RouteDirectionPanel } from "~/features/map/components/RouteDirectionPanel";
-import { SensorMarker } from "~/features/map/components/SensorMarker";
 import { WaterFlowRoute } from "~/features/map/components/WaterFlowRoute";
 import {
   DANANG_CENTER,
   FLOOD_ROUTES,
-  FLOOD_ZONES,
   FloodRoute,
-  FloodZone,
   MOCK_SENSORS,
   Sensor,
 } from "~/features/map/constants/map-data";
@@ -34,11 +32,12 @@ import { useMapLayerSettings } from "~/features/map/hooks/useMapLayerSettings";
 import { useRoutingUI } from "~/features/map/hooks/useRoutingUI";
 import { useStreetView } from "~/features/map/hooks/useStreetView";
 import { debounce } from "~/features/map/lib/map-utils";
-import { FloodSeverityFeature } from "~/features/map/types/map-layers.types";
+import { AreaWithStatus, FloodSeverityFeature } from "~/features/map/types/map-layers.types";
 
 type MapType = "standard" | "satellite" | "hybrid";
 
 export default function MapScreen() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showLayerSheet, setShowLayerSheet] = useState(false);
@@ -46,7 +45,11 @@ export default function MapScreen() {
   const stationCardAnim = useRef(new Animated.Value(300)).current;
 
   // Map layer settings hook
-  const { settings, refreshFloodSeverity } = useMapLayerSettings();
+  const { settings, areas, refreshFloodSeverity, refreshAreas } = useMapLayerSettings();
+
+  // Area selection state
+  const [selectedArea, setSelectedArea] = useState<AreaWithStatus | null>(null);
+  const areaCardAnim = useRef(new Animated.Value(300)).current;
 
   const {
     mapRef,
@@ -107,38 +110,54 @@ export default function MapScreen() {
     setTimeout(() => setIsLoading(false), 800);
   }, []);
 
-  // Initial load of flood severity markers when component mounts
+  // Initial load of flood severity markers and areas when component mounts
   useEffect(() => {
     if (settings.overlays.flood) {
       // Load markers for initial region (DANANG_CENTER)
-      const initialBounds = [
-        DANANG_CENTER.latitude - DANANG_CENTER.latitudeDelta / 2,
-        DANANG_CENTER.longitude - DANANG_CENTER.longitudeDelta / 2,
-        DANANG_CENTER.latitude + DANANG_CENTER.latitudeDelta / 2,
-        DANANG_CENTER.longitude + DANANG_CENTER.longitudeDelta / 2,
-      ].join(',');
-      const initialZoom = Math.round(Math.log2(360 / DANANG_CENTER.latitudeDelta));
-      console.log('🚀 Initial markers load:', { bounds: initialBounds, zoom: initialZoom });
-      refreshFloodSeverity(initialBounds, initialZoom);
+      refreshFloodSeverity({
+        minLat: DANANG_CENTER.latitude - DANANG_CENTER.latitudeDelta / 2,
+        minLng: DANANG_CENTER.longitude - DANANG_CENTER.longitudeDelta / 2,
+        maxLat: DANANG_CENTER.latitude + DANANG_CENTER.latitudeDelta / 2,
+        maxLng: DANANG_CENTER.longitude + DANANG_CENTER.longitudeDelta / 2,
+      });
+      // Load areas
+      refreshAreas();
     }
-  }, [settings.overlays.flood, refreshFloodSeverity]);
+  }, [settings.overlays.flood, refreshFloodSeverity, refreshAreas]);
 
   useEffect(() => {
     setSelectedZone(null);
     setSelectedRoute(null);
   }, [viewMode]);
 
-  const handleZonePress = (zone: FloodZone) => {
+  const handleAreaPress = (area: AreaWithStatus) => {
     setSelectedRoute(null);
-    setSelectedZone(zone);
-    focusOnZone(zone);
+    setSelectedZone(null);
+    setSelectedArea(area);
+    // Animate card slide in
+    Animated.spring(areaCardAnim, {
+      toValue: 0,
+      useNativeDriver: true,
+      tension: 65,
+      friction: 10,
+    }).start();
+    // Focus on area
+    mapRef.current?.animateToRegion({
+      latitude: area.latitude,
+      longitude: area.longitude,
+      latitudeDelta: (area.radiusMeters / 111320) * 3,
+      longitudeDelta: (area.radiusMeters / 111320) * 3,
+    }, 500);
   };
 
+  // Keep old handlers for routes
   const handleRoutePress = (route: FloodRoute) => {
     setSelectedZone(null);
+    setSelectedArea(null);
     setSelectedRoute(route);
     focusOnRoute(route);
   };
+
 
   // Ray-casting algorithm for point in polygon
   function isPointInPolygon(
@@ -160,31 +179,29 @@ export default function MapScreen() {
     return inside;
   }
 
-  function getSensorsForZone(zoneId: string): Sensor[] {
-    const zone = FLOOD_ZONES.find((z) => z.id === zoneId);
-    if (!zone) return [];
-    return MOCK_SENSORS.filter((sensor) =>
-      isPointInPolygon(
-        { latitude: sensor.latitude, longitude: sensor.longitude },
-        zone.coordinates
-      )
-    );
-  }
+  // function getSensorsForZone(zoneId: string): Sensor[] {
+  //   const zone = FLOOD_ZONES.find((z) => z.id === zoneId);
+  //   if (!zone) return [];
+  //   return MOCK_SENSORS.filter((sensor) =>
+  //     isPointInPolygon(
+  //       { latitude: sensor.latitude, longitude: sensor.longitude },
+  //       zone.coordinates
+  //     )
+  //   );
+  // }
 
   const fetchMarkersInViewPort = useMemo(() => debounce((newRegion: Region) => {
     if (!settings.overlays.flood) return;
 
-    const bounds = [
-      newRegion.latitude - newRegion.latitudeDelta / 2,  // minLat
-      newRegion.longitude - newRegion.longitudeDelta / 2, // minLng
-      newRegion.latitude + newRegion.latitudeDelta / 2,  // maxLat
-      newRegion.longitude + newRegion.longitudeDelta / 2, // maxLng
-    ].join(',');
+    const params = {
+      minLat: newRegion.latitude - newRegion.latitudeDelta / 2,
+      minLng: newRegion.longitude - newRegion.longitudeDelta / 2,
+      maxLat: newRegion.latitude + newRegion.latitudeDelta / 2,
+      maxLng: newRegion.longitude + newRegion.longitudeDelta / 2,
+    };
     
-    // Tính zoom level từ latitudeDelta
-    const zoom = Math.round(Math.log2(360 / newRegion.latitudeDelta));
-    console.log('📍 Fetching markers in viewport:', { bounds, zoom });
-    refreshFloodSeverity(bounds, zoom);
+    console.log('📍 Fetching markers in viewport:', params);
+    refreshFloodSeverity(params);
   }, 800),  // Increased debounce for stability
   [refreshFloodSeverity, settings.overlays.flood]
   );
@@ -261,23 +278,17 @@ const handleRegionChange = useCallback(
               : undefined
           }
         >
-          {/* ZONES MODE */}
+          {/* ZONES MODE - API Areas */}
           {viewMode === "zones" &&
-            FLOOD_ZONES.map((zone) => (
-              <FloodZoneOverlay
-                key={zone.id}
-                zone={zone}
-                isSelected={selectedZone?.id === zone.id}
-                onPress={() => handleZonePress(zone)}
+            areas.map((area) => (
+              <AreaCircleOverlay
+                key={area.id}
+                area={area}
+                isSelected={selectedArea?.id === area.id}
+                onPress={() => handleAreaPress(area)}
               />
             ))}
 
-          {/* Sensors for selected zone */}
-          {viewMode === "zones" &&
-            selectedZone &&
-            getSensorsForZone(selectedZone.id).map((sensor) => (
-              <SensorMarker key={sensor.id} sensor={sensor} />
-            ))}
 
           {/* ROUTES MODE */}
           {viewMode === "routes" &&
@@ -421,12 +432,30 @@ const handleRegionChange = useCallback(
           )}
         </View>
 
-        {/* Selected Zone Card */}
-        {selectedZone && showDetailPanels && (
-          <FloodZoneCard
-            zone={selectedZone}
-            slideAnim={slideAnim}
-            onClose={() => setSelectedZone(null)}
+        {/* Selected Zone Card - now uses AreaCard */}
+        {selectedArea && (
+          <AreaCard
+            area={selectedArea}
+            slideAnim={areaCardAnim}
+            onClose={() => {
+              Animated.timing(areaCardAnim, {
+                toValue: 300,
+                duration: 200,
+                useNativeDriver: true,
+              }).start(() => setSelectedArea(null));
+            }}
+            onViewDetails={() => {
+              Animated.timing(areaCardAnim, {
+                toValue: 300,
+                duration: 200,
+                useNativeDriver: true,
+              }).start(() => {
+                router.push({
+                  pathname: "/map/area/[areaId]",
+                  params: { areaId: selectedArea.id }
+                });
+              });
+            }}
           />
         )}
 
@@ -466,8 +495,17 @@ const handleRegionChange = useCallback(
               }).start(() => setSelectedStation(null));
             }}
             onViewDetails={() => {
-              console.log('View details for:', selectedStation.properties.stationName);
-              // TODO: Navigate to station detail screen
+              // Close the card and navigate to detail screen
+              Animated.timing(stationCardAnim, {
+                toValue: 300,
+                duration: 200,
+                useNativeDriver: true,
+              }).start(() => {
+                router.push({
+                  pathname: "/map/[stationId]",
+                  params: { stationId: selectedStation.properties.stationId }
+                });
+              });
             }}
           />
         )}

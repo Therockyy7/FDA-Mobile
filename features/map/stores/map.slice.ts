@@ -3,8 +3,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { MapService } from "../services/map.service";
 import type {
+  AreaWithStatus,
   FloodSeverityGeoJSON,
-  MapLayerSettings,
+  FloodStatusParams,
+  MapLayerSettings
 } from "../types/map-layers.types";
 
 // Constants
@@ -28,8 +30,10 @@ export const DEFAULT_MAP_SETTINGS: MapLayerSettings = {
 export interface MapState {
   settings: MapLayerSettings;
   floodSeverity: FloodSeverityGeoJSON | null;
+  areas: AreaWithStatus[];
   loading: boolean;
   floodLoading: boolean;
+  areasLoading: boolean;
   settingsLoaded: boolean;
   error: string | null;
 }
@@ -37,8 +41,10 @@ export interface MapState {
 const initialState: MapState = {
   settings: DEFAULT_MAP_SETTINGS,
   floodSeverity: null,
+  areas: [],
   loading: false,
   floodLoading: false,
+  areasLoading: false,
   settingsLoaded: false,
   error: null,
 };
@@ -123,14 +129,49 @@ export const syncGuestSettingsToBackend = createAsyncThunk<
  */
 export const fetchFloodSeverity = createAsyncThunk<
   FloodSeverityGeoJSON,
-  { bounds?: string; zoom?: number } | undefined,
+  FloodStatusParams | undefined,
   { rejectValue: string }
 >("map/fetchFloodSeverity", async (params, { rejectWithValue }) => {
   try {
-    return await MapService.getFloodSeverity(params?.bounds, params?.zoom);
+    return await MapService.getFloodSeverity(params);
   } catch (error: any) {
     console.error("Failed to fetch flood severity:", error);
     return rejectWithValue(error?.message || "Không thể tải dữ liệu ngập lụt");
+  }
+});
+
+/**
+ * Fetch all areas with their statuses
+ */
+export const fetchAreas = createAsyncThunk<
+  AreaWithStatus[],
+  void,
+  { rejectValue: string }
+>("map/fetchAreas", async (_, { rejectWithValue }) => {
+  try {
+    // Fetch all areas
+    const areas = await MapService.getAreas();
+    
+    // Fetch status for each area in parallel
+    const areasWithStatus = await Promise.all(
+      areas.map(async (area) => {
+        const status = await MapService.getAreaStatus(area.id);
+        return {
+          ...area,
+          status: status.status,
+          severityLevel: status.severityLevel,
+          summary: status.summary,
+          contributingStations: status.contributingStations,
+          evaluatedAt: status.evaluatedAt,
+        };
+      })
+    );
+    
+    console.log(`✅ Loaded ${areasWithStatus.length} areas with status`);
+    return areasWithStatus;
+  } catch (error: any) {
+    console.error("Failed to fetch areas:", error);
+    return rejectWithValue(error?.message || "Không thể tải dữ liệu vùng");
   }
 });
 
@@ -261,6 +302,22 @@ const mapSlice = createSlice({
       .addCase(fetchFloodSeverity.rejected, (state, action) => {
         state.floodLoading = false;
         state.error = action.payload || "Lỗi tải dữ liệu ngập";
+      });
+
+    // Fetch areas
+    builder
+      .addCase(fetchAreas.pending, (state) => {
+        state.areasLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchAreas.fulfilled, (state, action) => {
+        console.log("✅ Areas loaded:", action.payload.length);
+        state.areas = action.payload;
+        state.areasLoading = false;
+      })
+      .addCase(fetchAreas.rejected, (state, action) => {
+        state.areasLoading = false;
+        state.error = action.payload || "Lỗi tải dữ liệu vùng";
       });
   },
 });

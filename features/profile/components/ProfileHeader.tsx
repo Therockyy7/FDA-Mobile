@@ -90,7 +90,7 @@ const ProfileHeader: React.FC<Props> = ({
           Extrapolation.CLAMP
         )
       : 1;
-    return { 
+    return {
       opacity,
       transform: [{ scale }],
     } as ViewStyle;
@@ -114,7 +114,8 @@ const ProfileHeader: React.FC<Props> = ({
     gradientEnd: isDarkColorScheme ? "#0F172A" : "#1D4ED8",
   };
 
-  const statusBarHeight = Platform.OS === "android" ? (StatusBar.currentHeight || 0) : 0;
+  const statusBarHeight =
+    Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0;
 
   return (
     <Animated.View style={[{ overflow: "hidden" }, headerAnimatedStyle]}>
@@ -155,8 +156,6 @@ const ProfileHeader: React.FC<Props> = ({
             justifyContent: "space-between",
             zIndex: 10,
             bottom: 20,
-            
-
           }}
         >
           {/* Back Button */}
@@ -200,7 +199,12 @@ const ProfileHeader: React.FC<Props> = ({
               }}
             />
             <Text
-              style={{ fontSize: 16, fontWeight: "700", color: "white", maxWidth: 150 }}
+              style={{
+                fontSize: 16,
+                fontWeight: "700",
+                color: "white",
+                maxWidth: 150,
+              }}
               numberOfLines={1}
             >
               {displayName}
@@ -215,7 +219,9 @@ const ProfileHeader: React.FC<Props> = ({
                   marginLeft: 8,
                 }}
               >
-                <Text style={{ fontSize: 8, fontWeight: "800", color: "white" }}>
+                <Text
+                  style={{ fontSize: 8, fontWeight: "800", color: "white" }}
+                >
                   ADMIN
                 </Text>
               </View>
@@ -242,9 +248,9 @@ const ProfileHeader: React.FC<Props> = ({
         {/* Full Profile Info - Fades out on scroll */}
         <Animated.View
           style={[
-            { 
-              flex: 1, 
-              alignItems: "center", 
+            {
+              flex: 1,
+              alignItems: "center",
               justifyContent: "center",
               zIndex: 5,
               bottom: 22,
@@ -260,7 +266,6 @@ const ProfileHeader: React.FC<Props> = ({
               shadowOpacity: 0.4,
               shadowRadius: 15,
               elevation: 8,
-              
             }}
           >
             <View style={{ position: "relative" }}>
@@ -276,7 +281,9 @@ const ProfileHeader: React.FC<Props> = ({
                 }}
               >
                 <Image
-                  source={{ uri: avatarUrl || "https://i.pravatar.cc/300?img=12" }}
+                  source={{
+                    uri: avatarUrl || "https://i.pravatar.cc/300?img=12",
+                  }}
                   style={{ width: "100%", height: "100%", borderRadius: 24 }}
                 />
               </View>
@@ -322,7 +329,14 @@ const ProfileHeader: React.FC<Props> = ({
           </View>
 
           {/* Name and Role */}
-          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10, gap: 6 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginTop: 10,
+              gap: 6,
+            }}
+          >
             <Text style={{ fontSize: 20, fontWeight: "800", color: "white" }}>
               {displayName}
             </Text>
@@ -335,7 +349,9 @@ const ProfileHeader: React.FC<Props> = ({
                   borderRadius: 6,
                 }}
               >
-                <Text style={{ fontSize: 9, fontWeight: "800", color: "white" }}>
+                <Text
+                  style={{ fontSize: 9, fontWeight: "800", color: "white" }}
+                >
                   ADMIN
                 </Text>
               </View>
@@ -343,7 +359,14 @@ const ProfileHeader: React.FC<Props> = ({
           </View>
 
           {/* Email */}
-          <Text style={{ fontSize: 12, fontWeight: "500", color: "rgba(255,255,255,0.7)", marginTop: 2 }}>
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: "500",
+              color: "rgba(255,255,255,0.7)",
+              marginTop: 2,
+            }}
+          >
             {email || "Chưa cập nhật email"}
           </Text>
 
@@ -367,8 +390,18 @@ const ProfileHeader: React.FC<Props> = ({
                   borderRadius: 14,
                 }}
               >
-                <Ionicons name="calendar-outline" size={10} color="rgba(255,255,255,0.7)" />
-                <Text style={{ fontSize: 10, color: "rgba(255,255,255,0.8)", marginLeft: 4 }}>
+                <Ionicons
+                  name="calendar-outline"
+                  size={10}
+                  color="rgba(255,255,255,0.7)"
+                />
+                <Text
+                  style={{
+                    fontSize: 10,
+                    color: "rgba(255,255,255,0.8)",
+                    marginLeft: 4,
+                  }}
+                >
                   {formattedDate}
                 </Text>
               </View>
@@ -378,7 +411,10 @@ const ProfileHeader: React.FC<Props> = ({
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                backgroundColor: status === "ACTIVE" ? "rgba(34, 197, 94, 0.15)" : "rgba(255,255,255,0.12)",
+                backgroundColor:
+                  status === "ACTIVE"
+                    ? "rgba(34, 197, 94, 0.15)"
+                    : "rgba(255,255,255,0.12)",
                 paddingHorizontal: 10,
                 paddingVertical: 4,
                 borderRadius: 14,
@@ -393,7 +429,13 @@ const ProfileHeader: React.FC<Props> = ({
                   marginRight: 4,
                 }}
               />
-              <Text style={{ fontSize: 10, color: status === "ACTIVE" ? "#86EFAC" : "rgba(255,255,255,0.7)" }}>
+              <Text
+                style={{
+                  fontSize: 10,
+                  color:
+                    status === "ACTIVE" ? "#86EFAC" : "rgba(255,255,255,0.7)",
+                }}
+              >
                 {status === "ACTIVE" ? "Online" : "Offline"}
               </Text>
             </View>

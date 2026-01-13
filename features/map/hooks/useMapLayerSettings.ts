@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "~/app/store";
 import {
   DEFAULT_MAP_SETTINGS,
+  fetchAreas,
   fetchFloodSeverity,
   loadMapSettings,
   saveMapSettings,
@@ -11,9 +12,8 @@ import {
   setOpacity,
   toggleOverlay,
 } from "../stores/map.slice";
-import type { MapLayerSettings } from "../types/map-layers.types";
+import type { FloodStatusParams, MapLayerSettings } from "../types/map-layers.types";
 
-// Debounce delay for saving settings (ms)
 const SAVE_DEBOUNCE_MS = 500;
 
 export function useMapLayerSettings() {
@@ -23,8 +23,10 @@ export function useMapLayerSettings() {
   // Selectors with safe defaults
   const settings = useSelector((state: RootState) => state.map?.settings ?? DEFAULT_MAP_SETTINGS);
   const floodSeverity = useSelector((state: RootState) => state.map?.floodSeverity ?? null);
+  const areas = useSelector((state: RootState) => state.map?.areas ?? []);
   const loading = useSelector((state: RootState) => state.map?.loading ?? false);
   const floodLoading = useSelector((state: RootState) => state.map?.floodLoading ?? false);
+  const areasLoading = useSelector((state: RootState) => state.map?.areasLoading ?? false);
   const settingsLoaded = useSelector((state: RootState) => state.map?.settingsLoaded ?? false);
   const error = useSelector((state: RootState) => state.map?.error ?? null);
   const isAuthenticated = useSelector(
@@ -62,7 +64,6 @@ export function useMapLayerSettings() {
   const handleToggleOverlay = useCallback(
     (layer: keyof MapLayerSettings["overlays"]) => {
       dispatch(toggleOverlay(layer));
-      // Get new settings after toggle
       const newSettings = {
         ...settings,
         overlays: {
@@ -100,18 +101,25 @@ export function useMapLayerSettings() {
 
   // Refresh flood severity data
   const refreshFloodSeverity = useCallback(
-    (bounds?: string, zoom?: number) => {
-      dispatch(fetchFloodSeverity({ bounds, zoom }));
+    (params?: FloodStatusParams) => {
+      dispatch(fetchFloodSeverity(params));
     },
     [dispatch]
   );
+
+  // Refresh areas data
+  const refreshAreas = useCallback(() => {
+    dispatch(fetchAreas());
+  }, [dispatch]);
 
   return {
     // State
     settings,
     floodSeverity,
+    areas,
     loading,
     floodLoading,
+    areasLoading,
     error,
     isAuthenticated,
 
@@ -120,5 +128,6 @@ export function useMapLayerSettings() {
     setBaseMap: handleSetBaseMap,
     setOpacity: handleSetOpacity,
     refreshFloodSeverity,
+    refreshAreas,
   };
 }

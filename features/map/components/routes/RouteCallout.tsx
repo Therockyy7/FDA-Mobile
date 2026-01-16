@@ -1,15 +1,15 @@
+// components/RouteCallout.tsx
 import { View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { Sensor } from "../constants/map-data";
-import { getStatusColor } from "../lib/map-utils";
+import { FloodRoute } from "../../constants/map-data";
+import { getStatusColor } from "../../lib/map-utils";
 
-
-interface CleanCalloutProps {
-  sensor: Sensor;
+interface RouteCalloutProps {
+  route: FloodRoute;
 }
 
-export function CleanCallout({ sensor }: CleanCalloutProps) {
-  const colors = getStatusColor(sensor.status);
+export function RouteCallout({ route }: RouteCalloutProps) {
+  const colors = getStatusColor(route.status);
 
   return (
     <View
@@ -17,7 +17,7 @@ export function CleanCallout({ sensor }: CleanCalloutProps) {
         backgroundColor: "white",
         padding: 16,
         borderRadius: 16,
-        minWidth: 280,
+        minWidth: 260,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.2,
@@ -35,8 +35,8 @@ export function CleanCallout({ sensor }: CleanCalloutProps) {
             marginBottom: 4,
           }}
         >
-          <Text style={{ fontSize: 18, fontWeight: "700", color: "#1F2937" }}>
-            {sensor.name}
+          <Text style={{ fontSize: 17, fontWeight: "700", color: "#1F2937" }}>
+            {route.name}
           </Text>
           <View
             style={{
@@ -46,12 +46,20 @@ export function CleanCallout({ sensor }: CleanCalloutProps) {
               borderRadius: 6,
             }}
           >
-            <Text style={{ fontSize: 10, fontWeight: "700", color: colors.text }}>
-              {sensor.statusText}
+            <Text
+              style={{ fontSize: 10, fontWeight: "700", color: colors.text }}
+            >
+              {route.status === "safe"
+                ? "An toàn"
+                : route.status === "warning"
+                  ? "Cảnh báo"
+                  : "Nguy hiểm"}
             </Text>
           </View>
         </View>
-        <Text style={{ fontSize: 13, color: "#6B7280" }}>{sensor.location}</Text>
+        <Text style={{ fontSize: 13, color: "#6B7280" }}>
+          {route.description}
+        </Text>
       </View>
 
       {/* Water Level */}
@@ -60,9 +68,19 @@ export function CleanCallout({ sensor }: CleanCalloutProps) {
           backgroundColor: colors.bg,
           padding: 12,
           borderRadius: 12,
-          marginBottom: 12,
+          marginBottom: 8,
         }}
       >
+        <Text
+          style={{
+            fontSize: 11,
+            color: "#6B7280",
+            marginBottom: 4,
+            textAlign: "center",
+          }}
+        >
+          Mực nước trung bình
+        </Text>
         <View
           style={{
             flexDirection: "row",
@@ -72,17 +90,17 @@ export function CleanCallout({ sensor }: CleanCalloutProps) {
         >
           <Text
             style={{
-              fontSize: 36,
+              fontSize: 32,
               fontWeight: "900",
               color: colors.main,
-              lineHeight: 36,
+              lineHeight: 32,
             }}
           >
-            {sensor.waterLevel}
+            {route.waterLevel}
           </Text>
           <Text
             style={{
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: "600",
               color: colors.text,
               marginLeft: 4,
@@ -102,7 +120,7 @@ export function CleanCallout({ sensor }: CleanCalloutProps) {
         >
           <View
             style={{
-              width: `${(sensor.waterLevel / sensor.maxLevel) * 100}%`,
+              width: `${Math.min((route.waterLevel / route.maxLevel) * 100, 100)}%`,
               height: "100%",
               backgroundColor: colors.main,
             }}
@@ -110,40 +128,23 @@ export function CleanCallout({ sensor }: CleanCalloutProps) {
         </View>
       </View>
 
-      {/* Stats */}
+      {/* Info */}
       <View
         style={{
           flexDirection: "row",
-          justifyContent: "space-around",
-          paddingTop: 12,
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingTop: 8,
           borderTopWidth: 1,
           borderTopColor: "#E5E7EB",
         }}
       >
-        <View style={{ alignItems: "center" }}>
-          <Text style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 2 }}>
-            Nhiệt độ
-          </Text>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: "#1F2937" }}>
-            {sensor.temperature}°
-          </Text>
-        </View>
-        <View style={{ alignItems: "center" }}>
-          <Text style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 2 }}>
-            Độ ẩm
-          </Text>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: "#1F2937" }}>
-            {sensor.humidity}%
-          </Text>
-        </View>
-        <View style={{ alignItems: "center" }}>
-          <Text style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 2 }}>
-            Cập nhật
-          </Text>
-          <Text style={{ fontSize: 11, fontWeight: "600", color: "#1F2937" }}>
-            {sensor.lastUpdate}
-          </Text>
-        </View>
+        <Text style={{ fontSize: 11, color: "#9CA3AF" }}>
+          Ngưỡng an toàn: {route.maxLevel}cm
+        </Text>
+        <Text style={{ fontSize: 11, fontWeight: "600", color: "#3B82F6" }}>
+          Chi tiết →
+        </Text>
       </View>
     </View>
   );

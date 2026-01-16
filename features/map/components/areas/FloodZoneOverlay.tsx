@@ -4,8 +4,8 @@ import React from "react";
 import { View } from "react-native";
 import { Marker, Polygon } from "react-native-maps";
 import { Text } from "~/components/ui/text";
-import { FloodZone } from "../constants/map-data";
-import { getStatusColor } from "../lib/map-utils";
+import { FloodZone } from "../../constants/map-data";
+import { getStatusColor } from "../../lib/map-utils";
 
 interface FloodZoneOverlayProps {
   zone: FloodZone;

@@ -1,11 +1,11 @@
 // features/map/components/FloodZoneCard.tsx
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Animated, TouchableOpacity, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Text } from "~/components/ui/text";
-import { FloodZone } from "../constants/map-data";
-import { getStatusColor } from "../lib/map-utils";
+import { FloodZone } from "../../constants/map-data";
+import { getStatusColor } from "../../lib/map-utils";
 
 interface FloodZoneCardProps {
   zone: FloodZone;

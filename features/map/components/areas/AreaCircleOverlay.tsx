@@ -7,7 +7,7 @@ import {
   AREA_STATUS_COLORS,
   AREA_STATUS_ICONS,
   type AreaWithStatus,
-} from "../types/map-layers.types";
+} from "../../types/map-layers.types";
 
 interface AreaCircleOverlayProps {
   area: AreaWithStatus;

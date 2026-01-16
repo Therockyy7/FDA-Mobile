@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Animated, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { Sensor } from "../constants/map-data";
-import { getStatusColor } from "../lib/map-utils";
+import { Sensor } from "../../constants/map-data";
+import { getStatusColor } from "../../lib/map-utils";
 
 
 interface SelectedSensorCardProps {

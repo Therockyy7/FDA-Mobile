@@ -5,25 +5,23 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Animated, StatusBar, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { Text } from "~/components/ui/text";
-import { AreaCard } from "~/features/map/components/AreaCard";
-import { AreaCircleOverlay } from "~/features/map/components/AreaCircleOverlay";
-import { FloodSeverityMarkers } from "~/features/map/components/FloodSeverityMarkers";
-import { FloodStationCard } from "~/features/map/components/FloodStationCard";
-import { LayerToggleSheet } from "~/features/map/components/LayerToggleSheet";
-import Legend from "~/features/map/components/Legend";
-import { MapControls } from "~/features/map/components/MapControls";
-import { MapHeader } from "~/features/map/components/MapHeader";
-import { MapLoadingOverlay } from "~/features/map/components/MapLoadingOverlay";
-import { MapTopControls } from "~/features/map/components/MapTopControls";
-import { RouteDetailCard } from "~/features/map/components/RouteDetailCard";
-import { RouteDirectionPanel } from "~/features/map/components/RouteDirectionPanel";
-import { WaterFlowRoute } from "~/features/map/components/WaterFlowRoute";
+import { AreaCard } from "~/features/map/components/areas/AreaCard";
+import { AreaCircleOverlay } from "~/features/map/components/areas/AreaCircleOverlay";
+import { LayerToggleSheet } from "~/features/map/components/controls/LayerToggleSheet";
+import Legend from "~/features/map/components/controls/Legend";
+import { MapControls } from "~/features/map/components/controls/MapControls";
+import { MapTopControls } from "~/features/map/components/controls/MapTopControls";
+import { MapLoadingOverlay } from "~/features/map/components/overlays/MapLoadingOverlay";
+import { RouteDetailCard } from "~/features/map/components/routes/RouteDetailCard";
+import { RouteDirectionPanel } from "~/features/map/components/routes/RouteDirectionPanel";
+import { WaterFlowRoute } from "~/features/map/components/routes/WaterFlowRoute";
+import { FloodSeverityMarkers } from "~/features/map/components/stations/FloodSeverityMarkers";
+import { FloodStationCard } from "~/features/map/components/stations/FloodStationCard";
+import { MapHeader } from "~/features/map/components/ui/MapHeader";
 import {
   DANANG_CENTER,
   FLOOD_ROUTES,
-  FloodRoute,
-  MOCK_SENSORS,
-  Sensor,
+  FloodRoute
 } from "~/features/map/constants/map-data";
 import { useFloodSelection } from "~/features/map/hooks/useFloodSelection";
 import { useMapCamera } from "~/features/map/hooks/useMapCamera";
@@ -31,7 +29,7 @@ import { useMapDisplay } from "~/features/map/hooks/useMapDisplay";
 import { useMapLayerSettings } from "~/features/map/hooks/useMapLayerSettings";
 import { useRoutingUI } from "~/features/map/hooks/useRoutingUI";
 import { useStreetView } from "~/features/map/hooks/useStreetView";
-import { debounce } from "~/features/map/lib/map-utils";
+import { debounce, MapRegion, shouldFetchNewMarkers } from "~/features/map/lib/map-utils";
 import { AreaWithStatus, FloodSeverityFeature } from "~/features/map/types/map-layers.types";
 
 type MapType = "standard" | "satellite" | "hybrid";
@@ -43,6 +41,9 @@ export default function MapScreen() {
   const [showLayerSheet, setShowLayerSheet] = useState(false);
   const [selectedStation, setSelectedStation] = useState<FloodSeverityFeature | null>(null);
   const stationCardAnim = useRef(new Animated.Value(300)).current;
+
+  // Track last fetched region to avoid unnecessary API calls
+  const lastFetchedRegionRef = useRef<MapRegion | null>(null);
 
   // Map layer settings hook
   const { settings, areas, refreshFloodSeverity, refreshAreas } = useMapLayerSettings();
@@ -134,12 +135,11 @@ export default function MapScreen() {
     setSelectedRoute(null);
     setSelectedZone(null);
     setSelectedArea(area);
-    // Animate card slide in
-    Animated.spring(areaCardAnim, {
+    // Animate card slide in - using timing for faster response
+    Animated.timing(areaCardAnim, {
       toValue: 0,
+      duration: 200,
       useNativeDriver: true,
-      tension: 65,
-      friction: 10,
     }).start();
     // Focus on area
     mapRef.current?.animateToRegion({
@@ -193,6 +193,15 @@ export default function MapScreen() {
   const fetchMarkersInViewPort = useMemo(() => debounce((newRegion: Region) => {
     if (!settings.overlays.flood) return;
 
+    // Check if region has changed enough to warrant a new fetch
+    if (!shouldFetchNewMarkers(newRegion, lastFetchedRegionRef.current)) {
+      console.log('⏭️ Skip fetch - region change too small');
+      return;
+    }
+
+    // Update last fetched region
+    lastFetchedRegionRef.current = newRegion;
+
     const params = {
       minLat: newRegion.latitude - newRegion.latitudeDelta / 2,
       minLng: newRegion.longitude - newRegion.longitudeDelta / 2,
@@ -202,7 +211,7 @@ export default function MapScreen() {
     
     console.log('📍 Fetching markers in viewport:', params);
     refreshFloodSeverity(params);
-  }, 800),  // Increased debounce for stability
+  }, 1000),  // Increased debounce to 1s for stability
   [refreshFloodSeverity, settings.overlays.flood]
   );
 
@@ -250,9 +259,9 @@ const handleRegionChange = useCallback(
           pitchEnabled={true}
           rotateEnabled={true}
           mapType={settings.baseMap === "satellite" ? "satellite" : mapType}
-          onMapReady={() => console.log("Map ready")}
           customMapStyle={
-            mapType === "standard"
+            // Disable custom style when traffic is ON (traffic needs default road colors)
+            mapType === "standard" && !settings.overlays.traffic
               ? [
                   {
                     featureType: "water",
@@ -333,16 +342,32 @@ const handleRegionChange = useCallback(
 
           {/* Flood Severity Markers from API */}
           <FloodSeverityMarkers
-            onMarkerPress={(feature) => {
+            onMarkerPress={useCallback((feature) => {
+              // Get marker coordinates
+              const [longitude, latitude] = feature.geometry.coordinates;
+              
+              // Clear other selections and set new station
+              setSelectedArea(null);
+              setSelectedRoute(null);
+              setSelectedZone(null);
               setSelectedStation(feature);
-              // Animate card slide in
-              Animated.spring(stationCardAnim, {
+              
+              // Animate card slide in immediately (same as handleAreaPress)
+              Animated.timing(stationCardAnim, {
                 toValue: 0,
+                duration: 200,
                 useNativeDriver: true,
-                tension: 65,
-                friction: 10,
               }).start();
-            }}
+              
+              // Focus camera on marker with offset so popup is visible
+              const LATITUDE_OFFSET = 0.008;
+              mapRef.current?.animateToRegion({
+                latitude: latitude - LATITUDE_OFFSET,
+                longitude: longitude,
+                latitudeDelta: 0.03,
+                longitudeDelta: 0.02,
+              }, 400);
+            }, [stationCardAnim, mapRef])}
           />
         </MapView>
 

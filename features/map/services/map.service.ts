@@ -217,7 +217,7 @@ export const MapService = {
         message: string;
         areas: Area[];
         totalCount: number;
-      }>("/api/v1/areas?pageNumber=1&pageSize=100");
+      }>("/api/v1/areas/me?pageNumber=1&pageSize=100");
       
       console.log(`🗺️ Loaded ${res.data.areas.length} areas`);
       return res.data.areas;
@@ -233,7 +233,7 @@ export const MapService = {
         success: boolean;
         message: string;
         data: AreaStatusResponse;
-      }>(`/api/v1/areas/${areaId}/status`);
+      }>(`/api/v1/area/areas/${areaId}/status`);
       
       return res.data.data;
     } catch (error) {

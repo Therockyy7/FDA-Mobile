@@ -6,11 +6,11 @@ import { Animated, ScrollView, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import {
-  AREA_STATUS_COLORS,
-  AREA_STATUS_ICONS,
-  AREA_STATUS_LABELS,
-  type AreaWithStatus,
-} from "../types/map-layers.types";
+    AREA_STATUS_COLORS,
+    AREA_STATUS_ICONS,
+    AREA_STATUS_LABELS,
+    type AreaWithStatus,
+} from "../../types/map-layers.types";
 
 interface AreaCardProps {
   area: AreaWithStatus;
@@ -355,3 +355,12 @@ export function AreaCard({
     </Animated.View>
   );
 }
+
+// Memoize component to prevent unnecessary re-renders
+export default React.memo(AreaCard, (prevProps, nextProps) => {
+  // Only re-render if area ID changes or slideAnim changes
+  return (
+    prevProps.area?.id === nextProps.area?.id &&
+    prevProps.slideAnim === nextProps.slideAnim
+  );
+});

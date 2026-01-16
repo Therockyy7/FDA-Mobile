@@ -1,8 +1,9 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, TouchableOpacity, View } from "react-native";
-import { MapSearch } from "./MapSearch";
+
 import { ViewMode } from "./ViewModeSelector";
+import { MapSearch } from "../ui/MapSearch";
 
 interface MapTopControlsProps {
   searchQuery: string;

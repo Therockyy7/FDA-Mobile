@@ -13,8 +13,8 @@ import {
 } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { useMapLayerSettings } from "../hooks/useMapLayerSettings";
-import type { BaseMapType, MapLayerSettings } from "../types/map-layers.types";
+import { useMapLayerSettings } from "../../hooks/useMapLayerSettings";
+import type { BaseMapType, MapLayerSettings } from "../../types/map-layers.types";
 
 interface LayerToggleSheetProps {
   visible: boolean;

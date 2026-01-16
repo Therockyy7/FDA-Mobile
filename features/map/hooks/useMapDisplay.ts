@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { MapType } from "react-native-maps";
-import { ViewMode } from "../components/ViewModeSelector";
+import { ViewMode } from "../components/controls/ViewModeSelector";
 import {
     FLOOD_ROUTES,
     FLOOD_ZONES,

@@ -19,7 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSelector } from "react-redux";
 import type { RootState } from "~/app/store";
 import { Text } from "~/components/ui/text";
-import { WaterLevelVisualization } from "~/features/map/components/WaterLevelVisualization";
+import { WaterLevelVisualization } from "~/features/map/components/overlays/WaterLevelVisualization";
 import {
     SEVERITY_COLORS,
     SEVERITY_LABELS

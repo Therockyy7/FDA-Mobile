@@ -4,8 +4,8 @@ import React, { useMemo } from "react";
 import { View } from "react-native";
 import { Marker, Polyline } from "react-native-maps";
 import { Text } from "~/components/ui/text";
-import { FloodRoute, MOCK_SENSORS } from "../constants/map-data";
-import { getStatusColor } from "../lib/map-utils";
+import { FloodRoute, MOCK_SENSORS } from "../../constants/map-data";
+import { getStatusColor } from "../../lib/map-utils";
 
 interface WaterFlowRouteProps {
   route: FloodRoute;

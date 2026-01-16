@@ -1,12 +1,12 @@
 // features/map/components/FloodSeverityMarkers.tsx
 import React, { useMemo } from "react";
 import { Marker } from "react-native-maps";
-import { useMapLayerSettings } from "../hooks/useMapLayerSettings";
+import { useMapLayerSettings } from "../../hooks/useMapLayerSettings";
 import {
     SEVERITY_COLORS,
     SEVERITY_LABELS,
     type FloodSeverityFeature,
-} from "../types/map-layers.types";
+} from "../../types/map-layers.types";
 
 interface FloodSeverityMarkersProps {
   onMarkerPress?: (feature: FloodSeverityFeature) => void;

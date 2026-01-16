@@ -53,3 +53,62 @@ export function debounce<T extends (...args: any[]) => any>(
     timeout = setTimeout(() => func(...args), wait) as unknown as NodeJS.Timeout;
   };
 }
+
+// Throttle function - ensures function is called at most once per interval
+// Unlike debounce, throttle guarantees execution at regular intervals
+export function throttle<T extends (...args: any[]) => any>(
+  func: T,
+  limit: number
+): (...args: Parameters<T>) => void {
+  let inThrottle = false;
+  let lastArgs: Parameters<T> | null = null;
+
+  return (...args: Parameters<T>) => {
+    if (!inThrottle) {
+      func(...args);
+      inThrottle = true;
+      setTimeout(() => {
+        inThrottle = false;
+        if (lastArgs) {
+          func(...lastArgs);
+          lastArgs = null;
+        }
+      }, limit);
+    } else {
+      lastArgs = args; // Store latest args to call after throttle ends
+    }
+  };
+}
+
+// Region type for map
+export interface MapRegion {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+}
+
+// Minimum distance threshold (in degrees) before fetching new markers
+// ~0.005 degrees ≈ ~500m at equator
+const MINIMUM_REGION_DELTA = 0.005;
+
+// Check if region has changed enough to warrant a new API call
+export function shouldFetchNewMarkers(
+  newRegion: MapRegion,
+  lastRegion: MapRegion | null
+): boolean {
+  if (!lastRegion) return true;
+
+  const latChange = Math.abs(newRegion.latitude - lastRegion.latitude);
+  const lngChange = Math.abs(newRegion.longitude - lastRegion.longitude);
+  const zoomChange = Math.abs(
+    newRegion.latitudeDelta - lastRegion.latitudeDelta
+  );
+
+  // Fetch if moved significantly OR zoom changed significantly
+  return (
+    latChange > MINIMUM_REGION_DELTA ||
+    lngChange > MINIMUM_REGION_DELTA ||
+    zoomChange > MINIMUM_REGION_DELTA * 2
+  );
+}

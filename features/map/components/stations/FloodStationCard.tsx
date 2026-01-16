@@ -5,10 +5,10 @@ import { Animated, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import {
-  FloodSeverityFeature,
-  SEVERITY_COLORS,
-  SEVERITY_LABELS,
-} from "../types/map-layers.types";
+    FloodSeverityFeature,
+    SEVERITY_COLORS,
+    SEVERITY_LABELS,
+} from "../../types/map-layers.types";
 
 interface FloodStationCardProps {
   station: FloodSeverityFeature;
@@ -506,3 +506,12 @@ export function FloodStationCard({
     </Animated.View>
   );
 }
+
+// Memoize component to prevent unnecessary re-renders
+export default React.memo(FloodStationCard, (prevProps, nextProps) => {
+  // Only re-render if station ID changes or slideAnim changes
+  return (
+    prevProps.station?.properties?.stationId === nextProps.station?.properties?.stationId &&
+    prevProps.slideAnim === nextProps.slideAnim
+  );
+});

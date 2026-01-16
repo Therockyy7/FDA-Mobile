@@ -1,11 +1,11 @@
 // features/map/components/RouteDetailCard.tsx
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Animated, TouchableOpacity, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Text } from "~/components/ui/text";
-import { FloodRoute } from "../constants/map-data";
-import { getStatusColor } from "../lib/map-utils";
+import { FloodRoute } from "../../constants/map-data";
+import { getStatusColor } from "../../lib/map-utils";
 
 interface RouteDetailCardProps {
   route: FloodRoute;

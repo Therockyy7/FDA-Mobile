@@ -16,12 +16,20 @@ import {
     MOCK_NOTIFICATIONS,
 } from "~/features/notifications/constants/notifications-data";
 import { Notification, NotificationPriority } from "~/features/notifications/types/notifications-types";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { isDarkColorScheme } = useColorScheme();
   const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<"all" | NotificationPriority>("all");
+
+  // Theme colors
+  const colors = {
+    background: isDarkColorScheme ? "#0F172A" : "#F9FAFB",
+    statusBarStyle: isDarkColorScheme ? "light-content" : "dark-content",
+  };
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -39,13 +47,11 @@ export default function NotificationsScreen() {
   }, []);
 
   const handleMapPress = useCallback((notificationId: string) => {
-    // TODO: Navigate to map with notification location
     console.log("View map for notification:", notificationId);
     router.push("/map" as any);
   }, [router]);
 
   const handleDirectionsPress = useCallback((notificationId: string) => {
-    // TODO: Navigate to route planner
     console.log("Get directions for notification:", notificationId);
   }, []);
 
@@ -63,8 +69,6 @@ export default function NotificationsScreen() {
   );
 
   const handleDetailsPress = useCallback((notificationId: string) => {
-    
-    // console.log("View details for notification:", notificationId);
     router.push({
         pathname: '/notifications/[id]',
         params: { id: notificationId }
@@ -72,9 +76,9 @@ export default function NotificationsScreen() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar
-        barStyle="dark-content"
+        barStyle={colors.statusBarStyle as any}
         backgroundColor="transparent"
         translucent
       />
@@ -83,7 +87,6 @@ export default function NotificationsScreen() {
       <NotificationsHeader
         unreadCount={unreadCount}
         onFilterPress={() => {
-          // TODO: Open filter modal
           console.log("Open filter modal");
         }}
       />
@@ -100,7 +103,11 @@ export default function NotificationsScreen() {
         style={{ flex: 1 }}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor={isDarkColorScheme ? "#60A5FA" : "#3B82F6"}
+          />
         }
       >
         {filteredNotifications.length === 0 ? (

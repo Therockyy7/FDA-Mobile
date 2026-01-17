@@ -1,20 +1,29 @@
-# Expo Base Starter Kit
+# FDA App
 
-This is a comprehensive starter kit for building cross-platform mobile applications using Expo and React Native. It's designed to provide a solid foundation with a modern tech stack and a scalable project structure, allowing you to start developing features right away.
+FDA App is a cross-platform mobile application built with Expo and React Native, designed to provide flood disaster alerts and community safety information.
 
-This boilerplate comes pre-configured with essential tools for routing, state management, styling, and data fetching, saving you from the initial setup hassle.
+This app comes pre-configured with essential tools for routing, state management, styling, and data fetching.
+
+> **Note:** The OTP for Login/SignUp (Phone/Email) is `123456` (this will be fixed in the next version).
 
 ## ✨ Features
+
+- **Flood Zone Map**: Interactive map displaying flood zones and disaster areas.
+- **Real-time Notifications**: Push notifications for flood alerts and safety warnings.
+- **Community Updates**: Stay connected with community safety information.
+- **User Profile**: Manage your profile and saved areas.
+- **Dark Mode Support**: Built-in support for light and dark themes.
+
+## 🛠️ Tech Features
 
 - **Expo Router**: A powerful file-system-based router for React Native.
 - **TypeScript**: For type safety and improved developer experience.
 - **Tailwind CSS (NativeWind)**: A utility-first CSS framework for rapid UI development.
-- **Zustand**: A small, fast, and scalable state management solution.
-- **Supabase**: Integrated backend-as-a-service for authentication, database, and storage.
+- **Redux Toolkit**: A scalable state management solution with Redux Persist for data persistence.
+- **React Query**: Powerful data fetching and server state management.
 - **React Hook Form**: Performant, flexible, and extensible forms with easy-to-use validation.
 - **Feature-Sliced Design**: A scalable architecture for organizing your codebase.
 - **ESLint & Prettier**: For consistent code style and quality.
-- **Dark Mode Support**: Built-in support for light and dark themes.
 
 ## 🥞 Tech Stack
 
@@ -22,8 +31,8 @@ This boilerplate comes pre-configured with essential tools for routing, state ma
 - **Routing**: [Expo Router](https://docs.expo.dev/router/introduction/)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) via [NativeWind](https://www.nativewind.dev/)
-- **State Management**: [Zustand](https://zustand-demo.pmnd.rs/)
-- **Backend & Database**: [Supabase](https://supabase.io/)
+- **State Management**: [Redux Toolkit](https://redux-toolkit.js.org/) with [Redux Persist](https://github.com/rt2zz/redux-persist)
+- **Data Fetching**: [TanStack React Query](https://tanstack.com/query/latest)
 - **Forms**: [React Hook Form](https://react-hook-form.com/)
 - **Linting**: [ESLint](https://eslint.org/)
 - **Formatting**: [Prettier](https://prettier.io/)
@@ -35,32 +44,36 @@ This starter kit uses a feature-based directory structure to promote modularity 
 ```
 /
 ├── app/                # Expo Router routes (the "screens" of your app)
+│   ├── store.ts        # Redux store configuration
+│   ├── hooks.ts        # Typed Redux hooks (useAppSelector, useAppDispatch)
+│   └── ...
 ├── assets/             # Static assets like fonts and images
 ├── components/         # Global, shared, and reusable UI components
 │   └── ui/             # Unstyled base components (Button, Input, etc.)
 ├── features/           # Feature-specific modules
 │   ├── auth/           # Authentication feature
 │   │   ├── components/ # React components specific to auth
-│   │   ├── stores/     # Zustand stores for auth state
+│   │   ├── stores/     # Redux slices for auth state (auth.slice.ts)
 │   │   └── utils/      # Utility functions for auth
-│   └── notes/          # Notes feature
-│       ├── components/
-│       ├── hooks/      # React Query hooks for notes
-│       ├── services/   # Data fetching services for notes
-│       └── types/      # TypeScript types for the notes feature
-├── lib/                # Core libraries and utilities (Supabase client, constants)
+│   ├── home/           # Home screen feature
+│   ├── map/            # Map and flood zones feature
+│   ├── profile/        # User profile feature
+│   ├── notifications/  # Notifications feature
+│   ├── community/      # Community feature
+│   └── areas/          # Areas management feature
+├── lib/                # Core libraries and utilities (constants, helpers)
 ├── services/           # Global API service definitions
-├── supabase-migrations/ # Database migration scripts for Supabase
 └── ...
 ```
 
 ### The `features` Directory
 
-The `/features` directory is the heart of the application's business logic. Each subdirectory represents a distinct feature (e.g., `auth`, `profile`, `notes`). Inside each feature folder, you'll find all the code related to that feature:
+The `/features` directory is the heart of the application's business logic. Each subdirectory represents a distinct feature (e.g., `auth`, `profile`, `map`). Inside each feature folder, you'll find all the code related to that feature:
+
 - **`components`**: React components that are only used within this feature.
 - **`hooks`**: React Query or other hooks for data fetching and logic.
 - **`services`**: Functions that interact with APIs or external services.
-- **`stores`**: State management stores (e.g., Zustand) for the feature's state.
+- **`stores`**: Redux Toolkit slices (`*.slice.ts`) for the feature's state management.
 - **`types`**: TypeScript interfaces and type definitions.
 
 This approach makes the codebase easier to navigate and maintain as it grows. It also encourages code reusability and separation of concerns.
@@ -76,32 +89,28 @@ This approach makes the codebase easier to navigate and maintain as it grows. It
 ### Installation & Setup
 
 1.  **Clone the repository:**
+
     ```bash
-    git clone https://github.com/sawsew467/expo-starter-kit
-    cd expo-starter-kit
+    git clone https://github.com/Therockyy7/FDA-Mobile
+    cd FDA-Mobile
     ```
 
 2.  **Install dependencies:**
+
     ```bash
     npm install
     ```
 
-3.  **Set up environment variables:**
-    -   Copy the example `.env.example` file to a new `.env` file:
-        ```bash
-        cp .env.example .env
-        ```
-    -   Open the `.env` file and add your Supabase URL and Anon Key. You can find these in your Supabase project's API settings.
+3.  **Run the application:**
 
-4.  **Run the application:**
     ```bash
     npm start
     ```
-    This will start the Metro bundler. You can then run the app on a simulator or a physical device.
 
-    -   Press `i` to run on the iOS Simulator.
-    -   Press `a` to run on the Android Emulator.
-    -   Scan the QR code with the Expo Go app on your phone.
+    This will start the Metro bundler. You can then run the app on a simulator or a physical device.
+    - Press `i` to run on the iOS Simulator.
+    - Press `a` to run on the Android Emulator.
+    - Scan the QR code with the Expo Go app on your phone.
 
 ## 📜 Available Scripts
 

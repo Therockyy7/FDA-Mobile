@@ -1,3 +1,4 @@
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { DarkTheme, DefaultTheme, Theme } from "@react-navigation/native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useSegments } from "expo-router";
@@ -12,6 +13,7 @@ import { persistor, store } from "~/app/store";
 
 import { useAppDispatch, useAppSelector } from "~/app/hooks";
 import { initializeAuth } from "~/features/auth/stores/auth.slice";
+
 import { NAV_THEME } from "~/lib/constants";
 import { useColorScheme } from "~/lib/useColorScheme";
 import "../global.css";
@@ -34,15 +36,24 @@ const useIsomorphicLayoutEffect =
     ? React.useEffect
     : React.useLayoutEffect;
 
+// RootLayout.tsx hoặc app/_layout.tsx
+
+GoogleSignin.configure({
+  webClientId: "176554472012-dm1lfi1lq24m5i1p5lb3e4rvlp4gsgpe.apps.googleusercontent.com",
+  scopes: ["profile", "email"],
+});
+
 
 function RootStack() {
   const hasMounted = React.useRef(false);
   const segments = useSegments();
   const { colorScheme, isDarkColorScheme } = useColorScheme();
   const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
-
+  const status = useAppSelector((state) => state.auth.status);
   const dispatch = useAppDispatch();
   const authLoading = useAppSelector((state) => state.auth.loading);
+
+
 
   useEffect(() => {
     console.log("Path: ", segments[0]);
@@ -89,10 +100,7 @@ function RootStack() {
           
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="(auth)" />
-          <Stack.Screen
-            name="area-detail/[id]"
-            options={{ title: "Chi tiết khu vực" }}
-          />
+          <Stack.Screen name="community" />
         </Stack>
         {/* </ThemeProvider> */}
       </SafeAreaProvider>

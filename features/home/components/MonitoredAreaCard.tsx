@@ -3,9 +3,8 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { getStatusConfig } from "../lib/home-utils";
-import { Area } from "~/features/areas/types/areas-types";
 import { cn } from "~/lib/utils";
+import { getStatusConfig } from "../lib/home-utils";
 import { MonitoredArea } from "../types/home-types";
 
 interface MonitoredAreaCardProps {
@@ -24,7 +23,7 @@ export function MonitoredAreaCard({ area }: MonitoredAreaCardProps) {
 
   return (
     <TouchableOpacity
-      onPress={() => router.push(`/area-detail/${area.id}` as any)}
+      onPress={() => router.push(`/areas/${area.id}` as any)}
       activeOpacity={0.7}
       style={{
         shadowColor: "#000",

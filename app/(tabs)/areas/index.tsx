@@ -2,13 +2,13 @@
 import { useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import {
-  LayoutAnimation,
-  Platform,
-  RefreshControl,
-  ScrollView,
-  StatusBar,
-  UIManager,
-  View,
+    LayoutAnimation,
+    Platform,
+    RefreshControl,
+    ScrollView,
+    StatusBar,
+    UIManager,
+    View,
 } from "react-native";
 import { AddAreaModal } from "~/features/areas/components/AddAreaModal";
 import { AreaCard } from "~/features/areas/components/AreaCard";
@@ -16,8 +16,8 @@ import { AreaMenuModal } from "~/features/areas/components/AreaMenuModal";
 import { AreasHeader } from "~/features/areas/components/AreasHeader";
 import { EmptyAreasState } from "~/features/areas/components/EmptyAreasState";
 import { USER_AREAS } from "~/features/areas/constants/areas-data";
-
 import { Area } from "~/features/areas/types/areas-types";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 // Enable LayoutAnimation for Android
 if (
@@ -29,11 +29,19 @@ if (
 
 export default function AreasScreen() {
   const router = useRouter();
+  const { isDarkColorScheme } = useColorScheme();
   const [areas, setAreas] = useState<Area[]>(USER_AREAS);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedArea, setSelectedArea] = useState<Area | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showMenuModal, setShowMenuModal] = useState(false);
+
+  // Theme colors
+  const colors = {
+    background: isDarkColorScheme ? "#0F172A" : "#F9FAFB",
+    statusBarStyle: isDarkColorScheme ? "light-content" : "dark-content",
+    refreshColor: isDarkColorScheme ? "#60A5FA" : "#3B82F6",
+  };
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -73,7 +81,6 @@ export default function AreasScreen() {
   }, []);
 
   const handleEditArea = useCallback(() => {
-    // TODO: Implement edit functionality
     console.log("Edit area:", selectedArea);
   }, [selectedArea]);
 
@@ -86,9 +93,9 @@ export default function AreasScreen() {
   }, [areas]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F9FAFB" }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar
-        barStyle="dark-content"
+        barStyle={colors.statusBarStyle as any}
         backgroundColor="transparent"
         translucent
       />
@@ -103,8 +110,8 @@ export default function AreasScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={["#3B82F6"]}
-            tintColor="#3B82F6"
+            colors={[colors.refreshColor]}
+            tintColor={colors.refreshColor}
           />
         }
       >
@@ -116,10 +123,12 @@ export default function AreasScreen() {
               key={area.id}
               area={area}
               onPress={() => {
-                // TODO: Navigate to detail
                 console.log("id: ", area.id);
-                
-                router.push(`/area-detail/${area.id}` as any)
+                router.push({
+                    pathname: '/areas/[id]',
+                    params: { id: area.id }
+                });;
+           
               }}
               onMenuPress={() => {
                 setSelectedArea(area);

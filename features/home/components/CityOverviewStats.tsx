@@ -1,7 +1,8 @@
-
+// features/home/components/CityOverviewStats.tsx
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import LottieView from "lottie-react-native";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
@@ -32,8 +33,25 @@ export function CityOverviewStats({ stats }: CityOverviewStatsProps) {
           shadowRadius: 12,
           elevation: 6,
           borderRadius: 20,
+          overflow: "hidden",
         }}
       >
+        {/* Lottie Water Animation Background */}
+        <LottieView
+          source={require("../../../assets/animations/city-stats.json")}
+          autoPlay
+          loop
+          speed={0.4}
+          style={{
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            left: 0,
+            bottom: -20,
+            opacity: 0.2,
+          }}
+        />
+
         {/* Header */}
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center gap-2">

@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
 
 import { CityOverviewStats } from "~/features/home/components/CityOverviewStats";
+import { CommunityBanner } from "~/features/home/components/CommunityBanner";
 import { EmergencyAlertBanner } from "~/features/home/components/EmergencyAlertBanner";
 import { HomeHeader } from "~/features/home/components/HomeHeader";
 import { MonitoredAreasSection } from "~/features/home/components/MonitoredAreasSection";
@@ -44,6 +45,8 @@ export default function HomeScreen() {
         <EmergencyAlertBanner alert={MOCK_ALERT} />
 
         <QuickActionsGrid actions={QUICK_ACTIONS} />
+
+        <CommunityBanner />
 
         <MonitoredAreasSection areas={HOME_AREAS} />
 

@@ -1,6 +1,6 @@
 
-export type AreaStatus = "safe" | "warning" | "danger";
-export type FloodLevel = "safe" | "warning" | "danger" ;
+export type AreaStatus = "safe" | "warning" | "danger" | "critical";
+export type FloodLevel = "safe" | "warning" | "danger" | "critical";
 export type AreaType = "personal" | "district";
 export interface Area {
   id: string;

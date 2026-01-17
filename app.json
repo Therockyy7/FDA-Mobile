@@ -1,17 +1,23 @@
 {
   "expo": {
-    "name": "",
-    
+    "name": "FDA App",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "FDA",
+    "scheme": "fda-mobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fda.mobile"
     },
     "android": {
+      "package": "com.fda.mobile",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyB8drKIcdo8Ty_yzkXNBpYsF3w7Oi_r3mU"
+        }
+      },
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -35,10 +41,35 @@
         }
       ],
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.176554472012-2ks2ui6bnf59s3e4d179422jctoohgcj",
+          "scopes": [
+            "profile",
+            "email"
+          ]
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "googleRedirectPath": "auth/google/callback",
+      "router": {},
+      "eas": {
+        "projectId": "620158e0-e474-4ace-b801-c2f2e5406932"
+      }
     }
   }
 }

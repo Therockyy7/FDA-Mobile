@@ -1,7 +1,9 @@
 
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { ScrollView, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { useColorScheme } from "~/lib/useColorScheme";
 import { FilterOption } from "../types/notifications-types";
 
 interface NotificationFiltersProps {
@@ -10,59 +12,85 @@ interface NotificationFiltersProps {
   onFilterChange: (filter: FilterOption["key"]) => void;
 }
 
+const getFilterIcon = (key: string) => {
+  switch (key) {
+    case "all":
+      return "apps";
+    case "high":
+      return "warning";
+    case "medium":
+      return "alert-circle";
+    case "low":
+      return "checkmark-circle";
+    default:
+      return "ellipse";
+  }
+};
+
 export function NotificationFilters({
   filters,
   activeFilter,
   onFilterChange,
 }: NotificationFiltersProps) {
+  const { isDarkColorScheme } = useColorScheme();
+
+  // Theme colors
+  const colors = {
+    background: isDarkColorScheme ? "#0F172A" : "#FFFFFF",
+    border: isDarkColorScheme ? "#1E293B" : "#E5E7EB",
+    inactiveBg: isDarkColorScheme ? "#1E293B" : "#F3F4F6",
+    inactiveText: isDarkColorScheme ? "#94A3B8" : "#6B7280",
+  };
+
   return (
     <View
       style={{
-        paddingVertical: 4,
-        marginBottom: 8,
-        backgroundColor: "white",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 4,
-        alignItems: "center",
+        paddingVertical: 12,
+        backgroundColor: colors.background,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
       }}
     >
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
-          gap: 8,
+          gap: 10,
           paddingHorizontal: 16,
         }}
-        // Giới hạn chiều cao để không chiếm full màn
-        style={{ maxHeight: 40 }}
       >
         {filters.map((filter) => {
           const isActive = activeFilter === filter.key;
           const backgroundColor = isActive
             ? filter.color || "#3B82F6"
-            : "#F3F4F6";
+            : colors.inactiveBg;
+          const textColor = isActive ? "white" : colors.inactiveText;
 
           return (
             <TouchableOpacity
               key={filter.key}
               onPress={() => onFilterChange(filter.key)}
               style={{
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: 999,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+                borderRadius: 12,
                 backgroundColor,
-                alignSelf: "flex-start", // để nút không kéo full height
               }}
               activeOpacity={0.7}
             >
+              <Ionicons 
+                name={getFilterIcon(filter.key) as any} 
+                size={14} 
+                color={textColor} 
+              />
               <Text
                 style={{
                   fontSize: 13,
                   fontWeight: "700",
-                  color: isActive ? "white" : "#6B7280",
+                  color: textColor,
                 }}
               >
                 {filter.label}
@@ -74,4 +102,3 @@ export function NotificationFilters({
     </View>
   );
 }
-

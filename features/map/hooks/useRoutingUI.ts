@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TransportMode } from "../components/RouteDirectionPanel";
+import { TransportMode } from "../components/routes/RouteDirectionPanel";
 
 export function useRoutingUI() {
   const [isRoutingUIVisible, setIsRoutingUIVisible] = useState(false);

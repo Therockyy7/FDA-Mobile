@@ -108,11 +108,13 @@ export function RadiusAdjustBar({
             />
           </View>
           <View>
-            <Text style={{ fontSize: 14, fontWeight: "700", color: colors.text }}>
+            <Text
+              style={{ fontSize: 14, fontWeight: "700", color: colors.text }}
+            >
               Chọn vùng theo dõi
             </Text>
             <Text style={{ fontSize: 11, color: colors.subtext }}>
-              Kéo bản đồ để di chuyển vị trí
+              Nhấn lên bản đồ hoặc kéo để di chuyển
             </Text>
           </View>
         </View>
@@ -196,13 +198,19 @@ export function RadiusAdjustBar({
           }}
         >
           <Ionicons name="close" size={18} color={colors.subtext} />
-          <Text style={{ fontSize: 14, fontWeight: "600", color: colors.subtext }}>
+          <Text
+            style={{ fontSize: 14, fontWeight: "600", color: colors.subtext }}
+          >
             Hủy
           </Text>
         </TouchableOpacity>
 
         {/* Confirm Button */}
-        <TouchableOpacity onPress={onConfirm} activeOpacity={0.9} style={{ flex: 2 }}>
+        <TouchableOpacity
+          onPress={onConfirm}
+          activeOpacity={0.9}
+          style={{ flex: 2 }}
+        >
           <LinearGradient
             colors={["#3B82F6", "#2563EB"]}
             start={{ x: 0, y: 0 }}

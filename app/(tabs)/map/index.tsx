@@ -12,8 +12,10 @@ import { Animated, StatusBar, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { Text } from "~/components/ui/text";
 import { useControlArea } from "~/features/areas/hooks/useControlArea";
+import { AddressSearchSheet } from "~/features/map/components/areas/AddressSearchSheet";
 import { AreaCard } from "~/features/map/components/areas/AreaCard";
 import { AreaCircleOverlay } from "~/features/map/components/areas/AreaCircleOverlay";
+import { AreaCreationOptionSheet } from "~/features/map/components/areas/AreaCreationOptionSheet";
 import { AreaPreviewCircle } from "~/features/map/components/areas/AreaPreviewCircle";
 import { CreateAreaSheet } from "~/features/map/components/areas/CreateAreaSheet";
 import { RadiusAdjustBar } from "~/features/map/components/areas/RadiusAdjustBar";
@@ -66,7 +68,6 @@ export default function MapScreen() {
   const stationCardAnim = useRef(new Animated.Value(300)).current;
 
   const lastFetchedRegionRef = useRef<MapRegion | null>(null);
-
 
   const { settings, areas, refreshFloodSeverity, refreshAreas } =
     useMapLayerSettings();
@@ -160,6 +161,10 @@ export default function MapScreen() {
     draftAreaCenter,
     draftAreaRadius,
     editingArea,
+    // NEW: Option selection states
+    showCreationOptions,
+    showAddressSearch,
+    draftAddress,
     setSelectedArea,
     setDraftAreaRadius,
     setDraftAreaCenter,
@@ -174,10 +179,17 @@ export default function MapScreen() {
     handleCreateAreaSubmit,
     handleCloseCreateArea,
     handleMapPress,
+    // NEW: Option selection handlers
+    handleOptionSelect,
+    handleAddressSelected,
+    handleCloseCreationOptions,
+    handleCloseAddressSearch,
   } = useControlArea({
     mapRef,
     region,
-    refreshAreas,
+    refreshAreas: () => {
+      refreshAreas();
+    },
     clearSelections: () => {
       setSelectedRoute(null);
       setSelectedZone(null);
@@ -625,16 +637,18 @@ export default function MapScreen() {
               }).start(() => setSelectedStation(null));
             }}
             onViewDetails={() => {
-              // Close the card and navigate to detail screen
+              // Store stationId before closing card
+              const stationId = selectedStation.properties.stationId;
+
+              // Close the card first
               Animated.timing(stationCardAnim, {
                 toValue: 300,
                 duration: 200,
                 useNativeDriver: true,
               }).start(() => {
-                router.push({
-                  pathname: "/map/[stationId]",
-                  params: { stationId: selectedStation.properties.stationId },
-                });
+                setSelectedStation(null);
+                // Navigate after card is closed and state is cleared
+                router.push(`/map/${stationId}`);
               });
             }}
           />
@@ -668,8 +682,24 @@ export default function MapScreen() {
                   name: editingArea.name,
                   addressText: editingArea.addressText || "",
                 }
-              : undefined
+              : draftAddress
+                ? { name: "", addressText: draftAddress }
+                : undefined
           }
+        />
+
+        {/* NEW: Area Creation Option Sheet */}
+        <AreaCreationOptionSheet
+          visible={showCreationOptions}
+          onClose={handleCloseCreationOptions}
+          onSelectOption={handleOptionSelect}
+        />
+
+        {/* NEW: Address Search Sheet */}
+        <AddressSearchSheet
+          visible={showAddressSearch}
+          onClose={handleCloseAddressSearch}
+          onSelectLocation={handleAddressSelected}
         />
       </View>
     </View>

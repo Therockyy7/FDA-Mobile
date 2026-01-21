@@ -22,7 +22,7 @@ export default function HomeScreen() {
 
   // Initial loading effect
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
+    const timer = setTimeout(() => setIsLoading(false), 850);
     return () => clearTimeout(timer);
   }, []);
 

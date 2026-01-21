@@ -40,7 +40,7 @@ const TabsLayout = () => {
     inactiveColor: isDarkColorScheme ? "#64748B" : "#94A3B8",
   };
 
-  console.log("TABS layout, user?", !!user);
+  // console.log("TABS layout, user?", !!user);
   
   return (
     <>

@@ -1,11 +1,11 @@
 // features/areas/hooks/useControlArea.ts
 // Hook to manage all area-related operations for map screen
+import * as Location from "expo-location";
 import { useCallback, useRef, useState } from "react";
 import { Alert, Animated } from "react-native";
 import type MapView from "react-native-maps";
 import type { MapPressEvent, Region } from "react-native-maps";
 import { AreaService } from "~/features/areas/services/area.service";
-import { DANANG_CENTER } from "~/features/map/constants/map-data";
 import type { AreaWithStatus } from "~/features/map/types/map-layers.types";
 
 type UseControlAreaParams = {
@@ -14,6 +14,9 @@ type UseControlAreaParams = {
   refreshAreas: () => void | Promise<void>;
   clearSelections: () => void;
 };
+
+// Default radius for new areas (meters)
+const DEFAULT_RADIUS = 150;
 
 export function useControlArea({
   mapRef,
@@ -25,6 +28,11 @@ export function useControlArea({
   const [selectedArea, setSelectedArea] = useState<AreaWithStatus | null>(null);
   const areaCardAnim = useRef(new Animated.Value(300)).current;
 
+  // New: Option selection state
+  const [showCreationOptions, setShowCreationOptions] = useState(false);
+  const [showAddressSearch, setShowAddressSearch] = useState(false);
+  const [draftAddress, setDraftAddress] = useState("");
+
   // Create/Edit area state - Two-step flow
   // Step 1: Adjust radius bar visible, map draggable
   // Step 2: Modal for name/address input
@@ -35,7 +43,7 @@ export function useControlArea({
     latitude: number;
     longitude: number;
   } | null>(null);
-  const [draftAreaRadius, setDraftAreaRadius] = useState(500);
+  const [draftAreaRadius, setDraftAreaRadius] = useState(DEFAULT_RADIUS);
   const [editingArea, setEditingArea] = useState<AreaWithStatus | null>(null);
 
   // Handle area press - select and show card
@@ -105,22 +113,136 @@ export function useControlArea({
     );
   }, [selectedArea, refreshAreas]);
 
-  // Step 1: Start creating area - show radius adjust bar
+  // NEW: Start creating area - show option selection sheet
   const handleStartCreateArea = useCallback(() => {
     clearSelections();
     setSelectedArea(null);
+    setShowCreationOptions(true);
+  }, [clearSelections]);
 
-    // Set draft area at current map center
-    const currentCenter = region || DANANG_CENTER;
-    setDraftAreaCenter({
-      latitude: currentCenter.latitude,
-      longitude: currentCenter.longitude,
-    });
-    setDraftAreaRadius(100);
-    setIsAdjustingRadius(true);
-  }, [region, clearSelections]);
+  // NEW: Handle option selection (GPS or Search)
+  const handleOptionSelect = useCallback(
+    async (option: "gps" | "search") => {
+      setShowCreationOptions(false);
 
- 
+      if (option === "gps") {
+        // Option 1: Use current GPS location
+        try {
+          // Request location permission
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status !== "granted") {
+            Alert.alert(
+              "Quyền truy cập vị trí",
+              "Ứng dụng cần quyền truy cập vị trí để sử dụng tính năng này. Vui lòng cấp quyền trong cài đặt.",
+              [{ text: "OK" }],
+            );
+            return;
+          }
+
+          // Get current location
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.High,
+          });
+          console.log("Location GPS:", location);
+
+          const { latitude, longitude } = location.coords;
+
+          // Reverse geocode to get address from coordinates
+          let addressText = "";
+          try {
+            const reverseGeocode = await Location.reverseGeocodeAsync({
+              latitude,
+              longitude,
+            });
+
+            if (reverseGeocode.length > 0) {
+              const place = reverseGeocode[0];
+              // Build address string from components
+              const addressParts = [
+                place.streetNumber,
+                place.street,
+                place.district,
+                place.subregion,
+                place.city,
+              ].filter(Boolean); // Remove null/undefined values
+
+              addressText = addressParts.join(", ");
+              console.log("Reverse geocoded address:", addressText);
+            }
+          } catch (geocodeError) {
+            console.warn("Reverse geocoding failed:", geocodeError);
+            // Continue without address - user can fill manually
+          }
+
+          // Set draft area at user's location with 150m radius
+          setDraftAreaCenter({ latitude, longitude });
+          setDraftAreaRadius(DEFAULT_RADIUS);
+          setDraftAddress(addressText);
+          setIsAdjustingRadius(true);
+
+          // Animate map to user's location
+          mapRef.current?.animateToRegion(
+            {
+              latitude,
+              longitude,
+              latitudeDelta: (DEFAULT_RADIUS / 111320) * 4,
+              longitudeDelta: (DEFAULT_RADIUS / 111320) * 4,
+            },
+            500,
+          );
+        } catch (error) {
+          console.error("Location error:", error);
+          Alert.alert(
+            "Lỗi vị trí",
+            "Không thể lấy vị trí hiện tại. Vui lòng thử lại hoặc dùng tìm kiếm địa chỉ.",
+            [{ text: "OK" }],
+          );
+        }
+      } else {
+        // Option 2: Show address search sheet
+        setShowAddressSearch(true);
+      }
+    },
+    [mapRef],
+  );
+
+  // NEW: Handle address selection from search
+  const handleAddressSelected = useCallback(
+    (coords: { latitude: number; longitude: number; address: string }) => {
+      setShowAddressSearch(false);
+
+      // Set draft area at searched location with 150m radius
+      setDraftAreaCenter({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+      });
+      setDraftAreaRadius(DEFAULT_RADIUS);
+      setDraftAddress(coords.address);
+      setIsAdjustingRadius(true);
+
+      // Animate map to searched location
+      mapRef.current?.animateToRegion(
+        {
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          latitudeDelta: (DEFAULT_RADIUS / 111320) * 4,
+          longitudeDelta: (DEFAULT_RADIUS / 111320) * 4,
+        },
+        500,
+      );
+    },
+    [mapRef],
+  );
+
+  // NEW: Close creation options sheet
+  const handleCloseCreationOptions = useCallback(() => {
+    setShowCreationOptions(false);
+  }, []);
+
+  // NEW: Close address search sheet
+  const handleCloseAddressSearch = useCallback(() => {
+    setShowAddressSearch(false);
+  }, []);
 
   // Step 1 -> Step 2: Confirm location, show name/address modal
   const handleConfirmLocation = useCallback(() => {
@@ -132,7 +254,8 @@ export function useControlArea({
   const handleCancelCreateArea = useCallback(() => {
     setIsAdjustingRadius(false);
     setDraftAreaCenter(null);
-    setDraftAreaRadius(100);
+    setDraftAreaRadius(DEFAULT_RADIUS);
+    setDraftAddress("");
     setEditingArea(null);
   }, []);
 
@@ -169,6 +292,7 @@ export function useControlArea({
         // Close sheet and reset
         setShowCreateAreaSheet(false);
         setDraftAreaCenter(null);
+        setDraftAddress("");
         setEditingArea(null);
       } catch (error: any) {
         console.error("Failed to save area:", error);
@@ -194,6 +318,7 @@ export function useControlArea({
   const handleMapPress = useCallback(
     (event: MapPressEvent) => {
       if (isAdjustingRadius && draftAreaCenter) {
+        // Allow tap on map to change position
         setDraftAreaCenter(event.nativeEvent.coordinate);
       }
     },
@@ -228,6 +353,7 @@ export function useControlArea({
         longitude: areaData.longitude,
       });
       setDraftAreaRadius(areaData.radiusMeters);
+      setDraftAddress(areaData.addressText || "");
 
       // Show radius adjustment bar
       setIsAdjustingRadius(true);
@@ -235,7 +361,7 @@ export function useControlArea({
     [clearSelections],
   );
 
- // Start editing area
+  // Start editing area
   const handleStartEditArea = useCallback(() => {
     if (!selectedArea) return;
 
@@ -246,6 +372,7 @@ export function useControlArea({
       longitude: selectedArea.longitude,
     });
     setDraftAreaRadius(selectedArea.radiusMeters);
+    setDraftAddress(selectedArea.addressText || "");
 
     // Close card and show radius adjust
     setSelectedArea(null);
@@ -273,6 +400,10 @@ export function useControlArea({
     draftAreaCenter,
     draftAreaRadius,
     editingArea,
+    // NEW: Option selection states
+    showCreationOptions,
+    showAddressSearch,
+    draftAddress,
 
     // Setters for external use
     setSelectedArea,
@@ -291,5 +422,10 @@ export function useControlArea({
     handleCreateAreaSubmit,
     handleCloseCreateArea,
     handleMapPress,
+    // NEW: Option selection handlers
+    handleOptionSelect,
+    handleAddressSelected,
+    handleCloseCreationOptions,
+    handleCloseAddressSearch,
   };
 }

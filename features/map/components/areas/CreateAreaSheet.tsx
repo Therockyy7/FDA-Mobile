@@ -12,7 +12,7 @@ import {
   Pressable,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { Text } from "~/components/ui/text";
@@ -21,10 +21,7 @@ import { useColorScheme } from "~/lib/useColorScheme";
 interface CreateAreaSheetProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (data: {
-    name: string;
-    addressText: string;
-  }) => Promise<void>;
+  onSubmit: (data: { name: string; addressText: string }) => Promise<void>;
   radiusMeters: number;
   isLoading?: boolean;
   initialValues?: {
@@ -42,6 +39,16 @@ function formatRadius(meters: number): string {
   }
   return `${meters} m`;
 }
+
+// Quick select tags for area names
+const AREA_TAGS = [
+  { id: "home", label: "Nhà", icon: "home", color: "#10B981" },
+  { id: "office", label: "Công ty", icon: "business", color: "#3B82F6" },
+  { id: "school", label: "Trường học", icon: "school", color: "#F59E0B" },
+  { id: "market", label: "Chợ", icon: "cart", color: "#EF4444" },
+  { id: "hospital", label: "Bệnh viện", icon: "medkit", color: "#EC4899" },
+  { id: "warehouse", label: "Kho hàng", icon: "cube", color: "#8B5CF6" },
+] as const;
 
 function CreateAreaSheetContent({
   onClose,
@@ -144,7 +151,9 @@ function CreateAreaSheetContent({
               justifyContent: "space-between",
             }}
           >
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
+            >
               <View
                 style={{
                   width: 44,
@@ -158,7 +167,9 @@ function CreateAreaSheetContent({
                 <Ionicons name="bookmark" size={24} color="white" />
               </View>
               <View>
-                <Text style={{ fontSize: 18, fontWeight: "700", color: "white" }}>
+                <Text
+                  style={{ fontSize: 18, fontWeight: "700", color: "white" }}
+                >
                   {initialValues ? "Cập nhật thông tin" : "Nhập thông tin vùng"}
                 </Text>
                 <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.8)" }}>
@@ -198,6 +209,56 @@ function CreateAreaSheetContent({
             >
               TÊN VÙNG *
             </Text>
+
+            {/* Quick Select Tags */}
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                gap: 8,
+                marginBottom: 12,
+              }}
+            >
+              {AREA_TAGS.map((tag) => {
+                const isSelected = name === tag.label;
+                return (
+                  <TouchableOpacity
+                    key={tag.id}
+                    onPress={() => setName(isSelected ? "" : tag.label)}
+                    activeOpacity={0.7}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 20,
+                      backgroundColor: isSelected
+                        ? tag.color
+                        : `${tag.color}15`,
+                      borderWidth: 1.5,
+                      borderColor: isSelected ? tag.color : `${tag.color}40`,
+                    }}
+                  >
+                    <Ionicons
+                      name={tag.icon as any}
+                      size={16}
+                      color={isSelected ? "white" : tag.color}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: "600",
+                        color: isSelected ? "white" : tag.color,
+                      }}
+                    >
+                      {tag.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
             <View
               style={{
                 flexDirection: "row",
@@ -214,7 +275,7 @@ function CreateAreaSheetContent({
               <TextInput
                 value={name}
                 onChangeText={setName}
-                placeholder="VD: Nhà riêng, Công ty, Trường học..."
+                placeholder="Hoặc nhập tên tùy chỉnh..."
                 placeholderTextColor={colors.subtext}
                 style={{
                   flex: 1,
@@ -226,6 +287,15 @@ function CreateAreaSheetContent({
                 maxLength={255}
                 editable={!isSubmitting}
               />
+              {name.length > 0 && (
+                <TouchableOpacity onPress={() => setName("")}>
+                  <Ionicons
+                    name="close-circle"
+                    size={20}
+                    color={colors.subtext}
+                  />
+                </TouchableOpacity>
+              )}
             </View>
           </Animated.View>
 
@@ -327,9 +397,14 @@ function CreateAreaSheetContent({
               marginTop: 16,
             }}
           >
-            <Ionicons name="information-circle" size={16} color={colors.subtext} />
+            <Ionicons
+              name="information-circle"
+              size={16}
+              color={colors.subtext}
+            />
             <Text style={{ fontSize: 11, color: colors.subtext, flex: 1 }}>
-              Bạn có thể tạo tối đa 5 vùng theo dõi. Nâng cấp Premium để không giới hạn.
+              Bạn có thể tạo tối đa 5 vùng theo dõi. Nâng cấp Premium để không
+              giới hạn.
             </Text>
           </View>
         </View>

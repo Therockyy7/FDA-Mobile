@@ -1,6 +1,7 @@
 // features/map/stores/map.slice.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { AreaService } from "~/features/areas/services/area.service";
 import { MapService } from "../services/map.service";
 import type {
   AreaWithStatus,
@@ -150,12 +151,12 @@ export const fetchAreas = createAsyncThunk<
 >("map/fetchAreas", async (_, { rejectWithValue }) => {
   try {
     // Fetch all areas
-    const areas = await MapService.getAreas();
+    const areas = await AreaService.getAreas();
     
     // Fetch status for each area in parallel
     const areasWithStatus = await Promise.all(
       areas.map(async (area) => {
-        const status = await MapService.getAreaStatus(area.id);
+        const status = await AreaService.getAreaStatus(area.id);
         return {
           ...area,
           status: status.status,

@@ -15,6 +15,7 @@
     "@hookform/resolvers": "^5.1.1",
     "@mapbox/polyline": "^1.2.1",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/datetimepicker": "^8.6.0",
     "@react-native-community/slider": "^5.0.1",
     "@react-native-google-signin/google-signin": "^16.1.1",
     "@react-navigation/bottom-tabs": "^7.3.10",

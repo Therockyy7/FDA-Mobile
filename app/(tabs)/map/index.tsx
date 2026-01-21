@@ -1,12 +1,22 @@
 // app/(tabs)/map/index.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Animated, StatusBar, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { Text } from "~/components/ui/text";
+import { useControlArea } from "~/features/areas/hooks/useControlArea";
 import { AreaCard } from "~/features/map/components/areas/AreaCard";
 import { AreaCircleOverlay } from "~/features/map/components/areas/AreaCircleOverlay";
+import { AreaPreviewCircle } from "~/features/map/components/areas/AreaPreviewCircle";
+import { CreateAreaSheet } from "~/features/map/components/areas/CreateAreaSheet";
+import { RadiusAdjustBar } from "~/features/map/components/areas/RadiusAdjustBar";
 import { LayerToggleSheet } from "~/features/map/components/controls/LayerToggleSheet";
 import Legend from "~/features/map/components/controls/Legend";
 import { MapControls } from "~/features/map/components/controls/MapControls";
@@ -21,7 +31,7 @@ import { MapHeader } from "~/features/map/components/ui/MapHeader";
 import {
   DANANG_CENTER,
   FLOOD_ROUTES,
-  FloodRoute
+  FloodRoute,
 } from "~/features/map/constants/map-data";
 import { useFloodSelection } from "~/features/map/hooks/useFloodSelection";
 import { useMapCamera } from "~/features/map/hooks/useMapCamera";
@@ -29,28 +39,37 @@ import { useMapDisplay } from "~/features/map/hooks/useMapDisplay";
 import { useMapLayerSettings } from "~/features/map/hooks/useMapLayerSettings";
 import { useRoutingUI } from "~/features/map/hooks/useRoutingUI";
 import { useStreetView } from "~/features/map/hooks/useStreetView";
-import { debounce, MapRegion, shouldFetchNewMarkers } from "~/features/map/lib/map-utils";
-import { AreaWithStatus, FloodSeverityFeature } from "~/features/map/types/map-layers.types";
+import {
+  debounce,
+  MapRegion,
+  shouldFetchNewMarkers,
+} from "~/features/map/lib/map-utils";
+import { FloodSeverityFeature } from "~/features/map/types/map-layers.types";
 
 type MapType = "standard" | "satellite" | "hybrid";
 
 export default function MapScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{
+    editAreaId?: string;
+    editLat?: string;
+    editLng?: string;
+    editRadius?: string;
+    editName?: string;
+    editAddress?: string;
+  }>();
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showLayerSheet, setShowLayerSheet] = useState(false);
-  const [selectedStation, setSelectedStation] = useState<FloodSeverityFeature | null>(null);
+  const [selectedStation, setSelectedStation] =
+    useState<FloodSeverityFeature | null>(null);
   const stationCardAnim = useRef(new Animated.Value(300)).current;
 
-  // Track last fetched region to avoid unnecessary API calls
   const lastFetchedRegionRef = useRef<MapRegion | null>(null);
 
-  // Map layer settings hook
-  const { settings, areas, refreshFloodSeverity, refreshAreas } = useMapLayerSettings();
 
-  // Area selection state
-  const [selectedArea, setSelectedArea] = useState<AreaWithStatus | null>(null);
-  const areaCardAnim = useRef(new Animated.Value(300)).current;
+  const { settings, areas, refreshFloodSeverity, refreshAreas } =
+    useMapLayerSettings();
 
   const {
     mapRef,
@@ -131,24 +150,77 @@ export default function MapScreen() {
     setSelectedRoute(null);
   }, [viewMode]);
 
-  const handleAreaPress = (area: AreaWithStatus) => {
-    setSelectedRoute(null);
-    setSelectedZone(null);
-    setSelectedArea(area);
-    // Animate card slide in - using timing for faster response
-    Animated.timing(areaCardAnim, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-    // Focus on area
-    mapRef.current?.animateToRegion({
-      latitude: area.latitude,
-      longitude: area.longitude,
-      latitudeDelta: (area.radiusMeters / 111320) * 3,
-      longitudeDelta: (area.radiusMeters / 111320) * 3,
-    }, 500);
-  };
+  // Area control hook - all area-related state and handlers
+  const {
+    selectedArea,
+    areaCardAnim,
+    isAdjustingRadius,
+    showCreateAreaSheet,
+    isCreatingArea,
+    draftAreaCenter,
+    draftAreaRadius,
+    editingArea,
+    setSelectedArea,
+    setDraftAreaRadius,
+    setDraftAreaCenter,
+    handleAreaPress,
+    handleCloseAreaCard,
+    handleDeleteArea,
+    handleStartCreateArea,
+    handleStartEditArea,
+    handleStartEditAreaFromParams,
+    handleConfirmLocation,
+    handleCancelCreateArea,
+    handleCreateAreaSubmit,
+    handleCloseCreateArea,
+    handleMapPress,
+  } = useControlArea({
+    mapRef,
+    region,
+    refreshAreas,
+    clearSelections: () => {
+      setSelectedRoute(null);
+      setSelectedZone(null);
+      setSelectedStation(null);
+    },
+  });
+
+  // Handle edit params from Areas screen navigation
+  useEffect(() => {
+    if (
+      params.editAreaId &&
+      params.editLat &&
+      params.editLng &&
+      params.editRadius
+    ) {
+      // Enter edit mode with the area data
+      const lat = parseFloat(params.editLat);
+      const lng = parseFloat(params.editLng);
+      const radius = parseFloat(params.editRadius);
+
+      // Trigger edit mode - this sets all draft values and shows adjust bar
+      handleStartEditAreaFromParams({
+        id: params.editAreaId,
+        name: params.editName || "",
+        latitude: lat,
+        longitude: lng,
+        radiusMeters: radius,
+        addressText: params.editAddress || "",
+      });
+
+      // Focus map on the area
+      mapRef.current?.animateToRegion(
+        {
+          latitude: lat,
+          longitude: lng,
+          latitudeDelta: (radius / 111320) * 4,
+          longitudeDelta: (radius / 111320) * 4,
+        },
+        500,
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.editAreaId]);
 
   // Keep old handlers for routes
   const handleRoutePress = (route: FloodRoute) => {
@@ -158,11 +230,10 @@ export default function MapScreen() {
     focusOnRoute(route);
   };
 
-
   // Ray-casting algorithm for point in polygon
   function isPointInPolygon(
     point: { latitude: number; longitude: number },
-    polygon: { latitude: number; longitude: number }[]
+    polygon: { latitude: number; longitude: number }[],
   ): boolean {
     let inside = false;
     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
@@ -190,38 +261,40 @@ export default function MapScreen() {
   //   );
   // }
 
-  const fetchMarkersInViewPort = useMemo(() => debounce((newRegion: Region) => {
-    if (!settings.overlays.flood) return;
+  const fetchMarkersInViewPort = useMemo(
+    () =>
+      debounce((newRegion: Region) => {
+        if (!settings.overlays.flood) return;
 
-    // Check if region has changed enough to warrant a new fetch
-    if (!shouldFetchNewMarkers(newRegion, lastFetchedRegionRef.current)) {
-      console.log('⏭️ Skip fetch - region change too small');
-      return;
-    }
+        // Check if region has changed enough to warrant a new fetch
+        if (!shouldFetchNewMarkers(newRegion, lastFetchedRegionRef.current)) {
+          console.log("⏭️ Skip fetch - region change too small");
+          return;
+        }
 
-    // Update last fetched region
-    lastFetchedRegionRef.current = newRegion;
+        // Update last fetched region
+        lastFetchedRegionRef.current = newRegion;
 
-    const params = {
-      minLat: newRegion.latitude - newRegion.latitudeDelta / 2,
-      minLng: newRegion.longitude - newRegion.longitudeDelta / 2,
-      maxLat: newRegion.latitude + newRegion.latitudeDelta / 2,
-      maxLng: newRegion.longitude + newRegion.longitudeDelta / 2,
-    };
-    
-    console.log('📍 Fetching markers in viewport:', params);
-    refreshFloodSeverity(params);
-  }, 1000),  // Increased debounce to 1s for stability
-  [refreshFloodSeverity, settings.overlays.flood]
+        const params = {
+          minLat: newRegion.latitude - newRegion.latitudeDelta / 2,
+          minLng: newRegion.longitude - newRegion.longitudeDelta / 2,
+          maxLat: newRegion.latitude + newRegion.latitudeDelta / 2,
+          maxLng: newRegion.longitude + newRegion.longitudeDelta / 2,
+        };
+
+        console.log("📍 Fetching markers in viewport:", params);
+        refreshFloodSeverity(params);
+      }, 1000), // Increased debounce to 1s for stability
+    [refreshFloodSeverity, settings.overlays.flood],
   );
 
-const handleRegionChange = useCallback(
-  (newRegion: Region) => {
-    onRegionChangeComplete(newRegion);
-    fetchMarkersInViewPort(newRegion);
-  },
-  [onRegionChangeComplete, fetchMarkersInViewPort]
-);
+  const handleRegionChange = useCallback(
+    (newRegion: Region) => {
+      onRegionChangeComplete(newRegion);
+      fetchMarkersInViewPort(newRegion);
+    },
+    [onRegionChangeComplete, fetchMarkersInViewPort],
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0F172A" }}>
@@ -236,6 +309,14 @@ const handleRegionChange = useCallback(
         mapType={mapType as MapType}
         onMapTypeChange={handleMapTypeChange}
         onShowLayers={() => setShowLayerSheet(true)}
+        onCreateArea={handleStartCreateArea}
+        showCreateAreaButton={
+          viewMode === "zones" &&
+          !isRoutingUIVisible &&
+          !selectedArea &&
+          !isAdjustingRadius &&
+          !showCreateAreaSheet
+        }
       />
 
       <View style={{ flex: 1, position: "relative" }}>
@@ -251,6 +332,7 @@ const handleRegionChange = useCallback(
           camera={is3DEnabled ? camera : undefined}
           onRegionChangeComplete={handleRegionChange}
           onLongPress={handleMapLongPress}
+          onPress={handleMapPress}
           showsUserLocation
           showsMyLocationButton={false}
           showsCompass={false}
@@ -298,6 +380,17 @@ const handleRegionChange = useCallback(
               />
             ))}
 
+          {/* Draft Area Preview Circle - Draggable during Step 1 */}
+          {draftAreaCenter && (
+            <AreaPreviewCircle
+              center={draftAreaCenter}
+              radiusMeters={draftAreaRadius}
+              visible={isAdjustingRadius || showCreateAreaSheet}
+              onCenterChange={
+                isAdjustingRadius ? setDraftAreaCenter : undefined
+              }
+            />
+          )}
 
           {/* ROUTES MODE */}
           {viewMode === "routes" &&
@@ -317,7 +410,7 @@ const handleRegionChange = useCallback(
               onPress={() =>
                 openStreetView(
                   streetViewLocation.latitude,
-                  streetViewLocation.longitude
+                  streetViewLocation.longitude,
                 )
               }
             >
@@ -342,37 +435,43 @@ const handleRegionChange = useCallback(
 
           {/* Flood Severity Markers from API */}
           <FloodSeverityMarkers
-            onMarkerPress={useCallback((feature) => {
-              // Get marker coordinates
-              const [longitude, latitude] = feature.geometry.coordinates;
-              
-              // Clear other selections and set new station
-              setSelectedArea(null);
-              setSelectedRoute(null);
-              setSelectedZone(null);
-              setSelectedStation(feature);
-              
-              // Animate card slide in immediately (same as handleAreaPress)
-              Animated.timing(stationCardAnim, {
-                toValue: 0,
-                duration: 200,
-                useNativeDriver: true,
-              }).start();
-              
-              // Focus camera on marker with offset so popup is visible
-              const LATITUDE_OFFSET = 0.008;
-              mapRef.current?.animateToRegion({
-                latitude: latitude - LATITUDE_OFFSET,
-                longitude: longitude,
-                latitudeDelta: 0.03,
-                longitudeDelta: 0.02,
-              }, 400);
-            }, [stationCardAnim, mapRef])}
+            onMarkerPress={useCallback(
+              (feature) => {
+                // Get marker coordinates
+                const [longitude, latitude] = feature.geometry.coordinates;
+
+                // Clear other selections and set new station
+                setSelectedArea(null);
+                setSelectedRoute(null);
+                setSelectedZone(null);
+                setSelectedStation(feature);
+
+                // Animate card slide in immediately (same as handleAreaPress)
+                Animated.timing(stationCardAnim, {
+                  toValue: 0,
+                  duration: 200,
+                  useNativeDriver: true,
+                }).start();
+
+                // Focus camera on marker with offset so popup is visible
+                const LATITUDE_OFFSET = 0.008;
+                mapRef.current?.animateToRegion(
+                  {
+                    latitude: latitude - LATITUDE_OFFSET,
+                    longitude: longitude,
+                    latitudeDelta: 0.03,
+                    longitudeDelta: 0.02,
+                  },
+                  400,
+                );
+              },
+              [stationCardAnim, mapRef],
+            )}
           />
         </MapView>
 
-        {/* Top Controls */}
-        {!isRoutingUIVisible && (
+        {/* Top Controls - Hide during create area mode */}
+        {!isRoutingUIVisible && !isAdjustingRadius && !showCreateAreaSheet && (
           <View
             style={{
               position: "absolute",
@@ -429,7 +528,7 @@ const handleRegionChange = useCallback(
           </View>
         )}
 
-        {/* Map Controls */}
+        {/* Map Controls - Hide during create area mode */}
         <View
           style={{
             position: "absolute",
@@ -438,23 +537,27 @@ const handleRegionChange = useCallback(
             zIndex: 10,
           }}
         >
-          {!selectedRoute && !selectedZone && !isRoutingUIVisible && (
-            <MapControls
-              onZoomIn={zoomIn}
-              onZoomOut={zoomOut}
-              onMyLocation={goToMyLocation}
-              is3DEnabled={is3DEnabled}
-              onToggle3D={toggle3DView}
-              showLegend={showLegend}
-              onShowLegend={toggleLegend}
-              onRotateLeft={() => rotateCamera("left")}
-              onRotateRight={() => rotateCamera("right")}
-              streetViewLocation={streetViewLocation}
-              onClearStreetView={() => setStreetViewLocation(null)}
-              onShowIsRouting={openRouting}
-              onShowLayers={() => setShowLayerSheet(true)}
-            />
-          )}
+          {!selectedRoute &&
+            !selectedZone &&
+            !isRoutingUIVisible &&
+            !isAdjustingRadius &&
+            !showCreateAreaSheet && (
+              <MapControls
+                onZoomIn={zoomIn}
+                onZoomOut={zoomOut}
+                onMyLocation={goToMyLocation}
+                is3DEnabled={is3DEnabled}
+                onToggle3D={toggle3DView}
+                showLegend={showLegend}
+                onShowLegend={toggleLegend}
+                onRotateLeft={() => rotateCamera("left")}
+                onRotateRight={() => rotateCamera("right")}
+                streetViewLocation={streetViewLocation}
+                onClearStreetView={() => setStreetViewLocation(null)}
+                onShowIsRouting={openRouting}
+                onShowLayers={() => setShowLayerSheet(true)}
+              />
+            )}
         </View>
 
         {/* Selected Zone Card - now uses AreaCard */}
@@ -469,6 +572,8 @@ const handleRegionChange = useCallback(
                 useNativeDriver: true,
               }).start(() => setSelectedArea(null));
             }}
+            onEdit={handleStartEditArea}
+            onDelete={handleDeleteArea}
             onViewDetails={() => {
               Animated.timing(areaCardAnim, {
                 toValue: 300,
@@ -476,8 +581,8 @@ const handleRegionChange = useCallback(
                 useNativeDriver: true,
               }).start(() => {
                 router.push({
-                  pathname: "/map/area/[areaId]",
-                  params: { areaId: selectedArea.id }
+                  pathname: "/areas/[id]",
+                  params: { id: selectedArea.id },
                 });
               });
             }}
@@ -528,7 +633,7 @@ const handleRegionChange = useCallback(
               }).start(() => {
                 router.push({
                   pathname: "/map/[stationId]",
-                  params: { stationId: selectedStation.properties.stationId }
+                  params: { stationId: selectedStation.properties.stationId },
                 });
               });
             }}
@@ -539,6 +644,32 @@ const handleRegionChange = useCallback(
         <LayerToggleSheet
           visible={showLayerSheet}
           onClose={() => setShowLayerSheet(false)}
+        />
+
+        {/* Step 1: Radius Adjust Bar */}
+        <RadiusAdjustBar
+          visible={isAdjustingRadius}
+          radius={draftAreaRadius}
+          onRadiusChange={setDraftAreaRadius}
+          onConfirm={handleConfirmLocation}
+          onCancel={handleCancelCreateArea}
+        />
+
+        {/* Step 2: Create Area Sheet (Name + Address only) */}
+        <CreateAreaSheet
+          visible={showCreateAreaSheet}
+          onClose={handleCloseCreateArea}
+          onSubmit={handleCreateAreaSubmit}
+          radiusMeters={draftAreaRadius}
+          isLoading={isCreatingArea}
+          initialValues={
+            editingArea
+              ? {
+                  name: editingArea.name,
+                  addressText: editingArea.addressText || "",
+                }
+              : undefined
+          }
         />
       </View>
     </View>

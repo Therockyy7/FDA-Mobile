@@ -12,15 +12,42 @@ interface FloodSeverityMarkersProps {
   onMarkerPress?: (feature: FloodSeverityFeature) => void;
 }
 
-export function FloodSeverityMarkers({ onMarkerPress }: FloodSeverityMarkersProps) {
+export function FloodSeverityMarkers({
+  onMarkerPress,
+}: FloodSeverityMarkersProps) {
   const { floodSeverity, settings, floodLoading } = useMapLayerSettings();
 
-  // Memoize markers to prevent unnecessary re-renders
+  // Memoize and filter valid markers to prevent unnecessary re-renders
   const markers = useMemo(() => {
     if (!settings.overlays.flood || !floodSeverity?.features?.length) {
       return [];
     }
-    return floodSeverity.features;
+
+    // Filter out features with invalid coordinates
+    return floodSeverity.features.filter((feature) => {
+      const { properties, geometry } = feature;
+
+      // Validate coordinates exist
+      if (!geometry?.coordinates || geometry.coordinates.length < 2) {
+        console.warn(`⚠️ Invalid coordinates for ${properties.stationName}`);
+        return false;
+      }
+
+      const [longitude, latitude] = geometry.coordinates;
+
+      // Validate lat/lng are valid numbers
+      if (
+        typeof latitude !== "number" ||
+        typeof longitude !== "number" ||
+        isNaN(latitude) ||
+        isNaN(longitude)
+      ) {
+        console.warn(`⚠️ Invalid lat/lng for ${properties.stationName}`);
+        return false;
+      }
+
+      return true;
+    });
   }, [settings.overlays.flood, floodSeverity?.features]);
 
   // Don't render while loading or if no markers
@@ -34,24 +61,12 @@ export function FloodSeverityMarkers({ onMarkerPress }: FloodSeverityMarkersProp
     <>
       {markers.map((feature) => {
         const { properties, geometry } = feature;
-        
-        // Validate coordinates
-        if (!geometry?.coordinates || geometry.coordinates.length < 2) {
-          console.warn(`⚠️ Invalid coordinates for ${properties.stationName}`);
-          return null;
-        }
-        
         const [longitude, latitude] = geometry.coordinates;
-        
-        // Validate lat/lng are valid numbers
-        if (typeof latitude !== 'number' || typeof longitude !== 'number' ||
-            isNaN(latitude) || isNaN(longitude)) {
-          console.warn(`⚠️ Invalid lat/lng for ${properties.stationName}`);
-          return null;
-        }
-        
-        const color = SEVERITY_COLORS[properties.severity] || SEVERITY_COLORS.unknown;
-        const label = SEVERITY_LABELS[properties.severity] || SEVERITY_LABELS.unknown;
+
+        const color =
+          SEVERITY_COLORS[properties.severity] || SEVERITY_COLORS.unknown;
+        const label =
+          SEVERITY_LABELS[properties.severity] || SEVERITY_LABELS.unknown;
 
         return (
           <Marker
@@ -62,7 +77,7 @@ export function FloodSeverityMarkers({ onMarkerPress }: FloodSeverityMarkersProp
             title={properties.stationName}
             description={`Mực nước: ${properties.waterLevel}${properties.unit} - ${label}`}
             onPress={() => onMarkerPress?.(feature)}
-            tracksViewChanges={false}  // Performance optimization - prevents crash
+            tracksViewChanges={false} // Performance optimization - prevents crash
           />
         );
       })}

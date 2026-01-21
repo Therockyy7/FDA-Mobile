@@ -4,25 +4,26 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Animated, {
-    FadeIn,
-    FadeInDown,
-    FadeInUp,
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSelector } from "react-redux";
 import type { RootState } from "~/app/store";
 import { Text } from "~/components/ui/text";
+import { FloodHistorySection } from "~/features/areas/components/charts";
 import { WaterLevelVisualization } from "~/features/map/components/overlays/WaterLevelVisualization";
 import {
-    SEVERITY_COLORS,
-    SEVERITY_LABELS
+  SEVERITY_COLORS,
+  SEVERITY_LABELS,
 } from "~/features/map/types/map-layers.types";
 import { useColorScheme } from "~/lib/useColorScheme";
 
@@ -34,11 +35,11 @@ export default function StationDetailScreen() {
 
   // Get station data from Redux store
   const floodSeverity = useSelector(
-    (state: RootState) => state.map?.floodSeverity
+    (state: RootState) => state.map?.floodSeverity,
   );
 
   const station = floodSeverity?.features.find(
-    (f) => f.properties.stationId === stationId
+    (f) => f.properties.stationId === stationId,
   );
 
   const colors = {
@@ -115,7 +116,9 @@ export default function StationDetailScreen() {
           {/* Station Info */}
           <View style={styles.headerContent}>
             <View style={styles.headerBadge}>
-              <Text style={styles.headerBadgeText}>{properties.alertLevel}</Text>
+              <Text style={styles.headerBadgeText}>
+                {properties.alertLevel}
+              </Text>
             </View>
             <Text style={styles.headerTitle} numberOfLines={2}>
               {properties.stationName}
@@ -171,7 +174,10 @@ export default function StationDetailScreen() {
                 </Text>
                 <View style={styles.statusValueRow}>
                   <View
-                    style={[styles.statusDot, { backgroundColor: severityColor }]}
+                    style={[
+                      styles.statusDot,
+                      { backgroundColor: severityColor },
+                    ]}
                   />
                   <Text style={[styles.statusValue, { color: severityColor }]}>
                     {severityLabel}
@@ -179,7 +185,10 @@ export default function StationDetailScreen() {
                 </View>
               </View>
               <View
-                style={[styles.statusItem, { backgroundColor: colors.background }]}
+                style={[
+                  styles.statusItem,
+                  { backgroundColor: colors.background },
+                ]}
               >
                 <Text style={[styles.statusLabel, { color: colors.subtext }]}>
                   Hoạt động
@@ -246,11 +255,7 @@ export default function StationDetailScreen() {
         <Animated.View entering={FadeInDown.delay(500).duration(500)}>
           <View style={[styles.card, { backgroundColor: colors.cardBg }]}>
             <View style={styles.cardHeader}>
-              <MaterialCommunityIcons
-                name="chip"
-                size={18}
-                color="#8B5CF6"
-              />
+              <MaterialCommunityIcons name="chip" size={18} color="#8B5CF6" />
               <Text style={[styles.cardTitle, { color: colors.text }]}>
                 Thông số cảm biến
               </Text>
@@ -320,6 +325,14 @@ export default function StationDetailScreen() {
               </View>
             </View>
           </View>
+        </Animated.View>
+
+        {/* Flood History Charts Section */}
+        <Animated.View entering={FadeInDown.delay(700).duration(500)}>
+          <FloodHistorySection
+            stationId={stationId}
+            isDark={isDarkColorScheme}
+          />
         </Animated.View>
 
         {/* Bottom Spacing */}

@@ -17,9 +17,18 @@ interface MapHeaderProps {
   mapType: MapType;
   onMapTypeChange: () => void;
   onShowLayers: () => void;
+  onCreateArea?: () => void;
+  showCreateAreaButton?: boolean;
 }
 
-export function MapHeader({ stats, mapType, onMapTypeChange, onShowLayers }: MapHeaderProps) {
+export function MapHeader({ 
+  stats, 
+  mapType, 
+  onMapTypeChange, 
+  onShowLayers, 
+  onCreateArea,
+  showCreateAreaButton = false,
+}: MapHeaderProps) {
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
 
@@ -179,21 +188,47 @@ export function MapHeader({ stats, mapType, onMapTypeChange, onShowLayers }: Map
           </View>
         </View>
 
-        {/* Layers Button */}
-        <TouchableOpacity
-          onPress={onShowLayers}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 12,
-            backgroundColor: "#3B82F6",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          activeOpacity={0.8}
-        >
-          <MaterialIcons name="layers" size={20} color="white" />
-        </TouchableOpacity>
+        {/* Action Buttons */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          {/* Create Area Button */}
+          {showCreateAreaButton && onCreateArea && (
+            <TouchableOpacity
+              onPress={onCreateArea}
+              style={{
+                height: 40,
+                paddingHorizontal: 12,
+                borderRadius: 12,
+                backgroundColor: "#10B981",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+              }}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="add-circle" size={18} color="white" />
+              <Text style={{ fontSize: 12, fontWeight: "700", color: "white" }}>
+                Tạo vùng
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Layers Button */}
+          <TouchableOpacity
+            onPress={onShowLayers}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              backgroundColor: "#3B82F6",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            activeOpacity={0.8}
+          >
+            <MaterialIcons name="layers" size={20} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Stats Bar - 4 Severity Levels */}

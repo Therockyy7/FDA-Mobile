@@ -1,5 +1,5 @@
-// features/map/components/overlays/MapLoadingOverlay.tsx
-// Premium loading overlay for Map screen with Lottie animation
+// components/ui/TabLoadingScreen.tsx
+// Fullscreen loading overlay with Lottie animation for tab transitions
 import LottieView from "lottie-react-native";
 import React, { useEffect } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
@@ -12,18 +12,21 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 import { Text } from "~/components/ui/text";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-interface MapLoadingOverlayProps {
+interface TabLoadingScreenProps {
   visible: boolean;
   message?: string;
 }
 
-export function MapLoadingOverlay({
+export function TabLoadingScreen({
   visible,
-  message = "Đang tải bản đồ...",
-}: MapLoadingOverlayProps) {
+  message = "Đang tải...",
+}: TabLoadingScreenProps) {
+  const { isDarkColorScheme } = useColorScheme();
+
   // Animation values
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.8);
@@ -70,12 +73,32 @@ export function MapLoadingOverlay({
 
   if (!visible) return null;
 
+  // Theme colors
+  const colors = {
+    background: isDarkColorScheme
+      ? "rgba(15, 23, 42, 0.97)"
+      : "rgba(248, 250, 252, 0.97)",
+    card: isDarkColorScheme
+      ? "rgba(30, 41, 59, 0.9)"
+      : "rgba(255, 255, 255, 0.9)",
+    text: isDarkColorScheme ? "#E2E8F0" : "#334155",
+    subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
+    accent: "#3B82F6",
+    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
+  };
+
   return (
-    <Animated.View style={[styles.overlay, containerStyle]}>
+    <Animated.View
+      style={[
+        styles.overlay,
+        containerStyle,
+        { backgroundColor: colors.background },
+      ]}
+    >
       {/* Subtle background pattern */}
       <View style={styles.backgroundPattern}>
         <LottieView
-          source={require("../../../../assets/animations/water-rise.json")}
+          source={require("../../assets/animations/water-rise.json")}
           autoPlay
           loop
           speed={0.2}
@@ -84,11 +107,20 @@ export function MapLoadingOverlay({
       </View>
 
       {/* Main content card */}
-      <Animated.View style={[styles.contentCard, contentStyle]}>
+      <Animated.View
+        style={[
+          styles.contentCard,
+          contentStyle,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+          },
+        ]}
+      >
         {/* Lottie animation */}
         <View style={styles.lottieContainer}>
           <LottieView
-            source={require("../../../../assets/animations/water-rise.json")}
+            source={require("../../assets/animations/water-rise.json")}
             autoPlay
             loop
             speed={0.8}
@@ -99,23 +131,27 @@ export function MapLoadingOverlay({
         {/* Loading dots animation */}
         <View style={styles.dotsContainer}>
           {[0, 1, 2].map((i) => (
-            <LoadingDot key={i} delay={i * 150} />
+            <LoadingDot key={i} delay={i * 150} color={colors.accent} />
           ))}
         </View>
 
         {/* Message text */}
-        <Animated.Text style={[styles.message, textStyle]}>
+        <Animated.Text
+          style={[styles.message, textStyle, { color: colors.text }]}
+        >
           {message}
         </Animated.Text>
 
-        <Text style={styles.hint}>Hệ thống cảnh báo ngập lụt</Text>
+        <Text style={[styles.hint, { color: colors.subtext }]}>
+          Vui lòng chờ trong giây lát
+        </Text>
       </Animated.View>
     </Animated.View>
   );
 }
 
 // Individual loading dot with staggered animation
-function LoadingDot({ delay }: { delay: number }) {
+function LoadingDot({ delay, color }: { delay: number; color: string }) {
   const scale = useSharedValue(0.6);
   const opacity = useSharedValue(0.4);
 
@@ -148,20 +184,17 @@ function LoadingDot({ delay }: { delay: number }) {
     opacity: opacity.value,
   }));
 
-  return <Animated.View style={[styles.dot, dotStyle]} />;
+  return (
+    <Animated.View style={[styles.dot, dotStyle, { backgroundColor: color }]} />
+  );
 }
 
 const styles = StyleSheet.create({
   overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(15, 23, 42, 0.97)",
+    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 100,
+    zIndex: 1000,
   },
   backgroundPattern: {
     ...StyleSheet.absoluteFillObject,
@@ -182,8 +215,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 50,
     borderRadius: 28,
     borderWidth: 1,
-    borderColor: "#334155",
-    backgroundColor: "rgba(30, 41, 59, 0.9)",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
@@ -208,19 +239,16 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#3B82F6",
   },
   message: {
     fontSize: 17,
     fontWeight: "700",
     marginBottom: 6,
     textAlign: "center",
-    color: "#E2E8F0",
   },
   hint: {
     fontSize: 13,
     fontWeight: "500",
     textAlign: "center",
-    color: "#94A3B8",
   },
 });

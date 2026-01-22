@@ -6,6 +6,8 @@ import LottieView from "lottie-react-native";
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { AlertChannelsStatus } from "~/features/alerts/components/AlertChannelsStatus";
+import type { NotificationChannels } from "~/features/alerts/types/alert-settings.types";
 import type { Area, AreaStatusResponse } from "~/features/map/types/map-layers.types";
 import { useColorScheme } from "~/lib/useColorScheme";
 
@@ -15,6 +17,9 @@ interface ApiAreaCardProps {
   onPress: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onAlertSettings?: () => void;
+  alertChannels?: NotificationChannels;
+  onAlertHistory?: () => void;
 }
 
 // Get status config based on AreaStatus
@@ -88,6 +93,9 @@ export function ApiAreaCard({
   onPress,
   onEdit,
   onDelete,
+  onAlertSettings,
+  alertChannels,
+  onAlertHistory,
 }: ApiAreaCardProps) {
   const { isDarkColorScheme } = useColorScheme();
   const statusConfig = getStatusConfig(status?.status);
@@ -130,6 +138,12 @@ export function ApiAreaCard({
     mutedBg: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
     divider: isDarkColorScheme ? "#334155" : "#F3F4F6",
     waterBg: isDarkColorScheme ? "rgba(6, 182, 212, 0.15)" : "rgba(6, 182, 212, 0.1)",
+  };
+
+  const channels: NotificationChannels = alertChannels || {
+    push: true,
+    email: false,
+    sms: false,
   };
 
   return (
@@ -185,6 +199,26 @@ export function ApiAreaCard({
             
           }}
         >
+          {onAlertHistory && (
+            <TouchableOpacity
+              onPress={onAlertHistory}
+              style={{
+                position: "absolute",
+                right: 16,
+                top: 16,
+                width: 34,
+                height: 34,
+                borderRadius: 12,
+                backgroundColor: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
+                alignItems: "center",
+                justifyContent: "center",
+                borderWidth: 1,
+                borderColor: colors.divider,
+              }}
+            >
+              <Ionicons name="time-outline" size={16} color={colors.subtext} />
+            </TouchableOpacity>
+          )}
           {/* Water Level Display - HERO */}
           <View style={{ alignItems: "center", marginBottom: 12
            }}>
@@ -419,6 +453,9 @@ export function ApiAreaCard({
           </View>
         )}
 
+        {/* Alert channels */}
+        <AlertChannelsStatus channels={channels} />
+
         {/* Footer */}
         <View
           style={{
@@ -476,6 +513,23 @@ export function ApiAreaCard({
                 }}
               >
                 <Ionicons name="trash" size={16} color="#EF4444" />
+              </TouchableOpacity>
+            )}
+            {onAlertSettings && (
+              <TouchableOpacity
+                onPress={onAlertSettings}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 12,
+                  backgroundColor: isDarkColorScheme ? "#F59E0B20" : "#FEF3C7",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderWidth: 1,
+                  borderColor: isDarkColorScheme ? "#F59E0B40" : "#FCD34D",
+                }}
+              >
+                <Ionicons name="notifications" size={16} color="#F59E0B" />
               </TouchableOpacity>
             )}
             <TouchableOpacity onPress={onPress} activeOpacity={0.8}>

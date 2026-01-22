@@ -13,6 +13,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TabLoadingScreen } from "~/components/ui/TabLoadingScreen";
 import { Text } from "~/components/ui/text";
@@ -23,13 +24,22 @@ import type {
     Area,
     AreaStatusResponse,
 } from "~/features/map/types/map-layers.types";
+import type { NotificationChannels } from "~/features/alerts/types/alert-settings.types";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 // Areas with their status
 interface AreaWithStatus {
   area: Area;
   status?: AreaStatusResponse;
+  alertChannels?: NotificationChannels;
 }
+
+const ALERT_SETTINGS_KEY_PREFIX = "@alert_settings_";
+const DEFAULT_ALERT_CHANNELS: NotificationChannels = {
+  push: true,
+  email: false,
+  sms: false,
+};
 
 export default function AreasScreen() {
   const router = useRouter();
@@ -72,7 +82,29 @@ export default function AreasScreen() {
         }),
       );
 
-      setAreas(areasWithStatus);
+      const areasWithAlerts: AreaWithStatus[] = await Promise.all(
+        areasWithStatus.map(async (entry) => {
+          try {
+            const stored = await AsyncStorage.getItem(
+              `${ALERT_SETTINGS_KEY_PREFIX}${entry.area.id}`,
+            );
+            if (stored) {
+              const parsed = JSON.parse(stored) as {
+                notificationChannels?: NotificationChannels;
+              };
+              return {
+                ...entry,
+                alertChannels: parsed.notificationChannels || DEFAULT_ALERT_CHANNELS,
+              };
+            }
+          } catch {
+            // Ignore storage errors and fall back to defaults
+          }
+          return { ...entry, alertChannels: DEFAULT_ALERT_CHANNELS };
+        }),
+      );
+
+      setAreas(areasWithAlerts);
     } catch (error) {
       console.error("Failed to fetch areas:", error);
     } finally {
@@ -179,6 +211,28 @@ export default function AreasScreen() {
   const handleCreateArea = useCallback(() => {
     router.push("/map");
   }, [router]);
+
+  // Navigate to alert settings
+  const handleAlertSettings = useCallback(
+    (areaId: string, areaName: string) => {
+      router.push({
+        pathname: "/alerts/settings" as const ,
+        params: { areaId, areaName },
+      });
+    },
+    [router],
+  );
+
+  // Navigate to alert history
+  const handleAlertHistory = useCallback(
+    (areaId: string, areaName: string) => {
+      router.push({
+        pathname: "/alerts/history",
+        params: { areaId, areaName },
+      });
+    },
+    [router],
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -352,7 +406,7 @@ export default function AreasScreen() {
             />
           }
         >
-          {areas.map(({ area, status }) => (
+          {areas.map(({ area, status, alertChannels }) => (
             <ApiAreaCard
               key={area.id}
               area={area}
@@ -360,6 +414,9 @@ export default function AreasScreen() {
               onPress={() => handleViewDetail(area.id)}
               onEdit={() => handleEdit(area)}
               onDelete={() => handleDelete(area.id, area.name)}
+              onAlertSettings={() => handleAlertSettings(area.id, area.name)}
+              alertChannels={alertChannels}
+              onAlertHistory={() => handleAlertHistory(area.id, area.name)}
             />
           ))}
         </ScrollView>

@@ -9,9 +9,8 @@ export interface NotificationChannels {
 }
 
 export interface QuietHours {
-  enabled: boolean;
-  startTime: string; // HH:MM format
-  endTime: string; // HH:MM format
+  startTime: string; // HH:MM:SS format
+  endTime: string; // HH:MM:SS format
 }
 
 export interface AlertSettings {

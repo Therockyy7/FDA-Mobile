@@ -2,15 +2,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import {
-  Alert,
-  Dimensions,
-  ScrollView,
-  StatusBar,
-  View
-} from "react-native";
+import { Alert, Dimensions, ScrollView, StatusBar, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { AlertSettingsService } from "../services/alert-settings.service";
 import type {
   AlertSettingsColors,
   AlertSettingsFormData,
@@ -45,24 +40,32 @@ export function AlertSettings({
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isDarkColorScheme } = useColorScheme();
+  const normalizeTime = (time: string) =>
+    time.length === 5 ? `${time}:00` : time;
   // Form state
   const [minimumSeverity, setMinimumSeverity] = useState<AlertSeverity>(
-    initialSettings?.minimumSeverity || "Warning"
+    initialSettings?.minimumSeverity || "Warning",
   );
-  const [notificationChannels, setNotificationChannels] = useState<NotificationChannels>(
-    initialSettings?.notificationChannels || {
-      push: true,
-      email: false,
-      sms: false,
+  const [notificationChannels, setNotificationChannels] =
+    useState<NotificationChannels>(
+      initialSettings?.notificationChannels || {
+        push: true,
+        email: false,
+        sms: false,
+      },
+    );
+  const [quietHours, setQuietHours] = useState<QuietHours>(() => {
+    if (initialSettings?.quietHours) {
+      return {
+        startTime: normalizeTime(initialSettings.quietHours.startTime),
+        endTime: normalizeTime(initialSettings.quietHours.endTime),
+      };
     }
-  );
-  const [quietHours, setQuietHours] = useState<QuietHours>(
-    initialSettings?.quietHours || {
-      enabled: true,
-      startTime: "22:00",
-      endTime: "06:00",
-    }
-  );
+    return {
+      startTime: "22:00:00",
+      endTime: "06:00:00",
+    };
+  });
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -81,7 +84,10 @@ export function AlertSettings({
           setNotificationChannels(parsed.notificationChannels);
         }
         if (parsed.quietHours) {
-          setQuietHours(parsed.quietHours);
+          setQuietHours({
+            startTime: normalizeTime(parsed.quietHours.startTime),
+            endTime: normalizeTime(parsed.quietHours.endTime),
+          });
         }
       } catch {
         // Ignore storage errors and keep defaults
@@ -120,12 +126,10 @@ export function AlertSettings({
     { value: "Critical", label: "Critical", color: "#EF4444" },
   ];
 
-  const [activeTimeField, setActiveTimeField] = useState<"start" | "end" | null>(
-    null
-  );
-  const [timePickerValue, setTimePickerValue] = useState<Date>(
-    new Date()
-  );
+  const [activeTimeField, setActiveTimeField] = useState<
+    "start" | "end" | null
+  >(null);
+  const [timePickerValue, setTimePickerValue] = useState<Date>(new Date());
 
   const parseTimeToDate = (time: string) => {
     const [hours, minutes] = time.split(":").map((value) => Number(value));
@@ -135,17 +139,20 @@ export function AlertSettings({
   };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("vi-VN", {
+    const hhmm = date.toLocaleTimeString("vi-VN", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
     });
+    return `${hhmm}:00`;
   };
 
   const openTimePicker = (field: "start" | "end") => {
     setActiveTimeField(field);
     setTimePickerValue(
-      parseTimeToDate(field === "start" ? quietHours.startTime : quietHours.endTime)
+      parseTimeToDate(
+        field === "start" ? quietHours.startTime : quietHours.endTime,
+      ),
     );
   };
 
@@ -170,17 +177,23 @@ export function AlertSettings({
       const settings: AlertSettingsFormData = {
         minimumSeverity,
         notificationChannels,
-        quietHours,
+        quietHours: {
+          startTime: normalizeTime(quietHours.startTime),
+          endTime: normalizeTime(quietHours.endTime),
+        },
       };
+
+      const payload = AlertSettingsService.buildSubscriptionPayload(settings);
+      await AlertSettingsService.updateSubscription(areaId, payload);
+
+      if (onSave) {
+        await onSave(settings);
+      }
 
       await AsyncStorage.setItem(
         `${ALERT_SETTINGS_KEY_PREFIX}${areaId}`,
         JSON.stringify(settings),
       );
-
-      if (onSave) {
-        await onSave(settings);
-      }
 
       Alert.alert("Thành công", "Cài đặt cảnh báo đã được lưu", [
         { text: "OK", onPress: () => router.back() },
@@ -206,7 +219,7 @@ export function AlertSettings({
       >
         <AlertSettingsHeader
           areaName={areaName}
-          description="Configure alerts for your saved home area"
+          description="Thiết lập cảnh báo cho khu vực bạn đã lưu"
           onBack={() => router.back()}
           topInset={insets.top}
           colors={headerColors}
@@ -227,9 +240,6 @@ export function AlertSettings({
 
         <QuietHoursSection
           quietHours={quietHours}
-          onToggle={(enabled) =>
-            setQuietHours((prev) => ({ ...prev, enabled }))
-          }
           onStartPress={() => openTimePicker("start")}
           onEndPress={() => openTimePicker("end")}
           colors={colors}
@@ -245,7 +255,9 @@ export function AlertSettings({
 
       <TimePickerModal
         visible={activeTimeField !== null}
-        title={activeTimeField === "start" ? "Chọn giờ bắt đầu" : "Chọn giờ kết thúc"}
+        title={
+          activeTimeField === "start" ? "Chọn giờ bắt đầu" : "Chọn giờ kết thúc"
+        }
         value={timePickerValue}
         onConfirm={(date) => applyTimePicker(date)}
         onCancel={closeTimePicker}

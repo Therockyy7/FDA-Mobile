@@ -1,15 +1,14 @@
 // features/alerts/components/alert-settings/QuietHoursSection.tsx
 import React from "react";
-import { Switch, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import type {
-    AlertSettingsColors,
-    QuietHours,
+  AlertSettingsColors,
+  QuietHours,
 } from "../../types/alert-settings.types";
 
 interface QuietHoursSectionProps {
   quietHours: QuietHours;
-  onToggle: (enabled: boolean) => void;
   onStartPress: () => void;
   onEndPress: () => void;
   colors: AlertSettingsColors;
@@ -17,11 +16,12 @@ interface QuietHoursSectionProps {
 
 export function QuietHoursSection({
   quietHours,
-  onToggle,
   onStartPress,
   onEndPress,
   colors,
 }: QuietHoursSectionProps) {
+  const displayTime = (time: string) => time.split(":").slice(0, 2).join(":");
+
   return (
     <View style={{ marginTop: 32, paddingHorizontal: 20 }}>
       <View
@@ -42,14 +42,8 @@ export function QuietHoursSection({
             letterSpacing: 1,
           }}
         >
-          Quiet Hours
+          Giờ Yên Lặng
         </Text>
-        <Switch
-          value={quietHours.enabled}
-          onValueChange={onToggle}
-          trackColor={{ false: colors.border, true: colors.primary }}
-          thumbColor={colors.cardBg}
-        />
       </View>
 
       <View
@@ -69,7 +63,7 @@ export function QuietHoursSection({
             marginBottom: 16,
           }}
         >
-          <Text style={{ fontSize: 14, color: colors.subtext }}>Start Time</Text>
+          <Text style={{ fontSize: 14, color: colors.subtext }}>Bắt Đầu</Text>
           <TouchableOpacity
             onPress={onStartPress}
             activeOpacity={0.8}
@@ -90,7 +84,7 @@ export function QuietHoursSection({
                 fontFamily: "monospace",
               }}
             >
-              {quietHours.startTime}
+              {displayTime(quietHours.startTime)}
             </Text>
           </TouchableOpacity>
         </View>
@@ -110,7 +104,7 @@ export function QuietHoursSection({
             justifyContent: "space-between",
           }}
         >
-          <Text style={{ fontSize: 14, color: colors.subtext }}>End Time</Text>
+          <Text style={{ fontSize: 14, color: colors.subtext }}>Kết Thúc</Text>
           <TouchableOpacity
             onPress={onEndPress}
             activeOpacity={0.8}
@@ -131,7 +125,7 @@ export function QuietHoursSection({
                 fontFamily: "monospace",
               }}
             >
-              {quietHours.endTime}
+              {displayTime(quietHours.endTime)}
             </Text>
           </TouchableOpacity>
         </View>
@@ -144,8 +138,8 @@ export function QuietHoursSection({
             lineHeight: 16,
           }}
         >
-          Critical alerts will bypass quiet hours if the flood severity exceeds "Critical"
-          thresholds.
+          Cảnh báo nghiêm trọng sẽ không bị giới hạn bởi giờ yên lặng nếu mức độ
+          ngập vượt ngưỡng “Critical”.
         </Text>
       </View>
     </View>

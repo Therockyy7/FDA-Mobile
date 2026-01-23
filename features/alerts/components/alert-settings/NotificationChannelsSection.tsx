@@ -32,7 +32,7 @@ export function NotificationChannelsSection({
           paddingBottom: 12,
         }}
       >
-        Notification Channels
+        Kênh Thông Báo
       </Text>
       <View
         style={{
@@ -69,7 +69,9 @@ export function NotificationChannelsSection({
             >
               <Ionicons name="notifications" size={18} color={colors.primary} />
             </View>
-            <Text style={{ fontSize: 15, fontWeight: "500", color: colors.text }}>
+            <Text
+              style={{ fontSize: 15, fontWeight: "500", color: colors.text }}
+            >
               Push Notifications
             </Text>
           </View>
@@ -107,7 +109,9 @@ export function NotificationChannelsSection({
             >
               <Ionicons name="mail" size={18} color="#8B5CF6" />
             </View>
-            <Text style={{ fontSize: 15, fontWeight: "500", color: colors.text }}>
+            <Text
+              style={{ fontSize: 15, fontWeight: "500", color: colors.text }}
+            >
               Email Alerts
             </Text>
           </View>
@@ -143,7 +147,9 @@ export function NotificationChannelsSection({
             >
               <Ionicons name="chatbubble" size={18} color="#10B981" />
             </View>
-            <Text style={{ fontSize: 15, fontWeight: "500", color: colors.text }}>
+            <Text
+              style={{ fontSize: 15, fontWeight: "500", color: colors.text }}
+            >
               SMS Messages
             </Text>
           </View>

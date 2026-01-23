@@ -4,8 +4,8 @@ import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import type {
-  AlertSeverity,
   AlertSettingsColors,
+  AlertSeverity,
 } from "../../types/alert-settings.types";
 
 interface SeverityOption {
@@ -41,7 +41,7 @@ export function MinimumSeveritySection({
           opacity: 1,
         }}
       >
-        Minimum Severity Level
+        Mức độ nghiêm trọng tối thiểu
       </Text>
       <View style={{ paddingHorizontal: 20, opacity: 1 }}>
         <View
@@ -80,7 +80,9 @@ export function MinimumSeveritySection({
                   opacity: 1,
                 }}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+                >
                   <View
                     style={{
                       width: 10,
@@ -96,7 +98,9 @@ export function MinimumSeveritySection({
                       fontSize: 13,
                       fontWeight: isSelected ? "800" : "600",
                       color: isSelected ? option.color : colors.subtext,
-                      textShadowColor: isSelected ? option.color : "transparent",
+                      textShadowColor: isSelected
+                        ? option.color
+                        : "transparent",
                       textShadowOffset: { width: 0, height: 0 },
                       textShadowRadius: isSelected ? 4 : 0,
                     }}
@@ -130,7 +134,7 @@ export function MinimumSeveritySection({
             lineHeight: 16,
           }}
         >
-          You will only receive alerts at this level or higher.
+          Bạn chỉ nhận cảnh báo ở mức này hoặc cao hơn.
         </Text>
       </View>
     </View>

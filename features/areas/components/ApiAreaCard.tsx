@@ -207,14 +207,14 @@ export function ApiAreaCard({
                 width: 34,
                 height: 34,
                 borderRadius: 12,
-                backgroundColor: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
+                backgroundColor: isDarkColorScheme ? "#3A2F0A" : "#FFFBEB",
                 alignItems: "center",
                 justifyContent: "center",
                 borderWidth: 1,
-                borderColor: colors.divider,
+                borderColor: "#F59E0B",
               }}
             >
-              <Ionicons name="notifications" size={16} color={colors.subtext} />
+              <Ionicons name="notifications" size={16} color="#F59E0B" />
             </TouchableOpacity>
           )}
           {/* Water Level Display - HERO */}

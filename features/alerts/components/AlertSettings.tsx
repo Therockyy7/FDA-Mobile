@@ -221,6 +221,12 @@ export function AlertSettings({
           areaName={areaName}
           description="Thiết lập cảnh báo cho khu vực bạn đã lưu"
           onBack={() => router.back()}
+          onThresholdPress={() =>
+            router.push({
+              pathname: "/alerts/thresholds",
+              params: { areaId, areaName },
+            })
+          }
           topInset={insets.top}
           colors={headerColors}
         />
@@ -267,6 +273,7 @@ export function AlertSettings({
       {/* Background Decorations */}
       <View
         style={{
+          pointerEvents: "none",
           position: "absolute",
           top: 0,
           right: 0,
@@ -280,6 +287,7 @@ export function AlertSettings({
       />
       <View
         style={{
+          pointerEvents: "none",
           position: "absolute",
           bottom: 0,
           left: 0,

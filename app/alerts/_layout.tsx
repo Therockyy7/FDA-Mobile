@@ -18,6 +18,13 @@ export default function AlertsLayout() {
             presentation: "modal",
         }}
       />
+      <Stack.Screen
+        name="thresholds"
+        options={{
+          headerShown: false,
+          presentation: "modal",
+        }}
+      />
     </Stack>
   );
 }

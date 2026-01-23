@@ -15,6 +15,7 @@ export default function AlertsLayout() {
         name="history"
         options={{
           headerShown: false,
+            presentation: "modal",
         }}
       />
     </Stack>

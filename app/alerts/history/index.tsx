@@ -3,15 +3,13 @@ import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { SafeAreaView, ScrollView, StatusBar, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useColorScheme } from "~/lib/useColorScheme";
 import AlertHistoryCard from "~/features/alerts/components/alert-history/AlertHistoryCard";
 import AlertHistoryChips from "~/features/alerts/components/alert-history/AlertHistoryChips";
 import AlertHistoryHeader from "~/features/alerts/components/alert-history/AlertHistoryHeader";
 import AlertHistorySearchBar from "~/features/alerts/components/alert-history/AlertHistorySearchBar";
 import AlertHistorySectionTitle from "~/features/alerts/components/alert-history/AlertHistorySectionTitle";
 import type { AlertHistoryItem } from "~/features/alerts/types/alert-history.types";
-
-const HEADER_HEIGHT = 64;
+import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function AlertHistoryScreen() {
   const router = useRouter();
@@ -36,6 +34,10 @@ export default function AlertHistoryScreen() {
 
   const [query, setQuery] = useState("");
   const [chipAll, setChipAll] = useState(true);
+  const headerHeight = insets.top + 56;
+  const floatingTop = headerHeight + 8;
+  const floatingHeight = 108;
+  const contentPaddingTop = floatingTop + floatingHeight + 8;
 
   const today: AlertHistoryItem[] = [
     {
@@ -105,7 +107,6 @@ export default function AlertHistoryScreen() {
       <AlertHistoryHeader
         title="Alert History"
         onBack={() => router.back()}
-        onFilter={() => {}}
         colors={{
           text: colors.text,
           primary: colors.primary,
@@ -115,42 +116,52 @@ export default function AlertHistoryScreen() {
         topInset={insets.top}
       />
 
+      <View
+        style={{
+          position: "absolute",
+          top: floatingTop,
+          left: 0,
+          right: 0,
+          paddingHorizontal: 16,
+          zIndex: 9,
+          backgroundColor: colors.background,
+        }}
+      >
+        <AlertHistorySearchBar
+          value={query}
+          onChange={setQuery}
+          placeholder="Search station or area..."
+          colors={{
+            text: colors.text,
+            subtext: colors.subtext,
+            inputBg: isDarkColorScheme ? "rgba(30,41,59,0.5)" : "#FFFFFF",
+          }}
+        />
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <AlertHistoryChips
+            chipAll={chipAll}
+            onSelectAll={() => setChipAll(true)}
+            onSelectCritical={() => setChipAll(false)}
+            onSelectLast30Days={() => {}}
+            colors={{
+              primary: colors.primary,
+              subtext: colors.subtext,
+              chipBg: colors.chipBg,
+              border: colors.border,
+            }}
+          />
+        </ScrollView>
+      </View>
+
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
-          paddingTop: HEADER_HEIGHT,
+          paddingTop: contentPaddingTop,
           paddingBottom: 24,
         }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
-          <AlertHistorySearchBar
-            value={query}
-            onChange={setQuery}
-            placeholder="Search station or area..."
-            colors={{
-              text: colors.text,
-              subtext: colors.subtext,
-              inputBg: isDarkColorScheme ? "rgba(30,41,59,0.5)" : "#FFFFFF",
-            }}
-          />
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <AlertHistoryChips
-              chipAll={chipAll}
-              onSelectAll={() => setChipAll(true)}
-              onSelectCritical={() => setChipAll(false)}
-              onSelectLast30Days={() => {}}
-              colors={{
-                primary: colors.primary,
-                subtext: colors.subtext,
-                chipBg: colors.chipBg,
-                border: colors.border,
-              }}
-            />
-          </ScrollView>
-        </View>
-
         <View style={{ paddingHorizontal: 16, paddingTop: 10, gap: 14 }}>
           <AlertHistorySectionTitle title="Today" color={colors.subtext} />
           {today.map((item) => (
@@ -193,16 +204,7 @@ export default function AlertHistoryScreen() {
           <View style={{ height: 18 }} />
         </View>
 
-        <View style={{ alignItems: "center", paddingTop: 18, paddingBottom: 10 }}>
-          <View
-            style={{
-              width: 120,
-              height: 6,
-              borderRadius: 999,
-              backgroundColor: isDarkColorScheme ? "#334155" : "#CBD5E1",
-            }}
-          />
-        </View>
+      
       </ScrollView>
     </SafeAreaView>
   );

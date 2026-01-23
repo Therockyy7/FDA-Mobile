@@ -19,7 +19,6 @@ interface ApiAreaCardProps {
   onDelete?: () => void;
   onAlertSettings?: () => void;
   alertChannels?: NotificationChannels;
-  onAlertHistory?: () => void;
 }
 
 // Get status config based on AreaStatus
@@ -95,7 +94,6 @@ export function ApiAreaCard({
   onDelete,
   onAlertSettings,
   alertChannels,
-  onAlertHistory,
 }: ApiAreaCardProps) {
   const { isDarkColorScheme } = useColorScheme();
   const statusConfig = getStatusConfig(status?.status);
@@ -199,9 +197,9 @@ export function ApiAreaCard({
             
           }}
         >
-          {onAlertHistory && (
+          {onAlertSettings && (
             <TouchableOpacity
-              onPress={onAlertHistory}
+              onPress={onAlertSettings}
               style={{
                 position: "absolute",
                 right: 16,
@@ -216,7 +214,7 @@ export function ApiAreaCard({
                 borderColor: colors.divider,
               }}
             >
-              <Ionicons name="time-outline" size={16} color={colors.subtext} />
+              <Ionicons name="notifications" size={16} color={colors.subtext} />
             </TouchableOpacity>
           )}
           {/* Water Level Display - HERO */}
@@ -513,23 +511,6 @@ export function ApiAreaCard({
                 }}
               >
                 <Ionicons name="trash" size={16} color="#EF4444" />
-              </TouchableOpacity>
-            )}
-            {onAlertSettings && (
-              <TouchableOpacity
-                onPress={onAlertSettings}
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 12,
-                  backgroundColor: isDarkColorScheme ? "#F59E0B20" : "#FEF3C7",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderWidth: 1,
-                  borderColor: isDarkColorScheme ? "#F59E0B40" : "#FCD34D",
-                }}
-              >
-                <Ionicons name="notifications" size={16} color="#F59E0B" />
               </TouchableOpacity>
             )}
             <TouchableOpacity onPress={onPress} activeOpacity={0.8}>

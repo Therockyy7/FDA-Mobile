@@ -224,15 +224,9 @@ export default function AreasScreen() {
   );
 
   // Navigate to alert history
-  const handleAlertHistory = useCallback(
-    (areaId: string, areaName: string) => {
-      router.push({
-        pathname: "/alerts/history",
-        params: { areaId, areaName },
-      });
-    },
-    [router],
-  );
+  const handleAlertHistory = useCallback(() => {
+    router.push("/alerts/history");
+  }, [router]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -299,25 +293,47 @@ export default function AreasScreen() {
             </Text>
           </View>
 
-          {/* Create button */}
-          <TouchableOpacity onPress={handleCreateArea} activeOpacity={0.8}>
-            <LinearGradient
-              colors={["#10B981", "#059669"]}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
-                paddingVertical: 10,
-                paddingHorizontal: 14,
-                borderRadius: 12,
-              }}
-            >
-              <Ionicons name="add-circle" size={18} color="white" />
-              <Text style={{ fontSize: 13, fontWeight: "700", color: "white" }}>
-                Tạo mới
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
+          {/* Header actions */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <TouchableOpacity onPress={handleAlertHistory} activeOpacity={0.8}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  paddingVertical: 9,
+                  paddingHorizontal: 12,
+                  borderRadius: 12,
+                  backgroundColor: isDarkColorScheme ? "#1F2937" : "#FFFFFF",
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
+              >
+                <Ionicons name="time-outline" size={16} color={colors.text} />
+                <Text style={{ fontSize: 12, fontWeight: "700", color: colors.text }}>
+                  Lịch sử
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleCreateArea} activeOpacity={0.8}>
+              <LinearGradient
+                colors={["#10B981", "#059669"]}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  paddingVertical: 10,
+                  paddingHorizontal: 14,
+                  borderRadius: 12,
+                }}
+              >
+                <Ionicons name="add-circle" size={18} color="white" />
+                <Text style={{ fontSize: 13, fontWeight: "700", color: "white" }}>
+                  Tạo mới
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         </View>
       </LinearGradient>
 
@@ -416,7 +432,6 @@ export default function AreasScreen() {
               onDelete={() => handleDelete(area.id, area.name)}
               onAlertSettings={() => handleAlertSettings(area.id, area.name)}
               alertChannels={alertChannels}
-              onAlertHistory={() => handleAlertHistory(area.id, area.name)}
             />
           ))}
         </ScrollView>

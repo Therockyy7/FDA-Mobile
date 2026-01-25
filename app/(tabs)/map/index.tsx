@@ -11,6 +11,7 @@ import React, {
 import { Animated, StatusBar, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { Text } from "~/components/ui/text";
+import { PremiumLimitModal } from "~/features/areas/components/PremiumLimitModal";
 import { useControlArea } from "~/features/areas/hooks/useControlArea";
 import { AddressSearchSheet } from "~/features/map/components/areas/AddressSearchSheet";
 import { AreaCard } from "~/features/map/components/areas/AreaCard";
@@ -184,6 +185,14 @@ export default function MapScreen() {
     handleAddressSelected,
     handleCloseCreationOptions,
     handleCloseAddressSearch,
+    // Premium limit states and handlers
+    showPremiumLimitModal,
+    currentAreaCount,
+    freeAreaLimit,
+    handleClosePremiumLimitModal,
+    handleUpgradePremium,
+    // Loading states
+    isLoadingLocation,
   } = useControlArea({
     mapRef,
     region,
@@ -693,6 +702,7 @@ export default function MapScreen() {
           visible={showCreationOptions}
           onClose={handleCloseCreationOptions}
           onSelectOption={handleOptionSelect}
+          isLoadingGps={isLoadingLocation}
         />
 
         {/* NEW: Address Search Sheet */}
@@ -700,6 +710,15 @@ export default function MapScreen() {
           visible={showAddressSearch}
           onClose={handleCloseAddressSearch}
           onSelectLocation={handleAddressSelected}
+        />
+
+        {/* Premium Limit Modal */}
+        <PremiumLimitModal
+          visible={showPremiumLimitModal}
+          onClose={handleClosePremiumLimitModal}
+          onUpgrade={handleUpgradePremium}
+          currentCount={currentAreaCount}
+          maxCount={freeAreaLimit}
         />
       </View>
     </View>

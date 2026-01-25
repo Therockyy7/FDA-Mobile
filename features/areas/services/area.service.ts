@@ -57,7 +57,7 @@ export const AreaService = {
       };
     }
   },
-
+// Chung cư FPT Plaza 1
   // FeatG35: Get area by ID
   getAreaById: async (id: string): Promise<Area> => {
     try {
@@ -215,7 +215,9 @@ export const AreaService = {
       console.log("📊 Fetching flood history:", url);
 
       const res = await apiClient.get<FloodHistoryResponse>(url);
-      return res.data.data;
+      // return res.data.data;
+      return generateMockFloodHistory(params);
+
     } catch {
       console.warn("⚠️ Flood history API unavailable, using mock data");
       return generateMockFloodHistory(params);
@@ -256,7 +258,9 @@ export const AreaService = {
       console.log("📈 Fetching flood trends:", url);
 
       const res = await apiClient.get<FloodTrendsResponse>(url);
-      return res.data.data;
+      // return res.data.data;
+      return generateMockFloodTrends(params);
+
     } catch {
       console.warn("⚠️ Flood trends API unavailable, using mock data");
       return generateMockFloodTrends(params);

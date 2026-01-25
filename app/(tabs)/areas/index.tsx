@@ -16,8 +16,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TabLoadingScreen } from "~/components/ui/TabLoadingScreen";
 import { Text } from "~/components/ui/text";
-import { ApiAreaCard } from "~/features/areas/components/ApiAreaCard";
 import { EditAreaSheet } from "~/features/areas/components/EditAreaSheet";
+import { WaterLevelAreaCard } from "~/features/areas/components/WaterLevelAreaCard";
 import { AreaService } from "~/features/areas/services/area.service";
 import type {
     Area,
@@ -353,7 +353,7 @@ export default function AreasScreen() {
           }
         >
           {areas.map(({ area, status }) => (
-            <ApiAreaCard
+            <WaterLevelAreaCard
               key={area.id}
               area={area}
               status={status}

@@ -26,7 +26,7 @@ export function AlertHistorySearchBar({
         style={{
           position: "absolute",
           left: 12,
-          top: 0,
+          top: 10,
           bottom: 0,
           justifyContent: "center",
           zIndex: 1,
@@ -40,6 +40,10 @@ export function AlertHistorySearchBar({
         onChangeText={onChange}
         placeholder={placeholder}
         placeholderTextColor={colors.subtext}
+        autoCorrect={false}
+        autoCapitalize="none"
+        clearButtonMode="while-editing"
+        returnKeyType="search"
         style={{
           backgroundColor: colors.inputBg,
           borderRadius: 14,

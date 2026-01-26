@@ -55,10 +55,20 @@ function Chip({ active, label, rightIcon, colors, onPress }: ChipProps) {
   );
 }
 
+export type AlertHistorySeverityFilter =
+  | "all"
+  | "critical"
+  | "warning"
+  | "caution";
+
 interface AlertHistoryChipsProps {
-  chipAll: boolean;
+  activeSeverity: AlertHistorySeverityFilter;
+  dropdownOpen: boolean;
+  onToggleDropdown: () => void;
+  onSelectSeverity: (severity: AlertHistorySeverityFilter) => void;
+  severityCounts: Record<Exclude<AlertHistorySeverityFilter, "all">, number>;
+  totalCount: number;
   onSelectAll: () => void;
-  onSelectCritical: () => void;
   onSelectLast30Days: () => void;
   colors: {
     primary: string;
@@ -69,29 +79,74 @@ interface AlertHistoryChipsProps {
 }
 
 export function AlertHistoryChips({
-  chipAll,
+  activeSeverity,
+  dropdownOpen,
+  onToggleDropdown,
+  onSelectSeverity,
+  severityCounts,
+  totalCount,
   onSelectAll,
-  onSelectCritical,
   onSelectLast30Days,
   colors,
 }: AlertHistoryChipsProps) {
+  const labelMap: Record<AlertHistorySeverityFilter, string> = {
+    all: "All Alerts",
+    critical: "Critical",
+    warning: "Warning",
+    caution: "Caution",
+  };
+
+  const activeLabel =
+    activeSeverity === "all"
+      ? `${labelMap.all} (${totalCount})`
+      : `${labelMap[activeSeverity]} (${severityCounts[activeSeverity]})`;
+
   return (
-    <View style={{ flexDirection: "row", gap: 10, paddingBottom: 8 }}>
-      <Chip active={chipAll} label="All Alerts" colors={colors} onPress={onSelectAll} />
-      <Chip
-        active={!chipAll}
-        label="Critical"
-        rightIcon="chevron-down"
-        colors={colors}
-        onPress={onSelectCritical}
-      />
-      <Chip
-        active={false}
-        label="Last 30 Days"
-        rightIcon="calendar-outline"
-        colors={colors}
-        onPress={onSelectLast30Days}
-      />
+    <View style={{ gap: 8, paddingBottom: 8 }}>
+      <View style={{ flexDirection: "row", gap: 10 }}>
+        <Chip
+          active={activeSeverity === "all"}
+          label={`${labelMap.all} (${totalCount})`}
+          colors={colors}
+          onPress={onSelectAll}
+        />
+        <Chip
+          active={activeSeverity !== "all"}
+          label={activeLabel}
+          rightIcon={dropdownOpen ? "chevron-up" : "chevron-down"}
+          colors={colors}
+          onPress={onToggleDropdown}
+        />
+        <Chip
+          active={false}
+          label="Last 30 Days"
+          rightIcon="calendar-outline"
+          colors={colors}
+          onPress={onSelectLast30Days}
+        />
+      </View>
+
+      {dropdownOpen ? (
+        <View
+          style={{
+            flexDirection: "row",
+            gap: 8,
+            flexWrap: "wrap",
+          }}
+        >
+          {(["critical", "warning", "caution"] as const).map(
+            (severity) => (
+              <Chip
+                key={severity}
+                active={activeSeverity === severity}
+                label={`${labelMap[severity]} (${severityCounts[severity]})`}
+                colors={colors}
+                onPress={() => onSelectSeverity(severity)}
+              />
+            ),
+          )}
+        </View>
+      ) : null}
     </View>
   );
 }

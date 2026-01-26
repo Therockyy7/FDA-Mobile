@@ -33,11 +33,9 @@ export function AlertHistoryHeader({
         right: 0,
         zIndex: 10,
         paddingHorizontal: 16,
-        paddingTop: topInset + 4,
-        paddingBottom: 8,
+        paddingTop: topInset + 8,
+        paddingBottom: 12,
         backgroundColor: colors.backgroundOverlay,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>

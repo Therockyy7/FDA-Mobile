@@ -1,27 +1,42 @@
 // features/alerts/types/alert-history.types.ts
 
-export type AlertHistorySeverity = "Critical" | "Warning" | "Resolved";
+export type AlertHistorySeverity = "caution" | "warning" | "critical";
 
-export type AlertHistoryChannelType = "push" | "email" | "sms";
-export type AlertHistoryChannelStatus = "sent" | "failed";
-
-export interface AlertHistoryChannel {
-  type: AlertHistoryChannelType;
-  status: AlertHistoryChannelStatus;
+export interface AlertHistoryNotification {
+  notificationId: string;
+  channel: number;
+  channelName: string;
+  priority: number;
+  priorityName: string;
+  status: string;
+  statusName: string;
+  sentAt: string | null;
+  deliveredAt: string | null;
+  errorMessage: string | null;
+  title: string;
 }
 
 export interface AlertHistoryItem {
-  id: string;
-  station: string;
-  area: string;
+  alertId: string;
+  stationId: string;
+  stationName: string;
+  stationCode: string;
   severity: AlertHistorySeverity;
-  valueLabel: string;
-  value: string;
-  unit: string;
-  time: string;
-  date: string;
-  channels: AlertHistoryChannel[];
-  actionLabel: string;
-  icon: "water" | "waves" | "water_damage";
-  dimmed?: boolean;
+  priority: number;
+  waterLevel: number;
+  message: string;
+  triggeredAt: string;
+  resolvedAt: string | null;
+  status: "open" | "closed";
+  notifications: AlertHistoryNotification[];
+}
+
+export interface AlertHistoryResponse {
+  success: boolean;
+  message: string;
+  alerts: AlertHistoryItem[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
 }

@@ -21,24 +21,12 @@ interface AlertHistoryCardProps {
   };
 }
 
-const iconName = (k: AlertHistoryItem["icon"]) => {
-  switch (k) {
-    case "water_damage":
-      return "water-outline";
-    case "waves":
-      return "pulse-outline";
-    case "water":
-    default:
-      return "water-outline";
-  }
-};
-
 const severityStyle = (
   severity: AlertHistorySeverity,
   isDark: boolean,
   primary: string,
 ) => {
-  if (severity === "Critical") {
+  if (severity === "critical") {
     return {
       border: "rgba(239,68,68,0.3)",
       tagBg: "#EF4444",
@@ -47,13 +35,22 @@ const severityStyle = (
       iconBg: "rgba(239,68,68,0.1)",
     };
   }
-  if (severity === "Warning") {
+  if (severity === "warning") {
     return {
       border: "rgba(245,158,11,0.3)",
       tagBg: "#F59E0B",
       tagText: "#fff",
       accent: "#F59E0B",
       iconBg: "rgba(245,158,11,0.1)",
+    };
+  }
+  if (severity === "caution") {
+    return {
+      border: "rgba(249,115,22,0.3)",
+      tagBg: "#F97316",
+      tagText: "#fff",
+      accent: "#F97316",
+      iconBg: "rgba(249,115,22,0.1)",
     };
   }
   return {
@@ -67,6 +64,17 @@ const severityStyle = (
 
 export function AlertHistoryCard({ item, colors }: AlertHistoryCardProps) {
   const style = severityStyle(item.severity, colors.isDark, colors.primary);
+  const primaryTime = item.resolvedAt || item.triggeredAt;
+  const dateObj = new Date(primaryTime);
+  const timeLabel = dateObj.toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const dateLabel = dateObj.toLocaleDateString("vi-VN");
+  const severityLabel = item.severity.toUpperCase();
+  const waterValue = Number.isFinite(item.waterLevel)
+    ? item.waterLevel.toFixed(2)
+    : "--";
 
   return (
     <View
@@ -76,7 +84,6 @@ export function AlertHistoryCard({ item, colors }: AlertHistoryCardProps) {
         borderWidth: 1,
         borderColor: style.border,
         overflow: "hidden",
-        opacity: item.dimmed ? 0.8 : 1,
       }}
     >
       <View style={{ padding: 16 }}>
@@ -99,15 +106,18 @@ export function AlertHistoryCard({ item, colors }: AlertHistoryCardProps) {
                 justifyContent: "center",
               }}
             >
-              <Ionicons name={iconName(item.icon)} size={18} color={style.accent} />
+              <Ionicons name="water-outline" size={18} color={style.accent} />
             </View>
 
             <View style={{ flex: 1 }}>
               <Text style={{ color: colors.text, fontSize: 16, fontWeight: "800" }}>
-                {item.station}
+                {item.stationName}
               </Text>
               <Text style={{ color: colors.subtext, fontSize: 12, marginTop: 2 }}>
-                {item.area}
+                {item.stationCode}
+              </Text>
+              <Text style={{ color: colors.subtext, fontSize: 12, marginTop: 6 }}>
+                {item.message}
               </Text>
             </View>
           </View>
@@ -129,16 +139,16 @@ export function AlertHistoryCard({ item, colors }: AlertHistoryCardProps) {
                 fontWeight: "800",
               }}
             >
-              {item.severity.toUpperCase()}
+              {severityLabel}
             </Text>
           </View>
         </View>
 
         <View style={{ flexDirection: "row", gap: 12, marginBottom: 14 }}>
           <AlertHistoryValueCard
-            label={item.valueLabel}
-            value={item.value}
-            unit={item.unit}
+            label="Mực nước"
+            value={waterValue}
+            unit="cm"
             accent={style.accent}
             colors={{
               text: colors.text,
@@ -150,9 +160,9 @@ export function AlertHistoryCard({ item, colors }: AlertHistoryCardProps) {
             }}
           />
           <AlertHistoryValueCard
-            label={item.severity === "Resolved" ? "Resolved At" : "Triggered"}
-            value={item.time}
-            secondary={item.date}
+            label={item.resolvedAt ? "Đã xử lý" : "Kích hoạt"}
+            value={timeLabel}
+            secondary={dateLabel}
             accent={colors.text}
             colors={{
               text: colors.text,
@@ -175,11 +185,11 @@ export function AlertHistoryCard({ item, colors }: AlertHistoryCardProps) {
             paddingTop: 12,
           }}
         >
-          <AlertHistoryChannelsRow channels={item.channels} subtext={colors.subtext} />
+          <AlertHistoryChannelsRow channels={item.notifications} subtext={colors.subtext} />
 
           <TouchableOpacity activeOpacity={0.8} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <Text style={{ fontSize: 12, color: colors.primary, fontWeight: "800" }}>
-              {item.actionLabel}
+              Chi tiết
             </Text>
             <Ionicons name="chevron-forward" size={14} color={colors.primary} />
           </TouchableOpacity>

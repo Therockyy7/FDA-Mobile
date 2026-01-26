@@ -3,10 +3,10 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View } from "react-native";
 import { Text } from "~/components/ui/text";
-import type { AlertHistoryChannel } from "../../types/alert-history.types";
+import type { AlertHistoryNotification } from "../../types/alert-history.types";
 
 interface AlertHistoryChannelsRowProps {
-  channels: AlertHistoryChannel[];
+  channels: AlertHistoryNotification[];
   subtext: string;
 }
 
@@ -15,12 +15,12 @@ export function AlertHistoryChannelsRow({
   subtext,
 }: AlertHistoryChannelsRowProps) {
   return (
-    <View style={{ flexDirection: "row", gap: 16 }}>
+    <View style={{ flexDirection: "row", gap: 16, flexWrap: "wrap" }}>
       {channels.map((channel) => {
-        const ok = channel.status === "sent";
+        const ok = channel.statusName === "sent";
         return (
           <View
-            key={`${channel.type}-${channel.status}`}
+            key={channel.notificationId}
             style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
           >
             <Ionicons
@@ -29,12 +29,7 @@ export function AlertHistoryChannelsRow({
               color={ok ? "#22C55E" : "#EF4444"}
             />
             <Text style={{ fontSize: 11, color: subtext }}>
-              {channel.type === "push"
-                ? "Push"
-                : channel.type === "email"
-                  ? "Email"
-                  : "SMS"}{" "}
-              {ok ? "Sent" : "Failed"}
+              {channel.channelName} {ok ? "Sent" : channel.statusName}
             </Text>
           </View>
         );

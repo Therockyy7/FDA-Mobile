@@ -1,30 +1,32 @@
 // app/(tabs)/areas/index.tsx
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-    Alert,
-    Platform,
-    RefreshControl,
-    ScrollView,
-    StatusBar,
-    TouchableOpacity,
-    View,
+  Alert,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StatusBar,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TabLoadingScreen } from "~/components/ui/TabLoadingScreen";
 import { Text } from "~/components/ui/text";
+import type { NotificationChannels } from "~/features/alerts/types/alert-settings.types";
+import { ConfirmDeleteModal } from "~/features/areas/components/ConfirmDeleteModal";
 import { EditAreaSheet } from "~/features/areas/components/EditAreaSheet";
+import { ErrorModal } from "~/features/areas/components/ErrorModal";
 import { WaterLevelAreaCard } from "~/features/areas/components/WaterLevelAreaCard";
 import { AreaService } from "~/features/areas/services/area.service";
 import type {
-    Area,
-    AreaStatusResponse,
+  Area,
+  AreaStatusResponse,
 } from "~/features/map/types/map-layers.types";
-import type { NotificationChannels } from "~/features/alerts/types/alert-settings.types";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 // Areas with their status
@@ -52,6 +54,18 @@ export default function AreasScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [editingArea, setEditingArea] = useState<Area | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Delete modal state
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deletingArea, setDeletingArea] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Error modal state
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Theme colors
   const colors = {
@@ -94,7 +108,8 @@ export default function AreasScreen() {
               };
               return {
                 ...entry,
-                alertChannels: parsed.notificationChannels || DEFAULT_ALERT_CHANNELS,
+                alertChannels:
+                  parsed.notificationChannels || DEFAULT_ALERT_CHANNELS,
               };
             }
           } catch {
@@ -126,27 +141,37 @@ export default function AreasScreen() {
     fetchAreas();
   }, [fetchAreas]);
 
-  // Delete area
-  const handleDelete = useCallback(async (areaId: string, areaName: string) => {
-    Alert.alert(
-      "Xóa vùng theo dõi",
-      `Bạn có chắc chắn muốn xóa "${areaName}"?`,
-      [
-        { text: "Hủy", style: "cancel" },
-        {
-          text: "Xóa",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await AreaService.deleteArea(areaId);
-              setAreas((prev) => prev.filter((a) => a.area.id !== areaId));
-            } catch (error: any) {
-              Alert.alert("Lỗi", error?.message || "Không thể xóa vùng");
-            }
-          },
-        },
-      ],
-    );
+  // Open delete confirmation modal
+  const handleDelete = useCallback((areaId: string, areaName: string) => {
+    setDeletingArea({ id: areaId, name: areaName });
+    setDeleteModalVisible(true);
+  }, []);
+
+  // Confirm delete
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deletingArea) return;
+
+    setIsDeleting(true);
+    try {
+      await AreaService.deleteArea(deletingArea.id);
+      setAreas((prev) => prev.filter((a) => a.area.id !== deletingArea.id));
+      setDeleteModalVisible(false);
+      setDeletingArea(null);
+    } catch (error: any) {
+      setDeleteModalVisible(false);
+      setErrorMessage(
+        error?.message || "Không thể xóa vùng. Vui lòng thử lại sau.",
+      );
+      setErrorModalVisible(true);
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [deletingArea]);
+
+  // Cancel delete
+  const handleCancelDelete = useCallback(() => {
+    setDeleteModalVisible(false);
+    setDeletingArea(null);
   }, []);
 
   // Edit area - navigate to map with edit mode
@@ -216,7 +241,7 @@ export default function AreasScreen() {
   const handleAlertSettings = useCallback(
     (areaId: string, areaName: string) => {
       router.push({
-        pathname: "/alerts/settings" as const ,
+        pathname: "/alerts/settings" as const,
         params: { areaId, areaName },
       });
     },
@@ -310,7 +335,13 @@ export default function AreasScreen() {
                 }}
               >
                 <Ionicons name="time-outline" size={16} color={colors.text} />
-                <Text style={{ fontSize: 12, fontWeight: "700", color: colors.text }}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: "700",
+                    color: colors.text,
+                  }}
+                >
                   Lịch sử
                 </Text>
               </View>
@@ -328,7 +359,9 @@ export default function AreasScreen() {
                 }}
               >
                 <Ionicons name="add-circle" size={18} color="white" />
-                <Text style={{ fontSize: 13, fontWeight: "700", color: "white" }}>
+                <Text
+                  style={{ fontSize: 13, fontWeight: "700", color: "white" }}
+                >
                   Tạo mới
                 </Text>
               </LinearGradient>
@@ -430,7 +463,6 @@ export default function AreasScreen() {
               onPress={() => handleViewDetail(area.id)}
               onEdit={() => handleEdit(area)}
               onDelete={() => handleDelete(area.id, area.name)}
-              
             />
           ))}
         </ScrollView>
@@ -443,6 +475,23 @@ export default function AreasScreen() {
         onClose={() => setEditingArea(null)}
         onSubmit={handleEditSubmit}
         isLoading={isEditing}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        visible={deleteModalVisible}
+        areaName={deletingArea?.name || ""}
+        isDeleting={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
+
+      {/* Error Modal */}
+      <ErrorModal
+        visible={errorModalVisible}
+        title="Không thể xóa vùng"
+        message={errorMessage}
+        onClose={() => setErrorModalVisible(false)}
       />
     </View>
   );

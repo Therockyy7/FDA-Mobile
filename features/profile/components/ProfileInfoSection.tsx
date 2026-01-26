@@ -1,7 +1,7 @@
 // features/profile/components/ProfileInfoSection.tsx
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, TextInput, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 
 type Props = {
@@ -19,6 +19,7 @@ type Props = {
   provider?: string;
   originalPhone?: string;
   onVerifyPhone?: () => void;
+  isCheckingPassword?: boolean;
 };
 
 const ProfileInfoSection: React.FC<Props> = ({
@@ -35,6 +36,7 @@ const ProfileInfoSection: React.FC<Props> = ({
   provider,
   originalPhone,
   onVerifyPhone,
+  isCheckingPassword,
 }) => {
   
   const getProviderName = (p?: string) => {
@@ -220,14 +222,20 @@ const ProfileInfoSection: React.FC<Props> = ({
 
         <TouchableOpacity
           onPress={onChangePassword}
+          disabled={isCheckingPassword}
           style={{
             marginTop: 8,
             flexDirection: "row",
             alignItems: "center",
+            opacity: isCheckingPassword ? 0.6 : 1,
           }}
           activeOpacity={0.7}
         >
-          <Ionicons name="key-outline" size={18} color="#3B82F6" />
+          {isCheckingPassword ? (
+            <ActivityIndicator size="small" color="#3B82F6" />
+          ) : (
+            <Ionicons name="key-outline" size={18} color="#3B82F6" />
+          )}
           <Text
             style={{
               marginLeft: 8,
@@ -236,7 +244,7 @@ const ProfileInfoSection: React.FC<Props> = ({
               color: "#3B82F6",
             }}
           >
-            Đổi mật khẩu
+            {isCheckingPassword ? "Đang kiểm tra..." : "Đổi mật khẩu"}
           </Text>
         </TouchableOpacity>
       </View>

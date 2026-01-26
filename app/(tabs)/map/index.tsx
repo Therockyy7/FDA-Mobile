@@ -11,6 +11,8 @@ import React, {
 import { Animated, StatusBar, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { Text } from "~/components/ui/text";
+import { AreaCreationErrorModal } from "~/features/areas/components/AreaCreationErrorModal";
+import { AreaCreationLoadingOverlay } from "~/features/areas/components/AreaCreationLoadingOverlay";
 import { PremiumLimitModal } from "~/features/areas/components/PremiumLimitModal";
 import { useControlArea } from "~/features/areas/hooks/useControlArea";
 import { AddressSearchSheet } from "~/features/map/components/areas/AddressSearchSheet";
@@ -192,7 +194,12 @@ export default function MapScreen() {
     handleClosePremiumLimitModal,
     handleUpgradePremium,
     // Loading states
+    isCheckingLimit,
     isLoadingLocation,
+    isLoadingSearch,
+    // Error states and handlers
+    areaError,
+    handleCloseErrorModal,
   } = useControlArea({
     mapRef,
     region,
@@ -703,6 +710,7 @@ export default function MapScreen() {
           onClose={handleCloseCreationOptions}
           onSelectOption={handleOptionSelect}
           isLoadingGps={isLoadingLocation}
+          isLoadingSearch={isLoadingSearch}
         />
 
         {/* NEW: Address Search Sheet */}
@@ -719,6 +727,21 @@ export default function MapScreen() {
           onUpgrade={handleUpgradePremium}
           currentCount={currentAreaCount}
           maxCount={freeAreaLimit}
+        />
+
+        {/* Area Creation Loading Overlay */}
+        <AreaCreationLoadingOverlay
+          visible={isCheckingLimit}
+          message="Đang kiểm tra..."
+          subMessage="Đang xác minh giới hạn vùng của bạn"
+        />
+
+        {/* Area Creation Error Modal */}
+        <AreaCreationErrorModal
+          visible={!!areaError}
+          error={areaError}
+          onClose={handleCloseErrorModal}
+          onChangeLocation={handleCancelCreateArea}
         />
       </View>
     </View>

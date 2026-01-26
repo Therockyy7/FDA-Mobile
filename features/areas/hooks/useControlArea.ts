@@ -8,6 +8,16 @@ import type { MapPressEvent, Region } from "react-native-maps";
 import { AreaService } from "~/features/areas/services/area.service";
 import type { AreaWithStatus } from "~/features/map/types/map-layers.types";
 
+// Error types for better UX
+export type AreaErrorType = "duplicate" | "general" | null;
+
+export interface AreaError {
+  type: AreaErrorType;
+  title: string;
+  message: string;
+  existingAreaName?: string;
+}
+
 type UseControlAreaParams = {
   mapRef: React.RefObject<MapView>;
   region: Region | null;
@@ -43,6 +53,9 @@ export function useControlArea({
   // Loading states for better UX
   const [isCheckingLimit, setIsCheckingLimit] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+
+  // Error modal state
+  const [areaError, setAreaError] = useState<AreaError | null>(null);
 
   // Create/Edit area state - Two-step flow
   // Step 1: Adjust radius bar visible, map draggable
@@ -246,8 +259,13 @@ export function useControlArea({
           );
         }
       } else {
-        // Option 2: Show address search sheet
-        setShowAddressSearch(true);
+        // Option 2: Show address search sheet with brief loading
+        setIsLoadingSearch(true);
+        // Brief delay for smooth UX
+        setTimeout(() => {
+          setIsLoadingSearch(false);
+          setShowAddressSearch(true);
+        }, 300);
       }
     },
     [mapRef],
@@ -291,6 +309,9 @@ export function useControlArea({
     setShowAddressSearch(false);
   }, []);
 
+  // Loading state for search option (brief loading before showing search sheet)
+  const [isLoadingSearch, setIsLoadingSearch] = useState(false);
+
   // Step 1 -> Step 2: Confirm location, show name/address modal
   const handleConfirmLocation = useCallback(() => {
     setIsAdjustingRadius(false);
@@ -304,6 +325,40 @@ export function useControlArea({
     setDraftAreaRadius(DEFAULT_RADIUS);
     setDraftAddress("");
     setEditingArea(null);
+  }, []);
+
+  // Parse error message to detect duplicate area error
+  const parseAreaError = useCallback(
+    (errorMessage: string, isUpdate: boolean): AreaError => {
+      // Check for duplicate area error pattern: "An area 'AreaName' already exists within X meters"
+      const duplicateMatch = errorMessage.match(
+        /An area '([^']+)' already exists within (\d+) meters/i,
+      );
+
+      if (duplicateMatch) {
+        const existingAreaName = duplicateMatch[1];
+        const distance = duplicateMatch[2];
+        return {
+          type: "duplicate",
+          title: "Vùng đã tồn tại",
+          message: `Đã có vùng "${existingAreaName}" trong bán kính ${distance}m tại vị trí này.\n\nVui lòng chọn vị trí khác hoặc chỉnh sửa vùng hiện có.`,
+          existingAreaName,
+        };
+      }
+
+      // General error
+      return {
+        type: "general",
+        title: isUpdate ? "Không thể cập nhật" : "Không thể tạo vùng",
+        message: errorMessage || "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
+      };
+    },
+    [],
+  );
+
+  // Close error modal
+  const handleCloseErrorModal = useCallback(() => {
+    setAreaError(null);
   }, []);
 
   // Step 2: Submit name/address and create/update area
@@ -343,16 +398,14 @@ export function useControlArea({
         setEditingArea(null);
       } catch (error: any) {
         console.error("Failed to save area:", error);
-        Alert.alert(
-          editingArea ? "Lỗi cập nhật" : "Lỗi tạo vùng",
-          error?.message || "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
-          [{ text: "OK" }],
-        );
+        // Show custom error modal instead of Alert
+        const parsedError = parseAreaError(error?.message || "", !!editingArea);
+        setAreaError(parsedError);
       } finally {
         setIsCreatingArea(false);
       }
     },
-    [draftAreaCenter, draftAreaRadius, refreshAreas, editingArea],
+    [draftAreaCenter, draftAreaRadius, refreshAreas, editingArea, parseAreaError],
   );
 
   // Close Step 2 modal (go back to Step 1)
@@ -474,6 +527,9 @@ export function useControlArea({
     // Loading states
     isCheckingLimit,
     isLoadingLocation,
+    isLoadingSearch,
+    // Error state
+    areaError,
 
     // Setters for external use
     setSelectedArea,
@@ -500,5 +556,7 @@ export function useControlArea({
     // Premium limit handlers
     handleClosePremiumLimitModal,
     handleUpgradePremium,
+    // Error handlers
+    handleCloseErrorModal,
   };
 }

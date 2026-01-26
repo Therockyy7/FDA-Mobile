@@ -85,10 +85,12 @@ const ModalChangePassword: React.FC<ModalChangePasswordProps> = ({
           <View className="items-center mb-4">
             <View className="h-1 w-12 bg-gray-300 rounded-full mb-4" />
             <Text className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
-              Đổi mật khẩu
+              {requireCurrentPassword ? "Đổi mật khẩu" : "Tạo mật khẩu"}
             </Text>
             <Text className="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-2 text-center">
-              Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật.
+              {requireCurrentPassword 
+                ? "Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật."
+                : "Tài khoản của bạn chưa có mật khẩu. Hãy tạo mật khẩu mới."}
             </Text>
           </View>
 
@@ -191,7 +193,11 @@ const ModalChangePassword: React.FC<ModalChangePasswordProps> = ({
                 className="h-12 rounded-lg bg-primary"
               >
                 <Text className="text-white font-semibold">
-                  {loading ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
+                  {loading 
+                    ? "Đang cập nhật..." 
+                    : requireCurrentPassword 
+                      ? "Cập nhật mật khẩu" 
+                      : "Tạo mật khẩu"}
                 </Text>
               </Button>
 

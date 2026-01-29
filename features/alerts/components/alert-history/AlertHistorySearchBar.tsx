@@ -26,7 +26,7 @@ export function AlertHistorySearchBar({
         style={{
           position: "absolute",
           left: 12,
-          top: 10,
+          top: 0,
           bottom: 0,
           justifyContent: "center",
           zIndex: 1,

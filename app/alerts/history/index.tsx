@@ -16,9 +16,9 @@ import AlertHistoryHeader from "~/features/alerts/components/alert-history/Alert
 import AlertHistoryPagination from "~/features/alerts/components/alert-history/AlertHistoryPagination";
 import AlertHistorySearchBar from "~/features/alerts/components/alert-history/AlertHistorySearchBar";
 import AlertHistorySectionTitle from "~/features/alerts/components/alert-history/AlertHistorySectionTitle";
+import { useAlertHistoryData } from "~/features/alerts/hooks/useAlertHistoryData";
 import type { AlertHistoryItem } from "~/features/alerts/types/alert-history.types";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { useAlertHistoryData } from "~/features/alerts/hooks/useAlertHistoryData";
 
 export default function AlertHistoryScreen() {
   const router = useRouter();
@@ -36,8 +36,12 @@ export default function AlertHistoryScreen() {
       border: isDarkColorScheme ? "#334155" : "#E2E8F0",
       chipBg: isDarkColorScheme ? "rgba(30,41,59,0.9)" : "#FFFFFF",
       mutedBg: isDarkColorScheme ? "rgba(15,23,42,0.5)" : "#F8FAFC",
-      divider: isDarkColorScheme ? "rgba(148,163,184,0.2)" : "rgba(15,23,42,0.08)",
-      overlay: isDarkColorScheme ? "rgba(16,25,34,0.85)" : "rgba(246,247,248,0.85)",
+      divider: isDarkColorScheme
+        ? "rgba(148,163,184,0.2)"
+        : "rgba(15,23,42,0.08)",
+      overlay: isDarkColorScheme
+        ? "rgba(16,25,34,0.85)"
+        : "rgba(246,247,248,0.85)",
     }),
     [isDarkColorScheme],
   );
@@ -142,7 +146,7 @@ export default function AlertHistoryScreen() {
 
   const paginationItems = useMemo(() => {
     if (totalPagesDisplay <= 1) return [1];
-    const items: Array<number | "ellipsis"> = [];
+    const items: (number | "ellipsis")[] = [];
     const add = (item: number | "ellipsis") => {
       if (items[items.length - 1] !== item) items.push(item);
     };
@@ -167,7 +171,7 @@ export default function AlertHistoryScreen() {
       />
 
       <AlertHistoryHeader
-        title="Alert History"
+        title="Lịch sử cảnh báo"
         onBack={() => router.back()}
         colors={{
           text: colors.text,
@@ -194,7 +198,7 @@ export default function AlertHistoryScreen() {
         <AlertHistorySearchBar
           value={query}
           onChange={setQuery}
-          placeholder="Search station or area..."
+          placeholder="Tìm kiếm theo trạm hoặc khu vực..."
           colors={{
             text: colors.text,
             subtext: colors.subtext,
@@ -209,7 +213,10 @@ export default function AlertHistoryScreen() {
             onToggleDropdown={() => setSeverityDropdownOpen((prev) => !prev)}
             onSelectSeverity={(severity) => {
               if (severityCounts[severity] === 0) {
-                Alert.alert("Không có dữ liệu", "Không có cảnh báo cho mức này.");
+                Alert.alert(
+                  "Không có dữ liệu",
+                  "Không có cảnh báo cho mức này.",
+                );
                 return;
               }
               setPageNumber(1);
@@ -257,7 +264,12 @@ export default function AlertHistoryScreen() {
       >
         <View style={{ paddingHorizontal: 16, paddingTop: 10, gap: 14 }}>
           {isLoading ? (
-            <AlertHistorySectionTitle title="Đang tải..." color={colors.subtext} />
+            <View style={{ alignItems: "center" }}>
+              <AlertHistorySectionTitle
+                title="Đang tải..."
+                color={colors.subtext}
+              />
+            </View>
           ) : sections.length === 0 ? (
             <View style={{ paddingVertical: 24, alignItems: "center" }}>
               <AlertHistorySectionTitle
@@ -268,7 +280,10 @@ export default function AlertHistoryScreen() {
           ) : (
             sections.map((section) => (
               <View key={section.title} style={{ gap: 14 }}>
-                <AlertHistorySectionTitle title={section.title} color={colors.subtext} />
+                <AlertHistorySectionTitle
+                  title={section.title}
+                  color={colors.subtext}
+                />
                 {section.items.map((item) => (
                   <AlertHistoryCard
                     key={item.alertId}
@@ -304,7 +319,6 @@ export default function AlertHistoryScreen() {
             background: colors.card,
           }}
         />
-
       </ScrollView>
     </SafeAreaView>
   );

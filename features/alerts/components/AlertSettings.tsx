@@ -121,9 +121,9 @@ export function AlertSettings({
     label: string;
     color: string;
   }[] = [
-    { value: "Caution", label: "Caution", color: "#F59E0B" },
-    { value: "Warning", label: "Warning", color: "#F97316" },
-    { value: "Critical", label: "Critical", color: "#EF4444" },
+    { value: "Caution", label: "Chú ý", color: "#F59E0B" },
+    { value: "Warning", label: "Cảnh báo", color: "#F97316" },
+    { value: "Critical", label: "Nguy hiểm", color: "#EF4444" },
   ];
 
   const [activeTimeField, setActiveTimeField] = useState<

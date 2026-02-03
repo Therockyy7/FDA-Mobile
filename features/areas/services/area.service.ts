@@ -57,7 +57,6 @@ export const AreaService = {
       };
     }
   },
-// Chung cư FPT Plaza 1
   // FeatG35: Get area by ID
   getAreaById: async (id: string): Promise<Area> => {
     try {

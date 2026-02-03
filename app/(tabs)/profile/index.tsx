@@ -2,7 +2,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
 import { Alert, Platform, StatusBar } from "react-native";
-import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
+import Animated, {
+  useAnimatedScrollHandler,
+  useSharedValue,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ModalChangePassword from "~/features/auth/components/ModalChangePassword";
@@ -60,7 +63,6 @@ export default function ProfileScreen() {
   const [checkingPassword, setCheckingPassword] = useState(false);
   const [hasPassword, setHasPassword] = useState(true); // Default true for safety
 
-
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -99,8 +101,11 @@ export default function ProfileScreen() {
 
   const handlePickAvatar = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert("Quyền truy cập", "Cần cấp quyền truy cập thư viện ảnh để thay đổi avatar.");
+    if (status !== "granted") {
+      Alert.alert(
+        "Quyền truy cập",
+        "Cần cấp quyền truy cập thư viện ảnh để thay đổi avatar.",
+      );
       return;
     }
 
@@ -116,7 +121,6 @@ export default function ProfileScreen() {
     }
   };
 
-
   // Trong ProfileScreen.tsx
 
   const handleSaveChanges = async () => {
@@ -128,18 +132,19 @@ export default function ProfileScreen() {
       formData.append("fullName", fullName.trim());
 
       // 2. AvatarUrl (✅ BỔ SUNG: Gửi lại URL cũ nếu có)
-      // Nếu user không chọn ảnh mới (newAvatarUri là null), ta cần gửi lại avatarUrl cũ 
+      // Nếu user không chọn ảnh mới (newAvatarUri là null), ta cần gửi lại avatarUrl cũ
       // để Backend biết là "tôi muốn giữ nguyên ảnh cũ".
       formData.append("avatarUrl", user?.avatarUrl || "");
 
       // 3. AvatarFile (Chỉ gửi khi có ảnh mới)
       if (newAvatarUri) {
         // Xử lý path cho Android
-        const uri = Platform.OS === "android" && !newAvatarUri.startsWith("file://")
-          ? `file://${newAvatarUri}`
-          : newAvatarUri;
+        const uri =
+          Platform.OS === "android" && !newAvatarUri.startsWith("file://")
+            ? `file://${newAvatarUri}`
+            : newAvatarUri;
 
-        const filename = uri.split('/').pop() || "avatar.jpg";
+        const filename = uri.split("/").pop() || "avatar.jpg";
         const match = /\.(\w+)$/.exec(filename);
         const type = match ? `image/${match[1]}` : `image/jpeg`;
 
@@ -170,13 +175,13 @@ export default function ProfileScreen() {
         console.log("Server status:", err.response.status);
       }
 
-      const message = err?.response?.data?.message || "Lỗi cập nhật. Vui lòng thử lại.";
+      const message =
+        err?.response?.data?.message || "Lỗi cập nhật. Vui lòng thử lại.";
       Alert.alert("Lỗi", message);
     } finally {
       setIsUpdating(false);
     }
   };
-
 
   const handleConfirmLogout = async () => {
     try {
@@ -186,7 +191,6 @@ export default function ProfileScreen() {
       setIsLoggingOut(false);
       setShowLogoutModal(false);
       router.replace("/(tabs)");
-
     } catch (err) {
       console.error("Logout error:", err);
       Alert.alert("Lỗi", "Có lỗi xảy ra khi đăng xuất.");
@@ -208,7 +212,7 @@ export default function ProfileScreen() {
       setCheckingPassword(true);
       const res = await AuthService.checkIdentifier(identifier);
       const { hasPassword: userHasPassword } = res.data;
-      
+
       setHasPassword(userHasPassword);
       setShowChangePassword(true);
     } catch (err: any) {
@@ -221,19 +225,34 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleSubmitChangePassword = async ({ currentPassword, newPassword }: any) => {
+  const handleSubmitChangePassword = async ({
+    currentPassword,
+    newPassword,
+  }: any) => {
     try {
       setChangePwLoading(true);
       setChangePwError(null);
-      if (!user?.email) {
-        setChangePwError("Không tìm thấy email tài khoản.");
-        return;
+
+      if (hasPassword) {
+        // User đã có password -> dùng API change-password
+        await AuthService.changePassword({
+          currentPassword,
+          newPassword,
+          confirmPassword: newPassword,
+        });
+      } else {
+        // User chưa có password -> dùng API set-password
+        if (!user?.email) {
+          setChangePwError("Không tìm thấy email tài khoản.");
+          return;
+        }
+        await AuthService.setPassWord({
+          email: user.email,
+          newPassword,
+          confirmPassword: newPassword,
+        });
       }
-      await AuthService.setPassWord({
-        email: user.email,
-        newPassword,
-        confirmPassword: newPassword,
-      });
+
       Alert.alert("Thành công", "Mật khẩu đã được cập nhật!");
       setShowChangePassword(false);
     } catch (err: any) {
@@ -251,7 +270,10 @@ export default function ProfileScreen() {
       await ProfileService.sendPhoneOTP(phone);
       setShowPhoneOTPModal(true);
     } catch (err: any) {
-      Alert.alert("Lỗi", err?.response?.data?.message || "Không thể gửi mã OTP.");
+      Alert.alert(
+        "Lỗi",
+        err?.response?.data?.message || "Không thể gửi mã OTP.",
+      );
     }
   };
 
@@ -298,8 +320,17 @@ export default function ProfileScreen() {
   const displayName = fullName || user?.email || "Người dùng";
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDarkColorScheme ? "#0F172A" : "#F9FAFB" }}>
-      <StatusBar barStyle={isDarkColorScheme ? "light-content" : "dark-content"} backgroundColor={isDarkColorScheme ? "#1E293B" : "#3B82F6"} translucent />
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: isDarkColorScheme ? "#0F172A" : "#F9FAFB",
+      }}
+    >
+      <StatusBar
+        barStyle={isDarkColorScheme ? "light-content" : "dark-content"}
+        backgroundColor={isDarkColorScheme ? "#1E293B" : "#3B82F6"}
+        translucent
+      />
 
       <ProfileHeader
         displayName={displayName}
@@ -338,17 +369,23 @@ export default function ProfileScreen() {
         />
 
         <NotificationSettingsSection
-          emergencyAlerts={emergencyAlerts} setEmergencyAlerts={setEmergencyAlerts}
-          weatherUpdates={weatherUpdates} setWeatherUpdates={setWeatherUpdates}
-          trafficAlerts={trafficAlerts} setTrafficAlerts={setTrafficAlerts}
-          weeklyReport={weeklyReport} setWeeklyReport={setWeeklyReport}
+          emergencyAlerts={emergencyAlerts}
+          setEmergencyAlerts={setEmergencyAlerts}
+          weatherUpdates={weatherUpdates}
+          setWeatherUpdates={setWeatherUpdates}
+          trafficAlerts={trafficAlerts}
+          setTrafficAlerts={setTrafficAlerts}
+          weeklyReport={weeklyReport}
+          setWeeklyReport={setWeeklyReport}
         />
 
         <AppSettingsSection
           darkMode={isDarkColorScheme}
-          setDarkMode={(value) => setColorScheme(value ? 'dark' : 'light')}
-          autoRefresh={autoRefresh} setAutoRefresh={setAutoRefresh}
-          soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled}
+          setDarkMode={(value) => setColorScheme(value ? "dark" : "light")}
+          autoRefresh={autoRefresh}
+          setAutoRefresh={setAutoRefresh}
+          soundEnabled={soundEnabled}
+          setSoundEnabled={setSoundEnabled}
         />
 
         <OtherSettingsSection />
@@ -389,7 +426,6 @@ export default function ProfileScreen() {
           onResend={handleResendPhoneOTP}
           error={phoneOtpError}
         />
-
       </Animated.ScrollView>
     </SafeAreaView>
   );

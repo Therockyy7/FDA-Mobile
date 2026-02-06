@@ -114,7 +114,7 @@ export default function SubscriptionPlansScreen() {
             <Ionicons name="chevron-back" size={20} color={colors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.text }]}>
-            Choose Your Plan
+            Chọn gói đăng ký
           </Text>
           <View style={styles.headerSpacer} />
         </View>
@@ -138,7 +138,7 @@ export default function SubscriptionPlansScreen() {
             <Text
               style={{ fontSize: 14, fontWeight: "700", color: colors.text }}
             >
-              Gói đăng kí hiện tại {currentPlanName || "a paid plan"}
+              Gói đăng ký hiện tại {currentPlanName || "a paid plan"}
             </Text>
             <Text style={{ fontSize: 13, color: colors.subtext, marginTop: 6 }}>
               Vui lòng hủy gói hiện tại trước khi chuyển đổi

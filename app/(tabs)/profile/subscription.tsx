@@ -121,7 +121,7 @@ export default function SubscriptionDetailScreen() {
             <Ionicons name="chevron-back" size={20} color={colors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.text }]}>
-            Gói đăng kí của bạn
+            Gói đăng ký của bạn
           </Text>
           {isPaid ? (
             <TouchableOpacity

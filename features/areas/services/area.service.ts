@@ -169,9 +169,9 @@ export const AreaService = {
         "Unknown error";
       const statusCode = error?.response?.status || "N/A";
 
-      console.error("❌ Failed to create area:");
-      console.error("   Status:", statusCode);
-      console.error("   Message:", JSON.stringify(errorMessage));
+      // console.error("❌ Failed to create area:");
+      // console.error("   Status:", statusCode);
+      // console.error("   Message:", JSON.stringify(errorMessage));
 
       const enhancedError = new Error(
         typeof errorMessage === "string"

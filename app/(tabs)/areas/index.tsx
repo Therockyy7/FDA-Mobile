@@ -346,7 +346,7 @@ export default function AreasScreen() {
                 </Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleCreateArea} activeOpacity={0.8}>
+            {/* <TouchableOpacity onPress={handleCreateArea} activeOpacity={0.8}>
               <LinearGradient
                 colors={["#10B981", "#059669"]}
                 style={{
@@ -365,7 +365,7 @@ export default function AreasScreen() {
                   Tạo mới
                 </Text>
               </LinearGradient>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </View>
       </LinearGradient>

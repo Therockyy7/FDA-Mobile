@@ -1,7 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { Tabs, useRouter } from "expo-router";
 import { useState } from "react";
-import { Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LoginRequiredOverlay } from "~/features/auth/components/LoginRequiredOverlay";
 import { useAuthLoading, useUser } from "~/features/auth/stores/hooks";
@@ -77,34 +76,9 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="areas"
           options={{
-            title: "",
-            tabBarIcon: ({ focused }) => (
-              <View
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 30,
-                  backgroundColor: focused ? "#0284C7" : "#0EA5E9",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 28,
-                  borderWidth: 4,
-                  borderColor: "#FFFFFF",
-                  ...Platform.select({
-                    ios: {
-                      shadowColor: "#0EA5E9",
-                      shadowOffset: { width: 0, height: 6 },
-                      shadowOpacity: 0.5,
-                      shadowRadius: 12,
-                    },
-                    android: {
-                      elevation: 10,
-                    },
-                  }),
-                }}
-              >
-                <Feather name="compass" size={28} color="white" />
-              </View>
+            title: "Khu vực",
+            tabBarIcon: ({ color, size }) => (
+              <Feather name="compass" size={size} color={color} />
             ),
           }}
           listeners={{

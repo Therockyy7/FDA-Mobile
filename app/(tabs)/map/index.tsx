@@ -1,5 +1,6 @@
 // app/(tabs)/map/index.tsx
 import { Ionicons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, {
   useCallback,
@@ -132,6 +133,20 @@ export default function MapScreen() {
 
   useEffect(() => {
     setTimeout(() => setIsLoading(false), 800);
+  }, []);
+
+  // Request location permission on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          console.log("Permission to access location was denied");
+        }
+      } catch (err) {
+        console.warn("Failed to request location permission:", err);
+      }
+    })();
   }, []);
 
   // Initial load of flood severity markers and areas when component mounts

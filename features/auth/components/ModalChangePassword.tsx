@@ -1,11 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Modal,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -85,10 +84,7 @@ const ModalChangePassword: React.FC<ModalChangePasswordProps> = ({
       transparent
       onRequestClose={handleClose}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-      >
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View className="flex-1 bg-black/50 justify-end">
           <View className="bg-background-light dark:bg-background-dark rounded-t-3xl p-6 pb-10">
             {/* Handle bar */}

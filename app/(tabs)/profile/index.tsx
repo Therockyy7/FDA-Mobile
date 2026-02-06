@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
 import { Alert, Platform, StatusBar } from "react-native";
@@ -18,7 +19,7 @@ import { setUser } from "~/features/auth/stores/auth.slice";
 import { ProfileService } from "~/features/profile/services/profile.service";
 
 import { useRouter } from "expo-router";
-import { useAppDispatch } from "~/app/hooks";
+import { useAppDispatch, useAppSelector } from "~/app/hooks";
 import { useSignOut, useUser } from "~/features/auth/stores/hooks";
 import AppSettingsSection from "~/features/profile/components/AppSettingsSection";
 import NotificationSettingsSection from "~/features/profile/components/NotificationSettingsSection";
@@ -26,12 +27,17 @@ import OtherSettingsSection from "~/features/profile/components/OtherSettingsSec
 import ProfileHeader from "~/features/profile/components/ProfileHeader";
 import ProfileInfoSection from "~/features/profile/components/ProfileInfoSection";
 import SaveButton from "~/features/profile/components/SaveButton";
+import SubscriptionStatusWidget from "~/features/subscription/components/SubscriptionStatusWidget";
+import { fetchCurrentSubscription } from "~/features/subscription/stores/subscription.slice";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function ProfileScreen() {
   const dispatch = useAppDispatch();
   const signOut = useSignOut();
   const user = useUser();
+  const subscriptionCurrent = useAppSelector(
+    (state) => state.subscription.current,
+  );
   const { isDarkColorScheme, setColorScheme } = useColorScheme();
 
   // Reanimated shared value for smooth scroll animation (UI thread)
@@ -98,6 +104,16 @@ export default function ProfileScreen() {
       setIsPhoneVerified(!!userAny.phoneVerifiedAt);
     }
   }, [user]);
+
+  useEffect(() => {
+    dispatch(fetchCurrentSubscription());
+  }, [dispatch]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      dispatch(fetchCurrentSubscription());
+    }, [dispatch]),
+  );
 
   const handlePickAvatar = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -366,6 +382,11 @@ export default function ProfileScreen() {
           originalPhone={originalPhone}
           onVerifyPhone={handleSendPhoneOTP}
           isCheckingPassword={checkingPassword}
+        />
+
+        <SubscriptionStatusWidget
+          current={subscriptionCurrent}
+          onPressManage={() => router.push("/(tabs)/profile/subscription")}
         />
 
         <NotificationSettingsSection

@@ -18,6 +18,7 @@ import authReducer, {
 import mapReducer, {
     MapState,
 } from "../features/map/stores/map.slice";
+import subscriptionReducer from "../features/subscription/stores/subscription.slice";
 
 const authPersistConfig = {
   key: "auth",
@@ -34,6 +35,7 @@ const mapPersistConfig = {
 const rootReducer = combineReducers({
   auth: persistReducer<AuthState>(authPersistConfig, authReducer),
   map: persistReducer<MapState>(mapPersistConfig, mapReducer),
+  subscription: subscriptionReducer,
 });
 
 export const store = configureStore({

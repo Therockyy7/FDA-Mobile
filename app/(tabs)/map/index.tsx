@@ -16,6 +16,7 @@ import { AreaCreationErrorModal } from "~/features/areas/components/AreaCreation
 import { AreaCreationLoadingOverlay } from "~/features/areas/components/AreaCreationLoadingOverlay";
 import { PremiumLimitModal } from "~/features/areas/components/PremiumLimitModal";
 import { useControlArea } from "~/features/areas/hooks/useControlArea";
+import { useUser } from "~/features/auth/stores/hooks";
 import { AddressSearchSheet } from "~/features/map/components/areas/AddressSearchSheet";
 import { AreaCard } from "~/features/map/components/areas/AreaCard";
 import { AreaCircleOverlay } from "~/features/map/components/areas/AreaCircleOverlay";
@@ -56,6 +57,7 @@ type MapType = "standard" | "satellite" | "hybrid";
 
 export default function MapScreen() {
   const router = useRouter();
+  const user = useUser();
   const params = useLocalSearchParams<{
     editAreaId?: string;
     editLat?: string;
@@ -354,6 +356,7 @@ export default function MapScreen() {
         onShowLayers={() => setShowLayerSheet(true)}
         onCreateArea={handleStartCreateArea}
         showCreateAreaButton={
+          !!user &&
           viewMode === "zones" &&
           !isRoutingUIVisible &&
           !selectedArea &&

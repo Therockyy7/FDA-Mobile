@@ -2,20 +2,18 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Animated, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { FloodRoute } from "../../constants/map-data";
 import { getStatusColor } from "../../lib/map-utils";
 
 interface RouteDetailCardProps {
   route: FloodRoute;
-  slideAnim: Animated.Value;
   onClose: () => void;
 }
 
 export function RouteDetailCard({
   route,
-  slideAnim,
   onClose,
 }: RouteDetailCardProps) {
   const colors = getStatusColor(route.status);
@@ -34,28 +32,8 @@ export function RouteDetailCard({
   };
 
   return (
-    <Animated.View
-      style={{
-        position: "absolute",
-        bottom: 16,
-        left: 16,
-        right: 16,
-        transform: [{ translateY: slideAnim }],
-      }}
-    >
-      <View
-        style={{
-          backgroundColor: "white",
-          borderRadius: 24,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 12 },
-          shadowOpacity: 0.25,
-          shadowRadius: 20,
-          elevation: 16,
-          overflow: "hidden",
-        }}
-      >
-        {/* Gradient Header */}
+    <View style={{ flex: 1 }}>
+      {/* Gradient Header */}
         <LinearGradient
           colors={[colors.main, colors.text]}
           start={{ x: 0, y: 0 }}
@@ -392,7 +370,6 @@ export function RouteDetailCard({
             </View>
           </View>
         </View>
-      </View>
-    </Animated.View>
+    </View>
   );
 }

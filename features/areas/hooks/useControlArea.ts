@@ -1,8 +1,8 @@
 // features/areas/hooks/useControlArea.ts
 // Hook to manage all area-related operations for map screen
 import * as Location from "expo-location";
-import { useCallback, useRef, useState } from "react";
-import { Alert, Animated } from "react-native";
+import { useCallback, useState } from "react";
+import { Alert } from "react-native";
 import type MapView from "react-native-maps";
 import type { MapPressEvent, Region } from "react-native-maps";
 import { AreaService } from "~/features/areas/services/area.service";
@@ -39,7 +39,6 @@ export function useControlArea({
 }: UseControlAreaParams) {
   // Selected area state
   const [selectedArea, setSelectedArea] = useState<AreaWithStatus | null>(null);
-  const areaCardAnim = useRef(new Animated.Value(300)).current;
 
   // New: Option selection state
   const [showCreationOptions, setShowCreationOptions] = useState(false);
@@ -76,13 +75,6 @@ export function useControlArea({
       clearSelections();
       setSelectedArea(area);
 
-      // Animate card slide in
-      Animated.timing(areaCardAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-
       // Focus on area
       mapRef.current?.animateToRegion(
         {
@@ -94,19 +86,13 @@ export function useControlArea({
         500,
       );
     },
-    [clearSelections, areaCardAnim, mapRef],
+    [clearSelections, mapRef],
   );
 
   // Close area card
   const handleCloseAreaCard = useCallback(() => {
-    Animated.timing(areaCardAnim, {
-      toValue: 300,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
-      setSelectedArea(null);
-    });
-  }, [areaCardAnim]);
+    setSelectedArea(null);
+  }, []);
 
   // Delete area
   const handleDeleteArea = useCallback(() => {
@@ -141,7 +127,7 @@ export function useControlArea({
   const handleStartCreateArea = useCallback(async () => {
     // Prevent multiple calls
     if (isCheckingLimit) {
-      console.log("⚠️ Already checking limit, skipping...");
+      // console.log("⚠️ Already checking limit, skipping...");
       return;
     }
 
@@ -180,8 +166,7 @@ export function useControlArea({
   // NEW: Handle option selection (GPS or Search)
   const handleOptionSelect = useCallback(
     async (option: "gps" | "search") => {
-      // Don't close immediately to show creating state in the sheet
-      // setShowCreationOptions(false);
+      setShowCreationOptions(false);
 
       if (option === "gps") {
         // Option 1: Use current GPS location
@@ -190,7 +175,6 @@ export function useControlArea({
           // Request location permission
           const { status } = await Location.requestForegroundPermissionsAsync();
           if (status !== "granted") {
-            setIsLoadingLocation(false);
             Alert.alert(
               "Quyền truy cập vị trí",
               "Ứng dụng cần quyền truy cập vị trí để sử dụng tính năng này. Vui lòng cấp quyền trong cài đặt.",
@@ -238,15 +222,8 @@ export function useControlArea({
           setDraftAreaCenter({ latitude, longitude });
           setDraftAreaRadius(DEFAULT_RADIUS);
           setDraftAddress(addressText);
-
-          // Switch UI state
+          setIsAdjustingRadius(true);
           setIsLoadingLocation(false);
-          setShowCreationOptions(false); // Close sheet now
-
-          // Small delay to allow sheet to close before showing radius bar
-          setTimeout(() => {
-            setIsAdjustingRadius(true);
-          }, 300);
 
           // Animate map to user's location
           mapRef.current?.animateToRegion(
@@ -273,7 +250,6 @@ export function useControlArea({
         // Brief delay for smooth UX
         setTimeout(() => {
           setIsLoadingSearch(false);
-          setShowCreationOptions(false);
           setShowAddressSearch(true);
         }, 300);
       }
@@ -415,13 +391,7 @@ export function useControlArea({
         setIsCreatingArea(false);
       }
     },
-    [
-      draftAreaCenter,
-      draftAreaRadius,
-      refreshAreas,
-      editingArea,
-      parseAreaError,
-    ],
+    [draftAreaCenter, draftAreaRadius, refreshAreas, editingArea, parseAreaError],
   );
 
   // Close Step 2 modal (go back to Step 1)
@@ -525,7 +495,6 @@ export function useControlArea({
   return {
     // State
     selectedArea,
-    areaCardAnim,
     isAdjustingRadius,
     showCreateAreaSheet,
     isCreatingArea,

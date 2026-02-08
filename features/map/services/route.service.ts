@@ -22,8 +22,6 @@ export const RouteService = {
 
       const url = `${OSRM_API_URL}/${startStr};${endStr}?overview=full&geometries=polyline`;
 
-      console.log("🗺️ Fetching route shape:", url);
-
       const response = await fetch(url);
       const data = await response.json();
 

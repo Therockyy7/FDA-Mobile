@@ -176,12 +176,12 @@ export const MapService = {
         ? `/api/map/current-status?${queryString}`
         : "/api/map/current-status";
 
-      console.log("🌐 Calling API:", url);
+   
       const res = await apiClient.get<{ success: boolean; message: string; data: FloodSeverityGeoJSON }>(url);
       
       return res.data.data;
     } catch {
-      console.log("⚠️ API not available, using mock flood severity data");
+
       
       if (params?.minLat !== undefined && params?.maxLat !== undefined && 
           params?.minLng !== undefined && params?.maxLng !== undefined) {

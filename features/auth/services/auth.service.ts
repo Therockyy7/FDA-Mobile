@@ -39,7 +39,7 @@ export const AuthService = {
     deviceInfo?: string | null;
   }) => {
     const { identifier, otpCode, password, deviceInfo } = params;
-    console.log("AuthService: ", identifier, otpCode, password, deviceInfo);
+  
 
     const form: LoginInput = {
       identifier: identifier,

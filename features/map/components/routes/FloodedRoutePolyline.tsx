@@ -36,7 +36,7 @@ export function FloodedRoutePolyline({
 
       setIsLoading(true);
       const points = await RouteService.getRouteShape(start, end);
-
+      
       if (mounted && points.length > 0) {
         setCoords(points);
       }

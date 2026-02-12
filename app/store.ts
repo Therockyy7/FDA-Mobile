@@ -1,29 +1,25 @@
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import {
-    FLUSH,
-    PAUSE,
-    PERSIST,
-    persistReducer,
-    persistStore,
-    PURGE,
-    REGISTER,
-    REHYDRATE,
+  FLUSH,
+  PAUSE,
+  PERSIST,
+  persistReducer,
+  persistStore,
+  PURGE,
+  REGISTER,
+  REHYDRATE,
 } from "redux-persist";
 
-import authReducer, {
-    AuthState,
-} from "../features/auth/stores/auth.slice";
-import mapReducer, {
-    MapState,
-} from "../features/map/stores/map.slice";
 import subscriptionReducer from "../features/subscription/stores/subscription.slice";
+import adminAreaReducer from "../features/areas/stores/admin-area.slice";
+import authReducer, { AuthState } from "../features/auth/stores/auth.slice";
+import mapReducer, { MapState } from "../features/map/stores/map.slice";
 
 const authPersistConfig = {
   key: "auth",
   storage: AsyncStorage,
-  whitelist: ["user", "session"], 
+  whitelist: ["user", "session"],
 };
 
 const mapPersistConfig = {
@@ -36,6 +32,7 @@ const rootReducer = combineReducers({
   auth: persistReducer<AuthState>(authPersistConfig, authReducer),
   map: persistReducer<MapState>(mapPersistConfig, mapReducer),
   subscription: subscriptionReducer,
+  adminAreas: adminAreaReducer,
 });
 
 export const store = configureStore({

@@ -55,7 +55,6 @@ export function FloodSeverityMarkers({
     return null;
   }
 
-  console.log("✅ FloodSeverityMarkers: Rendering", markers.length, "markers");
 
   return (
     <>

@@ -1,7 +1,7 @@
 // features/map/components/FloodStationCard.tsx
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
-import { Animated, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import {
@@ -12,14 +12,12 @@ import {
 
 interface FloodStationCardProps {
   station: FloodSeverityFeature;
-  slideAnim: Animated.Value;
   onClose: () => void;
   onViewDetails?: () => void;
 }
 
 export function FloodStationCard({
   station,
-  slideAnim,
   onClose,
   onViewDetails,
 }: FloodStationCardProps) {
@@ -79,29 +77,8 @@ export function FloodStationCard({
   };
 
   return (
-    <Animated.View
-      style={{
-        position: "absolute",
-        bottom: 100,
-        left: 16,
-        right: 16,
-        transform: [{ translateY: slideAnim }],
-        zIndex: 100,
-      }}
-    >
-      <View
-        style={{
-          backgroundColor: colors.background,
-          borderRadius: 20,
-          overflow: "hidden",
-          shadowColor: severityColor,
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.25,
-          shadowRadius: 20,
-          elevation: 12,
-        }}
-      >
-        {/* Top gradient strip */}
+    <View style={{ flex: 1 }}>
+      {/* Top gradient strip */}
         <View
           style={{
             height: 4,
@@ -502,16 +479,14 @@ export function FloodStationCard({
             )}
           </View>
         </View>
-      </View>
-    </Animated.View>
+    </View>
   );
 }
 
 // Memoize component to prevent unnecessary re-renders
 export default React.memo(FloodStationCard, (prevProps, nextProps) => {
-  // Only re-render if station ID changes or slideAnim changes
+  // Only re-render if station ID changes
   return (
-    prevProps.station?.properties?.stationId === nextProps.station?.properties?.stationId &&
-    prevProps.slideAnim === nextProps.slideAnim
+    prevProps.station?.properties?.stationId === nextProps.station?.properties?.stationId
   );
 });

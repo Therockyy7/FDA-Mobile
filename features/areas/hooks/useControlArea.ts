@@ -1,8 +1,8 @@
 // features/areas/hooks/useControlArea.ts
 // Hook to manage all area-related operations for map screen
 import * as Location from "expo-location";
-import { useCallback, useRef, useState } from "react";
-import { Alert, Animated } from "react-native";
+import { useCallback, useState } from "react";
+import { Alert } from "react-native";
 import type MapView from "react-native-maps";
 import type { MapPressEvent, Region } from "react-native-maps";
 import { AreaService } from "~/features/areas/services/area.service";
@@ -39,7 +39,6 @@ export function useControlArea({
 }: UseControlAreaParams) {
   // Selected area state
   const [selectedArea, setSelectedArea] = useState<AreaWithStatus | null>(null);
-  const areaCardAnim = useRef(new Animated.Value(300)).current;
 
   // New: Option selection state
   const [showCreationOptions, setShowCreationOptions] = useState(false);
@@ -76,13 +75,6 @@ export function useControlArea({
       clearSelections();
       setSelectedArea(area);
 
-      // Animate card slide in
-      Animated.timing(areaCardAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-
       // Focus on area
       mapRef.current?.animateToRegion(
         {
@@ -94,19 +86,13 @@ export function useControlArea({
         500,
       );
     },
-    [clearSelections, areaCardAnim, mapRef],
+    [clearSelections, mapRef],
   );
 
   // Close area card
   const handleCloseAreaCard = useCallback(() => {
-    Animated.timing(areaCardAnim, {
-      toValue: 300,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
-      setSelectedArea(null);
-    });
-  }, [areaCardAnim]);
+    setSelectedArea(null);
+  }, []);
 
   // Delete area
   const handleDeleteArea = useCallback(() => {
@@ -141,7 +127,7 @@ export function useControlArea({
   const handleStartCreateArea = useCallback(async () => {
     // Prevent multiple calls
     if (isCheckingLimit) {
-      console.log("⚠️ Already checking limit, skipping...");
+      // console.log("⚠️ Already checking limit, skipping...");
       return;
     }
 
@@ -509,7 +495,6 @@ export function useControlArea({
   return {
     // State
     selectedArea,
-    areaCardAnim,
     isAdjustingRadius,
     showCreateAreaSheet,
     isCreatingArea,

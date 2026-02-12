@@ -1,6 +1,6 @@
 // app/(tabs)/map/index.tsx
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, {
   useCallback,
   useEffect,
@@ -8,20 +8,24 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Animated, StatusBar, View } from "react-native";
+import { StatusBar, TouchableOpacity, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
+import { useAppDispatch, useAppSelector } from "~/app/hooks";
 import { Text } from "~/components/ui/text";
 import { AreaCreationErrorModal } from "~/features/areas/components/AreaCreationErrorModal";
 import { AreaCreationLoadingOverlay } from "~/features/areas/components/AreaCreationLoadingOverlay";
 import { PremiumLimitModal } from "~/features/areas/components/PremiumLimitModal";
 import { useControlArea } from "~/features/areas/hooks/useControlArea";
+import { fetchAdminAreas } from "~/features/areas/stores/admin-area.slice";
 import { AddressSearchSheet } from "~/features/map/components/areas/AddressSearchSheet";
+import { AdminAreaPolygon } from "~/features/map/components/areas/AdminAreaPolygon";
 import { AreaCard } from "~/features/map/components/areas/AreaCard";
 import { AreaCircleOverlay } from "~/features/map/components/areas/AreaCircleOverlay";
 import { AreaCreationOptionSheet } from "~/features/map/components/areas/AreaCreationOptionSheet";
 import { AreaPreviewCircle } from "~/features/map/components/areas/AreaPreviewCircle";
 import { CreateAreaSheet } from "~/features/map/components/areas/CreateAreaSheet";
 import { RadiusAdjustBar } from "~/features/map/components/areas/RadiusAdjustBar";
+import { MapBottomSheet } from "~/features/map/components/common/MapBottomSheet";
 import { LayerToggleSheet } from "~/features/map/components/controls/LayerToggleSheet";
 import Legend from "~/features/map/components/controls/Legend";
 import { MapControls } from "~/features/map/components/controls/MapControls";
@@ -50,11 +54,13 @@ import {
   shouldFetchNewMarkers,
 } from "~/features/map/lib/map-utils";
 import { FloodSeverityFeature } from "~/features/map/types/map-layers.types";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 type MapType = "standard" | "satellite" | "hybrid";
 
 export default function MapScreen() {
   const router = useRouter();
+  const { isDarkColorScheme } = useColorScheme();
   const params = useLocalSearchParams<{
     editAreaId?: string;
     editLat?: string;
@@ -68,9 +74,49 @@ export default function MapScreen() {
   const [showLayerSheet, setShowLayerSheet] = useState(false);
   const [selectedStation, setSelectedStation] =
     useState<FloodSeverityFeature | null>(null);
-  const stationCardAnim = useRef(new Animated.Value(300)).current;
+  const [areaDisplayMode, setAreaDisplayMode] = useState<"user" | "admin">(
+    "user",
+  );
+  const [showAdminAreaConfirmModal, setShowAdminAreaConfirmModal] =
+    useState(false);
+  const [selectedAdminArea, setSelectedAdminArea] = useState<any>(null);
+
+  const dispatch = useAppDispatch();
+  const { items: adminAreas } = useAppSelector((state) => state.adminAreas);
 
   const lastFetchedRegionRef = useRef<MapRegion | null>(null);
+  const mapPanLogLastRef = useRef(0);
+
+  // #region agent log
+  useFocusEffect(
+    useCallback(() => {
+      fetch("http://127.0.0.1:7242/ingest/1d6f14c8-c23f-4143-adbd-6650871f1c1c", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          location: "app/(tabs)/map/index.tsx:focus",
+          message: "MapScreen focused",
+          data: {},
+          timestamp: Date.now(),
+          hypothesisId: "H3",
+        }),
+      }).catch(() => {});
+      return () => {
+        fetch("http://127.0.0.1:7242/ingest/1d6f14c8-c23f-4143-adbd-6650871f1c1c", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            location: "app/(tabs)/map/index.tsx:blur",
+            message: "MapScreen blurred",
+            data: {},
+            timestamp: Date.now(),
+            hypothesisId: "H3",
+          }),
+        }).catch(() => {});
+      };
+    }, [])
+  );
+  // #endregion
 
   const { settings, areas, refreshFloodSeverity, refreshAreas } =
     useMapLayerSettings();
@@ -97,7 +143,6 @@ export default function MapScreen() {
     selectedRoute,
     setSelectedRoute,
     showDetailPanels,
-    slideAnim,
     clearSelection,
   } = useFloodSelection();
 
@@ -149,6 +194,13 @@ export default function MapScreen() {
     }
   }, [settings.overlays.flood, refreshFloodSeverity, refreshAreas]);
 
+  // Fetch Admin Areas if not already loaded
+  useEffect(() => {
+    if (adminAreas.length === 0) {
+      dispatch(fetchAdminAreas({ pageNumber: 1, pageSize: 100 }));
+    }
+  }, [dispatch, adminAreas.length]);
+
   useEffect(() => {
     setSelectedZone(null);
     setSelectedRoute(null);
@@ -157,7 +209,6 @@ export default function MapScreen() {
   // Area control hook - all area-related state and handlers
   const {
     selectedArea,
-    areaCardAnim,
     isAdjustingRadius,
     showCreateAreaSheet,
     isCreatingArea,
@@ -296,7 +347,7 @@ export default function MapScreen() {
 
         // Check if region has changed enough to warrant a new fetch
         if (!shouldFetchNewMarkers(newRegion, lastFetchedRegionRef.current)) {
-          console.log("⏭️ Skip fetch - region change too small");
+          // console.log("⏭️ Skip fetch - region change too small");
           return;
         }
 
@@ -310,7 +361,7 @@ export default function MapScreen() {
           maxLng: newRegion.longitude + newRegion.longitudeDelta / 2,
         };
 
-        console.log("📍 Fetching markers in viewport:", params);
+        // console.log("📍 Fetching markers in viewport:", params);
         refreshFloodSeverity(params);
       }, 1000), // Increased debounce to 1s for stability
     [refreshFloodSeverity, settings.overlays.flood],
@@ -318,6 +369,23 @@ export default function MapScreen() {
 
   const handleRegionChange = useCallback(
     (newRegion: Region) => {
+      // #region agent log
+      const now = Date.now();
+      if (now - mapPanLogLastRef.current > 500) {
+        mapPanLogLastRef.current = now;
+        fetch("http://127.0.0.1:7242/ingest/1d6f14c8-c23f-4143-adbd-6650871f1c1c", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            location: "app/(tabs)/map/index.tsx:onRegionChangeComplete",
+            message: "Map pan/region change",
+            data: {},
+            timestamp: now,
+            hypothesisId: "H4",
+          }),
+        }).catch(() => {});
+      }
+      // #endregion
       onRegionChangeComplete(newRegion);
       fetchMarkersInViewPort(newRegion);
     },
@@ -397,14 +465,29 @@ export default function MapScreen() {
               : undefined
           }
         >
-          {/* ZONES MODE - API Areas */}
+          {/* ZONES MODE - User Created Areas */}
           {viewMode === "zones" &&
+            areaDisplayMode === "user" &&
             areas.map((area) => (
               <AreaCircleOverlay
                 key={area.id}
                 area={area}
                 isSelected={selectedArea?.id === area.id}
                 onPress={() => handleAreaPress(area)}
+              />
+            ))}
+
+          {/* Admin Areas Polygons */}
+          {viewMode === "zones" &&
+            areaDisplayMode === "admin" &&
+            adminAreas.map((area) => (
+              <AdminAreaPolygon
+                key={area.id}
+                area={area}
+                onPress={(selectedArea) => {
+                  setSelectedAdminArea(selectedArea);
+                  setShowAdminAreaConfirmModal(true);
+                }}
               />
             ))}
 
@@ -474,13 +557,6 @@ export default function MapScreen() {
                 setSelectedZone(null);
                 setSelectedStation(feature);
 
-                // Animate card slide in immediately (same as handleAreaPress)
-                Animated.timing(stationCardAnim, {
-                  toValue: 0,
-                  duration: 200,
-                  useNativeDriver: true,
-                }).start();
-
                 // Focus camera on marker with offset so popup is visible
                 const LATITUDE_OFFSET = 0.008;
                 mapRef.current?.animateToRegion(
@@ -493,7 +569,7 @@ export default function MapScreen() {
                   400,
                 );
               },
-              [stationCardAnim, mapRef],
+              [mapRef],
             )}
           />
         </MapView>
@@ -567,6 +643,8 @@ export default function MapScreen() {
         >
           {!selectedRoute &&
             !selectedZone &&
+            !selectedArea &&
+            !selectedStation &&
             !isRoutingUIVisible &&
             !isAdjustingRadius &&
             !showCreateAreaSheet && (
@@ -588,43 +666,42 @@ export default function MapScreen() {
             )}
         </View>
 
-        {/* Selected Zone Card - now uses AreaCard */}
-        {selectedArea && (
-          <AreaCard
-            area={selectedArea}
-            slideAnim={areaCardAnim}
-            onClose={() => {
-              Animated.timing(areaCardAnim, {
-                toValue: 300,
-                duration: 200,
-                useNativeDriver: true,
-              }).start(() => setSelectedArea(null));
-            }}
-            onEdit={handleStartEditArea}
-            onDelete={handleDeleteArea}
-            onViewDetails={() => {
-              Animated.timing(areaCardAnim, {
-                toValue: 300,
-                duration: 200,
-                useNativeDriver: true,
-              }).start(() => {
+        {/* Selected Area Bottom Sheet */}
+        <MapBottomSheet
+          isOpen={!!selectedArea}
+          onClose={() => setSelectedArea(null)}
+          snapPoints={["50%", "75%"]}
+        >
+          {selectedArea && (
+            <AreaCard
+              area={selectedArea}
+              onClose={() => setSelectedArea(null)}
+              onEdit={handleStartEditArea}
+              onDelete={handleDeleteArea}
+              onViewDetails={() => {
+                setSelectedArea(null);
                 router.push({
                   pathname: "/areas/[id]",
                   params: { id: selectedArea.id },
                 });
-              });
-            }}
-          />
-        )}
+              }}
+            />
+          )}
+        </MapBottomSheet>
 
-        {/* Selected Route Card */}
-        {selectedRoute && showDetailPanels && (
-          <RouteDetailCard
-            route={selectedRoute}
-            slideAnim={slideAnim}
-            onClose={() => setSelectedRoute(null)}
-          />
-        )}
+        {/* Selected Route Bottom Sheet */}
+        <MapBottomSheet
+          isOpen={!!selectedRoute && showDetailPanels}
+          onClose={() => setSelectedRoute(null)}
+          snapPoints={["45%", "75%"]}
+        >
+          {selectedRoute && (
+            <RouteDetailCard
+              route={selectedRoute}
+              onClose={() => setSelectedRoute(null)}
+            />
+          )}
+        </MapBottomSheet>
 
         {/* Routing Panel */}
         <RouteDirectionPanel
@@ -636,45 +713,164 @@ export default function MapScreen() {
           transportMode={transportMode}
           onModeChange={setTransportMode}
           onFindRoute={() => {
-            closeRouting;
+            closeRouting();
           }}
         />
 
-        {/* Flood Station Detail Card */}
-        {selectedStation && (
-          <FloodStationCard
-            station={selectedStation}
-            slideAnim={stationCardAnim}
-            onClose={() => {
-              Animated.timing(stationCardAnim, {
-                toValue: 300,
-                duration: 200,
-                useNativeDriver: true,
-              }).start(() => setSelectedStation(null));
-            }}
-            onViewDetails={() => {
-              // Store stationId before closing card
-              const stationId = selectedStation.properties.stationId;
-
-              // Close the card first
-              Animated.timing(stationCardAnim, {
-                toValue: 300,
-                duration: 200,
-                useNativeDriver: true,
-              }).start(() => {
+        {/* Flood Station Bottom Sheet */}
+        <MapBottomSheet
+          isOpen={!!selectedStation}
+          onClose={() => setSelectedStation(null)}
+          snapPoints={["40%", "55%"]}
+        >
+          {selectedStation && (
+            <FloodStationCard
+              station={selectedStation}
+              onClose={() => setSelectedStation(null)}
+              onViewDetails={() => {
+                const stationId = selectedStation.properties.stationId;
                 setSelectedStation(null);
-                // Navigate after card is closed and state is cleared
                 router.push(`/map/${stationId}`);
-              });
-            }}
-          />
-        )}
+              }}
+            />
+          )}
+        </MapBottomSheet>
 
         {/* Layer Toggle Sheet */}
         <LayerToggleSheet
           visible={showLayerSheet}
           onClose={() => setShowLayerSheet(false)}
+          areaDisplayMode={areaDisplayMode}
+          onAreaDisplayModeChange={setAreaDisplayMode}
         />
+
+        {/* Admin Area Confirmation Modal */}
+        {showAdminAreaConfirmModal && selectedAdminArea && (
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.6)",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1000,
+            }}
+          >
+            <View
+              style={{
+                backgroundColor: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
+                borderRadius: 24,
+                padding: 24,
+                marginHorizontal: 20,
+                width: "90%",
+                maxWidth: 400,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.3,
+                shadowRadius: 20,
+                elevation: 10,
+              }}
+            >
+              <View style={{ alignItems: "center", marginBottom: 20 }}>
+                <View
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 32,
+                    backgroundColor: "#3B82F620",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 16,
+                  }}
+                >
+                  <Ionicons name="analytics" size={32} color="#3B82F6" />
+                </View>
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: "800",
+                    color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
+                    marginBottom: 8,
+                    textAlign: "center",
+                  }}
+                >
+                  Xem Dự báo AI
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    color: isDarkColorScheme ? "#94A3B8" : "#64748B",
+                    textAlign: "center",
+                    lineHeight: 20,
+                  }}
+                >
+                  Bạn có muốn xem phân tích rủi ro ngập lụt của AI cho khu vực{" "}
+                  <Text style={{ fontWeight: "700", color: "#3B82F6" }}>
+                    {selectedAdminArea.name}
+                  </Text>
+                  ?
+                </Text>
+              </View>
+
+              <View style={{ gap: 12 }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowAdminAreaConfirmModal(false);
+                    router.push({
+                      pathname: "/prediction/[id]",
+                      params: {
+                        id: selectedAdminArea.id,
+                        name: selectedAdminArea.name,
+                      },
+                    });
+                  }}
+                  style={{
+                    backgroundColor: "#3B82F6",
+                    borderRadius: 16,
+                    padding: 16,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#FFFFFF",
+                      fontSize: 16,
+                      fontWeight: "700",
+                    }}
+                  >
+                    Xem Dự báo
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowAdminAreaConfirmModal(false);
+                    setSelectedAdminArea(null);
+                  }}
+                  style={{
+                    backgroundColor: isDarkColorScheme ? "#334155" : "#F1F5F9",
+                    borderRadius: 16,
+                    padding: 16,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: isDarkColorScheme ? "#F1F5F9" : "#64748B",
+                      fontSize: 16,
+                      fontWeight: "600",
+                    }}
+                  >
+                    Hủy
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* Step 1: Radius Adjust Bar */}
         <RadiusAdjustBar

@@ -1,13 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
+    Keyboard,
+    KeyboardAvoidingView,
+    Modal,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View
 } from "react-native";
 import { OtpInput } from "react-native-otp-entry";
 import { Button } from "~/components/ui/button";
@@ -61,23 +60,13 @@ const ModalVerifyOTP: React.FC<ModalVerifyOTPProps> = ({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      {/* ✅ FIX QUAN TRỌNG: 
-        - iOS: Dùng "padding" để đẩy view lên.
-        - Android: Để undefined. Android tự động resize layout khi bàn phím hiện (adjustResize), 
-          nếu dùng thêm KeyboardAvoidingView sẽ bị xung đột gây giật/nhảy.
-      */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
-      >
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         {/* TouchableWithoutFeedback để đóng bàn phím khi bấm ra ngoài */}
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View className="flex-1 bg-black/70 justify-center items-center px-6">
-            
             {/* Chặn sự kiện onPress để không bị đóng bàn phím khi bấm vào chính cái Modal */}
             <TouchableWithoutFeedback>
               <View className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl items-center w-full">
-                
                 {/* Close Button */}
                 <TouchableOpacity
                   onPress={onClose}

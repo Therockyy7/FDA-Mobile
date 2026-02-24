@@ -1,12 +1,22 @@
 // features/areas/hooks/useControlArea.ts
 // Hook to manage all area-related operations for map screen
 import * as Location from "expo-location";
-import { useCallback, useRef, useState } from "react";
-import { Alert, Animated } from "react-native";
+import { useCallback, useState } from "react";
+import { Alert } from "react-native";
 import type MapView from "react-native-maps";
 import type { MapPressEvent, Region } from "react-native-maps";
 import { AreaService } from "~/features/areas/services/area.service";
 import type { AreaWithStatus } from "~/features/map/types/map-layers.types";
+
+// Error types for better UX
+export type AreaErrorType = "duplicate" | "general" | null;
+
+export interface AreaError {
+  type: AreaErrorType;
+  title: string;
+  message: string;
+  existingAreaName?: string;
+}
 
 type UseControlAreaParams = {
   mapRef: React.RefObject<MapView>;
@@ -18,6 +28,9 @@ type UseControlAreaParams = {
 // Default radius for new areas (meters)
 const DEFAULT_RADIUS = 150;
 
+// Premium limits
+const FREE_AREA_LIMIT = 5;
+
 export function useControlArea({
   mapRef,
   region,
@@ -26,12 +39,22 @@ export function useControlArea({
 }: UseControlAreaParams) {
   // Selected area state
   const [selectedArea, setSelectedArea] = useState<AreaWithStatus | null>(null);
-  const areaCardAnim = useRef(new Animated.Value(300)).current;
 
   // New: Option selection state
   const [showCreationOptions, setShowCreationOptions] = useState(false);
   const [showAddressSearch, setShowAddressSearch] = useState(false);
   const [draftAddress, setDraftAddress] = useState("");
+
+  // Premium limit state
+  const [showPremiumLimitModal, setShowPremiumLimitModal] = useState(false);
+  const [currentAreaCount, setCurrentAreaCount] = useState(0);
+
+  // Loading states for better UX
+  const [isCheckingLimit, setIsCheckingLimit] = useState(false);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+
+  // Error modal state
+  const [areaError, setAreaError] = useState<AreaError | null>(null);
 
   // Create/Edit area state - Two-step flow
   // Step 1: Adjust radius bar visible, map draggable
@@ -52,13 +75,6 @@ export function useControlArea({
       clearSelections();
       setSelectedArea(area);
 
-      // Animate card slide in
-      Animated.timing(areaCardAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-
       // Focus on area
       mapRef.current?.animateToRegion(
         {
@@ -70,19 +86,13 @@ export function useControlArea({
         500,
       );
     },
-    [clearSelections, areaCardAnim, mapRef],
+    [clearSelections, mapRef],
   );
 
   // Close area card
   const handleCloseAreaCard = useCallback(() => {
-    Animated.timing(areaCardAnim, {
-      toValue: 300,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
-      setSelectedArea(null);
-    });
-  }, [areaCardAnim]);
+    setSelectedArea(null);
+  }, []);
 
   // Delete area
   const handleDeleteArea = useCallback(() => {
@@ -113,24 +123,60 @@ export function useControlArea({
     );
   }, [selectedArea, refreshAreas]);
 
-  // NEW: Start creating area - show option selection sheet
-  const handleStartCreateArea = useCallback(() => {
+  // NEW: Start creating area - check premium limit first, then show option selection sheet
+  const handleStartCreateArea = useCallback(async () => {
+    // Prevent multiple calls
+    if (isCheckingLimit) {
+      // console.log("⚠️ Already checking limit, skipping...");
+      return;
+    }
+
     clearSelections();
     setSelectedArea(null);
-    setShowCreationOptions(true);
-  }, [clearSelections]);
+    setIsCheckingLimit(true);
+
+    // Check if user has reached free limit
+    try {
+      console.log("🔍 Checking area count...");
+      const areas = await AreaService.getAreas();
+      const count = areas.length;
+      console.log(`📊 Area count: ${count}/${FREE_AREA_LIMIT}`);
+      setCurrentAreaCount(count);
+
+      if (count >= FREE_AREA_LIMIT) {
+        // Show premium limit modal instead of creation options
+        console.log("🔒 LIMIT REACHED! Showing premium modal...");
+        setIsCheckingLimit(false);
+        setShowPremiumLimitModal(true);
+        return;
+      }
+
+      // Under limit, show creation options
+      console.log("✅ Under limit, showing creation options...");
+      setIsCheckingLimit(false);
+      setShowCreationOptions(true);
+    } catch (error) {
+      console.error("❌ Failed to check area count:", error);
+      // Still reset checking state and allow creation on error
+      setIsCheckingLimit(false);
+      setShowCreationOptions(true);
+    }
+  }, [clearSelections, isCheckingLimit]);
 
   // NEW: Handle option selection (GPS or Search)
   const handleOptionSelect = useCallback(
     async (option: "gps" | "search") => {
-      setShowCreationOptions(false);
+      // Don't close immediately - wait for next step to be ready
+      // setShowCreationOptions(false);
 
       if (option === "gps") {
         // Option 1: Use current GPS location
+        setIsLoadingLocation(true);
         try {
           // Request location permission
           const { status } = await Location.requestForegroundPermissionsAsync();
           if (status !== "granted") {
+            setIsLoadingLocation(false);
             Alert.alert(
               "Quyền truy cập vị trí",
               "Ứng dụng cần quyền truy cập vị trí để sử dụng tính năng này. Vui lòng cấp quyền trong cài đặt.",
@@ -178,7 +224,11 @@ export function useControlArea({
           setDraftAreaCenter({ latitude, longitude });
           setDraftAreaRadius(DEFAULT_RADIUS);
           setDraftAddress(addressText);
+
+          // Switch to adjustment mode and CLOSE the options sheet
           setIsAdjustingRadius(true);
+          setShowCreationOptions(false);
+          setIsLoadingLocation(false);
 
           // Animate map to user's location
           mapRef.current?.animateToRegion(
@@ -192,6 +242,7 @@ export function useControlArea({
           );
         } catch (error) {
           console.error("Location error:", error);
+          setIsLoadingLocation(false);
           Alert.alert(
             "Lỗi vị trí",
             "Không thể lấy vị trí hiện tại. Vui lòng thử lại hoặc dùng tìm kiếm địa chỉ.",
@@ -199,8 +250,14 @@ export function useControlArea({
           );
         }
       } else {
-        // Option 2: Show address search sheet
-        setShowAddressSearch(true);
+        // Option 2: Show address search sheet with brief loading
+        setIsLoadingSearch(true);
+        // Brief delay for smooth UX
+        setTimeout(() => {
+          setIsLoadingSearch(false);
+          setShowAddressSearch(true);
+          setShowCreationOptions(false); // Close options sheet when search sheet opens
+        }, 300);
       }
     },
     [mapRef],
@@ -244,6 +301,9 @@ export function useControlArea({
     setShowAddressSearch(false);
   }, []);
 
+  // Loading state for search option (brief loading before showing search sheet)
+  const [isLoadingSearch, setIsLoadingSearch] = useState(false);
+
   // Step 1 -> Step 2: Confirm location, show name/address modal
   const handleConfirmLocation = useCallback(() => {
     setIsAdjustingRadius(false);
@@ -257,6 +317,40 @@ export function useControlArea({
     setDraftAreaRadius(DEFAULT_RADIUS);
     setDraftAddress("");
     setEditingArea(null);
+  }, []);
+
+  // Parse error message to detect duplicate area error
+  const parseAreaError = useCallback(
+    (errorMessage: string, isUpdate: boolean): AreaError => {
+      // Check for duplicate area error pattern: "An area 'AreaName' already exists within X meters"
+      const duplicateMatch = errorMessage.match(
+        /An area '([^']+)' already exists within (\d+) meters/i,
+      );
+
+      if (duplicateMatch) {
+        const existingAreaName = duplicateMatch[1];
+        const distance = duplicateMatch[2];
+        return {
+          type: "duplicate",
+          title: "Vùng đã tồn tại",
+          message: `Đã có vùng "${existingAreaName}" trong bán kính ${distance}m tại vị trí này.\n\nVui lòng chọn vị trí khác hoặc chỉnh sửa vùng hiện có.`,
+          existingAreaName,
+        };
+      }
+
+      // General error
+      return {
+        type: "general",
+        title: isUpdate ? "Không thể cập nhật" : "Không thể tạo vùng",
+        message: errorMessage || "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
+      };
+    },
+    [],
+  );
+
+  // Close error modal
+  const handleCloseErrorModal = useCallback(() => {
+    setAreaError(null);
   }, []);
 
   // Step 2: Submit name/address and create/update area
@@ -296,16 +390,20 @@ export function useControlArea({
         setEditingArea(null);
       } catch (error: any) {
         console.error("Failed to save area:", error);
-        Alert.alert(
-          editingArea ? "Lỗi cập nhật" : "Lỗi tạo vùng",
-          error?.message || "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
-          [{ text: "OK" }],
-        );
+        // Show custom error modal instead of Alert
+        const parsedError = parseAreaError(error?.message || "", !!editingArea);
+        setAreaError(parsedError);
       } finally {
         setIsCreatingArea(false);
       }
     },
-    [draftAreaCenter, draftAreaRadius, refreshAreas, editingArea],
+    [
+      draftAreaCenter,
+      draftAreaRadius,
+      refreshAreas,
+      editingArea,
+      parseAreaError,
+    ],
   );
 
   // Close Step 2 modal (go back to Step 1)
@@ -390,10 +488,25 @@ export function useControlArea({
     );
   }, [selectedArea, mapRef]);
 
+  // Close premium limit modal
+  const handleClosePremiumLimitModal = useCallback(() => {
+    setShowPremiumLimitModal(false);
+  }, []);
+
+  // Handle premium upgrade (placeholder for future implementation)
+  const handleUpgradePremium = useCallback(() => {
+    setShowPremiumLimitModal(false);
+    // TODO: Navigate to premium upgrade screen
+    Alert.alert(
+      "Nâng cấp Premium",
+      "Tính năng Premium sẽ sớm ra mắt. Hãy theo dõi để cập nhật!",
+      [{ text: "OK" }],
+    );
+  }, []);
+
   return {
     // State
     selectedArea,
-    areaCardAnim,
     isAdjustingRadius,
     showCreateAreaSheet,
     isCreatingArea,
@@ -404,6 +517,16 @@ export function useControlArea({
     showCreationOptions,
     showAddressSearch,
     draftAddress,
+    // Premium limit states
+    showPremiumLimitModal,
+    currentAreaCount,
+    freeAreaLimit: FREE_AREA_LIMIT,
+    // Loading states
+    isCheckingLimit,
+    isLoadingLocation,
+    isLoadingSearch,
+    // Error state
+    areaError,
 
     // Setters for external use
     setSelectedArea,
@@ -427,5 +550,10 @@ export function useControlArea({
     handleAddressSelected,
     handleCloseCreationOptions,
     handleCloseAddressSearch,
+    // Premium limit handlers
+    handleClosePremiumLimitModal,
+    handleUpgradePremium,
+    // Error handlers
+    handleCloseErrorModal,
   };
 }

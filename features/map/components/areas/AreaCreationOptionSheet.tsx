@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
+    ActivityIndicator,
     Dimensions,
     Modal,
     Pressable,
@@ -24,6 +25,8 @@ interface AreaCreationOptionSheetProps {
   visible: boolean;
   onClose: () => void;
   onSelectOption: (option: CreationOption) => void;
+  isLoadingGps?: boolean;
+  isLoadingSearch?: boolean;
 }
 
 interface OptionCardProps {
@@ -33,6 +36,8 @@ interface OptionCardProps {
   gradientColors: readonly [string, string, ...string[]];
   onPress: () => void;
   delay: number;
+  isLoading?: boolean;
+  isDisabled?: boolean;
   colors: {
     cardBg: string;
     text: string;
@@ -48,6 +53,8 @@ function OptionCard({
   gradientColors,
   onPress,
   delay,
+  isLoading = false,
+  isDisabled = false,
   colors,
 }: OptionCardProps) {
   return (
@@ -55,23 +62,47 @@ function OptionCard({
       <TouchableOpacity
         onPress={onPress}
         activeOpacity={0.85}
-        style={[styles.optionCard, { borderColor: colors.border }]}
+        disabled={isLoading || isDisabled}
+        style={[
+          styles.optionCard,
+          { borderColor: colors.border },
+          (isLoading || isDisabled) && styles.optionCardDisabled,
+        ]}
       >
         <LinearGradient
           colors={gradientColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.optionIconContainer}
+          style={[
+            styles.optionIconContainer,
+            (isLoading || isDisabled) && { opacity: 0.6 },
+          ]}
         >
-          <Ionicons name={icon} size={28} color="white" />
+          {isLoading ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <Ionicons name={icon} size={28} color="white" />
+          )}
         </LinearGradient>
 
         <View style={styles.optionContent}>
-          <Text style={[styles.optionTitle, { color: colors.text }]}>
-            {title}
+          <Text
+            style={[
+              styles.optionTitle,
+              { color: colors.text },
+              (isLoading || isDisabled) && { opacity: 0.6 },
+            ]}
+          >
+            {isLoading ? "Đang tải..." : title}
           </Text>
-          <Text style={[styles.optionDescription, { color: colors.subtext }]}>
-            {description}
+          <Text
+            style={[
+              styles.optionDescription,
+              { color: colors.subtext },
+              (isLoading || isDisabled) && { opacity: 0.6 },
+            ]}
+          >
+            {isLoading ? "Vui lòng chờ trong giây lát" : description}
           </Text>
         </View>
 
@@ -81,7 +112,11 @@ function OptionCard({
             { backgroundColor: `${colors.border}50` },
           ]}
         >
-          <Ionicons name="chevron-forward" size={20} color={colors.subtext} />
+          {isLoading ? (
+            <ActivityIndicator size="small" color={colors.subtext} />
+          ) : (
+            <Ionicons name="chevron-forward" size={20} color={colors.subtext} />
+          )}
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -92,6 +127,8 @@ export function AreaCreationOptionSheet({
   visible,
   onClose,
   onSelectOption,
+  isLoadingGps = false,
+  isLoadingSearch = false,
 }: AreaCreationOptionSheetProps) {
   const { isDarkColorScheme } = useColorScheme();
   const insets = useSafeAreaInsets();
@@ -169,6 +206,8 @@ export function AreaCreationOptionSheet({
             gradientColors={["#3B82F6", "#2563EB"]}
             onPress={() => onSelectOption("gps")}
             delay={100}
+            isLoading={isLoadingGps}
+            isDisabled={isLoadingSearch}
             colors={colors}
           />
 
@@ -179,6 +218,8 @@ export function AreaCreationOptionSheet({
             gradientColors={["#F97316", "#EA580C"]}
             onPress={() => onSelectOption("search")}
             delay={200}
+            isLoading={isLoadingSearch}
+            isDisabled={isLoadingGps}
             colors={colors}
           />
         </View>
@@ -278,6 +319,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     gap: 14,
+  },
+  optionCardDisabled: {
+    opacity: 0.7,
   },
   optionIconContainer: {
     width: 56,

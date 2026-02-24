@@ -17,7 +17,7 @@ export default function AuthRoutesLayout() {
 
   const current = segments[1]; // tên screen sau "(auth)"
 
- console.log("AUTH layout segments:", segments, "user?", !!user);
+//  console.log("AUTH layout segments:", segments, "user?", !!user);
   // Chỉ redirect nếu đã login và đang ở các màn auth gốc
   const authEntryScreens = ["sign-in", "sign-up", "identifier"]; // chỉnh theo project
   if (user && authEntryScreens.includes(current ?? "")) {

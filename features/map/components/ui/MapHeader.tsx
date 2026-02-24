@@ -9,10 +9,10 @@ type MapType = "standard" | "satellite" | "hybrid";
 
 interface MapHeaderProps {
   stats: {
-    safe: number;      // < 1.0m
-    caution: number;   // 1.0 - 1.9m
-    warning: number;   // 2.0 - 2.9m
-    critical: number;  // >= 3.0m
+    safe: number; // < 1.0m
+    caution: number; // 1.0 - 1.9m
+    warning: number; // 2.0 - 2.9m
+    critical: number; // >= 3.0m
   };
   mapType: MapType;
   onMapTypeChange: () => void;
@@ -21,11 +21,11 @@ interface MapHeaderProps {
   showCreateAreaButton?: boolean;
 }
 
-export function MapHeader({ 
-  stats, 
-  mapType, 
-  onMapTypeChange, 
-  onShowLayers, 
+export function MapHeader({
+  stats,
+  mapType,
+  onMapTypeChange,
+  onShowLayers,
   onCreateArea,
   showCreateAreaButton = false,
 }: MapHeaderProps) {
@@ -90,7 +90,8 @@ export function MapHeader({
     <View
       style={{
         backgroundColor: colors.background,
-        paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 8 : 54,
+        paddingTop:
+          Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 8 : 54,
         paddingBottom: 12,
         paddingHorizontal: 16,
         borderBottomWidth: 1,
@@ -195,21 +196,16 @@ export function MapHeader({
             <TouchableOpacity
               onPress={onCreateArea}
               style={{
+                width: 40,
                 height: 40,
-                paddingHorizontal: 12,
                 borderRadius: 12,
                 backgroundColor: "#10B981",
-                flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 6,
               }}
               activeOpacity={0.8}
             >
-              <Ionicons name="add-circle" size={18} color="white" />
-              <Text style={{ fontSize: 12, fontWeight: "700", color: "white" }}>
-                Tạo vùng
-              </Text>
+              <Ionicons name="add-circle" size={22} color="white" />
             </TouchableOpacity>
           )}
 

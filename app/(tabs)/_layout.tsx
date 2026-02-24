@@ -16,15 +16,6 @@ const TabsLayout = () => {
 
   if (loading) return null;
 
-  const guardTab = () => ({
-    tabPress: (e: any) => {
-      if (!user) {
-        e.preventDefault();
-        router.push("/(auth)/sign-in");
-      }
-    },
-  });
-
   const isAuthenticated = !!user;
   const handleProtectedTabPress = () => {
     if (!isAuthenticated) {
@@ -41,7 +32,7 @@ const TabsLayout = () => {
   };
 
   // console.log("TABS layout, user?", !!user);
-  
+
   return (
     <>
       <Tabs

@@ -1,30 +1,35 @@
 // app/(tabs)/areas/index.tsx
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-    Alert,
-    Platform,
-    RefreshControl,
-    ScrollView,
-    StatusBar,
-    TouchableOpacity,
-    View,
+  Alert,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StatusBar,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAppDispatch, useAppSelector } from "~/app/hooks";
 import { TabLoadingScreen } from "~/components/ui/TabLoadingScreen";
 import { Text } from "~/components/ui/text";
-import { ApiAreaCard } from "~/features/areas/components/ApiAreaCard";
-import { EditAreaSheet } from "~/features/areas/components/EditAreaSheet";
-import { AreaService } from "~/features/areas/services/area.service";
-import type {
-    Area,
-    AreaStatusResponse,
-} from "~/features/map/types/map-layers.types";
 import type { NotificationChannels } from "~/features/alerts/types/alert-settings.types";
+import { AdminAreaCard } from "~/features/areas/components/AdminAreaCard";
+import { ConfirmDeleteModal } from "~/features/areas/components/ConfirmDeleteModal";
+import { EditAreaSheet } from "~/features/areas/components/EditAreaSheet";
+import { ErrorModal } from "~/features/areas/components/ErrorModal";
+import { WaterLevelAreaCard } from "~/features/areas/components/WaterLevelAreaCard";
+import { AreaService } from "~/features/areas/services/area.service";
+import { fetchAdminAreas } from "~/features/areas/stores/admin-area.slice";
+import type {
+  Area,
+  AreaStatusResponse,
+} from "~/features/map/types/map-layers.types";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 // Areas with their status
@@ -52,6 +57,26 @@ export default function AreasScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [editingArea, setEditingArea] = useState<Area | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState<"my-areas" | "admin-areas">(
+    "my-areas",
+  );
+
+  const dispatch = useAppDispatch();
+  const { items: adminAreas, loading: loadingAdminAreas } = useAppSelector(
+    (state) => state.adminAreas,
+  );
+
+  // Delete modal state
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deletingArea, setDeletingArea] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Error modal state
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Theme colors
   const colors = {
@@ -94,7 +119,8 @@ export default function AreasScreen() {
               };
               return {
                 ...entry,
-                alertChannels: parsed.notificationChannels || DEFAULT_ALERT_CHANNELS,
+                alertChannels:
+                  parsed.notificationChannels || DEFAULT_ALERT_CHANNELS,
               };
             }
           } catch {
@@ -123,30 +149,53 @@ export default function AreasScreen() {
   // Pull to refresh
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchAreas();
-  }, [fetchAreas]);
+    if (activeTab === "my-areas") {
+      fetchAreas();
+    } else {
+      dispatch(fetchAdminAreas({ pageNumber: 1, pageSize: 100 })).finally(() =>
+        setRefreshing(false),
+      );
+    }
+  }, [fetchAreas, activeTab, dispatch]);
 
-  // Delete area
-  const handleDelete = useCallback(async (areaId: string, areaName: string) => {
-    Alert.alert(
-      "Xóa vùng theo dõi",
-      `Bạn có chắc chắn muốn xóa "${areaName}"?`,
-      [
-        { text: "Hủy", style: "cancel" },
-        {
-          text: "Xóa",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await AreaService.deleteArea(areaId);
-              setAreas((prev) => prev.filter((a) => a.area.id !== areaId));
-            } catch (error: any) {
-              Alert.alert("Lỗi", error?.message || "Không thể xóa vùng");
-            }
-          },
-        },
-      ],
-    );
+  // Load Admin Areas when tab changes
+  React.useEffect(() => {
+    if (activeTab === "admin-areas" && adminAreas.length === 0) {
+      dispatch(fetchAdminAreas({ pageNumber: 1, pageSize: 100 }));
+    }
+  }, [activeTab, dispatch, adminAreas.length]);
+
+  // Open delete confirmation modal
+  const handleDelete = useCallback((areaId: string, areaName: string) => {
+    setDeletingArea({ id: areaId, name: areaName });
+    setDeleteModalVisible(true);
+  }, []);
+
+  // Confirm delete
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deletingArea) return;
+
+    setIsDeleting(true);
+    try {
+      await AreaService.deleteArea(deletingArea.id);
+      setAreas((prev) => prev.filter((a) => a.area.id !== deletingArea.id));
+      setDeleteModalVisible(false);
+      setDeletingArea(null);
+    } catch (error: any) {
+      setDeleteModalVisible(false);
+      setErrorMessage(
+        error?.message || "Không thể xóa vùng. Vui lòng thử lại sau.",
+      );
+      setErrorModalVisible(true);
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [deletingArea]);
+
+  // Cancel delete
+  const handleCancelDelete = useCallback(() => {
+    setDeleteModalVisible(false);
+    setDeletingArea(null);
   }, []);
 
   // Edit area - navigate to map with edit mode
@@ -216,7 +265,7 @@ export default function AreasScreen() {
   const handleAlertSettings = useCallback(
     (areaId: string, areaName: string) => {
       router.push({
-        pathname: "/alerts/settings" as const ,
+        pathname: "/alerts/settings" as const,
         params: { areaId, areaName },
       });
     },
@@ -310,12 +359,18 @@ export default function AreasScreen() {
                 }}
               >
                 <Ionicons name="time-outline" size={16} color={colors.text} />
-                <Text style={{ fontSize: 12, fontWeight: "700", color: colors.text }}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: "700",
+                    color: colors.text,
+                  }}
+                >
                   Lịch sử
                 </Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleCreateArea} activeOpacity={0.8}>
+            {/* <TouchableOpacity onPress={handleCreateArea} activeOpacity={0.8}>
               <LinearGradient
                 colors={["#10B981", "#059669"]}
                 style={{
@@ -328,87 +383,169 @@ export default function AreasScreen() {
                 }}
               >
                 <Ionicons name="add-circle" size={18} color="white" />
-                <Text style={{ fontSize: 13, fontWeight: "700", color: "white" }}>
+                <Text
+                  style={{ fontSize: 13, fontWeight: "700", color: "white" }}
+                >
                   Tạo mới
                 </Text>
               </LinearGradient>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
+        </View>
+
+        {/* Tab Switcher */}
+        <View
+          style={{
+            flexDirection: "row",
+            paddingHorizontal: 20,
+            paddingTop: 10,
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => setActiveTab("my-areas")}
+            style={{
+              flex: 1,
+              paddingVertical: 12,
+              borderBottomWidth: 2,
+              borderBottomColor:
+                activeTab === "my-areas" ? "#3B82F6" : "transparent",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={{
+                fontWeight: activeTab === "my-areas" ? "700" : "500",
+                color: activeTab === "my-areas" ? "#3B82F6" : colors.subtext,
+              }}
+            >
+              Khu vực của tôi
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setActiveTab("admin-areas")}
+            style={{
+              flex: 1,
+              paddingVertical: 12,
+              borderBottomWidth: 2,
+              borderBottomColor:
+                activeTab === "admin-areas" ? "#3B82F6" : "transparent",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={{
+                fontWeight: activeTab === "admin-areas" ? "700" : "500",
+                color: activeTab === "admin-areas" ? "#3B82F6" : colors.subtext,
+              }}
+            >
+              Khu vực hệ thống
+            </Text>
+          </TouchableOpacity>
         </View>
       </LinearGradient>
 
       {/* Content */}
-      {isLoading ? (
-        <TabLoadingScreen
-          visible={isLoading}
-          message="Đang tải vùng theo dõi..."
-        />
-      ) : areas.length === 0 ? (
-        <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 40,
-          }}
-        >
+      {activeTab === "my-areas" &&
+        (isLoading ? (
+          <TabLoadingScreen
+            visible={isLoading}
+            message="Đang tải vùng theo dõi..."
+          />
+        ) : areas.length === 0 ? (
           <View
             style={{
-              width: 80,
-              height: 80,
-              borderRadius: 40,
-              backgroundColor: `${colors.border}50`,
+              flex: 1,
               alignItems: "center",
               justifyContent: "center",
-              marginBottom: 20,
+              padding: 40,
             }}
           >
-            <Ionicons
-              name="location-outline"
-              size={40}
-              color={colors.subtext}
-            />
-          </View>
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "700",
-              color: colors.text,
-              marginBottom: 8,
-            }}
-          >
-            Chưa có vùng nào
-          </Text>
-          <Text
-            style={{
-              fontSize: 14,
-              color: colors.subtext,
-              textAlign: "center",
-              marginBottom: 24,
-            }}
-          >
-            Tạo vùng theo dõi để nhận cảnh báo mực nước trong khu vực của bạn
-          </Text>
-          <TouchableOpacity onPress={handleCreateArea} activeOpacity={0.8}>
-            <LinearGradient
-              colors={["#3B82F6", "#2563EB"]}
+            <View
               style={{
-                flexDirection: "row",
+                width: 80,
+                height: 80,
+                borderRadius: 40,
+                backgroundColor: `${colors.border}50`,
                 alignItems: "center",
-                gap: 8,
-                paddingVertical: 14,
-                paddingHorizontal: 24,
-                borderRadius: 14,
+                justifyContent: "center",
+                marginBottom: 20,
               }}
             >
-              <Ionicons name="add-circle" size={20} color="white" />
-              <Text style={{ fontSize: 15, fontWeight: "700", color: "white" }}>
-                Tạo vùng đầu tiên
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      ) : (
+              <Ionicons
+                name="location-outline"
+                size={40}
+                color={colors.subtext}
+              />
+            </View>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "700",
+                color: colors.text,
+                marginBottom: 8,
+              }}
+            >
+              Chưa có vùng nào
+            </Text>
+            <Text
+              style={{
+                fontSize: 14,
+                color: colors.subtext,
+                textAlign: "center",
+                marginBottom: 24,
+              }}
+            >
+              Tạo vùng theo dõi để nhận cảnh báo mực nước trong khu vực của bạn
+            </Text>
+            <TouchableOpacity onPress={handleCreateArea} activeOpacity={0.8}>
+              <LinearGradient
+                colors={["#3B82F6", "#2563EB"]}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 8,
+                  paddingVertical: 14,
+                  paddingHorizontal: 24,
+                  borderRadius: 14,
+                }}
+              >
+                <Ionicons name="add-circle" size={20} color="white" />
+                <Text
+                  style={{ fontSize: 15, fontWeight: "700", color: "white" }}
+                >
+                  Tạo vùng đầu tiên
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={["#3B82F6"]}
+                tintColor="#3B82F6"
+              />
+            }
+          >
+            {areas.map(({ area, status }) => (
+              <WaterLevelAreaCard
+                key={area.id}
+                area={area}
+                status={status}
+                onPress={() => handleViewDetail(area.id)}
+                onEdit={() => handleEdit(area)}
+                onDelete={() => handleDelete(area.id, area.name)}
+              />
+            ))}
+          </ScrollView>
+        ))}
+
+      {activeTab === "admin-areas" && (
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
@@ -422,18 +559,44 @@ export default function AreasScreen() {
             />
           }
         >
-          {areas.map(({ area, status, alertChannels }) => (
-            <ApiAreaCard
-              key={area.id}
-              area={area}
-              status={status}
-              onPress={() => handleViewDetail(area.id)}
-              onEdit={() => handleEdit(area)}
-              onDelete={() => handleDelete(area.id, area.name)}
-              onAlertSettings={() => handleAlertSettings(area.id, area.name)}
-              alertChannels={alertChannels}
-            />
-          ))}
+          {loadingAdminAreas && adminAreas.length === 0 ? (
+            <Text
+              style={{
+                textAlign: "center",
+                marginTop: 20,
+                color: colors.subtext,
+              }}
+            >
+              Đang tải...
+            </Text>
+          ) : (
+            adminAreas.map((area) => (
+              <AdminAreaCard
+                key={area.id}
+                area={area}
+                onPress={() =>
+                  router.push({
+                    pathname: "/prediction/[id]",
+                    params: {
+                      id: area.id,
+                      name: area.name,
+                    },
+                  })
+                }
+              />
+            ))
+          )}
+          {!loadingAdminAreas && adminAreas.length === 0 && (
+            <Text
+              style={{
+                textAlign: "center",
+                marginTop: 20,
+                color: colors.subtext,
+              }}
+            >
+              Chưa có khu vực nào.
+            </Text>
+          )}
         </ScrollView>
       )}
 
@@ -444,6 +607,23 @@ export default function AreasScreen() {
         onClose={() => setEditingArea(null)}
         onSubmit={handleEditSubmit}
         isLoading={isEditing}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        visible={deleteModalVisible}
+        areaName={deletingArea?.name || ""}
+        isDeleting={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
+
+      {/* Error Modal */}
+      <ErrorModal
+        visible={errorModalVisible}
+        title="Không thể xóa vùng"
+        message={errorMessage}
+        onClose={() => setErrorModalVisible(false)}
       />
     </View>
   );

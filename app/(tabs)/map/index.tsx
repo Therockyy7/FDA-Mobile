@@ -1,5 +1,6 @@
 // app/(tabs)/map/index.tsx
 import { Ionicons } from "@expo/vector-icons";
+import * as ExpoLocation from "expo-location";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, {
   useCallback,
@@ -90,31 +91,37 @@ export default function MapScreen() {
   // #region agent log
   useFocusEffect(
     useCallback(() => {
-      fetch("http://127.0.0.1:7242/ingest/1d6f14c8-c23f-4143-adbd-6650871f1c1c", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          location: "app/(tabs)/map/index.tsx:focus",
-          message: "MapScreen focused",
-          data: {},
-          timestamp: Date.now(),
-          hypothesisId: "H3",
-        }),
-      }).catch(() => {});
-      return () => {
-        fetch("http://127.0.0.1:7242/ingest/1d6f14c8-c23f-4143-adbd-6650871f1c1c", {
+      fetch(
+        "http://127.0.0.1:7242/ingest/1d6f14c8-c23f-4143-adbd-6650871f1c1c",
+        {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            location: "app/(tabs)/map/index.tsx:blur",
-            message: "MapScreen blurred",
+            location: "app/(tabs)/map/index.tsx:focus",
+            message: "MapScreen focused",
             data: {},
             timestamp: Date.now(),
             hypothesisId: "H3",
           }),
-        }).catch(() => {});
+        },
+      ).catch(() => {});
+      return () => {
+        fetch(
+          "http://127.0.0.1:7242/ingest/1d6f14c8-c23f-4143-adbd-6650871f1c1c",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              location: "app/(tabs)/map/index.tsx:blur",
+              message: "MapScreen blurred",
+              data: {},
+              timestamp: Date.now(),
+              hypothesisId: "H3",
+            }),
+          },
+        ).catch(() => {});
       };
-    }, [])
+    }, []),
   );
   // #endregion
 
@@ -177,6 +184,14 @@ export default function MapScreen() {
 
   useEffect(() => {
     setTimeout(() => setIsLoading(false), 800);
+
+    // Request location permission on mount
+    (async () => {
+      const { status } = await ExpoLocation.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.log("Location permission denied");
+      }
+    })();
   }, []);
 
   // Initial load of flood severity markers and areas when component mounts
@@ -373,17 +388,20 @@ export default function MapScreen() {
       const now = Date.now();
       if (now - mapPanLogLastRef.current > 500) {
         mapPanLogLastRef.current = now;
-        fetch("http://127.0.0.1:7242/ingest/1d6f14c8-c23f-4143-adbd-6650871f1c1c", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            location: "app/(tabs)/map/index.tsx:onRegionChangeComplete",
-            message: "Map pan/region change",
-            data: {},
-            timestamp: now,
-            hypothesisId: "H4",
-          }),
-        }).catch(() => {});
+        fetch(
+          "http://127.0.0.1:7242/ingest/1d6f14c8-c23f-4143-adbd-6650871f1c1c",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              location: "app/(tabs)/map/index.tsx:onRegionChangeComplete",
+              message: "Map pan/region change",
+              data: {},
+              timestamp: now,
+              hypothesisId: "H4",
+            }),
+          },
+        ).catch(() => {});
       }
       // #endregion
       onRegionChangeComplete(newRegion);

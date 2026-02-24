@@ -166,7 +166,8 @@ export function useControlArea({
   // NEW: Handle option selection (GPS or Search)
   const handleOptionSelect = useCallback(
     async (option: "gps" | "search") => {
-      setShowCreationOptions(false);
+      // Don't close immediately - wait for next step to be ready
+      // setShowCreationOptions(false);
 
       if (option === "gps") {
         // Option 1: Use current GPS location
@@ -175,6 +176,7 @@ export function useControlArea({
           // Request location permission
           const { status } = await Location.requestForegroundPermissionsAsync();
           if (status !== "granted") {
+            setIsLoadingLocation(false);
             Alert.alert(
               "Quyền truy cập vị trí",
               "Ứng dụng cần quyền truy cập vị trí để sử dụng tính năng này. Vui lòng cấp quyền trong cài đặt.",
@@ -222,7 +224,10 @@ export function useControlArea({
           setDraftAreaCenter({ latitude, longitude });
           setDraftAreaRadius(DEFAULT_RADIUS);
           setDraftAddress(addressText);
+
+          // Switch to adjustment mode and CLOSE the options sheet
           setIsAdjustingRadius(true);
+          setShowCreationOptions(false);
           setIsLoadingLocation(false);
 
           // Animate map to user's location
@@ -251,6 +256,7 @@ export function useControlArea({
         setTimeout(() => {
           setIsLoadingSearch(false);
           setShowAddressSearch(true);
+          setShowCreationOptions(false); // Close options sheet when search sheet opens
         }, 300);
       }
     },
@@ -391,7 +397,13 @@ export function useControlArea({
         setIsCreatingArea(false);
       }
     },
-    [draftAreaCenter, draftAreaRadius, refreshAreas, editingArea, parseAreaError],
+    [
+      draftAreaCenter,
+      draftAreaRadius,
+      refreshAreas,
+      editingArea,
+      parseAreaError,
+    ],
   );
 
   // Close Step 2 modal (go back to Step 1)

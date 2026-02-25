@@ -3,7 +3,7 @@ import axios from "axios";
 import { AuthService } from "~/features/auth/services/auth.service";
 
 export const apiClient = axios.create({
-  baseURL: "https://uat.fda.id.vn",
+  baseURL: "https://fda.id.vn",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",

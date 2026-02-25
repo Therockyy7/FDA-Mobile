@@ -6,9 +6,11 @@ import LottieView from "lottie-react-native";
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { AlertChannelsStatus } from "~/features/alerts/components/AlertChannelsStatus";
+import { NotificationChannels } from "~/features/alerts/types/alert-settings.types";
 import type {
-    Area,
-    AreaStatusResponse,
+  Area,
+  AreaStatusResponse,
 } from "~/features/map/types/map-layers.types";
 import { useColorScheme } from "~/lib/useColorScheme";
 
@@ -18,6 +20,8 @@ interface WaterLevelAreaCardProps {
   onPress: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onAlertSettings?: () => void;
+  alertChannels?: NotificationChannels;
 }
 
 // Get status config based on AreaStatus
@@ -119,6 +123,8 @@ export function WaterLevelAreaCard({
   onPress,
   onEdit,
   onDelete,
+  onAlertSettings,
+  alertChannels,
 }: WaterLevelAreaCardProps) {
   const { isDarkColorScheme } = useColorScheme();
   const statusConfig = getStatusConfig(status?.status);
@@ -184,6 +190,12 @@ export function WaterLevelAreaCard({
       : "rgba(255, 255, 255, 0.95)",
   };
 
+  const channels: NotificationChannels = alertChannels || {
+    push: true,
+    email: false,
+    sms: false,
+  };
+
   return (
     <Animated.View
       style={{
@@ -216,7 +228,7 @@ export function WaterLevelAreaCard({
             isDarkColorScheme ? ["#0F172A", "#1E293B"] : ["#F0F9FF", "#E0F2FE"]
           }
           style={{
-            paddingTop: 20,
+            paddingTop: 64,
             paddingHorizontal: 20,
             paddingBottom: 20,
             position: "relative",
@@ -239,40 +251,43 @@ export function WaterLevelAreaCard({
             }}
           />
 
-          {/* Status Badge - Top Right */}
+          {/* Top-right row: Status Badge + Alert Settings Button */}
           <View
             style={{
               position: "absolute",
               top: 14,
               right: 14,
+              left: 14,
               flexDirection: "row",
               alignItems: "center",
+              justifyContent: "flex-end",
               gap: 8,
             }}
           >
+            {/* Status Badge */}
             <View
               style={{
                 backgroundColor: isDarkColorScheme
                   ? statusConfig.darkBg
                   : statusConfig.bg,
-                paddingHorizontal: 12,
-                paddingVertical: 6,
+                paddingHorizontal: 10,
+                paddingVertical: 5,
                 borderRadius: 12,
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 5,
+                gap: 4,
                 borderWidth: 1,
                 borderColor: `${statusConfig.main}40`,
               }}
             >
               <Ionicons
                 name={statusConfig.icon}
-                size={14}
+                size={13}
                 color={statusConfig.main}
               />
               <Text
                 style={{
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: "700",
                   color: statusConfig.main,
                   letterSpacing: 0.3,
@@ -281,10 +296,32 @@ export function WaterLevelAreaCard({
                 {statusConfig.text.toUpperCase()}
               </Text>
             </View>
+
+            {/* Alert Settings Button */}
+            {onAlertSettings && (
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  onAlertSettings();
+                }}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 10,
+                  backgroundColor: isDarkColorScheme ? "#3A2F0A" : "#FFFBEB",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderWidth: 1,
+                  borderColor: "#F59E0B",
+                }}
+              >
+                <Ionicons name="notifications" size={15} color="#F59E0B" />
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Water Level Display - Center */}
-          <View style={{ alignItems: "center", paddingTop: 8 }}>
+          <View style={{ alignItems: "center" }}>
             {maxWaterLevel > 0 ? (
               <>
                 {/* Circular Water Level Indicator */}
@@ -598,6 +635,9 @@ export function WaterLevelAreaCard({
               </Text>
             </View>
           )}
+
+          {/* Alert channels */}
+          <AlertChannelsStatus channels={channels} />
 
           {/* Footer */}
           <View

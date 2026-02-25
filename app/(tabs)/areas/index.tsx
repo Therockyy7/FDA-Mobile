@@ -6,13 +6,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-  Alert,
-  Platform,
-  RefreshControl,
-  ScrollView,
-  StatusBar,
-  TouchableOpacity,
-  View,
+    Alert,
+    Platform,
+    RefreshControl,
+    ScrollView,
+    StatusBar,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppDispatch, useAppSelector } from "~/app/hooks";
@@ -27,8 +27,8 @@ import { WaterLevelAreaCard } from "~/features/areas/components/WaterLevelAreaCa
 import { AreaService } from "~/features/areas/services/area.service";
 import { fetchAdminAreas } from "~/features/areas/stores/admin-area.slice";
 import type {
-  Area,
-  AreaStatusResponse,
+    Area,
+    AreaStatusResponse,
 } from "~/features/map/types/map-layers.types";
 import { useColorScheme } from "~/lib/useColorScheme";
 
@@ -532,14 +532,16 @@ export default function AreasScreen() {
               />
             }
           >
-            {areas.map(({ area, status }) => (
+            {areas.map(({ area, status, alertChannels }) => (
               <WaterLevelAreaCard
                 key={area.id}
                 area={area}
                 status={status}
+                alertChannels={alertChannels}
                 onPress={() => handleViewDetail(area.id)}
                 onEdit={() => handleEdit(area)}
                 onDelete={() => handleDelete(area.id, area.name)}
+                onAlertSettings={() => handleAlertSettings(area.id, area.name)}
               />
             ))}
           </ScrollView>

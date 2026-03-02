@@ -1,9 +1,10 @@
 // app/(tabs)/map/index.tsx
 import { Ionicons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, StatusBar, View } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
+import { Animated, StatusBar, TouchableOpacity, View } from "react-native";
+import MapView, { MapPressEvent, Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { Text } from "~/components/ui/text";
 import { AreaCard } from "~/features/map/components/areas/AreaCard";
 import { AreaCircleOverlay } from "~/features/map/components/areas/AreaCircleOverlay";
@@ -12,8 +13,13 @@ import Legend from "~/features/map/components/controls/Legend";
 import { MapControls } from "~/features/map/components/controls/MapControls";
 import { MapTopControls } from "~/features/map/components/controls/MapTopControls";
 import { MapLoadingOverlay } from "~/features/map/components/overlays/MapLoadingOverlay";
+import { FloodWarningMarkers } from "~/features/map/components/routes/FloodWarningMarkers";
 import { RouteDetailCard } from "~/features/map/components/routes/RouteDetailCard";
 import { RouteDirectionPanel } from "~/features/map/components/routes/RouteDirectionPanel";
+import { SafeRouteAlternatives } from "~/features/map/components/routes/SafeRouteAlternatives";
+import { SafeRoutePolylines } from "~/features/map/components/routes/SafeRoutePolylines";
+import { SafeRouteResultCard } from "~/features/map/components/routes/SafeRouteResultCard";
+import { SafeRouteWarnings } from "~/features/map/components/routes/SafeRouteWarnings";
 import { WaterFlowRoute } from "~/features/map/components/routes/WaterFlowRoute";
 import { FloodSeverityMarkers } from "~/features/map/components/stations/FloodSeverityMarkers";
 import { FloodStationCard } from "~/features/map/components/stations/FloodStationCard";
@@ -28,8 +34,11 @@ import { useMapCamera } from "~/features/map/hooks/useMapCamera";
 import { useMapDisplay } from "~/features/map/hooks/useMapDisplay";
 import { useMapLayerSettings } from "~/features/map/hooks/useMapLayerSettings";
 import { useRoutingUI } from "~/features/map/hooks/useRoutingUI";
+import { useSafeRoute } from "~/features/map/hooks/useSafeRoute";
 import { useStreetView } from "~/features/map/hooks/useStreetView";
+import { useUserLocation } from "~/features/map/hooks/useUserLocation";
 import { debounce, MapRegion, shouldFetchNewMarkers } from "~/features/map/lib/map-utils";
+import { getRouteBounds } from "~/features/map/lib/polyline-utils";
 import { AreaWithStatus, FloodSeverityFeature } from "~/features/map/types/map-layers.types";
 
 type MapType = "standard" | "satellite" | "hybrid";
@@ -51,6 +60,12 @@ export default function MapScreen() {
   // Area selection state
   const [selectedArea, setSelectedArea] = useState<AreaWithStatus | null>(null);
   const areaCardAnim = useRef(new Animated.Value(300)).current;
+
+  // Safe route state
+  const safeRoute = useSafeRoute();
+  const { location: userLocation, permissionGranted: locationPermission } = useUserLocation();
+  const routeResultCardAnim = useRef(new Animated.Value(300)).current;
+  const [showWarningsSheet, setShowWarningsSheet] = useState(false);
 
   const {
     mapRef,
@@ -85,17 +100,32 @@ export default function MapScreen() {
     handleMapLongPress,
   } = useStreetView();
 
+  const routingUI = useRoutingUI();
   const {
     isRoutingUIVisible,
     openRouting,
     closeRouting,
     transportMode,
     setTransportMode,
-    originLabel,
-    setOriginLabel,
+    originText,
+    setOriginText,
+    startCoord,
+    useCurrentLocationAsOrigin,
+    useGPSAsOrigin,
     destinationText,
     setDestinationText,
-  } = useRoutingUI();
+    endCoord,
+    useCurrentLocationAsDest,
+    useGPSAsDestination,
+    pickingTarget,
+    isPickingOnMap,
+    startPickingOrigin,
+    startPickingDestination,
+    cancelPicking,
+    setPointFromMap,
+    swapOriginDestination,
+    resetRouting,
+  } = routingUI;
 
   const {
     mapType,
@@ -114,14 +144,12 @@ export default function MapScreen() {
   // Initial load of flood severity markers and areas when component mounts
   useEffect(() => {
     if (settings.overlays.flood) {
-      // Load markers for initial region (DANANG_CENTER)
       refreshFloodSeverity({
         minLat: DANANG_CENTER.latitude - DANANG_CENTER.latitudeDelta / 2,
         minLng: DANANG_CENTER.longitude - DANANG_CENTER.longitudeDelta / 2,
         maxLat: DANANG_CENTER.latitude + DANANG_CENTER.latitudeDelta / 2,
         maxLng: DANANG_CENTER.longitude + DANANG_CENTER.longitudeDelta / 2,
       });
-      // Load areas
       refreshAreas();
     }
   }, [settings.overlays.flood, refreshFloodSeverity, refreshAreas]);
@@ -131,17 +159,97 @@ export default function MapScreen() {
     setSelectedRoute(null);
   }, [viewMode]);
 
+  // ==================== SAFE ROUTE HANDLERS ====================
+
+  const handleFindRoute = useCallback(async () => {
+    // Determine start: custom coord > GPS > fallback
+    const start = useCurrentLocationAsOrigin
+      ? (userLocation ?? { latitude: DANANG_CENTER.latitude, longitude: DANANG_CENTER.longitude })
+      : (startCoord ?? userLocation ?? { latitude: DANANG_CENTER.latitude, longitude: DANANG_CENTER.longitude });
+
+    if (!endCoord) return;
+
+    await safeRoute.findRoute(start, endCoord, transportMode);
+  }, [useCurrentLocationAsOrigin, startCoord, userLocation, endCoord, transportMode, safeRoute]);
+
+  // Fit map to route after results arrive
+  useEffect(() => {
+    if (safeRoute.primaryRoute) {
+      const bounds = getRouteBounds(safeRoute.primaryRoute.coordinates);
+      mapRef.current?.animateToRegion(bounds, 600);
+
+      Animated.timing(routeResultCardAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [safeRoute.primaryRoute, mapRef, routeResultCardAnim]);
+
+  const handleMapPress = useCallback(
+    async (event: MapPressEvent) => {
+      if (!isPickingOnMap) return;
+
+      const { latitude, longitude } = event.nativeEvent.coordinate;
+
+      // Try reverse geocode for a readable label
+      let label = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+      try {
+        const results = await Location.reverseGeocodeAsync({ latitude, longitude });
+        if (results.length > 0) {
+          const place = results[0];
+          const parts = [place.street, place.district, place.city].filter(Boolean);
+          if (parts.length > 0) label = parts.join(", ");
+        }
+      } catch {
+        // Keep coordinate label as fallback
+      }
+
+      setPointFromMap({ latitude, longitude }, label);
+    },
+    [isPickingOnMap, setPointFromMap]
+  );
+
+  const handleSelectRoute = useCallback(
+    (index: number) => {
+      safeRoute.selectRoute(index);
+      const allRoutes = safeRoute.getAllRoutes();
+      const selected = allRoutes[index];
+      if (selected) {
+        const bounds = getRouteBounds(selected.coordinates);
+        mapRef.current?.animateToRegion(bounds, 400);
+      }
+    },
+    [safeRoute, mapRef]
+  );
+
+  const handleCloseRouteResults = useCallback(() => {
+    Animated.timing(routeResultCardAnim, {
+      toValue: 300,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      safeRoute.clearRoutes();
+    });
+  }, [safeRoute, routeResultCardAnim]);
+
+  const handleCloseRouting = useCallback(() => {
+    closeRouting();
+    handleCloseRouteResults();
+    resetRouting();
+  }, [closeRouting, handleCloseRouteResults, resetRouting]);
+
+  // ==================== EXISTING HANDLERS ====================
+
   const handleAreaPress = (area: AreaWithStatus) => {
     setSelectedRoute(null);
     setSelectedZone(null);
     setSelectedArea(area);
-    // Animate card slide in - using timing for faster response
     Animated.timing(areaCardAnim, {
       toValue: 0,
       duration: 200,
       useNativeDriver: true,
     }).start();
-    // Focus on area
     mapRef.current?.animateToRegion({
       latitude: area.latitude,
       longitude: area.longitude,
@@ -150,7 +258,6 @@ export default function MapScreen() {
     }, 500);
   };
 
-  // Keep old handlers for routes
   const handleRoutePress = (route: FloodRoute) => {
     setSelectedZone(null);
     setSelectedArea(null);
@@ -158,8 +265,6 @@ export default function MapScreen() {
     focusOnRoute(route);
   };
 
-
-  // Ray-casting algorithm for point in polygon
   function isPointInPolygon(
     point: { latitude: number; longitude: number },
     polygon: { latitude: number; longitude: number }[]
@@ -179,27 +284,13 @@ export default function MapScreen() {
     return inside;
   }
 
-  // function getSensorsForZone(zoneId: string): Sensor[] {
-  //   const zone = FLOOD_ZONES.find((z) => z.id === zoneId);
-  //   if (!zone) return [];
-  //   return MOCK_SENSORS.filter((sensor) =>
-  //     isPointInPolygon(
-  //       { latitude: sensor.latitude, longitude: sensor.longitude },
-  //       zone.coordinates
-  //     )
-  //   );
-  // }
-
   const fetchMarkersInViewPort = useMemo(() => debounce((newRegion: Region) => {
     if (!settings.overlays.flood) return;
 
-    // Check if region has changed enough to warrant a new fetch
     if (!shouldFetchNewMarkers(newRegion, lastFetchedRegionRef.current)) {
-      console.log('⏭️ Skip fetch - region change too small');
       return;
     }
 
-    // Update last fetched region
     lastFetchedRegionRef.current = newRegion;
 
     const params = {
@@ -208,20 +299,19 @@ export default function MapScreen() {
       maxLat: newRegion.latitude + newRegion.latitudeDelta / 2,
       maxLng: newRegion.longitude + newRegion.longitudeDelta / 2,
     };
-    
-    console.log('📍 Fetching markers in viewport:', params);
+
     refreshFloodSeverity(params);
-  }, 1000),  // Increased debounce to 1s for stability
+  }, 1000),
   [refreshFloodSeverity, settings.overlays.flood]
   );
 
-const handleRegionChange = useCallback(
-  (newRegion: Region) => {
-    onRegionChangeComplete(newRegion);
-    fetchMarkersInViewPort(newRegion);
-  },
-  [onRegionChangeComplete, fetchMarkersInViewPort]
-);
+  const handleRegionChange = useCallback(
+    (newRegion: Region) => {
+      onRegionChangeComplete(newRegion);
+      fetchMarkersInViewPort(newRegion);
+    },
+    [onRegionChangeComplete, fetchMarkersInViewPort]
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0F172A" }}>
@@ -242,6 +332,40 @@ const handleRegionChange = useCallback(
         {/* Loading Overlay */}
         <MapLoadingOverlay visible={isLoading} />
 
+        {/* Pick on Map Banner */}
+        {isPickingOnMap && (
+          <View
+            style={{
+              position: "absolute",
+              top: 16,
+              left: 16,
+              right: 16,
+              zIndex: 50,
+              backgroundColor: pickingTarget === "origin" ? "#16A34A" : "#4F46E5",
+              borderRadius: 12,
+              padding: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              shadowColor: pickingTarget === "origin" ? "#16A34A" : "#4F46E5",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 6,
+            }}
+          >
+            <Ionicons name="location" size={18} color="white" />
+            <Text style={{ flex: 1, color: "white", fontSize: 13, fontWeight: "600" }}>
+              {pickingTarget === "origin"
+                ? "Nhấn vào bản đồ để chọn điểm đi"
+                : "Nhấn vào bản đồ để chọn điểm đến"}
+            </Text>
+            <TouchableOpacity onPress={cancelPicking} hitSlop={8}>
+              <Ionicons name="close" size={18} color="white" />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Map View */}
         <MapView
           ref={mapRef}
@@ -251,7 +375,8 @@ const handleRegionChange = useCallback(
           camera={is3DEnabled ? camera : undefined}
           onRegionChangeComplete={handleRegionChange}
           onLongPress={handleMapLongPress}
-          showsUserLocation
+          onPress={handleMapPress}
+          showsUserLocation={locationPermission}
           showsMyLocationButton={false}
           showsCompass={false}
           showsTraffic={settings.overlays.traffic}
@@ -260,7 +385,6 @@ const handleRegionChange = useCallback(
           rotateEnabled={true}
           mapType={settings.baseMap === "satellite" ? "satellite" : mapType}
           customMapStyle={
-            // Disable custom style when traffic is ON (traffic needs default road colors)
             mapType === "standard" && !settings.overlays.traffic
               ? [
                   {
@@ -298,7 +422,6 @@ const handleRegionChange = useCallback(
               />
             ))}
 
-
           {/* ROUTES MODE */}
           {viewMode === "routes" &&
             FLOOD_ROUTES.map((route) => (
@@ -309,6 +432,42 @@ const handleRegionChange = useCallback(
                 onPress={() => handleRoutePress(route)}
               />
             ))}
+
+          {/* Safe Route Polylines */}
+          {safeRoute.hasResults && (
+            <SafeRoutePolylines
+              routes={safeRoute.getAllRoutes()}
+              selectedIndex={safeRoute.selectedRouteIndex}
+              onRoutePress={handleSelectRoute}
+            />
+          )}
+
+          {/* Flood Warning Markers (safe route) */}
+          {safeRoute.hasResults && (
+            <FloodWarningMarkers warnings={safeRoute.floodWarnings} />
+          )}
+
+          {/* Destination Pin (when user has picked a destination) */}
+          {endCoord && isRoutingUIVisible && (
+            <Marker
+              coordinate={endCoord}
+              title="Điểm đến"
+              description={destinationText}
+            >
+              <View
+                style={{
+                  backgroundColor: "#4F46E5",
+                  borderRadius: 20,
+                  padding: 8,
+                  borderWidth: 3,
+                  borderColor: "white",
+                  elevation: 6,
+                }}
+              >
+                <Ionicons name="flag" size={18} color="white" />
+              </View>
+            </Marker>
+          )}
 
           {/* Street View Marker */}
           {streetViewLocation && (
@@ -343,23 +502,19 @@ const handleRegionChange = useCallback(
           {/* Flood Severity Markers from API */}
           <FloodSeverityMarkers
             onMarkerPress={useCallback((feature) => {
-              // Get marker coordinates
               const [longitude, latitude] = feature.geometry.coordinates;
-              
-              // Clear other selections and set new station
+
               setSelectedArea(null);
               setSelectedRoute(null);
               setSelectedZone(null);
               setSelectedStation(feature);
-              
-              // Animate card slide in immediately (same as handleAreaPress)
+
               Animated.timing(stationCardAnim, {
                 toValue: 0,
                 duration: 200,
                 useNativeDriver: true,
               }).start();
-              
-              // Focus camera on marker with offset so popup is visible
+
               const LATITUDE_OFFSET = 0.008;
               mapRef.current?.animateToRegion({
                 latitude: latitude - LATITUDE_OFFSET,
@@ -372,7 +527,7 @@ const handleRegionChange = useCallback(
         </MapView>
 
         {/* Top Controls */}
-        {!isRoutingUIVisible && (
+        {!isRoutingUIVisible && !isPickingOnMap && (
           <View
             style={{
               position: "absolute",
@@ -433,16 +588,16 @@ const handleRegionChange = useCallback(
         <View
           style={{
             position: "absolute",
-            bottom: selectedZone || selectedRoute ? 180 : 24,
+            bottom: selectedZone || selectedRoute || safeRoute.hasResults ? 180 : 24,
             right: 16,
             zIndex: 10,
           }}
         >
-          {!selectedRoute && !selectedZone && !isRoutingUIVisible && (
+          {!selectedRoute && !selectedZone && !isRoutingUIVisible && !safeRoute.hasResults && (
             <MapControls
               onZoomIn={zoomIn}
               onZoomOut={zoomOut}
-              onMyLocation={goToMyLocation}
+              onMyLocation={() => goToMyLocation(userLocation)}
               is3DEnabled={is3DEnabled}
               onToggle3D={toggle3DView}
               showLegend={showLegend}
@@ -495,17 +650,53 @@ const handleRegionChange = useCallback(
 
         {/* Routing Panel */}
         <RouteDirectionPanel
-          visible={isRoutingUIVisible}
-          onClose={closeRouting}
-          originLabel={originLabel}
+          visible={isRoutingUIVisible && !safeRoute.hasResults}
+          onClose={handleCloseRouting}
+          // Origin
+          originText={useCurrentLocationAsOrigin ? "" : originText}
+          onOriginChange={setOriginText}
+          useCurrentLocationAsOrigin={useCurrentLocationAsOrigin}
+          onUseGPSAsOrigin={useGPSAsOrigin}
+          onPickOriginOnMap={startPickingOrigin}
+          hasOriginCoord={startCoord !== null}
+          // Destination
           destinationText={destinationText}
           onDestinationChange={setDestinationText}
+          useCurrentLocationAsDest={useCurrentLocationAsDest}
+          onUseGPSAsDest={() => {
+            if (userLocation) useGPSAsDestination(userLocation);
+          }}
+          onPickDestinationOnMap={startPickingDestination}
+          hasDestinationCoord={endCoord !== null}
+          // Swap
+          onSwap={swapOriginDestination}
+          // Transport & Action
           transportMode={transportMode}
           onModeChange={setTransportMode}
-          onFindRoute={() => {
-            closeRouting;
-          }}
+          onFindRoute={handleFindRoute}
+          isLoading={safeRoute.isLoading}
+          error={safeRoute.error}
         />
+
+        {/* Safe Route Results */}
+        {safeRoute.hasResults && safeRoute.overallSafetyStatus && (
+          <>
+            <SafeRouteAlternatives
+              routes={safeRoute.getAllRoutes()}
+              selectedIndex={safeRoute.selectedRouteIndex}
+              onSelectRoute={handleSelectRoute}
+            />
+            <SafeRouteResultCard
+              route={safeRoute.getSelectedRoute()!}
+              floodWarnings={safeRoute.floodWarnings}
+              metadata={safeRoute.metadata}
+              overallSafetyStatus={safeRoute.overallSafetyStatus}
+              onClose={handleCloseRouteResults}
+              onShowWarnings={() => setShowWarningsSheet(true)}
+              slideAnim={routeResultCardAnim}
+            />
+          </>
+        )}
 
         {/* Flood Station Detail Card */}
         {selectedStation && (
@@ -520,7 +711,6 @@ const handleRegionChange = useCallback(
               }).start(() => setSelectedStation(null));
             }}
             onViewDetails={() => {
-              // Close the card and navigate to detail screen
               Animated.timing(stationCardAnim, {
                 toValue: 300,
                 duration: 200,
@@ -539,6 +729,13 @@ const handleRegionChange = useCallback(
         <LayerToggleSheet
           visible={showLayerSheet}
           onClose={() => setShowLayerSheet(false)}
+        />
+
+        {/* Safe Route Warnings Sheet */}
+        <SafeRouteWarnings
+          warnings={safeRoute.floodWarnings}
+          visible={showWarningsSheet}
+          onClose={() => setShowWarningsSheet(false)}
         />
       </View>
     </View>

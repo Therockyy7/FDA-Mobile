@@ -9,17 +9,26 @@ type MapType = "standard" | "satellite" | "hybrid";
 
 interface MapHeaderProps {
   stats: {
-    safe: number;      // < 1.0m
-    caution: number;   // 1.0 - 1.9m
-    warning: number;   // 2.0 - 2.9m
-    critical: number;  // >= 3.0m
+    safe: number; // < 1.0m
+    caution: number; // 1.0 - 1.9m
+    warning: number; // 2.0 - 2.9m
+    critical: number; // >= 3.0m
   };
   mapType: MapType;
   onMapTypeChange: () => void;
   onShowLayers: () => void;
+  onCreateArea?: () => void;
+  showCreateAreaButton?: boolean;
 }
 
-export function MapHeader({ stats, mapType, onMapTypeChange, onShowLayers }: MapHeaderProps) {
+export function MapHeader({
+  stats,
+  mapType,
+  onMapTypeChange,
+  onShowLayers,
+  onCreateArea,
+  showCreateAreaButton = false,
+}: MapHeaderProps) {
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
 
@@ -81,7 +90,8 @@ export function MapHeader({ stats, mapType, onMapTypeChange, onShowLayers }: Map
     <View
       style={{
         backgroundColor: colors.background,
-        paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 8 : 54,
+        paddingTop:
+          Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 8 : 54,
         paddingBottom: 12,
         paddingHorizontal: 16,
         borderBottomWidth: 1,
@@ -179,21 +189,42 @@ export function MapHeader({ stats, mapType, onMapTypeChange, onShowLayers }: Map
           </View>
         </View>
 
-        {/* Layers Button */}
-        <TouchableOpacity
-          onPress={onShowLayers}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 12,
-            backgroundColor: "#3B82F6",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          activeOpacity={0.8}
-        >
-          <MaterialIcons name="layers" size={20} color="white" />
-        </TouchableOpacity>
+        {/* Action Buttons */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          {/* Create Area Button */}
+          {showCreateAreaButton && onCreateArea && (
+            <TouchableOpacity
+              onPress={onCreateArea}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 12,
+                backgroundColor: "#10B981",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="add-circle" size={22} color="white" />
+            </TouchableOpacity>
+          )}
+
+          {/* Layers Button */}
+          <TouchableOpacity
+            onPress={onShowLayers}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              backgroundColor: "#3B82F6",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            activeOpacity={0.8}
+          >
+            <MaterialIcons name="layers" size={20} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Stats Bar - 4 Severity Levels */}

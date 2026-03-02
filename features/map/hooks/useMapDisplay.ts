@@ -10,7 +10,7 @@ import {
 
 export function useMapDisplay() {
   const [viewMode, setViewMode] = useState<ViewMode>("zones");
-  const [showLegend, setShowLegend] = useState(true);
+  const [showLegend, setShowLegend] = useState(false);
   const [mapType, setMapType] = useState<MapType>("standard");
 
   const toggleLegend = () => setShowLegend((v) => !v);

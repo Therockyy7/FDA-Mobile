@@ -16,15 +16,6 @@ const TabsLayout = () => {
 
   if (loading) return null;
 
-  const guardTab = () => ({
-    tabPress: (e: any) => {
-      if (!user) {
-        e.preventDefault();
-        router.push("/(auth)/sign-in");
-      }
-    },
-  });
-
   const isAuthenticated = !!user;
   const handleProtectedTabPress = () => {
     if (!isAuthenticated) {
@@ -40,8 +31,8 @@ const TabsLayout = () => {
     inactiveColor: isDarkColorScheme ? "#64748B" : "#94A3B8",
   };
 
-  console.log("TABS layout, user?", !!user);
-  
+  // console.log("TABS layout, user?", !!user);
+
   return (
     <>
       <Tabs

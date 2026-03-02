@@ -1,6 +1,7 @@
 // features/map/stores/map.slice.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { AreaService } from "~/features/areas/services/area.service";
 import { MapService } from "../services/map.service";
 import type {
   AreaWithStatus,
@@ -150,12 +151,12 @@ export const fetchAreas = createAsyncThunk<
 >("map/fetchAreas", async (_, { rejectWithValue }) => {
   try {
     // Fetch all areas
-    const areas = await MapService.getAreas();
+    const areas = await AreaService.getAreas();
     
     // Fetch status for each area in parallel
     const areasWithStatus = await Promise.all(
       areas.map(async (area) => {
-        const status = await MapService.getAreaStatus(area.id);
+        const status = await AreaService.getAreaStatus(area.id);
         return {
           ...area,
           status: status.status,
@@ -167,7 +168,7 @@ export const fetchAreas = createAsyncThunk<
       })
     );
     
-    console.log(`✅ Loaded ${areasWithStatus.length} areas with status`);
+    // console.log(`✅ Loaded ${areasWithStatus.length} areas with status`);
     return areasWithStatus;
   } catch (error: any) {
     console.error("Failed to fetch areas:", error);
@@ -267,7 +268,7 @@ const mapSlice = createSlice({
         state.error = null;
       })
       .addCase(loadMapSettings.fulfilled, (state, action) => {
-        console.log("✅ Settings loaded:", action.payload);
+      
         state.settings = action.payload;
         state.loading = false;
         state.settingsLoaded = true;
@@ -294,8 +295,6 @@ const mapSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchFloodSeverity.fulfilled, (state, action) => {
-        console.log("✅ Flood severity loaded:", action.payload);
-
         state.floodSeverity = action.payload;
         state.floodLoading = false;
       })
@@ -311,7 +310,6 @@ const mapSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchAreas.fulfilled, (state, action) => {
-        console.log("✅ Areas loaded:", action.payload.length);
         state.areas = action.payload;
         state.areasLoading = false;
       })

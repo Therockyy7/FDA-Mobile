@@ -9,7 +9,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { StatusBar, TouchableOpacity, View } from "react-native";
+import { Animated, StatusBar, TouchableOpacity, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { useAppDispatch, useAppSelector } from "~/app/hooks";
 import { Text } from "~/components/ui/text";
@@ -32,8 +32,13 @@ import Legend from "~/features/map/components/controls/Legend";
 import { MapControls } from "~/features/map/components/controls/MapControls";
 import { MapTopControls } from "~/features/map/components/controls/MapTopControls";
 import { MapLoadingOverlay } from "~/features/map/components/overlays/MapLoadingOverlay";
+import { FloodWarningMarkers } from "~/features/map/components/routes/FloodWarningMarkers";
 import { RouteDetailCard } from "~/features/map/components/routes/RouteDetailCard";
 import { RouteDirectionPanel } from "~/features/map/components/routes/RouteDirectionPanel";
+import { SafeRouteAlternatives } from "~/features/map/components/routes/SafeRouteAlternatives";
+import { SafeRoutePolylines } from "~/features/map/components/routes/SafeRoutePolylines";
+import { SafeRouteResultCard } from "~/features/map/components/routes/SafeRouteResultCard";
+import { SafeRouteWarnings } from "~/features/map/components/routes/SafeRouteWarnings";
 import { WaterFlowRoute } from "~/features/map/components/routes/WaterFlowRoute";
 import { FloodSeverityMarkers } from "~/features/map/components/stations/FloodSeverityMarkers";
 import { FloodStationCard } from "~/features/map/components/stations/FloodStationCard";
@@ -48,12 +53,15 @@ import { useMapCamera } from "~/features/map/hooks/useMapCamera";
 import { useMapDisplay } from "~/features/map/hooks/useMapDisplay";
 import { useMapLayerSettings } from "~/features/map/hooks/useMapLayerSettings";
 import { useRoutingUI } from "~/features/map/hooks/useRoutingUI";
+import { useSafeRoute } from "~/features/map/hooks/useSafeRoute";
 import { useStreetView } from "~/features/map/hooks/useStreetView";
+import { useUserLocation } from "~/features/map/hooks/useUserLocation";
 import {
   debounce,
   MapRegion,
   shouldFetchNewMarkers,
 } from "~/features/map/lib/map-utils";
+import { getRouteBounds } from "~/features/map/lib/polyline-utils";
 import { FloodSeverityFeature } from "~/features/map/types/map-layers.types";
 import { useColorScheme } from "~/lib/useColorScheme";
 
@@ -128,6 +136,13 @@ export default function MapScreen() {
   const { settings, areas, refreshFloodSeverity, refreshAreas } =
     useMapLayerSettings();
 
+  // Safe route state
+  const safeRoute = useSafeRoute();
+  const { location: userLocation, permissionGranted: locationPermission } =
+    useUserLocation();
+  const routeResultCardAnim = useRef(new Animated.Value(300)).current;
+  const [showWarningsSheet, setShowWarningsSheet] = useState(false);
+
   const {
     mapRef,
     region,
@@ -160,17 +175,32 @@ export default function MapScreen() {
     handleMapLongPress,
   } = useStreetView();
 
+  const routingUI = useRoutingUI();
   const {
     isRoutingUIVisible,
     openRouting,
     closeRouting,
     transportMode,
     setTransportMode,
-    originLabel,
-    setOriginLabel,
+    originText,
+    setOriginText,
+    startCoord,
+    useCurrentLocationAsOrigin,
+    setGPSAsOrigin,
     destinationText,
     setDestinationText,
-  } = useRoutingUI();
+    endCoord,
+    useCurrentLocationAsDest,
+    setGPSAsDestination,
+    pickingTarget,
+    isPickingOnMap,
+    startPickingOrigin,
+    startPickingDestination,
+    cancelPicking,
+    setPointFromMap,
+    swapOriginDestination,
+    resetRouting,
+  } = routingUI;
 
   const {
     mapType,
@@ -197,14 +227,12 @@ export default function MapScreen() {
   // Initial load of flood severity markers and areas when component mounts
   useEffect(() => {
     if (settings.overlays.flood) {
-      // Load markers for initial region (DANANG_CENTER)
       refreshFloodSeverity({
         minLat: DANANG_CENTER.latitude - DANANG_CENTER.latitudeDelta / 2,
         minLng: DANANG_CENTER.longitude - DANANG_CENTER.longitudeDelta / 2,
         maxLat: DANANG_CENTER.latitude + DANANG_CENTER.latitudeDelta / 2,
         maxLng: DANANG_CENTER.longitude + DANANG_CENTER.longitudeDelta / 2,
       });
-      // Load areas
       refreshAreas();
     }
   }, [settings.overlays.flood, refreshFloodSeverity, refreshAreas]);
@@ -315,8 +343,78 @@ export default function MapScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.editAreaId]);
+  // ==================== SAFE ROUTE HANDLERS ====================
 
-  // Keep old handlers for routes
+  const handleFindRoute = useCallback(async () => {
+    // Determine start: custom coord > GPS > fallback
+    const start = useCurrentLocationAsOrigin
+      ? (userLocation ?? {
+          latitude: DANANG_CENTER.latitude,
+          longitude: DANANG_CENTER.longitude,
+        })
+      : (startCoord ??
+        userLocation ?? {
+          latitude: DANANG_CENTER.latitude,
+          longitude: DANANG_CENTER.longitude,
+        });
+
+    if (!endCoord) return;
+
+    await safeRoute.findRoute(start, endCoord, transportMode);
+  }, [
+    useCurrentLocationAsOrigin,
+    startCoord,
+    userLocation,
+    endCoord,
+    transportMode,
+    safeRoute,
+  ]);
+
+  // Fit map to route after results arrive
+  useEffect(() => {
+    if (safeRoute.primaryRoute) {
+      const bounds = getRouteBounds(safeRoute.primaryRoute.coordinates);
+      mapRef.current?.animateToRegion(bounds, 600);
+
+      Animated.timing(routeResultCardAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [safeRoute.primaryRoute, mapRef, routeResultCardAnim]);
+
+  const handleSelectRoute = useCallback(
+    (index: number) => {
+      safeRoute.selectRoute(index);
+      const allRoutes = safeRoute.getAllRoutes();
+      const selected = allRoutes[index];
+      if (selected) {
+        const bounds = getRouteBounds(selected.coordinates);
+        mapRef.current?.animateToRegion(bounds, 400);
+      }
+    },
+    [safeRoute, mapRef],
+  );
+
+  const handleCloseRouteResults = useCallback(() => {
+    Animated.timing(routeResultCardAnim, {
+      toValue: 300,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      safeRoute.clearRoutes();
+    });
+  }, [safeRoute, routeResultCardAnim]);
+
+  const handleCloseRouting = useCallback(() => {
+    closeRouting();
+    handleCloseRouteResults();
+    resetRouting();
+  }, [closeRouting, handleCloseRouteResults, resetRouting]);
+
+  // ==================== EXISTING HANDLERS ====================
+
   const handleRoutePress = (route: FloodRoute) => {
     setSelectedZone(null);
     setSelectedArea(null);
@@ -343,17 +441,6 @@ export default function MapScreen() {
     }
     return inside;
   }
-
-  // function getSensorsForZone(zoneId: string): Sensor[] {
-  //   const zone = FLOOD_ZONES.find((z) => z.id === zoneId);
-  //   if (!zone) return [];
-  //   return MOCK_SENSORS.filter((sensor) =>
-  //     isPointInPolygon(
-  //       { latitude: sensor.latitude, longitude: sensor.longitude },
-  //       zone.coordinates
-  //     )
-  //   );
-  // }
 
   const fetchMarkersInViewPort = useMemo(
     () =>
@@ -437,6 +524,48 @@ export default function MapScreen() {
         {/* Loading Overlay */}
         <MapLoadingOverlay visible={isLoading} />
 
+        {/* Pick on Map Banner */}
+        {isPickingOnMap && (
+          <View
+            style={{
+              position: "absolute",
+              top: 16,
+              left: 16,
+              right: 16,
+              zIndex: 50,
+              backgroundColor:
+                pickingTarget === "origin" ? "#16A34A" : "#4F46E5",
+              borderRadius: 12,
+              padding: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              shadowColor: pickingTarget === "origin" ? "#16A34A" : "#4F46E5",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 6,
+            }}
+          >
+            <Ionicons name="location" size={18} color="white" />
+            <Text
+              style={{
+                flex: 1,
+                color: "white",
+                fontSize: 13,
+                fontWeight: "600",
+              }}
+            >
+              {pickingTarget === "origin"
+                ? "Nhấn vào bản đồ để chọn điểm đi"
+                : "Nhấn vào bản đồ để chọn điểm đến"}
+            </Text>
+            <TouchableOpacity onPress={cancelPicking} hitSlop={8}>
+              <Ionicons name="close" size={18} color="white" />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Map View */}
         <MapView
           ref={mapRef}
@@ -447,7 +576,7 @@ export default function MapScreen() {
           onRegionChangeComplete={handleRegionChange}
           onLongPress={handleMapLongPress}
           onPress={handleMapPress}
-          showsUserLocation
+          showsUserLocation={locationPermission}
           showsMyLocationButton={false}
           showsCompass={false}
           showsTraffic={settings.overlays.traffic}
@@ -456,7 +585,6 @@ export default function MapScreen() {
           rotateEnabled={true}
           mapType={settings.baseMap === "satellite" ? "satellite" : mapType}
           customMapStyle={
-            // Disable custom style when traffic is ON (traffic needs default road colors)
             mapType === "standard" && !settings.overlays.traffic
               ? [
                   {
@@ -532,6 +660,42 @@ export default function MapScreen() {
               />
             ))}
 
+          {/* Safe Route Polylines */}
+          {safeRoute.hasResults && (
+            <SafeRoutePolylines
+              routes={safeRoute.getAllRoutes()}
+              selectedIndex={safeRoute.selectedRouteIndex}
+              onRoutePress={handleSelectRoute}
+            />
+          )}
+
+          {/* Flood Warning Markers (safe route) */}
+          {safeRoute.hasResults && (
+            <FloodWarningMarkers warnings={safeRoute.floodWarnings} />
+          )}
+
+          {/* Destination Pin (when user has picked a destination) */}
+          {endCoord && isRoutingUIVisible && (
+            <Marker
+              coordinate={endCoord}
+              title="Điểm đến"
+              description={destinationText}
+            >
+              <View
+                style={{
+                  backgroundColor: "#4F46E5",
+                  borderRadius: 20,
+                  padding: 8,
+                  borderWidth: 3,
+                  borderColor: "white",
+                  elevation: 6,
+                }}
+              >
+                <Ionicons name="flag" size={18} color="white" />
+              </View>
+            </Marker>
+          )}
+
           {/* Street View Marker */}
           {streetViewLocation && (
             <Marker
@@ -592,8 +756,8 @@ export default function MapScreen() {
           />
         </MapView>
 
-        {/* Top Controls - Hide during create area mode */}
-        {!isRoutingUIVisible && !isAdjustingRadius && !showCreateAreaSheet && (
+        {/* Top Controls */}
+        {!isRoutingUIVisible && !isPickingOnMap && (
           <View
             style={{
               position: "absolute",
@@ -654,7 +818,8 @@ export default function MapScreen() {
         <View
           style={{
             position: "absolute",
-            bottom: selectedZone || selectedRoute ? 180 : 24,
+            bottom:
+              selectedZone || selectedRoute || safeRoute.hasResults ? 180 : 24,
             right: 16,
             zIndex: 10,
           }}
@@ -723,17 +888,53 @@ export default function MapScreen() {
 
         {/* Routing Panel */}
         <RouteDirectionPanel
-          visible={isRoutingUIVisible}
-          onClose={closeRouting}
-          originLabel={originLabel}
+          visible={isRoutingUIVisible && !safeRoute.hasResults}
+          onClose={handleCloseRouting}
+          // Origin
+          originText={useCurrentLocationAsOrigin ? "" : originText}
+          onOriginChange={setOriginText}
+          useCurrentLocationAsOrigin={useCurrentLocationAsOrigin}
+          onUseGPSAsOrigin={setGPSAsOrigin}
+          onPickOriginOnMap={startPickingOrigin}
+          hasOriginCoord={startCoord !== null}
+          // Destination
           destinationText={destinationText}
           onDestinationChange={setDestinationText}
+          useCurrentLocationAsDest={useCurrentLocationAsDest}
+          onUseGPSAsDest={() => {
+            if (userLocation) setGPSAsDestination(userLocation);
+          }}
+          onPickDestinationOnMap={startPickingDestination}
+          hasDestinationCoord={endCoord !== null}
+          // Swap
+          onSwap={swapOriginDestination}
+          // Transport & Action
           transportMode={transportMode}
           onModeChange={setTransportMode}
-          onFindRoute={() => {
-            closeRouting();
-          }}
+          onFindRoute={handleFindRoute}
+          isLoading={safeRoute.isLoading}
+          error={safeRoute.error}
         />
+
+        {/* Safe Route Results */}
+        {safeRoute.hasResults && safeRoute.overallSafetyStatus && (
+          <>
+            <SafeRouteAlternatives
+              routes={safeRoute.getAllRoutes()}
+              selectedIndex={safeRoute.selectedRouteIndex}
+              onSelectRoute={handleSelectRoute}
+            />
+            <SafeRouteResultCard
+              route={safeRoute.getSelectedRoute()!}
+              floodWarnings={safeRoute.floodWarnings}
+              metadata={safeRoute.metadata}
+              overallSafetyStatus={safeRoute.overallSafetyStatus}
+              onClose={handleCloseRouteResults}
+              onShowWarnings={() => setShowWarningsSheet(true)}
+              slideAnim={routeResultCardAnim}
+            />
+          </>
+        )}
 
         {/* Flood Station Bottom Sheet */}
         <MapBottomSheet
@@ -956,6 +1157,13 @@ export default function MapScreen() {
           error={areaError}
           onClose={handleCloseErrorModal}
           onChangeLocation={handleCancelCreateArea}
+        />
+
+        {/* Safe Route Warnings Sheet */}
+        <SafeRouteWarnings
+          warnings={safeRoute.floodWarnings}
+          visible={showWarningsSheet}
+          onClose={() => setShowWarningsSheet(false)}
         />
       </View>
     </View>

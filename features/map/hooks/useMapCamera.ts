@@ -94,25 +94,37 @@ export function useMapCamera() {
     }
   }, [camera, is3DEnabled, region]);
 
-  const goToMyLocation = useCallback(() => {
-    if (is3DEnabled) {
-      mapRef.current?.animateCamera(
-        {
-          center: {
-            latitude: DANANG_CENTER.latitude,
-            longitude: DANANG_CENTER.longitude,
+  const goToMyLocation = useCallback(
+    (userLocation?: { latitude: number; longitude: number } | null) => {
+      const target = userLocation ?? {
+        latitude: DANANG_CENTER.latitude,
+        longitude: DANANG_CENTER.longitude,
+      };
+
+      if (is3DEnabled) {
+        mapRef.current?.animateCamera(
+          {
+            center: target,
+            pitch: 50,
+            heading: 0,
+            altitude: 3000,
+            zoom: 14,
           },
-          pitch: 50,
-          heading: 0,
-          altitude: 3000,
-          zoom: 14,
-        },
-        { duration: 800 }
-      );
-    } else {
-      mapRef.current?.animateToRegion(DANANG_CENTER, 600);
-    }
-  }, [is3DEnabled]);
+          { duration: 800 }
+        );
+      } else {
+        mapRef.current?.animateToRegion(
+          {
+            ...target,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          },
+          600
+        );
+      }
+    },
+    [is3DEnabled]
+  );
 
   const focusOnZone = useCallback(
     (zone: FloodZone) => {

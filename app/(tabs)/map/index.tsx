@@ -1,6 +1,6 @@
 // app/(tabs)/map/index.tsx
 import { Ionicons } from "@expo/vector-icons";
-import * as ExpoLocation from "expo-location";
+import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, {
   useCallback,
@@ -9,8 +9,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { StatusBar, TouchableOpacity, View } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
+import { Animated, StatusBar, TouchableOpacity, View } from "react-native";
+import MapView, { MapPressEvent, Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { useAppDispatch, useAppSelector } from "~/app/hooks";
 import { Text } from "~/components/ui/text";
 import { AreaCreationErrorModal } from "~/features/areas/components/AreaCreationErrorModal";
@@ -32,8 +32,13 @@ import Legend from "~/features/map/components/controls/Legend";
 import { MapControls } from "~/features/map/components/controls/MapControls";
 import { MapTopControls } from "~/features/map/components/controls/MapTopControls";
 import { MapLoadingOverlay } from "~/features/map/components/overlays/MapLoadingOverlay";
+import { FloodWarningMarkers } from "~/features/map/components/routes/FloodWarningMarkers";
 import { RouteDetailCard } from "~/features/map/components/routes/RouteDetailCard";
 import { RouteDirectionPanel } from "~/features/map/components/routes/RouteDirectionPanel";
+import { SafeRouteAlternatives } from "~/features/map/components/routes/SafeRouteAlternatives";
+import { SafeRoutePolylines } from "~/features/map/components/routes/SafeRoutePolylines";
+import { SafeRouteResultCard } from "~/features/map/components/routes/SafeRouteResultCard";
+import { SafeRouteWarnings } from "~/features/map/components/routes/SafeRouteWarnings";
 import { WaterFlowRoute } from "~/features/map/components/routes/WaterFlowRoute";
 import { FloodSeverityMarkers } from "~/features/map/components/stations/FloodSeverityMarkers";
 import { FloodStationCard } from "~/features/map/components/stations/FloodStationCard";
@@ -49,7 +54,9 @@ import { useMapCamera } from "~/features/map/hooks/useMapCamera";
 import { useMapDisplay } from "~/features/map/hooks/useMapDisplay";
 import { useMapLayerSettings } from "~/features/map/hooks/useMapLayerSettings";
 import { useRoutingUI } from "~/features/map/hooks/useRoutingUI";
+import { useSafeRoute } from "~/features/map/hooks/useSafeRoute";
 import { useStreetView } from "~/features/map/hooks/useStreetView";
+import { useUserLocation } from "~/features/map/hooks/useUserLocation";
 import {
   debounce,
   getBufferedBounds,
@@ -58,6 +65,7 @@ import {
   type MapZoomMode,
   type ViewportBounds,
 } from "~/features/map/lib/map-utils";
+import { getRouteBounds } from "~/features/map/lib/polyline-utils";
 import { FloodSeverityFeature } from "~/features/map/types/map-layers.types";
 import { useColorScheme } from "~/lib/useColorScheme";
 
@@ -98,6 +106,14 @@ export default function MapScreen() {
   // Connect to SignalR for real-time flood updates
   useFloodSignalR(settings.overlays.flood);
 
+  // Safe route state
+  const safeRoute = useSafeRoute();
+  const { location: userLocation, permissionGranted: locationPermission } =
+    useUserLocation();
+  const routeResultCardAnim = useRef(new Animated.Value(300)).current;
+  const [showResultCard, setShowResultCard] = useState(false);
+  const [showWarningsSheet, setShowWarningsSheet] = useState(false);
+
   const {
     mapRef,
     region,
@@ -130,17 +146,32 @@ export default function MapScreen() {
     handleMapLongPress,
   } = useStreetView();
 
+  const routingUI = useRoutingUI();
   const {
     isRoutingUIVisible,
     openRouting,
     closeRouting,
     transportMode,
     setTransportMode,
-    originLabel,
-    setOriginLabel,
+    originText,
+    setOriginText,
+    startCoord,
+    isUsingGPSOrigin,
+    selectGPSAsOrigin,
     destinationText,
     setDestinationText,
-  } = useRoutingUI();
+    endCoord,
+    isUsingGPSDest,
+    selectGPSAsDestination,
+    pickingTarget,
+    isPickingOnMap,
+    startPickingOrigin,
+    startPickingDestination,
+    cancelPicking,
+    setPointFromMap,
+    swapOriginDestination,
+    resetRouting,
+  } = routingUI;
 
   const {
     mapType,
@@ -154,14 +185,6 @@ export default function MapScreen() {
 
   useEffect(() => {
     setTimeout(() => setIsLoading(false), 800);
-
-    // Request location permission on mount
-    (async () => {
-      const { status } = await ExpoLocation.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        console.log("Location permission denied");
-      }
-    })();
   }, []);
 
   // Initial load of flood severity markers and areas when component mounts
@@ -189,6 +212,104 @@ export default function MapScreen() {
     setSelectedRoute(null);
   }, [viewMode]);
 
+  // ==================== SAFE ROUTE HANDLERS ====================
+
+  const handleFindRoute = useCallback(async () => {
+    const start = isUsingGPSOrigin
+      ? (userLocation ?? {
+          latitude: DANANG_CENTER.latitude,
+          longitude: DANANG_CENTER.longitude,
+        })
+      : (startCoord ??
+          userLocation ?? {
+            latitude: DANANG_CENTER.latitude,
+            longitude: DANANG_CENTER.longitude,
+          });
+
+    if (!endCoord) return;
+
+    await safeRoute.findRoute(start, endCoord, transportMode);
+  }, [
+    isUsingGPSOrigin,
+    startCoord,
+    userLocation,
+    endCoord,
+    transportMode,
+    safeRoute,
+  ]);
+
+  // Fit map to route after results arrive
+  useEffect(() => {
+    if (safeRoute.primaryRoute) {
+      const bounds = getRouteBounds(safeRoute.primaryRoute.coordinates);
+      mapRef.current?.animateToRegion(bounds, 600);
+
+      const hasAlternatives = safeRoute.alternativeRoutes.length > 0;
+      if (!hasAlternatives) {
+        // Only 1 route → show result card immediately
+        setShowResultCard(true);
+        Animated.timing(routeResultCardAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+      } else {
+        // Multiple routes → hide result card, let user pick from alternatives
+        setShowResultCard(false);
+        routeResultCardAnim.setValue(300);
+      }
+    }
+  }, [safeRoute.primaryRoute, safeRoute.alternativeRoutes, mapRef, routeResultCardAnim]);
+
+  const handleSelectRoute = useCallback(
+    (index: number) => {
+      safeRoute.selectRoute(index);
+      const allRoutes = safeRoute.getAllRoutes();
+      const selected = allRoutes[index];
+      if (selected) {
+        const bounds = getRouteBounds(selected.coordinates);
+        mapRef.current?.animateToRegion(bounds, 400);
+      }
+      // Show result card when user taps a route
+      setShowResultCard(true);
+      Animated.timing(routeResultCardAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    },
+    [safeRoute, mapRef, routeResultCardAnim],
+  );
+
+  const handleCloseRouteResults = useCallback(() => {
+    Animated.timing(routeResultCardAnim, {
+      toValue: 300,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowResultCard(false);
+    });
+  }, [routeResultCardAnim]);
+
+  const handleClearAllRoutes = useCallback(() => {
+    Animated.timing(routeResultCardAnim, {
+      toValue: 300,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowResultCard(false);
+      safeRoute.clearRoutes();
+    });
+  }, [safeRoute, routeResultCardAnim]);
+
+  const handleCloseRouting = useCallback(() => {
+    closeRouting();
+    handleClearAllRoutes();
+    resetRouting();
+  }, [closeRouting, handleClearAllRoutes, resetRouting]);
+
+  // ==================== AREA CONTROL ====================
+
   // Area control hook - all area-related state and handlers
   const {
     selectedArea,
@@ -215,7 +336,7 @@ export default function MapScreen() {
     handleCancelCreateArea,
     handleCreateAreaSubmit,
     handleCloseCreateArea,
-    handleMapPress,
+    handleMapPress: handleAreaMapPress,
     // NEW: Option selection handlers
     handleOptionSelect,
     handleAddressSelected,
@@ -255,12 +376,10 @@ export default function MapScreen() {
       params.editLng &&
       params.editRadius
     ) {
-      // Enter edit mode with the area data
       const lat = parseFloat(params.editLat);
       const lng = parseFloat(params.editLng);
       const radius = parseFloat(params.editRadius);
 
-      // Trigger edit mode - this sets all draft values and shows adjust bar
       handleStartEditAreaFromParams({
         id: params.editAreaId,
         name: params.editName || "",
@@ -270,7 +389,6 @@ export default function MapScreen() {
         addressText: params.editAddress || "",
       });
 
-      // Focus map on the area
       mapRef.current?.animateToRegion(
         {
           latitude: lat,
@@ -284,44 +402,49 @@ export default function MapScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.editAreaId]);
 
-  // Keep old handlers for routes
+  // ==================== MAP PRESS (combined) ====================
+
+  const handleMapPress = useCallback(
+    async (event: MapPressEvent) => {
+      // Safe route picking takes priority
+      if (isPickingOnMap) {
+        const { latitude, longitude } = event.nativeEvent.coordinate;
+
+        let label = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+        try {
+          const results = await Location.reverseGeocodeAsync({
+            latitude,
+            longitude,
+          });
+          if (results.length > 0) {
+            const place = results[0];
+            const parts = [place.street, place.district, place.city].filter(
+              Boolean,
+            );
+            if (parts.length > 0) label = parts.join(", ");
+          }
+        } catch {
+          // Keep coordinate label as fallback
+        }
+
+        setPointFromMap({ latitude, longitude }, label);
+        return;
+      }
+
+      // Otherwise delegate to area creation
+      handleAreaMapPress(event);
+    },
+    [isPickingOnMap, setPointFromMap, handleAreaMapPress],
+  );
+
+  // ==================== EXISTING HANDLERS ====================
+
   const handleRoutePress = (route: FloodRoute) => {
     setSelectedZone(null);
     setSelectedArea(null);
     setSelectedRoute(route);
     focusOnRoute(route);
   };
-
-  // Ray-casting algorithm for point in polygon
-  function isPointInPolygon(
-    point: { latitude: number; longitude: number },
-    polygon: { latitude: number; longitude: number }[],
-  ): boolean {
-    let inside = false;
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-      const xi = polygon[i].latitude;
-      const yi = polygon[i].longitude;
-      const xj = polygon[j].latitude;
-      const yj = polygon[j].longitude;
-
-      const intersect =
-        yi > point.longitude !== yj > point.longitude &&
-        point.latitude < ((xj - xi) * (point.longitude - yi)) / (yj - yi) + xi;
-      if (intersect) inside = !inside;
-    }
-    return inside;
-  }
-
-  // function getSensorsForZone(zoneId: string): Sensor[] {
-  //   const zone = FLOOD_ZONES.find((z) => z.id === zoneId);
-  //   if (!zone) return [];
-  //   return MOCK_SENSORS.filter((sensor) =>
-  //     isPointInPolygon(
-  //       { latitude: sensor.latitude, longitude: sensor.longitude },
-  //       zone.coordinates
-  //     )
-  //   );
-  // }
 
   const fetchMarkersInViewPort = useMemo(
     () =>
@@ -331,7 +454,6 @@ export default function MapScreen() {
         const currentZoomMode = getZoomMode(newRegion.latitudeDelta);
         const zoomModeChanged = currentZoomMode !== lastZoomModeRef.current;
 
-        // Check if viewport is still within the loaded buffer zone
         if (
           !zoomModeChanged &&
           !isViewportOutsideBuffer(newRegion, loadedBoundsRef.current)
@@ -339,10 +461,8 @@ export default function MapScreen() {
           return;
         }
 
-        // Calculate bounds with 20% buffer on each side
         const bufferedBounds = getBufferedBounds(newRegion);
 
-        // Save for next comparison
         loadedBoundsRef.current = bufferedBounds;
         lastZoomModeRef.current = currentZoomMode;
 
@@ -390,6 +510,49 @@ export default function MapScreen() {
         {/* Loading Overlay */}
         <MapLoadingOverlay visible={isLoading} />
 
+        {/* Pick on Map Banner */}
+        {isPickingOnMap && (
+          <View
+            style={{
+              position: "absolute",
+              top: 16,
+              left: 16,
+              right: 16,
+              zIndex: 50,
+              backgroundColor:
+                pickingTarget === "origin" ? "#16A34A" : "#4F46E5",
+              borderRadius: 12,
+              padding: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              shadowColor:
+                pickingTarget === "origin" ? "#16A34A" : "#4F46E5",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 6,
+            }}
+          >
+            <Ionicons name="location" size={18} color="white" />
+            <Text
+              style={{
+                flex: 1,
+                color: "white",
+                fontSize: 13,
+                fontWeight: "600",
+              }}
+            >
+              {pickingTarget === "origin"
+                ? "Nhấn vào bản đồ để chọn điểm đi"
+                : "Nhấn vào bản đồ để chọn điểm đến"}
+            </Text>
+            <TouchableOpacity onPress={cancelPicking} hitSlop={8}>
+              <Ionicons name="close" size={18} color="white" />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Map View */}
         <MapView
           ref={mapRef}
@@ -400,7 +563,7 @@ export default function MapScreen() {
           onRegionChangeComplete={handleRegionChange}
           onLongPress={handleMapLongPress}
           onPress={handleMapPress}
-          showsUserLocation
+          showsUserLocation={locationPermission}
           showsMyLocationButton={false}
           showsCompass={false}
           showsTraffic={settings.overlays.traffic}
@@ -409,7 +572,6 @@ export default function MapScreen() {
           rotateEnabled={true}
           mapType={settings.baseMap === "satellite" ? "satellite" : mapType}
           customMapStyle={
-            // Disable custom style when traffic is ON (traffic needs default road colors)
             mapType === "standard" && !settings.overlays.traffic
               ? [
                   {
@@ -485,6 +647,42 @@ export default function MapScreen() {
               />
             ))}
 
+          {/* Safe Route Polylines */}
+          {safeRoute.hasResults && (
+            <SafeRoutePolylines
+              routes={safeRoute.getAllRoutes()}
+              selectedIndex={safeRoute.selectedRouteIndex}
+              onRoutePress={handleSelectRoute}
+            />
+          )}
+
+          {/* Flood Warning Markers (safe route) */}
+          {safeRoute.hasResults && (
+            <FloodWarningMarkers warnings={safeRoute.floodWarnings} />
+          )}
+
+          {/* Destination Pin */}
+          {endCoord && isRoutingUIVisible && (
+            <Marker
+              coordinate={endCoord}
+              title="Điểm đến"
+              description={destinationText}
+            >
+              <View
+                style={{
+                  backgroundColor: "#4F46E5",
+                  borderRadius: 20,
+                  padding: 8,
+                  borderWidth: 3,
+                  borderColor: "white",
+                  elevation: 6,
+                }}
+              >
+                <Ionicons name="flag" size={18} color="white" />
+              </View>
+            </Marker>
+          )}
+
           {/* Street View Marker */}
           {streetViewLocation && (
             <Marker
@@ -519,16 +717,13 @@ export default function MapScreen() {
           <FloodSeverityMarkers
             onMarkerPress={useCallback(
               (feature) => {
-                // Get marker coordinates
                 const [longitude, latitude] = feature.geometry.coordinates;
 
-                // Clear other selections and set new station
                 setSelectedArea(null);
                 setSelectedRoute(null);
                 setSelectedZone(null);
                 setSelectedStation(feature);
 
-                // Focus camera on marker with offset so popup is visible
                 const LATITUDE_OFFSET = 0.008;
                 mapRef.current?.animateToRegion(
                   {
@@ -545,25 +740,28 @@ export default function MapScreen() {
           />
         </MapView>
 
-        {/* Top Controls - Hide during create area mode */}
-        {!isRoutingUIVisible && !isAdjustingRadius && !showCreateAreaSheet && (
-          <View
-            style={{
-              position: "absolute",
-              top: 16,
-              left: 16,
-              right: 16,
-              zIndex: 10,
-            }}
-          >
-            <MapTopControls
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-            />
-          </View>
-        )}
+        {/* Top Controls - Hide during create area mode and picking */}
+        {!isRoutingUIVisible &&
+          !isPickingOnMap &&
+          !isAdjustingRadius &&
+          !showCreateAreaSheet && (
+            <View
+              style={{
+                position: "absolute",
+                top: 16,
+                left: 16,
+                right: 16,
+                zIndex: 10,
+              }}
+            >
+              <MapTopControls
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+              />
+            </View>
+          )}
 
         {/* Legend */}
         {showLegend && !isRoutingUIVisible && <Legend />}
@@ -607,7 +805,8 @@ export default function MapScreen() {
         <View
           style={{
             position: "absolute",
-            bottom: selectedZone || selectedRoute ? 180 : 24,
+            bottom:
+              selectedZone || selectedRoute || safeRoute.hasResults ? 180 : 24,
             right: 16,
             zIndex: 10,
           }}
@@ -617,12 +816,13 @@ export default function MapScreen() {
             !selectedArea &&
             !selectedStation &&
             !isRoutingUIVisible &&
+            !safeRoute.hasResults &&
             !isAdjustingRadius &&
             !showCreateAreaSheet && (
               <MapControls
                 onZoomIn={zoomIn}
                 onZoomOut={zoomOut}
-                onMyLocation={goToMyLocation}
+                onMyLocation={() => goToMyLocation(userLocation)}
                 is3DEnabled={is3DEnabled}
                 onToggle3D={toggle3DView}
                 showLegend={showLegend}
@@ -676,17 +876,56 @@ export default function MapScreen() {
 
         {/* Routing Panel */}
         <RouteDirectionPanel
-          visible={isRoutingUIVisible}
-          onClose={closeRouting}
-          originLabel={originLabel}
+          visible={isRoutingUIVisible && !safeRoute.hasResults}
+          onClose={handleCloseRouting}
+          // Origin
+          originText={isUsingGPSOrigin ? "" : originText}
+          onOriginChange={setOriginText}
+          isUsingGPSOrigin={isUsingGPSOrigin}
+          onUseGPSAsOrigin={selectGPSAsOrigin}
+          onPickOriginOnMap={startPickingOrigin}
+          hasOriginCoord={startCoord !== null}
+          // Destination
           destinationText={destinationText}
           onDestinationChange={setDestinationText}
+          isUsingGPSDest={isUsingGPSDest}
+          onUseGPSAsDest={() => {
+            if (userLocation) selectGPSAsDestination(userLocation);
+          }}
+          onPickDestinationOnMap={startPickingDestination}
+          hasDestinationCoord={endCoord !== null}
+          // Swap
+          onSwap={swapOriginDestination}
+          // Transport & Action
           transportMode={transportMode}
           onModeChange={setTransportMode}
-          onFindRoute={() => {
-            closeRouting();
-          }}
+          onFindRoute={handleFindRoute}
+          isLoading={safeRoute.isLoading}
+          error={safeRoute.error}
         />
+
+        {/* Safe Route Alternatives (route picker) */}
+        {safeRoute.hasResults && safeRoute.overallSafetyStatus && (
+          <SafeRouteAlternatives
+            routes={safeRoute.getAllRoutes()}
+            selectedIndex={safeRoute.selectedRouteIndex}
+            onSelectRoute={handleSelectRoute}
+            showResultCard={showResultCard}
+          />
+        )}
+
+        {/* Safe Route Result Card (shown after tapping a route) */}
+        {safeRoute.hasResults && safeRoute.overallSafetyStatus && showResultCard && (
+          <SafeRouteResultCard
+            route={safeRoute.getSelectedRoute()!}
+            floodWarnings={safeRoute.floodWarnings}
+            metadata={safeRoute.metadata}
+            overallSafetyStatus={safeRoute.overallSafetyStatus}
+            onClose={handleCloseRouteResults}
+            onShowWarnings={() => setShowWarningsSheet(true)}
+            slideAnim={routeResultCardAnim}
+          />
+        )}
 
         {/* Flood Station Bottom Sheet */}
         <MapBottomSheet
@@ -778,7 +1017,8 @@ export default function MapScreen() {
                     lineHeight: 20,
                   }}
                 >
-                  Bạn có muốn xem phân tích rủi ro ngập lụt của AI cho khu vực{" "}
+                  Bạn có muốn xem phân tích rủi ro ngập lụt của AI cho khu
+                  vực{" "}
                   <Text style={{ fontWeight: "700", color: "#3B82F6" }}>
                     {selectedAdminArea.name}
                   </Text>
@@ -871,7 +1111,7 @@ export default function MapScreen() {
           }
         />
 
-        {/* NEW: Area Creation Option Sheet */}
+        {/* Area Creation Option Sheet */}
         <AreaCreationOptionSheet
           visible={showCreationOptions}
           onClose={handleCloseCreationOptions}
@@ -880,7 +1120,7 @@ export default function MapScreen() {
           isLoadingSearch={isLoadingSearch}
         />
 
-        {/* NEW: Address Search Sheet */}
+        {/* Address Search Sheet */}
         <AddressSearchSheet
           visible={showAddressSearch}
           onClose={handleCloseAddressSearch}
@@ -909,6 +1149,13 @@ export default function MapScreen() {
           error={areaError}
           onClose={handleCloseErrorModal}
           onChangeLocation={handleCancelCreateArea}
+        />
+
+        {/* Safe Route Warnings Sheet */}
+        <SafeRouteWarnings
+          warnings={safeRoute.floodWarnings}
+          visible={showWarningsSheet}
+          onClose={() => setShowWarningsSheet(false)}
         />
       </View>
     </View>

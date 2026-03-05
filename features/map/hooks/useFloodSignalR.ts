@@ -32,7 +32,7 @@ export function useFloodSignalR(enabled: boolean) {
   // SignalR may send either wrapped { type, data } or flat { stationId, ... }
   const handleSensorUpdate = useCallback(
     (payload: SensorUpdatePayload | SensorUpdateData) => {
-      console.log("📡 SignalR: Received sensor update", JSON.stringify(payload).slice(0, 200));
+      // console.log("📡 SignalR: Received sensor update", JSON.stringify(payload).slice(0, 200));
 
       // Extract data: support both wrapped and flat formats
       const data = "data" in payload && payload.data?.stationId
@@ -42,7 +42,7 @@ export function useFloodSignalR(enabled: boolean) {
           : null;
 
       if (data?.stationId) {
-        console.log(`📡 SignalR: Updating station ${data.stationId} - waterLevel: ${data.waterLevel}, severity: ${data.severity}`);
+        // console.log(`📡 SignalR: Updating station ${data.stationId} - waterLevel: ${data.waterLevel}, severity: ${data.severity}`);
         dispatch(applyRealtimeUpdate(data));
       } else {
         console.warn("⚠️ SignalR: Received update with unknown format", payload);
@@ -61,11 +61,11 @@ export function useFloodSignalR(enabled: boolean) {
 
     // Register event handlers before starting
     connection.on("ReceiveSensorUpdate", (...args: unknown[]) => {
-      console.log("📡 RAW ReceiveSensorUpdate args:", JSON.stringify(args));
+      //console.log("📡 RAW ReceiveSensorUpdate args:", JSON.stringify(args));
       handleSensorUpdate(args[0] as any);
     });
     connection.on("ReceiveStationUpdate", (...args: unknown[]) => {
-      console.log("📡 RAW ReceiveStationUpdate args:", JSON.stringify(args));
+     // console.log("📡 RAW ReceiveStationUpdate args:", JSON.stringify(args));
       handleSensorUpdate(args[0] as any);
     });
 

@@ -53,6 +53,14 @@
         }
       ],
       [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Cho phép FDA App truy cập vị trí để hiển thị trên bản đồ và tìm đường an toàn.",
+          "locationWhenInUsePermission": "Cho phép FDA App truy cập vị trí để hiển thị trên bản đồ và tìm đường an toàn.",
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {

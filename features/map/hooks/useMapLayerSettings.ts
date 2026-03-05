@@ -55,12 +55,8 @@ export function useMapLayerSettings() {
     }
   }, [dispatch, isAuthenticated, settingsLoaded]);
 
-  // Load flood severity when flood layer is enabled
-  useEffect(() => {
-    if (settings.overlays.flood && !floodSeverity) {
-      dispatch(fetchFloodSeverity(undefined));
-    }
-  }, [dispatch, settings.overlays.flood, floodSeverity]);
+  // Note: flood severity is fetched by MapScreen with viewport bounds,
+  // not here, to avoid duplicate calls without bounds.
 
   // Debounced save function
   const debouncedSave = useCallback(

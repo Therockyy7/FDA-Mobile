@@ -173,8 +173,8 @@ export const MapService = {
 
       const queryString = queryParams.toString();
       const url = queryString
-        ? `/api/map/current-status?${queryString}`
-        : "/api/map/current-status";
+        ? `/api/v1/map/current-status?${queryString}`
+        : "/api/v1/map/current-status";
 
    
       const res = await apiClient.get<{ success: boolean; message: string; data: FloodSeverityGeoJSON }>(url);

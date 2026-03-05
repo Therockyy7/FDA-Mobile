@@ -15,12 +15,14 @@ interface SafeRouteAlternativesProps {
   routes: DecodedRoute[];
   selectedIndex: number;
   onSelectRoute: (index: number) => void;
+  showResultCard?: boolean;
 }
 
 export function SafeRouteAlternatives({
   routes,
   selectedIndex,
   onSelectRoute,
+  showResultCard = false,
 }: SafeRouteAlternativesProps) {
   if (routes.length <= 1) return null;
 
@@ -28,10 +30,10 @@ export function SafeRouteAlternatives({
     <View
       style={{
         position: "absolute",
-        bottom: 190,
+        bottom: showResultCard ? 230 : 24,
         left: 0,
         right: 0,
-        zIndex: 25,
+        zIndex: 35,
       }}
     >
       <ScrollView

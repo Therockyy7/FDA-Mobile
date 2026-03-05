@@ -111,6 +111,7 @@ export default function MapScreen() {
   const { location: userLocation, permissionGranted: locationPermission } =
     useUserLocation();
   const routeResultCardAnim = useRef(new Animated.Value(300)).current;
+  const [showResultCard, setShowResultCard] = useState(false);
   const [showWarningsSheet, setShowWarningsSheet] = useState(false);
 
   const {
@@ -243,13 +244,22 @@ export default function MapScreen() {
       const bounds = getRouteBounds(safeRoute.primaryRoute.coordinates);
       mapRef.current?.animateToRegion(bounds, 600);
 
-      Animated.timing(routeResultCardAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
+      const hasAlternatives = safeRoute.alternativeRoutes.length > 0;
+      if (!hasAlternatives) {
+        // Only 1 route → show result card immediately
+        setShowResultCard(true);
+        Animated.timing(routeResultCardAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+      } else {
+        // Multiple routes → hide result card, let user pick from alternatives
+        setShowResultCard(false);
+        routeResultCardAnim.setValue(300);
+      }
     }
-  }, [safeRoute.primaryRoute, mapRef, routeResultCardAnim]);
+  }, [safeRoute.primaryRoute, safeRoute.alternativeRoutes, mapRef, routeResultCardAnim]);
 
   const handleSelectRoute = useCallback(
     (index: number) => {
@@ -260,8 +270,15 @@ export default function MapScreen() {
         const bounds = getRouteBounds(selected.coordinates);
         mapRef.current?.animateToRegion(bounds, 400);
       }
+      // Show result card when user taps a route
+      setShowResultCard(true);
+      Animated.timing(routeResultCardAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
     },
-    [safeRoute, mapRef],
+    [safeRoute, mapRef, routeResultCardAnim],
   );
 
   const handleCloseRouteResults = useCallback(() => {
@@ -270,15 +287,26 @@ export default function MapScreen() {
       duration: 200,
       useNativeDriver: true,
     }).start(() => {
+      setShowResultCard(false);
+    });
+  }, [routeResultCardAnim]);
+
+  const handleClearAllRoutes = useCallback(() => {
+    Animated.timing(routeResultCardAnim, {
+      toValue: 300,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowResultCard(false);
       safeRoute.clearRoutes();
     });
   }, [safeRoute, routeResultCardAnim]);
 
   const handleCloseRouting = useCallback(() => {
     closeRouting();
-    handleCloseRouteResults();
+    handleClearAllRoutes();
     resetRouting();
-  }, [closeRouting, handleCloseRouteResults, resetRouting]);
+  }, [closeRouting, handleClearAllRoutes, resetRouting]);
 
   // ==================== AREA CONTROL ====================
 
@@ -876,24 +904,27 @@ export default function MapScreen() {
           error={safeRoute.error}
         />
 
-        {/* Safe Route Results */}
+        {/* Safe Route Alternatives (route picker) */}
         {safeRoute.hasResults && safeRoute.overallSafetyStatus && (
-          <>
-            <SafeRouteAlternatives
-              routes={safeRoute.getAllRoutes()}
-              selectedIndex={safeRoute.selectedRouteIndex}
-              onSelectRoute={handleSelectRoute}
-            />
-            <SafeRouteResultCard
-              route={safeRoute.getSelectedRoute()!}
-              floodWarnings={safeRoute.floodWarnings}
-              metadata={safeRoute.metadata}
-              overallSafetyStatus={safeRoute.overallSafetyStatus}
-              onClose={handleCloseRouteResults}
-              onShowWarnings={() => setShowWarningsSheet(true)}
-              slideAnim={routeResultCardAnim}
-            />
-          </>
+          <SafeRouteAlternatives
+            routes={safeRoute.getAllRoutes()}
+            selectedIndex={safeRoute.selectedRouteIndex}
+            onSelectRoute={handleSelectRoute}
+            showResultCard={showResultCard}
+          />
+        )}
+
+        {/* Safe Route Result Card (shown after tapping a route) */}
+        {safeRoute.hasResults && safeRoute.overallSafetyStatus && showResultCard && (
+          <SafeRouteResultCard
+            route={safeRoute.getSelectedRoute()!}
+            floodWarnings={safeRoute.floodWarnings}
+            metadata={safeRoute.metadata}
+            overallSafetyStatus={safeRoute.overallSafetyStatus}
+            onClose={handleCloseRouteResults}
+            onShowWarnings={() => setShowWarningsSheet(true)}
+            slideAnim={routeResultCardAnim}
+          />
         )}
 
         {/* Flood Station Bottom Sheet */}

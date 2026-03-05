@@ -15,7 +15,7 @@ interface FloodSeverityMarkersProps {
 export function FloodSeverityMarkers({
   onMarkerPress,
 }: FloodSeverityMarkersProps) {
-  const { floodSeverity, settings, floodLoading } = useMapLayerSettings();
+  const { floodSeverity, settings } = useMapLayerSettings();
 
   // Memoize and filter valid markers to prevent unnecessary re-renders
   const markers = useMemo(() => {
@@ -50,8 +50,8 @@ export function FloodSeverityMarkers({
     });
   }, [settings.overlays.flood, floodSeverity?.features]);
 
-  // Don't render while loading or if no markers
-  if (floodLoading || markers.length === 0) {
+  // Don't render if no markers (keep stale markers visible during re-fetch)
+  if (markers.length === 0) {
     return null;
   }
 

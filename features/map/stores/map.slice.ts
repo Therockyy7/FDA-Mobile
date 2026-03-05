@@ -365,10 +365,21 @@ const mapSlice = createSlice({
       .addCase(fetchFloodSeverity.fulfilled, (state, action) => {
         console.log("✅ Flood severity loaded:", action.payload);
 
-        // Always replace with the latest API response
-        // Viewport-based fetching returns only stations in bounds
-        // so we show exactly what the API returns
-        state.floodSeverity = action.payload;
+        // Merge: keep existing stations, update/add from new response
+        if (!state.floodSeverity) {
+          state.floodSeverity = action.payload;
+        } else {
+          action.payload.features.forEach((incoming) => {
+            const idx = state.floodSeverity!.features.findIndex(
+              (f) => f.properties.stationId === incoming.properties.stationId
+            );
+            if (idx >= 0) {
+              state.floodSeverity!.features[idx] = incoming;
+            } else {
+              state.floodSeverity!.features.push(incoming);
+            }
+          });
+        }
         state.floodLoading = false;
       })
       .addCase(fetchFloodSeverity.rejected, (state, action) => {

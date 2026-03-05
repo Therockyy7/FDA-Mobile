@@ -1,4 +1,5 @@
 // features/map/lib/map-utils.ts
+
 export function getStatusColor(status: "safe" | "warning" | "danger") {
   switch (status) {
     case "safe":
@@ -88,11 +89,88 @@ export interface MapRegion {
   longitudeDelta: number;
 }
 
-// Minimum distance threshold (in degrees) before fetching new markers
-// ~0.005 degrees ≈ ~500m at equator
-const MINIMUM_REGION_DELTA = 0.005;
+// Bounding box with buffer for viewport-based loading
+export interface ViewportBounds {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+}
 
-// Check if region has changed enough to warrant a new API call
+// ==================== BUFFER ZONE STRATEGY ====================
+// Load data with a 20% buffer around the visible viewport.
+// Only re-fetch when the viewport moves outside the buffered zone.
+
+const BUFFER_RATIO = 0.2; // 20% extra on each side
+
+/**
+ * Calculate viewport bounds with a buffer zone around the visible region.
+ * The buffer ensures we have data ready before the user scrolls to the edge.
+ */
+export function getBufferedBounds(region: MapRegion): ViewportBounds {
+  const latBuffer = region.latitudeDelta * BUFFER_RATIO;
+  const lngBuffer = region.longitudeDelta * BUFFER_RATIO;
+
+  return {
+    minLat: region.latitude - region.latitudeDelta / 2 - latBuffer,
+    maxLat: region.latitude + region.latitudeDelta / 2 + latBuffer,
+    minLng: region.longitude - region.longitudeDelta / 2 - lngBuffer,
+    maxLng: region.longitude + region.longitudeDelta / 2 + lngBuffer,
+  };
+}
+
+/**
+ * Check if the current viewport is still within the previously loaded buffer zone.
+ * Returns true if we need to fetch new data (viewport escaped the buffer).
+ */
+export function isViewportOutsideBuffer(
+  currentRegion: MapRegion,
+  loadedBounds: ViewportBounds | null
+): boolean {
+  if (!loadedBounds) return true;
+
+  // Current viewport edges (without buffer)
+  const viewMinLat = currentRegion.latitude - currentRegion.latitudeDelta / 2;
+  const viewMaxLat = currentRegion.latitude + currentRegion.latitudeDelta / 2;
+  const viewMinLng = currentRegion.longitude - currentRegion.longitudeDelta / 2;
+  const viewMaxLng = currentRegion.longitude + currentRegion.longitudeDelta / 2;
+
+  // Check if any edge of the visible viewport is outside the loaded buffer
+  return (
+    viewMinLat < loadedBounds.minLat ||
+    viewMaxLat > loadedBounds.maxLat ||
+    viewMinLng < loadedBounds.minLng ||
+    viewMaxLng > loadedBounds.maxLng
+  );
+}
+
+// ==================== ZOOM LEVEL STRATEGY ====================
+
+/**
+ * Approximate zoom level from latitudeDelta.
+ * Google Maps zoom levels: 0 (world) to 21 (building).
+ * latitudeDelta ~= 360 / 2^zoom
+ */
+export function getZoomLevel(latitudeDelta: number): number {
+  return Math.round(Math.log2(360 / latitudeDelta));
+}
+
+export type MapZoomMode = "cluster" | "individual" | "detailed";
+
+/**
+ * Determine the display mode based on zoom level:
+ * - cluster (zoom < 10): Show clustered markers, fewer details
+ * - individual (zoom 10-13): Show individual markers with SignalR
+ * - detailed (zoom > 13): Show markers + flood road lines with SignalR
+ */
+export function getZoomMode(latitudeDelta: number): MapZoomMode {
+  const zoom = getZoomLevel(latitudeDelta);
+  if (zoom < 10) return "cluster";
+  if (zoom <= 13) return "individual";
+  return "detailed";
+}
+
+// Legacy function kept for backwards compatibility
 export function shouldFetchNewMarkers(
   newRegion: MapRegion,
   lastRegion: MapRegion | null
@@ -105,7 +183,7 @@ export function shouldFetchNewMarkers(
     newRegion.latitudeDelta - lastRegion.latitudeDelta
   );
 
-  // Fetch if moved significantly OR zoom changed significantly
+  const MINIMUM_REGION_DELTA = 0.005;
   return (
     latChange > MINIMUM_REGION_DELTA ||
     lngChange > MINIMUM_REGION_DELTA ||

@@ -4,9 +4,9 @@ import { apiClient } from "~/lib/api-client";
 
 interface LoginInput {
   identifier: string;
-    otpCode?: string | null;
-    password?: string | null;
-    deviceInfo?: string | null;
+  otpCode?: string | null;
+  password?: string | null;
+  deviceInfo?: string | null;
 }
 // Ngay trên export const AuthService = { ... }
 export type CheckIdentifierResponse = {
@@ -19,10 +19,16 @@ export type CheckIdentifierResponse = {
 };
 
 export type CheckSetPassword = {
-  email : string,
-  newPassword : string,
-  confirmPassword : string
-}
+  email: string;
+  newPassword: string;
+  confirmPassword: string;
+};
+
+export type ChangePasswordInput = {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+};
 
 export const AuthService = {
   // ✅ loginUnified: dùng identifier + map sang LoginInput
@@ -33,10 +39,9 @@ export const AuthService = {
     deviceInfo?: string | null;
   }) => {
     const { identifier, otpCode, password, deviceInfo } = params;
-    console.log("AuthService: ", identifier, otpCode, password, deviceInfo);
-    
+  
+
     const form: LoginInput = {
-      
       identifier: identifier,
       otpCode: otpCode ?? "",
       password: password ?? "",
@@ -46,14 +51,13 @@ export const AuthService = {
     return apiClient.post("/api/v1/auth/login", form);
   },
 
-   checkIdentifier: (identifier: string) => {
+  checkIdentifier: (identifier: string) => {
     return apiClient.post<CheckIdentifierResponse>(
       "/api/v1/auth/check-identifier",
-      { identifier }
+      { identifier },
     );
   },
-  login: (form: LoginInput) =>
-    apiClient.post("/api/v1/auth/login", form),
+  login: (form: LoginInput) => apiClient.post("/api/v1/auth/login", form),
 
   googleMobileLogin(body: { idToken: string }) {
     return apiClient.post("/api/v1/auth/google/mobile", body);
@@ -66,6 +70,9 @@ export const AuthService = {
 
   setPassWord: (form: CheckSetPassword) =>
     apiClient.post("/api/v1/auth/set-password", form),
+
+  changePassword: (form: ChangePasswordInput) =>
+    apiClient.post("/api/v1/auth/change-password", form),
 
   logout: async (revokeAllTokens = false) => {
     const refreshToken = await AsyncStorage.getItem("refresh_token");

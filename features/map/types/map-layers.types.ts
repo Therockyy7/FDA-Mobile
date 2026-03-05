@@ -110,6 +110,8 @@ export interface Area {
   longitude: number;
   radiusMeters: number;
   addressText: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Area status types
@@ -117,6 +119,7 @@ export type AreaStatus = "Normal" | "Watch" | "Warning" | "Unknown";
 
 // Contributing station from area status API
 export interface ContributingStation {
+  stationId: string; // UUID of the station
   stationCode: string;
   distance: number;
   waterLevel: number;
@@ -165,3 +168,47 @@ export const AREA_STATUS_ICONS: Record<AreaStatus, string> = {
   Unknown: "help-circle",
 };
 
+// ==================== AREA CREATION TYPES ====================
+
+export interface CreateAreaRequest {
+  name: string;
+  latitude: number;
+  longitude: number;
+  radiusMeters: number;
+  addressText?: string;
+}
+
+export interface CreateAreaResponse {
+  success: boolean;
+  message: string;
+  statusCode: number;
+  data: Area;
+}
+
+// ==================== SIGNALR TYPES ====================
+
+/** Data payload from SignalR sensor update events */
+export interface SensorUpdateData {
+  stationId: string;
+  stationCode: string;
+  stationName: string;
+  latitude: number;
+  longitude: number;
+  waterLevel: number;
+  distance: number;
+  sensorHeight: number;
+  unit: string;
+  status: number;
+  severity: "safe" | "caution" | "warning" | "critical";
+  severityLevel: 0 | 1 | 2 | 3;
+  markerColor: string;
+  alertLevel: "SAFE" | "CAUTION" | "WARNING" | "CRITICAL";
+  measuredAt: string;
+}
+
+/** Wrapper payload from SignalR ReceiveSensorUpdate / ReceiveStationUpdate */
+export interface SensorUpdatePayload {
+  type: "sensor_update";
+  timestamp: string;
+  data: SensorUpdateData;
+}

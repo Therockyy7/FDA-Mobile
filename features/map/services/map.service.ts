@@ -1,12 +1,10 @@
 // features/map/services/map.service.ts
 import { apiClient } from "~/lib/api-client";
 import type {
-  Area,
-  AreaStatusResponse,
   FloodSeverityGeoJSON,
   FloodStatusParams,
   MapLayerSettings,
-  MapPreferencesResponse,
+  MapPreferencesResponse
 } from "../types/map-layers.types";
 
 // Mock data for testing when API is not available
@@ -175,15 +173,15 @@ export const MapService = {
 
       const queryString = queryParams.toString();
       const url = queryString
-        ? `/api/map/current-status?${queryString}`
-        : "/api/map/current-status";
+        ? `/api/v1/map/current-status?${queryString}`
+        : "/api/v1/map/current-status";
 
-      console.log("🌐 Calling API:", url);
+   
       const res = await apiClient.get<{ success: boolean; message: string; data: FloodSeverityGeoJSON }>(url);
       
       return res.data.data;
     } catch {
-      console.log("⚠️ API not available, using mock flood severity data");
+
       
       if (params?.minLat !== undefined && params?.maxLat !== undefined && 
           params?.minLng !== undefined && params?.maxLng !== undefined) {
@@ -207,45 +205,6 @@ export const MapService = {
       }
       
       return MOCK_FLOOD_SEVERITY_DATA;
-    }
-  },
-
-  getAreas: async (): Promise<Area[]> => {
-    try {
-      const res = await apiClient.get<{
-        success: boolean;
-        message: string;
-        areas: Area[];
-        totalCount: number;
-      }>("/api/v1/areas/me?pageNumber=1&pageSize=100");
-      
-      console.log(`🗺️ Loaded ${res.data.areas.length} areas`);
-      return res.data.areas;
-    } catch (error) {
-      console.error("❌ Failed to fetch areas:", error);
-      throw error;
-    }
-  },
-
-  getAreaStatus: async (areaId: string): Promise<AreaStatusResponse> => {
-    try {
-      const res = await apiClient.get<{
-        success: boolean;
-        message: string;
-        data: AreaStatusResponse;
-      }>(`/api/v1/area/areas/${areaId}/status`);
-      
-      return res.data.data;
-    } catch (error) {
-      console.error(`❌ Failed to fetch status for area ${areaId}:`, error);
-      return {
-        areaId,
-        status: "Unknown",
-        severityLevel: 0,
-        summary: "Không thể lấy thông tin trạng thái",
-        contributingStations: [],
-        evaluatedAt: new Date().toISOString(),
-      };
     }
   },
 };

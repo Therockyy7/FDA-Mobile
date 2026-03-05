@@ -184,3 +184,31 @@ export interface CreateAreaResponse {
   statusCode: number;
   data: Area;
 }
+
+// ==================== SIGNALR TYPES ====================
+
+/** Data payload from SignalR sensor update events */
+export interface SensorUpdateData {
+  stationId: string;
+  stationCode: string;
+  stationName: string;
+  latitude: number;
+  longitude: number;
+  waterLevel: number;
+  distance: number;
+  sensorHeight: number;
+  unit: string;
+  status: number;
+  severity: "safe" | "caution" | "warning" | "critical";
+  severityLevel: 0 | 1 | 2 | 3;
+  markerColor: string;
+  alertLevel: "SAFE" | "CAUTION" | "WARNING" | "CRITICAL";
+  measuredAt: string;
+}
+
+/** Wrapper payload from SignalR ReceiveSensorUpdate / ReceiveStationUpdate */
+export interface SensorUpdatePayload {
+  type: "sensor_update";
+  timestamp: string;
+  data: SensorUpdateData;
+}

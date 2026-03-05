@@ -1,9 +1,9 @@
-import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 import { AuthService } from "~/features/auth/services/auth.service";
 
 export const apiClient = axios.create({
-  baseURL: "https://fda.id.vn",
+  baseURL: "https://uat.fda.id.vn",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",

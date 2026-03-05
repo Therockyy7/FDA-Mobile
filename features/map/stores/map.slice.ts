@@ -5,9 +5,11 @@ import { AreaService } from "~/features/areas/services/area.service";
 import { MapService } from "../services/map.service";
 import type {
   AreaWithStatus,
+  FloodSeverityFeature,
   FloodSeverityGeoJSON,
   FloodStatusParams,
-  MapLayerSettings
+  MapLayerSettings,
+  SensorUpdateData,
 } from "../types/map-layers.types";
 
 // Constants
@@ -259,6 +261,72 @@ const mapSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+
+    /**
+     * Apply a real-time sensor update from SignalR.
+     * Merges into existing floodSeverity by stationId.
+     */
+    applyRealtimeUpdate: (
+      state,
+      action: PayloadAction<SensorUpdateData>
+    ) => {
+      const update = action.payload;
+
+      // If REST hasn't loaded yet, ignore
+      if (!state.floodSeverity) return;
+
+      const existingIndex = state.floodSeverity.features.findIndex(
+        (f) => f.properties.stationId === update.stationId
+      );
+
+      if (existingIndex >= 0) {
+        // Update existing station in place (Immer handles immutability)
+        const props = state.floodSeverity.features[existingIndex].properties;
+        props.waterLevel = update.waterLevel;
+        props.distance = update.distance;
+        props.sensorHeight = update.sensorHeight;
+        props.unit = update.unit;
+        props.severity = update.severity;
+        props.severityLevel = update.severityLevel;
+        props.markerColor = update.markerColor;
+        props.alertLevel = update.alertLevel;
+        props.measuredAt = update.measuredAt;
+        // Update coordinates in case station moved
+        state.floodSeverity.features[existingIndex].geometry.coordinates = [
+          update.longitude,
+          update.latitude,
+        ];
+      } else {
+        // Append new station
+        const newFeature: FloodSeverityFeature = {
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [update.longitude, update.latitude],
+          },
+          properties: {
+            stationId: update.stationId,
+            stationCode: update.stationCode,
+            stationName: update.stationName,
+            locationDesc: null,
+            roadName: null,
+            waterLevel: update.waterLevel,
+            distance: update.distance,
+            sensorHeight: update.sensorHeight,
+            unit: update.unit,
+            measuredAt: update.measuredAt,
+            severity: update.severity,
+            severityLevel: update.severityLevel,
+            stationStatus: "active",
+            lastSeenAt: null,
+            markerColor: update.markerColor,
+            alertLevel: update.alertLevel,
+          },
+        };
+        state.floodSeverity.features.push(newFeature);
+        state.floodSeverity.metadata.totalStations += 1;
+      }
+    },
   },
   extraReducers: (builder) => {
     // Load settings
@@ -297,6 +365,9 @@ const mapSlice = createSlice({
       .addCase(fetchFloodSeverity.fulfilled, (state, action) => {
         console.log("✅ Flood severity loaded:", action.payload);
 
+        // Always replace with the latest API response
+        // Viewport-based fetching returns only stations in bounds
+        // so we show exactly what the API returns
         state.floodSeverity = action.payload;
         state.floodLoading = false;
       })
@@ -331,6 +402,7 @@ export const {
   resetSettings,
   clearFloodSeverity,
   clearError,
+  applyRealtimeUpdate,
 } = mapSlice.actions;
 
 // Export reducer

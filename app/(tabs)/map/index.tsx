@@ -41,13 +41,17 @@ import {
 import { useFloodSelection } from "~/features/map/hooks/useFloodSelection";
 import { useMapCamera } from "~/features/map/hooks/useMapCamera";
 import { useMapDisplay } from "~/features/map/hooks/useMapDisplay";
+import { useFloodSignalR } from "~/features/map/hooks/useFloodSignalR";
 import { useMapLayerSettings } from "~/features/map/hooks/useMapLayerSettings";
 import { useRoutingUI } from "~/features/map/hooks/useRoutingUI";
 import { useStreetView } from "~/features/map/hooks/useStreetView";
 import {
   debounce,
-  MapRegion,
-  shouldFetchNewMarkers,
+  getBufferedBounds,
+  getZoomMode,
+  isViewportOutsideBuffer,
+  type MapZoomMode,
+  type ViewportBounds,
 } from "~/features/map/lib/map-utils";
 import { FloodSeverityFeature } from "~/features/map/types/map-layers.types";
 
@@ -70,10 +74,14 @@ export default function MapScreen() {
     useState<FloodSeverityFeature | null>(null);
   const stationCardAnim = useRef(new Animated.Value(300)).current;
 
-  const lastFetchedRegionRef = useRef<MapRegion | null>(null);
+  const loadedBoundsRef = useRef<ViewportBounds | null>(null);
+  const lastZoomModeRef = useRef<MapZoomMode | null>(null);
 
   const { settings, areas, refreshFloodSeverity, refreshAreas } =
     useMapLayerSettings();
+
+  // Connect to SignalR for real-time flood updates
+  useFloodSignalR(settings.overlays.flood);
 
   const {
     mapRef,
@@ -137,13 +145,11 @@ export default function MapScreen() {
   // Initial load of flood severity markers and areas when component mounts
   useEffect(() => {
     if (settings.overlays.flood) {
-      // Load markers for initial region (DANANG_CENTER)
-      refreshFloodSeverity({
-        minLat: DANANG_CENTER.latitude - DANANG_CENTER.latitudeDelta / 2,
-        minLng: DANANG_CENTER.longitude - DANANG_CENTER.longitudeDelta / 2,
-        maxLat: DANANG_CENTER.latitude + DANANG_CENTER.latitudeDelta / 2,
-        maxLng: DANANG_CENTER.longitude + DANANG_CENTER.longitudeDelta / 2,
-      });
+      // Load markers for initial region with buffer
+      const initialBounds = getBufferedBounds(DANANG_CENTER);
+      loadedBoundsRef.current = initialBounds;
+      lastZoomModeRef.current = getZoomMode(DANANG_CENTER.latitudeDelta);
+      refreshFloodSeverity(initialBounds);
       // Load areas
       refreshAreas();
     }
@@ -294,25 +300,30 @@ export default function MapScreen() {
       debounce((newRegion: Region) => {
         if (!settings.overlays.flood) return;
 
-        // Check if region has changed enough to warrant a new fetch
-        if (!shouldFetchNewMarkers(newRegion, lastFetchedRegionRef.current)) {
-          console.log("⏭️ Skip fetch - region change too small");
+        const currentZoomMode = getZoomMode(newRegion.latitudeDelta);
+        const zoomModeChanged = currentZoomMode !== lastZoomModeRef.current;
+
+        // Check if viewport is still within the loaded buffer zone
+        if (
+          !zoomModeChanged &&
+          !isViewportOutsideBuffer(newRegion, loadedBoundsRef.current)
+        ) {
           return;
         }
 
-        // Update last fetched region
-        lastFetchedRegionRef.current = newRegion;
+        // Calculate bounds with 20% buffer on each side
+        const bufferedBounds = getBufferedBounds(newRegion);
 
-        const params = {
-          minLat: newRegion.latitude - newRegion.latitudeDelta / 2,
-          minLng: newRegion.longitude - newRegion.longitudeDelta / 2,
-          maxLat: newRegion.latitude + newRegion.latitudeDelta / 2,
-          maxLng: newRegion.longitude + newRegion.longitudeDelta / 2,
-        };
+        // Save for next comparison
+        loadedBoundsRef.current = bufferedBounds;
+        lastZoomModeRef.current = currentZoomMode;
 
-        console.log("📍 Fetching markers in viewport:", params);
-        refreshFloodSeverity(params);
-      }, 1000), // Increased debounce to 1s for stability
+        console.log(
+          `📍 Fetching markers [${currentZoomMode}]:`,
+          bufferedBounds,
+        );
+        refreshFloodSeverity(bufferedBounds);
+      }, 400),
     [refreshFloodSeverity, settings.overlays.flood],
   );
 

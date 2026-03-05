@@ -1,8 +1,7 @@
 // features/map/components/routes/SafeRouteAlternatives.tsx
 
-import React from "react";
-import { ScrollView, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { ScrollView, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { formatDistance, formatDuration } from "../../lib/polyline-utils";
 import type { DecodedRoute } from "../../types/safe-route.types";

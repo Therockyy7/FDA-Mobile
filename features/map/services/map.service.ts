@@ -176,7 +176,7 @@ export const MapService = {
         ? `/api/v1/map/current-status?${queryString}`
         : "/api/v1/map/current-status";
 
-   
+   console.log("🌐 Calling API:", url);
       const res = await apiClient.get<{ success: boolean; message: string; data: FloodSeverityGeoJSON }>(url);
       
       return res.data.data;

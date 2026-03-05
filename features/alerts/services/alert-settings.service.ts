@@ -40,7 +40,7 @@ export const AlertSettingsService = {
     payload: AlertSubscriptionRequest,
   ): Promise<AlertSubscriptionResponse> => {
     try {
-      console.log("🔔 Updating alert subscription:", areaId, payload);
+      // console.log("🔔 Updating alert subscription:", areaId, payload);
       const res = await apiClient.put<AlertSubscriptionResponse>(
         `/api/v1/alerts/subscriptions/${areaId}`,
         payload,

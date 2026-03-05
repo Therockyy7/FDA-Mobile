@@ -90,10 +90,10 @@ export function AlertHistoryChips({
   colors,
 }: AlertHistoryChipsProps) {
   const labelMap: Record<AlertHistorySeverityFilter, string> = {
-    all: "All Alerts",
-    critical: "Critical",
-    warning: "Warning",
-    caution: "Caution",
+    all: "Tất cả ",
+    critical: "Nguy hiểm",
+    warning: "Cảnh báo",
+    caution: "Chú ý",
   };
 
   const activeLabel =
@@ -105,21 +105,16 @@ export function AlertHistoryChips({
     <View style={{ gap: 8, paddingBottom: 8 }}>
       <View style={{ flexDirection: "row", gap: 10 }}>
         <Chip
-          active={activeSeverity === "all"}
-          label={`${labelMap.all} (${totalCount})`}
-          colors={colors}
-          onPress={onSelectAll}
-        />
-        <Chip
           active={activeSeverity !== "all"}
           label={activeLabel}
           rightIcon={dropdownOpen ? "chevron-up" : "chevron-down"}
           colors={colors}
           onPress={onToggleDropdown}
         />
+
         <Chip
           active={false}
-          label="Last 30 Days"
+          label="30 ngày"
           rightIcon="calendar-outline"
           colors={colors}
           onPress={onSelectLast30Days}
@@ -134,17 +129,21 @@ export function AlertHistoryChips({
             flexWrap: "wrap",
           }}
         >
-          {(["critical", "warning", "caution"] as const).map(
-            (severity) => (
-              <Chip
-                key={severity}
-                active={activeSeverity === severity}
-                label={`${labelMap[severity]} (${severityCounts[severity]})`}
-                colors={colors}
-                onPress={() => onSelectSeverity(severity)}
-              />
-            ),
-          )}
+          <Chip
+            active={activeSeverity === "all"}
+            label={`${labelMap.all} (${totalCount})`}
+            colors={colors}
+            onPress={onSelectAll}
+          />
+          {(["critical", "warning", "caution"] as const).map((severity) => (
+            <Chip
+              key={severity}
+              active={activeSeverity === severity}
+              label={`${labelMap[severity]} (${severityCounts[severity]})`}
+              colors={colors}
+              onPress={() => onSelectSeverity(severity)}
+            />
+          ))}
         </View>
       ) : null}
     </View>

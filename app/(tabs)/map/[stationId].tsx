@@ -51,9 +51,6 @@ export default function StationDetailScreen() {
     (state: RootState) => state.map?.floodSeverity,
   );
 
-  console.log("floodSeverity", floodSeverity.features);
-  
-
   const station = floodSeverity?.features.find(
     (f) => f.properties.stationId === stationId,
   );

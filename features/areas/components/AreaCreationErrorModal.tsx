@@ -152,20 +152,13 @@ export function AreaCreationErrorModal({
       pulseOpacity.value = 0.6;
       glowOpacity.value = 0.3;
     }
-  }, [
-    visible,
-    iconScale,
-    iconRotate,
-    pulseScale,
-    pulseOpacity,
-    glowOpacity,
-  ]);
+  }, [visible, iconScale, iconRotate, pulseScale, pulseOpacity, glowOpacity]);
 
   const iconAnimatedStyle = useAnimatedStyle(() => ({
     transform: [
       { scale: iconScale.value },
       { rotate: `${iconRotate.value}deg` },
-    ],
+    ] as any,
   }));
 
   const pulseAnimatedStyle = useAnimatedStyle(() => ({
@@ -201,7 +194,9 @@ export function AreaCreationErrorModal({
               style={[styles.overlay, { backgroundColor: "rgba(0,0,0,0.4)" }]}
             />
           ) : (
-            <View style={[styles.overlay, { backgroundColor: colors.overlay }]} />
+            <View
+              style={[styles.overlay, { backgroundColor: colors.overlay }]}
+            />
           )}
         </Animated.View>
 
@@ -235,7 +230,10 @@ export function AreaCreationErrorModal({
 
           {/* Close Button */}
           <TouchableOpacity
-            style={[styles.closeButton, { backgroundColor: colors.buttonSecondary }]}
+            style={[
+              styles.closeButton,
+              { backgroundColor: colors.buttonSecondary },
+            ]}
             onPress={onClose}
             activeOpacity={0.7}
           >
@@ -338,7 +336,9 @@ export function AreaCreationErrorModal({
                 activeOpacity={0.7}
               >
                 <Ionicons name="navigate" size={18} color={colors.text} />
-                <Text style={[styles.secondaryButtonText, { color: colors.text }]}>
+                <Text
+                  style={[styles.secondaryButtonText, { color: colors.text }]}
+                >
                   Đổi vị trí
                 </Text>
               </TouchableOpacity>
@@ -370,15 +370,20 @@ export function AreaCreationErrorModal({
           {isDuplicateError && (
             <View style={styles.tipsContainer}>
               <View style={styles.tipRow}>
-                <View style={[styles.tipBullet, { backgroundColor: accentColor }]} />
+                <View
+                  style={[styles.tipBullet, { backgroundColor: accentColor }]}
+                />
                 <Text style={[styles.tipText, { color: colors.subtext }]}>
                   Di chuyển đến vị trí khác cách xa hơn 50m
                 </Text>
               </View>
               <View style={styles.tipRow}>
-                <View style={[styles.tipBullet, { backgroundColor: accentColor }]} />
+                <View
+                  style={[styles.tipBullet, { backgroundColor: accentColor }]}
+                />
                 <Text style={[styles.tipText, { color: colors.subtext }]}>
-                  Hoặc chỉnh sửa vùng "{error.existingAreaName}" hiện có
+                  Hoặc chỉnh sửa vùng &quot;{error.existingAreaName}&quot; hiện
+                  có
                 </Text>
               </View>
             </View>

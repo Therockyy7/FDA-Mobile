@@ -3,18 +3,20 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
-  Dimensions,
-  Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Dimensions,
+    Keyboard,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    Pressable,
+    ScrollView,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 
@@ -58,6 +60,7 @@ function CreateAreaSheetContent({
   initialValues,
 }: Omit<CreateAreaSheetProps, "visible">) {
   const { isDarkColorScheme } = useColorScheme();
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState(initialValues?.name || "");
   const [address, setAddress] = useState(initialValues?.addressText || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -112,7 +115,7 @@ function CreateAreaSheetContent({
           backgroundColor: colors.background,
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
-          maxHeight: SCREEN_HEIGHT * 0.6,
+          maxHeight: SCREEN_HEIGHT * 0.75,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: -4 },
           shadowOpacity: 0.15,
@@ -195,7 +198,15 @@ function CreateAreaSheetContent({
         </LinearGradient>
 
         {/* Content */}
-        <View style={{ paddingHorizontal: 16, paddingBottom: 32 }}>
+        <ScrollView
+          style={{ flexGrow: 0 }}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingBottom: Math.max(insets.bottom + 20, 32),
+          }}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
           {/* Name Input */}
           <Animated.View entering={FadeInDown.delay(100).duration(300)}>
             <Text
@@ -407,7 +418,7 @@ function CreateAreaSheetContent({
               giới hạn.
             </Text>
           </View>
-        </View>
+        </ScrollView>
       </Animated.View>
     </>
   );

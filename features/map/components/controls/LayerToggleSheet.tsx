@@ -19,12 +19,22 @@ import type { BaseMapType, MapLayerSettings } from "../../types/map-layers.types
 interface LayerToggleSheetProps {
   visible: boolean;
   onClose: () => void;
+  areaDisplayMode?: "user" | "admin";
+  onAreaDisplayModeChange?: (mode: "user" | "admin") => void;
 }
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 // Inner component that uses Redux hook - only mounted when visible
-function LayerToggleSheetContent({ onClose }: { onClose: () => void }) {
+function LayerToggleSheetContent({ 
+  onClose, 
+  areaDisplayMode = "user",
+  onAreaDisplayModeChange,
+}: { 
+  onClose: () => void;
+  areaDisplayMode?: "user" | "admin";
+  onAreaDisplayModeChange?: (mode: "user" | "admin") => void;
+}) {
   const { isDarkColorScheme } = useColorScheme();
   const {
     settings,
@@ -271,6 +281,161 @@ function LayerToggleSheetContent({ onClose }: { onClose: () => void }) {
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* Area Display Mode Section */}
+          {onAreaDisplayModeChange && (
+            <View style={{ marginBottom: 24 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  color: colors.subtext,
+                  marginBottom: 12,
+                  letterSpacing: 0.5,
+                }}
+              >
+                CHẾ ĐỘ KHU VỰC
+              </Text>
+
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                {/* User Areas */}
+                <TouchableOpacity
+                  onPress={() => onAreaDisplayModeChange("user")}
+                  style={{
+                    flex: 1,
+                    padding: 16,
+                    borderRadius: 16,
+                    backgroundColor: colors.cardBg,
+                    borderWidth: 2,
+                    borderColor:
+                      areaDisplayMode === "user" ? colors.accent : colors.border,
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 12,
+                      backgroundColor:
+                        areaDisplayMode === "user"
+                          ? `${colors.accent}20`
+                          : isDarkColorScheme
+                          ? "#475569"
+                          : "#E2E8F0",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Ionicons
+                      name="person-circle"
+                      size={24}
+                      color={
+                        areaDisplayMode === "user"
+                          ? colors.accent
+                          : colors.subtext
+                      }
+                    />
+                  </View>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color:
+                        areaDisplayMode === "user"
+                          ? colors.accent
+                          : colors.text,
+                      textAlign: "center",
+                    }}
+                  >
+                    Khu vực của tôi
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Admin Areas */}
+                <TouchableOpacity
+                  onPress={() => onAreaDisplayModeChange("admin")}
+                  style={{
+                    flex: 1,
+                    padding: 16,
+                    borderRadius: 16,
+                    backgroundColor: colors.cardBg,
+                    borderWidth: 2,
+                    borderColor:
+                      areaDisplayMode === "admin" ? colors.accent : colors.border,
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 12,
+                      backgroundColor:
+                        areaDisplayMode === "admin"
+                          ? `${colors.accent}20`
+                          : isDarkColorScheme
+                          ? "#475569"
+                          : "#E2E8F0",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name="shield-crown"
+                      size={24}
+                      color={
+                        areaDisplayMode === "admin"
+                          ? colors.accent
+                          : colors.subtext
+                      }
+                    />
+                  </View>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color:
+                        areaDisplayMode === "admin"
+                          ? colors.accent
+                          : colors.text,
+                      textAlign: "center",
+                    }}
+                  >
+                    Dự báo AI
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  padding: 12,
+                  borderRadius: 12,
+                  backgroundColor: `${colors.accent}10`,
+                  gap: 8,
+                  marginTop: 12,
+                }}
+              >
+                <Ionicons name="information-circle" size={16} color={colors.accent} />
+                <Text
+                  style={{
+                    flex: 1,
+                    fontSize: 11,
+                    color: colors.subtext,
+                    lineHeight: 16,
+                  }}
+                >
+                  {areaDisplayMode === "user"
+                    ? "Hiển thị các khu vực bạn đã tạo"
+                    : "Hiển thị các khu vực được Admin phân tích sẵn với AI"}
+                </Text>
+              </View>
+            </View>
+          )}
 
           {/* Overlay Layers Section */}
           <View style={{ marginBottom: 24 }}>
@@ -523,7 +688,12 @@ function LayerToggleSheetContent({ onClose }: { onClose: () => void }) {
 }
 
 // Main export - modal wrapper that only renders content when visible
-export function LayerToggleSheet({ visible, onClose }: LayerToggleSheetProps) {
+export function LayerToggleSheet({ 
+  visible, 
+  onClose, 
+  areaDisplayMode,
+  onAreaDisplayModeChange 
+}: LayerToggleSheetProps) {
   if (!visible) return null;
 
   return (
@@ -533,7 +703,11 @@ export function LayerToggleSheet({ visible, onClose }: LayerToggleSheetProps) {
       animationType="slide"
       onRequestClose={onClose}
     >
-      <LayerToggleSheetContent onClose={onClose} />
+      <LayerToggleSheetContent 
+        onClose={onClose} 
+        areaDisplayMode={areaDisplayMode}
+        onAreaDisplayModeChange={onAreaDisplayModeChange}
+      />
     </Modal>
   );
 }

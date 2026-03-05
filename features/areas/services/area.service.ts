@@ -1,18 +1,22 @@
 // features/areas/services/area.service.ts
+import {
+    AdminAreaParams,
+    AdminAreaResponse
+} from "~/features/areas/types/admin-area.types";
 import type {
-  FloodDataPoint,
-  FloodHistoryData,
-  FloodHistoryResponse,
-  FloodSeverity,
-  FloodStatisticsData,
-  FloodStatisticsResponse,
-  FloodTrendDataPoint,
-  FloodTrendsData,
-  FloodTrendsResponse,
+    FloodDataPoint,
+    FloodHistoryData,
+    FloodHistoryResponse,
+    FloodSeverity,
+    FloodStatisticsData,
+    FloodStatisticsResponse,
+    FloodTrendDataPoint,
+    FloodTrendsData,
+    FloodTrendsResponse,
 } from "~/features/areas/types/flood-history.types";
 import type {
-  Area,
-  AreaStatusResponse,
+    Area,
+    AreaStatusResponse,
 } from "~/features/map/types/map-layers.types";
 import { apiClient } from "~/lib/api-client";
 
@@ -27,7 +31,7 @@ export const AreaService = {
         totalCount: number;
       }>("/api/v1/areas/me?pageNumber=1&pageSize=100");
 
-      console.log(`🗺️ Loaded ${res.data.areas.length} areas`);
+      // console.log(`🗺️ Loaded ${res.data.areas.length} areas`);
       return res.data.areas;
     } catch (error) {
       console.error("❌ Failed to fetch areas:", error);
@@ -79,7 +83,7 @@ export const AreaService = {
         throw new Error("Area data not found in response");
       }
 
-      console.log("📍 Area fetched:", area.name);
+      // console.log("📍 Area fetched:", area.name);
       return area;
     } catch (error: any) {
       console.error(`❌ Failed to fetch area ${id}:`, error?.message);
@@ -99,7 +103,7 @@ export const AreaService = {
     },
   ): Promise<Area> => {
     try {
-      console.log("📝 Updating area:", id, request);
+      // console.log("📝 Updating area:", id, request);
 
       const res = await apiClient.put<{
         success: boolean;
@@ -108,7 +112,7 @@ export const AreaService = {
         data: Area;
       }>(`/api/v1/areas/${id}`, request);
 
-      console.log("✅ Area updated successfully");
+      // console.log("✅ Area updated successfully");
       return res.data.data;
     } catch (error: any) {
       const errorMessage =
@@ -121,7 +125,7 @@ export const AreaService = {
   // FeatG37: Delete area
   deleteArea: async (id: string): Promise<void> => {
     try {
-      console.log("🗑️ Deleting area:", id);
+      // console.log("🗑️ Deleting area:", id);
 
       await apiClient.delete<{
         success: boolean;
@@ -129,7 +133,7 @@ export const AreaService = {
         statusCode: number;
       }>(`/api/v1/areas/${id}`);
 
-      console.log("✅ Area deleted successfully");
+      // console.log("✅ Area deleted successfully");
     } catch (error: any) {
       const errorMessage =
         error?.response?.data?.message || error?.message || "Delete failed";
@@ -147,10 +151,10 @@ export const AreaService = {
     addressText?: string;
   }): Promise<Area> => {
     try {
-      console.log(
-        "📤 Creating area with request:",
-        JSON.stringify(request, null, 2),
-      );
+      // console.log(
+      //   "📤 Creating area with request:",
+      //   JSON.stringify(request, null, 2),
+      // );
 
       const res = await apiClient.post<{
         success: boolean;
@@ -159,7 +163,7 @@ export const AreaService = {
         data: Area;
       }>("/api/v1/areas/area", request);
 
-      console.log("✅ Area created successfully:", res.data.data.id);
+      // console.log("✅ Area created successfully:", res.data.data.id);
       return res.data.data;
     } catch (error: any) {
       const errorMessage =
@@ -169,9 +173,9 @@ export const AreaService = {
         "Unknown error";
       const statusCode = error?.response?.status || "N/A";
 
-      console.error("❌ Failed to create area:");
-      console.error("   Status:", statusCode);
-      console.error("   Message:", JSON.stringify(errorMessage));
+      // console.error("❌ Failed to create area:");
+      // console.error("   Status:", statusCode);
+      // console.error("   Message:", JSON.stringify(errorMessage));
 
       const enhancedError = new Error(
         typeof errorMessage === "string"
@@ -211,12 +215,11 @@ export const AreaService = {
       if (params.limit) queryParts.push(`limit=${params.limit}`);
 
       const url = `/api/v1/flood-history?${queryParts.join("&")}`;
-      console.log("📊 Fetching flood history:", url);
+      // console.log("📊 Fetching flood history:", url);
 
       const res = await apiClient.get<FloodHistoryResponse>(url);
       // return res.data.data;
       return generateMockFloodHistory(params);
-
     } catch {
       console.warn("⚠️ Flood history API unavailable, using mock data");
       return generateMockFloodHistory(params);
@@ -254,12 +257,11 @@ export const AreaService = {
       }
 
       const url = `/api/v1/flood-trends?${queryParts.join("&")}`;
-      console.log("📈 Fetching flood trends:", url);
+      // console.log("📈 Fetching flood trends:", url);
 
       const res = await apiClient.get<FloodTrendsResponse>(url);
       // return res.data.data;
       return generateMockFloodTrends(params);
-
     } catch {
       console.warn("⚠️ Flood trends API unavailable, using mock data");
       return generateMockFloodTrends(params);
@@ -295,13 +297,44 @@ export const AreaService = {
       }
 
       const url = `/api/v1/flood-statistics?${queryParts.join("&")}`;
-      console.log("📉 Fetching flood statistics:", url);
+      // console.log("📉 Fetching flood statistics:", url);
 
       const res = await apiClient.get<FloodStatisticsResponse>(url);
       return res.data.data;
     } catch {
       console.warn("⚠️ Flood statistics API unavailable, using mock data");
       return generateMockFloodStatistics(params);
+    }
+  },
+  // Feat: Get Admin Areas
+  getAdminAreas: async (
+    params: AdminAreaParams = {},
+  ): Promise<AdminAreaResponse> => {
+    try {
+      const {
+        searchTerm,
+        level,
+        parentId,
+        pageNumber = 1,
+        pageSize = 100,
+      } = params;
+
+      const queryParts: string[] = [];
+      if (searchTerm)
+        queryParts.push(`searchTerm=${encodeURIComponent(searchTerm)}`);
+      if (level) queryParts.push(`level=${level}`);
+      if (parentId) queryParts.push(`parentId=${parentId}`);
+      queryParts.push(`pageNumber=${pageNumber}`);
+      queryParts.push(`pageSize=${pageSize}`);
+
+      const url = `/api/v1/admin/administrative-areas?${queryParts.join("&")}`;
+      // console.log("🏛️ Fetching admin areas:", url);
+
+      const res = await apiClient.get<AdminAreaResponse>(url);
+      return res.data;
+    } catch (error) {
+      console.error("❌ Failed to fetch admin areas:", error);
+      throw error;
     }
   },
 };

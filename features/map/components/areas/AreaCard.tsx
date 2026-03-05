@@ -2,7 +2,7 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Animated, ScrollView, TouchableOpacity, View } from "react-native";
+import { ScrollView, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import {
@@ -14,7 +14,6 @@ import {
 
 interface AreaCardProps {
   area: AreaWithStatus;
-  slideAnim: Animated.Value;
   onClose: () => void;
   onViewDetails?: () => void;
   onEdit?: () => void;
@@ -23,7 +22,6 @@ interface AreaCardProps {
 
 export function AreaCard({
   area,
-  slideAnim,
   onClose,
   onViewDetails,
   onEdit,
@@ -59,30 +57,8 @@ export function AreaCard({
   }, 0);
 
   return (
-    <Animated.View
-      style={{
-        position: "absolute",
-        bottom: 100,
-        left: 16,
-        right: 16,
-        transform: [{ translateY: slideAnim }],
-        zIndex: 100,
-      }}
-    >
-      <View
-        style={{
-          backgroundColor: colors.background,
-          borderRadius: 20,
-          overflow: "hidden",
-          shadowColor: statusColor,
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.25,
-          shadowRadius: 20,
-          elevation: 12,
-          maxHeight: 600, // Increased height
-        }}
-      >
-        {/* Header Gradient */}
+    <View style={{ flex: 1 }}>
+      {/* Header Gradient */}
         <LinearGradient
           colors={[statusColor, `${statusColor}CC`]}
           start={{ x: 0, y: 0 }}
@@ -165,10 +141,7 @@ export function AreaCard({
         </LinearGradient>
 
         {/* Content */}
-        <ScrollView 
-          contentContainerStyle={{ padding: 16 }}
-          showsVerticalScrollIndicator={false}
-        >
+        <View style={{ padding: 16 }}>
           {/* Summary */}
           {/* {area.summary && (
             <View
@@ -502,17 +475,13 @@ export function AreaCard({
               </TouchableOpacity>
             )}
           </View>
-        </ScrollView>
-      </View>
-    </Animated.View>
+        </View>
+    </View>
   );
 }
 
 // Memoize component to prevent unnecessary re-renders
 export default React.memo(AreaCard, (prevProps, nextProps) => {
-  // Only re-render if area ID changes or slideAnim changes
-  return (
-    prevProps.area?.id === nextProps.area?.id &&
-    prevProps.slideAnim === nextProps.slideAnim
-  );
+  // Only re-render if area ID changes
+  return prevProps.area?.id === nextProps.area?.id;
 });

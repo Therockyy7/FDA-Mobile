@@ -64,7 +64,7 @@ apiClient.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      const newAccessToken = await AuthService.refreshToken(); // 
+      const newAccessToken = await AuthService.refreshToken(); //
 
       processQueue(null, newAccessToken);
 
@@ -82,5 +82,5 @@ apiClient.interceptors.response.use(
     } finally {
       isRefreshing = false;
     }
-  }
+  },
 );

@@ -1,9 +1,12 @@
 // features/alerts/components/alert-history/AlertHistoryCard.tsx
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { TouchableOpacity, View } from "react-native";
+import { View } from "react-native";
 import { Text } from "~/components/ui/text";
-import type { AlertHistoryItem, AlertHistorySeverity } from "../../types/alert-history.types";
+import type {
+  AlertHistoryItem,
+  AlertHistorySeverity,
+} from "../../types/alert-history.types";
 import AlertHistoryChannelsRow from "./AlertHistoryChannelsRow";
 import AlertHistoryValueCard from "./AlertHistoryValueCard";
 
@@ -71,7 +74,12 @@ export function AlertHistoryCard({ item, colors }: AlertHistoryCardProps) {
     minute: "2-digit",
   });
   const dateLabel = dateObj.toLocaleDateString("vi-VN");
-  const severityLabel = item.severity.toUpperCase();
+  const severityLabelMap: Record<AlertHistorySeverity, string> = {
+    critical: "NGUY HIỂM",
+    warning: "CẢNH BÁO",
+    caution: "CHÚ Ý",
+  };
+  const severityLabel = severityLabelMap[item.severity];
   const waterValue = Number.isFinite(item.waterLevel)
     ? item.waterLevel.toFixed(2)
     : "--";
@@ -110,13 +118,19 @@ export function AlertHistoryCard({ item, colors }: AlertHistoryCardProps) {
             </View>
 
             <View style={{ flex: 1 }}>
-              <Text style={{ color: colors.text, fontSize: 16, fontWeight: "800" }}>
+              <Text
+                style={{ color: colors.text, fontSize: 16, fontWeight: "800" }}
+              >
                 {item.stationName}
               </Text>
-              <Text style={{ color: colors.subtext, fontSize: 12, marginTop: 2 }}>
+              <Text
+                style={{ color: colors.subtext, fontSize: 12, marginTop: 2 }}
+              >
                 {item.stationCode}
               </Text>
-              <Text style={{ color: colors.subtext, fontSize: 12, marginTop: 6 }}>
+              <Text
+                style={{ color: colors.subtext, fontSize: 12, marginTop: 6 }}
+              >
                 {item.message}
               </Text>
             </View>
@@ -185,14 +199,17 @@ export function AlertHistoryCard({ item, colors }: AlertHistoryCardProps) {
             paddingTop: 12,
           }}
         >
-          <AlertHistoryChannelsRow channels={item.notifications} subtext={colors.subtext} />
+          <AlertHistoryChannelsRow
+            channels={item.notifications}
+            subtext={colors.subtext}
+          />
 
-          <TouchableOpacity activeOpacity={0.8} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          {/* <TouchableOpacity activeOpacity={0.8} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <Text style={{ fontSize: 12, color: colors.primary, fontWeight: "800" }}>
               Chi tiết
             </Text>
             <Ionicons name="chevron-forward" size={14} color={colors.primary} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </View>
     </View>

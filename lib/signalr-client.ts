@@ -3,12 +3,11 @@ import {
   HttpTransportType,
   HubConnection,
   HubConnectionBuilder,
-  HubConnectionState,
-  LogLevel,
+  HubConnectionState
 } from "@microsoft/signalr";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const SIGNALR_HUB_URL = "https://uat.fda.id.vn/hubs/flood-data";
+const SIGNALR_HUB_URL = process.env.EXPO_PUBLIC_SIGNALR_HUB_URL ?? "https://uat.fda.id.vn/hubs/flood-data";
 
 let connection: HubConnection | null = null;
 
@@ -27,7 +26,7 @@ export function getFloodHubConnection(): HubConnection {
         },
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
-      .configureLogging(LogLevel.Warning)
+      // .configureLogging(LogLevel.Warning)
       .build();
   }
   return connection;

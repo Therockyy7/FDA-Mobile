@@ -51,10 +51,16 @@ export async function startFloodHub(): Promise<void> {
 
 /**
  * Stop the connection and destroy the singleton so a fresh one is created next time.
+ * Skips stop if connection is currently in the middle of connecting (Connecting/Reconnecting)
+ * to avoid "connection was stopped during negotiation" error from React Strict Mode double-effect.
  */
 export async function stopFloodHub(): Promise<void> {
   if (connection) {
-    if (connection.state !== HubConnectionState.Disconnected) {
+    const state = connection.state;
+    if (
+      state === HubConnectionState.Connected ||
+      state === HubConnectionState.Reconnecting
+    ) {
       await connection.stop();
       console.log("⏹️ SignalR: Disconnected from flood-data hub");
     }

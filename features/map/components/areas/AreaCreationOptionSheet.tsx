@@ -4,13 +4,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
-    ActivityIndicator,
-    Dimensions,
-    Modal,
-    Pressable,
-    StyleSheet,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Dimensions,
+  Modal,
+  Pressable,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,7 +19,7 @@ import { useColorScheme } from "~/lib/useColorScheme";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-export type CreationOption = "gps" | "search";
+export type CreationOption = "gps" | "search" | "map_center";
 
 interface AreaCreationOptionSheetProps {
   visible: boolean;
@@ -212,12 +212,23 @@ export function AreaCreationOptionSheet({
           />
 
           <OptionCard
+            icon="map"
+            title="Tự chọn vùng"
+            description="Tạo vùng ngay tại vị trí trung tâm bản đồ hiện tại"
+            gradientColors={["#8B5CF6", "#6D28D9"]}
+            onPress={() => onSelectOption("map_center")}
+            delay={200}
+            isDisabled={isLoadingGps || isLoadingSearch}
+            colors={colors}
+          />
+
+          <OptionCard
             icon="search"
             title="Tìm kiếm địa chỉ"
             description="Nhập địa chỉ để tạo vùng theo dõi"
             gradientColors={["#F97316", "#EA580C"]}
             onPress={() => onSelectOption("search")}
-            delay={200}
+            delay={300}
             isLoading={isLoadingSearch}
             isDisabled={isLoadingGps}
             colors={colors}

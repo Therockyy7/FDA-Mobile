@@ -41,6 +41,7 @@ import { SafeRouteResultCard } from "~/features/map/components/routes/SafeRouteR
 import { SafeRouteWarnings } from "~/features/map/components/routes/SafeRouteWarnings";
 import { WaterFlowRoute } from "~/features/map/components/routes/WaterFlowRoute";
 import { FloodSeverityMarkers } from "~/features/map/components/stations/FloodSeverityMarkers";
+import { RoadGradientPolylines } from "~/features/map/components/stations/RoadGradientPolylines";
 import { FloodStationCard } from "~/features/map/components/stations/FloodStationCard";
 import { MapHeader } from "~/features/map/components/ui/MapHeader";
 import {
@@ -712,6 +713,9 @@ export default function MapScreen() {
               </View>
             </Marker>
           )}
+
+          {/* Road Gradient Polylines (rendered below station markers) */}
+          <RoadGradientPolylines />
 
           {/* Flood Severity Markers from API */}
           <FloodSeverityMarkers

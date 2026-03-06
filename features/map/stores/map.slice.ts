@@ -276,12 +276,13 @@ const mapSlice = createSlice({
       if (!state.floodSeverity) return;
 
       const existingIndex = state.floodSeverity.features.findIndex(
-        (f) => f.properties.stationId === update.stationId
+        (f) => f.geometry.type === "Point" && (f as FloodSeverityFeature).properties.stationId === update.stationId
       );
 
       if (existingIndex >= 0) {
         // Update existing station in place (Immer handles immutability)
-        const props = state.floodSeverity.features[existingIndex].properties;
+        const feature = state.floodSeverity.features[existingIndex] as FloodSeverityFeature;
+        const props = feature.properties;
         props.waterLevel = update.waterLevel;
         props.distance = update.distance;
         props.sensorHeight = update.sensorHeight;
@@ -292,10 +293,7 @@ const mapSlice = createSlice({
         props.alertLevel = update.alertLevel;
         props.measuredAt = update.measuredAt;
         // Update coordinates in case station moved
-        state.floodSeverity.features[existingIndex].geometry.coordinates = [
-          update.longitude,
-          update.latitude,
-        ];
+        feature.geometry.coordinates = [update.longitude, update.latitude];
       } else {
         // Append new station
         const newFeature: FloodSeverityFeature = {
@@ -369,9 +367,18 @@ const mapSlice = createSlice({
         if (!state.floodSeverity) {
           state.floodSeverity = action.payload;
         } else {
-          action.payload.features.forEach((incoming) => {
+          const incomingPoints = action.payload.features.filter(
+            (f) => f.geometry.type === "Point"
+          ) as FloodSeverityFeature[];
+          const incomingLines = action.payload.features.filter(
+            (f) => f.geometry.type === "LineString"
+          );
+
+          // Merge Point features by stationId
+          incomingPoints.forEach((incoming) => {
             const idx = state.floodSeverity!.features.findIndex(
-              (f) => f.properties.stationId === incoming.properties.stationId
+              (f) => f.geometry.type === "Point" &&
+                (f as FloodSeverityFeature).properties.stationId === incoming.properties.stationId
             );
             if (idx >= 0) {
               state.floodSeverity!.features[idx] = incoming;
@@ -379,6 +386,14 @@ const mapSlice = createSlice({
               state.floodSeverity!.features.push(incoming);
             }
           });
+
+          // Replace all LineString features with new ones from API
+          state.floodSeverity!.features = [
+            ...state.floodSeverity!.features.filter((f) => f.geometry.type === "Point"),
+            ...incomingLines,
+          ];
+
+          state.floodSeverity!.metadata = action.payload.metadata;
         }
         state.floodLoading = false;
       })

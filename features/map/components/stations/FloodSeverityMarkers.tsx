@@ -6,6 +6,7 @@ import {
     SEVERITY_COLORS,
     SEVERITY_LABELS,
     type FloodSeverityFeature,
+    isPointFeature,
 } from "../../types/map-layers.types";
 
 interface FloodSeverityMarkersProps {
@@ -23,8 +24,10 @@ export function FloodSeverityMarkers({
       return [];
     }
 
-    // Filter out features with invalid coordinates
-    return floodSeverity.features.filter((feature) => {
+    // Filter to only Point features with valid coordinates
+    return floodSeverity.features.filter((feature): feature is FloodSeverityFeature => {
+      if (!isPointFeature(feature)) return false;
+
       const { properties, geometry } = feature;
 
       // Validate coordinates exist
@@ -62,21 +65,21 @@ export function FloodSeverityMarkers({
         const { properties, geometry } = feature;
         const [longitude, latitude] = geometry.coordinates;
 
-        const color =
+        const color = properties.markerColor ||
           SEVERITY_COLORS[properties.severity] || SEVERITY_COLORS.unknown;
         const label =
           SEVERITY_LABELS[properties.severity] || SEVERITY_LABELS.unknown;
 
         return (
           <Marker
-            key={properties.stationId}
+            key={`${properties.stationId}-${properties.severity}`}
             identifier={properties.stationId}
             coordinate={{ latitude, longitude }}
             pinColor={color}
             title={properties.stationName}
             description={`Mực nước: ${properties.waterLevel}${properties.unit} - ${label}`}
             onPress={() => onMarkerPress?.(feature)}
-            tracksViewChanges={false} // Performance optimization - prevents crash
+            tracksViewChanges={false}
           />
         );
       })}

@@ -12,13 +12,13 @@ export function useRoutingUI() {
   // Origin state
   const [originText, setOriginText] = useState("");
   const [startCoord, setStartCoord] = useState<LatLng | null>(null);
-  const [useCurrentLocationAsOrigin, setUseCurrentLocationAsOrigin] =
+  const [isUsingGPSOrigin, setIsUsingGPSOrigin] =
     useState(true);
 
   // Destination state
   const [destinationText, setDestinationText] = useState("");
   const [endCoord, setEndCoord] = useState<LatLng | null>(null);
-  const [useCurrentLocationAsDest, setUseCurrentLocationAsDest] =
+  const [isUsingGPSDest, setIsUsingGPSDest] =
     useState(false);
 
   // Pick-on-map mode
@@ -50,36 +50,39 @@ export function useRoutingUI() {
       if (pickingTarget === "origin") {
         setStartCoord(coord);
         setOriginText(label);
-        setUseCurrentLocationAsOrigin(false);
+        setIsUsingGPSOrigin(false);
       } else if (pickingTarget === "destination") {
         setEndCoord(coord);
         setDestinationText(label);
-        setUseCurrentLocationAsDest(false);
+        setIsUsingGPSDest(false);
       }
       setPickingTarget(null);
     },
-    [pickingTarget],
+    [pickingTarget]
   );
 
   // Quick-select "Vị trí hiện tại" for origin
-  const setGPSAsOrigin = useCallback(() => {
-    setUseCurrentLocationAsOrigin(true);
+  const selectGPSAsOrigin = useCallback(() => {
+    setIsUsingGPSOrigin(true);
     setStartCoord(null);
     setOriginText("");
   }, []);
 
   // Quick-select "Vị trí hiện tại" for destination
-  const setGPSAsDestination = useCallback((gpsCoord: LatLng) => {
-    setUseCurrentLocationAsDest(true);
-    setEndCoord(gpsCoord);
-    setDestinationText("Vị trí hiện tại");
-  }, []);
+  const selectGPSAsDestination = useCallback(
+    (gpsCoord: LatLng) => {
+      setIsUsingGPSDest(true);
+      setEndCoord(gpsCoord);
+      setDestinationText("Vị trí hiện tại");
+    },
+    []
+  );
 
   // When user types in origin, disable "current location" mode
   const handleOriginTextChange = useCallback((text: string) => {
     setOriginText(text);
     if (text.length > 0) {
-      setUseCurrentLocationAsOrigin(false);
+      setIsUsingGPSOrigin(false);
     }
   }, []);
 
@@ -87,29 +90,29 @@ export function useRoutingUI() {
   const handleDestinationTextChange = useCallback((text: string) => {
     setDestinationText(text);
     if (text.length > 0) {
-      setUseCurrentLocationAsDest(false);
+      setIsUsingGPSDest(false);
     }
   }, []);
 
   const swapOriginDestination = useCallback(() => {
     const tmpText = originText;
     const tmpCoord = startCoord;
-    const tmpUseGPS = useCurrentLocationAsOrigin;
+    const tmpUseGPS = isUsingGPSOrigin;
 
     setOriginText(destinationText);
     setStartCoord(endCoord);
-    setUseCurrentLocationAsOrigin(useCurrentLocationAsDest);
+    setIsUsingGPSOrigin(isUsingGPSDest);
 
     setDestinationText(tmpText);
     setEndCoord(tmpCoord);
-    setUseCurrentLocationAsDest(tmpUseGPS);
+    setIsUsingGPSDest(tmpUseGPS);
   }, [
     originText,
     destinationText,
     startCoord,
     endCoord,
-    useCurrentLocationAsOrigin,
-    useCurrentLocationAsDest,
+    isUsingGPSOrigin,
+    isUsingGPSDest,
   ]);
 
   const resetRouting = useCallback(() => {
@@ -118,12 +121,12 @@ export function useRoutingUI() {
     setStartCoord(null);
     setEndCoord(null);
     setPickingTarget(null);
-    setUseCurrentLocationAsOrigin(true);
-    setUseCurrentLocationAsDest(false);
+    setIsUsingGPSOrigin(true);
+    setIsUsingGPSDest(false);
   }, []);
 
   // Display label
-  const originLabel = useCurrentLocationAsOrigin
+  const originLabel = isUsingGPSOrigin
     ? "Vị trí hiện tại"
     : originText;
 
@@ -139,15 +142,15 @@ export function useRoutingUI() {
     setOriginText: handleOriginTextChange,
     startCoord,
     setStartCoord,
-    useCurrentLocationAsOrigin,
-    setGPSAsOrigin,
+    isUsingGPSOrigin,
+    selectGPSAsOrigin,
     // Destination
     destinationText,
     setDestinationText: handleDestinationTextChange,
     endCoord,
     setEndCoord,
-    useCurrentLocationAsDest,
-    setGPSAsDestination,
+    isUsingGPSDest,
+    selectGPSAsDestination,
     // Pick on map
     pickingTarget,
     isPickingOnMap,
@@ -163,7 +166,7 @@ export function useRoutingUI() {
     setDestinationFromMap: (coord: LatLng, label: string) => {
       setEndCoord(coord);
       setDestinationText(label);
-      setUseCurrentLocationAsDest(false);
+      setIsUsingGPSDest(false);
       setPickingTarget(null);
     },
     setOriginFromGPS: (coord: LatLng, label: string) => {

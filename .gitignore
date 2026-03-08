@@ -39,6 +39,11 @@ yarn-error.*
 /android
 /ios
 
+# IDE
+.idea/
+.vscode/
+
+
 app-example
 
 # Firebase

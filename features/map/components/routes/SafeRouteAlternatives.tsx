@@ -1,8 +1,7 @@
 // features/map/components/routes/SafeRouteAlternatives.tsx
 
-import React from "react";
-import { ScrollView, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { ScrollView, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { formatDistance, formatDuration } from "../../lib/polyline-utils";
 import type { DecodedRoute } from "../../types/safe-route.types";
@@ -15,12 +14,14 @@ interface SafeRouteAlternativesProps {
   routes: DecodedRoute[];
   selectedIndex: number;
   onSelectRoute: (index: number) => void;
+  showResultCard?: boolean;
 }
 
 export function SafeRouteAlternatives({
   routes,
   selectedIndex,
   onSelectRoute,
+  showResultCard = false,
 }: SafeRouteAlternativesProps) {
   if (routes.length <= 1) return null;
 
@@ -28,10 +29,10 @@ export function SafeRouteAlternatives({
     <View
       style={{
         position: "absolute",
-        bottom: 190,
+        bottom: showResultCard ? 230 : 24,
         left: 0,
         right: 0,
-        zIndex: 25,
+        zIndex: 35,
       }}
     >
       <ScrollView

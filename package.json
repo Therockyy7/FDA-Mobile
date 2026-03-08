@@ -16,6 +16,7 @@
     "@hookform/resolvers": "^5.1.1",
     "@lottiefiles/dotlottie-react": "^0.13.5",
     "@mapbox/polyline": "^1.2.1",
+    "@microsoft/signalr": "^10.0.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "^8.6.0",
     "@react-native-community/slider": "^5.0.1",

@@ -165,7 +165,7 @@ export function useControlArea({
 
   // NEW: Handle option selection (GPS or Search)
   const handleOptionSelect = useCallback(
-    async (option: "gps" | "search") => {
+    async (option: "gps" | "search" | "map_center") => {
       // Don't close immediately - wait for next step to be ready
       // setShowCreationOptions(false);
 
@@ -249,6 +249,22 @@ export function useControlArea({
             [{ text: "OK" }],
           );
         }
+      } else if (option === "map_center") {
+        // Option 3: Use current map center
+        if (region) {
+          const { latitude, longitude } = region;
+          setDraftAreaCenter({ latitude, longitude });
+          setDraftAreaRadius(DEFAULT_RADIUS);
+          setDraftAddress("");
+
+          // Switch to adjustment mode and CLOSE the options sheet
+          setIsAdjustingRadius(true);
+          setShowCreationOptions(false);
+        } else {
+          Alert.alert("Lỗi", "Không thể lấy vị trí trung tâm bản đồ.", [
+            { text: "OK" },
+          ]);
+        }
       } else {
         // Option 2: Show address search sheet with brief loading
         setIsLoadingSearch(true);
@@ -260,7 +276,7 @@ export function useControlArea({
         }, 300);
       }
     },
-    [mapRef],
+    [mapRef, region],
   );
 
   // NEW: Handle address selection from search

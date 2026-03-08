@@ -40,3 +40,7 @@ yarn-error.*
 /ios
 
 app-example
+
+# Firebase
+google-services.json
+GoogleService-Info.plist

@@ -7,6 +7,7 @@ interface LoginInput {
   otpCode?: string | null;
   password?: string | null;
   deviceInfo?: string | null;
+  fcmToken?: string | null;
 }
 // Ngay trên export const AuthService = { ... }
 export type CheckIdentifierResponse = {
@@ -37,15 +38,16 @@ export const AuthService = {
     otpCode?: string | null;
     password?: string | null;
     deviceInfo?: string | null;
+    fcmToken?: string | null;
   }) => {
-    const { identifier, otpCode, password, deviceInfo } = params;
-  
+    const { identifier, otpCode, password, deviceInfo, fcmToken } = params;
 
     const form: LoginInput = {
       identifier: identifier,
       otpCode: otpCode ?? "",
       password: password ?? "",
       deviceInfo: deviceInfo ?? "mobile-app",
+      fcmToken: fcmToken ?? null,
     };
 
     return apiClient.post("/api/v1/auth/login", form);

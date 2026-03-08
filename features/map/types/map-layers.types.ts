@@ -64,8 +64,40 @@ export interface FloodSeverityFeature {
   properties: FloodSeverityProperties;
 }
 
+// Road segment (LineString) between two stations
+export interface RoadSegmentProperties {
+  roadName: string;
+  startStationId: string;
+  endStationId: string;
+  startSeverityLevel: number;
+  endSeverityLevel: number;
+  startColor: string;
+  endColor: string;
+}
+
+export interface RoadSegmentFeature {
+  type: "Feature";
+  geometry: {
+    type: "LineString";
+    coordinates: [number, number][]; // array of [longitude, latitude]
+  };
+  properties: RoadSegmentProperties;
+}
+
+// Union type for all features in the flood FeatureCollection
+export type FloodFeature = FloodSeverityFeature | RoadSegmentFeature;
+
+// Type guards
+export function isPointFeature(f: FloodFeature): f is FloodSeverityFeature {
+  return f.geometry.type === "Point";
+}
+export function isLineStringFeature(f: FloodFeature): f is RoadSegmentFeature {
+  return f.geometry.type === "LineString";
+}
+
 export interface FloodSeverityMetadata {
   totalStations: number;
+  roadSegments?: number;
   stationsWithData?: number;
   stationsNoData?: number;
   generatedAt: string;
@@ -79,7 +111,7 @@ export interface FloodSeverityMetadata {
 
 export interface FloodSeverityGeoJSON {
   type: "FeatureCollection";
-  features: FloodSeverityFeature[];
+  features: FloodFeature[];
   metadata: FloodSeverityMetadata;
 }
 
@@ -183,4 +215,32 @@ export interface CreateAreaResponse {
   message: string;
   statusCode: number;
   data: Area;
+}
+
+// ==================== SIGNALR TYPES ====================
+
+/** Data payload from SignalR sensor update events */
+export interface SensorUpdateData {
+  stationId: string;
+  stationCode: string;
+  stationName: string;
+  latitude: number;
+  longitude: number;
+  waterLevel: number;
+  distance: number;
+  sensorHeight: number;
+  unit: string;
+  status: number;
+  severity: "safe" | "caution" | "warning" | "critical";
+  severityLevel: 0 | 1 | 2 | 3;
+  markerColor: string;
+  alertLevel: "SAFE" | "CAUTION" | "WARNING" | "CRITICAL";
+  measuredAt: string;
+}
+
+/** Wrapper payload from SignalR ReceiveSensorUpdate / ReceiveStationUpdate */
+export interface SensorUpdatePayload {
+  type: "sensor_update";
+  timestamp: string;
+  data: SensorUpdateData;
 }

@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     right: 0,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: SCREEN_HEIGHT * 0.55,
+    maxHeight: SCREEN_HEIGHT * 0.65,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,

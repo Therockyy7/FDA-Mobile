@@ -3,7 +3,7 @@ import axios from "axios";
 import { AuthService } from "~/features/auth/services/auth.service";
 
 export const apiClient = axios.create({
-  baseURL: "https://fda.id.vn",
+  baseURL: process.env.EXPO_PUBLIC_API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",

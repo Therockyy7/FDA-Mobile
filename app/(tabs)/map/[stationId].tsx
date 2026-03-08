@@ -2,7 +2,7 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   ScrollView,
   StatusBar,
@@ -21,6 +21,7 @@ import type { RootState } from "~/app/store";
 import { Text } from "~/components/ui/text";
 import { FloodHistorySection } from "~/features/areas/components/charts";
 import { WaterLevelVisualization } from "~/features/map/components/overlays/WaterLevelVisualization";
+import { useFloodSignalR } from "~/features/map/hooks/useFloodSignalR";
 import {
   SEVERITY_COLORS,
   SEVERITY_LABELS,
@@ -32,6 +33,18 @@ export default function StationDetailScreen() {
   const insets = useSafeAreaInsets();
   const { isDarkColorScheme } = useColorScheme();
   const { stationId } = useLocalSearchParams<{ stationId: string }>();
+
+  // Subscribe to per-station real-time updates
+  const { subscribeToStation, unsubscribeFromStation } = useFloodSignalR(true);
+
+  useEffect(() => {
+    if (stationId) {
+      subscribeToStation(stationId);
+      return () => {
+        unsubscribeFromStation(stationId);
+      };
+    }
+  }, [stationId, subscribeToStation, unsubscribeFromStation]);
 
   // Get station data from Redux store
   const floodSeverity = useSelector(

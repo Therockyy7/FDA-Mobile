@@ -20,7 +20,7 @@ interface RouteDirectionPanelProps {
   // Origin
   originText: string;
   onOriginChange: (value: string) => void;
-  useCurrentLocationAsOrigin: boolean;
+  isUsingGPSOrigin: boolean;
   onUseGPSAsOrigin: () => void;
   onPickOriginOnMap: () => void;
   hasOriginCoord: boolean;
@@ -28,7 +28,7 @@ interface RouteDirectionPanelProps {
   // Destination
   destinationText: string;
   onDestinationChange: (value: string) => void;
-  useCurrentLocationAsDest: boolean;
+  isUsingGPSDest: boolean;
   onUseGPSAsDest: () => void;
   onPickDestinationOnMap: () => void;
   hasDestinationCoord: boolean;
@@ -51,13 +51,13 @@ export function RouteDirectionPanel({
   onClose,
   originText,
   onOriginChange,
-  useCurrentLocationAsOrigin,
+  isUsingGPSOrigin,
   onUseGPSAsOrigin,
   onPickOriginOnMap,
   hasOriginCoord,
   destinationText,
   onDestinationChange,
-  useCurrentLocationAsDest,
+  isUsingGPSDest,
   onUseGPSAsDest,
   onPickDestinationOnMap,
   hasDestinationCoord,
@@ -70,9 +70,9 @@ export function RouteDirectionPanel({
 }: RouteDirectionPanelProps) {
   if (!visible) return null;
 
-  const hasOrigin = useCurrentLocationAsOrigin || hasOriginCoord;
+  const hasOrigin = isUsingGPSOrigin || hasOriginCoord;
   const hasDest =
-    useCurrentLocationAsDest ||
+    isUsingGPSDest ||
     hasDestinationCoord ||
     destinationText.trim().length > 0;
   const canFindRoute = hasOrigin && hasDest;
@@ -172,34 +172,34 @@ export function RouteDirectionPanel({
               {/* Origin Input */}
               <LocationInput
                 value={
-                  useCurrentLocationAsOrigin ? "Vị trí hiện tại" : originText
+                  isUsingGPSOrigin ? "Vị trí hiện tại" : originText
                 }
                 onChangeText={onOriginChange}
                 placeholder="Nhập điểm đi..."
-                isCurrentLocation={useCurrentLocationAsOrigin}
+                isCurrentLocation={isUsingGPSOrigin}
                 hasCoord={hasOriginCoord}
                 onPickOnMap={onPickOriginOnMap}
                 onUseGPS={onUseGPSAsOrigin}
-                showGPSButton={!useCurrentLocationAsOrigin}
-                editable={!isLoading && !useCurrentLocationAsOrigin}
+                showGPSButton={!isUsingGPSOrigin}
+                editable={!isLoading && !isUsingGPSOrigin}
                 accentColor="#22C55E"
               />
 
               {/* Destination Input */}
               <LocationInput
                 value={
-                  useCurrentLocationAsDest
+                  isUsingGPSDest
                     ? "Vị trí hiện tại"
                     : destinationText
                 }
                 onChangeText={onDestinationChange}
                 placeholder="Nhập điểm đến..."
-                isCurrentLocation={useCurrentLocationAsDest}
+                isCurrentLocation={isUsingGPSDest}
                 hasCoord={hasDestinationCoord}
                 onPickOnMap={onPickDestinationOnMap}
                 onUseGPS={onUseGPSAsDest}
-                showGPSButton={!useCurrentLocationAsDest}
-                editable={!isLoading && !useCurrentLocationAsDest}
+                showGPSButton={!isUsingGPSDest}
+                editable={!isLoading && !isUsingGPSDest}
                 accentColor="#4F46E5"
               />
             </View>

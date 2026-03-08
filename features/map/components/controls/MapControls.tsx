@@ -74,33 +74,7 @@ export function MapControls({
                 </MotiView>
               )}
 
-              {/* Navigation Button */}
-              <MotiView
-                from={{ opacity: 0, scale: 0.5, translateY: 20 }}
-                animate={{ opacity: 1, scale: 1, translateY: 0 }}
-                exit={{ opacity: 0, scale: 0.5, translateY: 10 }}
-                transition={{ type: "timing", duration: 250, delay: 50 }}
-              >
-                <TouchableOpacity
-                  onPress={onShowIsRouting}
-                  style={{
-                    width: 50,
-                    height: 50,
-                    borderRadius: 25,
-                    backgroundColor: "#3B82F6",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    shadowColor: "#3B82F6",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.35,
-                    shadowRadius: 8,
-                    elevation: 6,
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="navigate" size={22} color="white" />
-                </TouchableOpacity>
-              </MotiView>
+              {/* Navigation Button - moved to standalone FAB */}
 
               {/* Control Group */}
               <MotiView

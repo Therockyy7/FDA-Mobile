@@ -242,3 +242,105 @@ JSX changes:
    - Close → clear everything
 4. **Error cases**: Test với destination quá xa, test không có GPS, test API error (mock)
 5. **Lint**: `npm run lint` — no errors
+
+---
+
+## Update: BE Changes — Flood Zone Handling (2026-03-09)
+
+### Thay đổi BE
+
+1. **AnalyzeRoute**: Dùng bán kính polygon thực tế thay vì 1km để phát hiện route đi qua vùng ngập (critical=150m, warning=100m). `floodRiskScore` chính xác hơn.
+
+2. **Start/End trong flood zone**: Nếu điểm đầu/cuối nằm trong polygon ngập, polygon đó bị loại khỏi `AvoidPolygons` để GraphHopper vẫn route được đến đích. FE nhận 2 trường mới trong `metadata`:
+   - `startInFloodZone: boolean` — điểm xuất phát trong vùng ngập
+   - `endInFloodZone: boolean` — điểm đến trong vùng ngập
+
+### API Response (metadata mới)
+
+```json
+{
+  "metadata": {
+    "safetyStatus": "Safe",
+    "totalFloodZones": 3,
+    "alternativeRouteCount": 2,
+    "startInFloodZone": true,
+    "endInFloodZone": false,
+    "generatedAt": "2026-03-09T10:00:00Z"
+  }
+}
+```
+
+### Files cần sửa
+
+| File | Thay đổi |
+|------|----------|
+| `features/map/types/safe-route.types.ts` | Thêm `startInFloodZone` và `endInFloodZone` vào `SafeRouteApiResponse.metadata` và `RouteMetadata` |
+| `features/map/lib/polyline-utils.ts` | Pass 2 field mới qua `parseRouteResponse` → `metadata` (dùng `?? false` cho backward compat) |
+| `features/map/components/routes/SafeRouteResultCard.tsx` | Hiển thị warning banner khi `startInFloodZone` hoặc `endInFloodZone` là `true` |
+
+### Chi tiết implement
+
+**Step 1 — `safe-route.types.ts`**
+
+Thêm vào `SafeRouteApiResponse.metadata`:
+```ts
+startInFloodZone: boolean;
+endInFloodZone: boolean;
+```
+
+Thêm vào `RouteMetadata`:
+```ts
+startInFloodZone: boolean;
+endInFloodZone: boolean;
+```
+
+**Step 2 — `polyline-utils.ts`** (trong `parseRouteResponse`, object `metadata`)
+
+```ts
+startInFloodZone: response.metadata.startInFloodZone ?? false,
+endInFloodZone: response.metadata.endInFloodZone ?? false,
+```
+
+**Step 3 — `SafeRouteResultCard.tsx`**
+
+Thêm warning banner giữa progress bar và footer, sử dụng cùng style `#FEF3C7 / #D97706 / #92400E` đã có:
+
+```tsx
+{/* Flood Zone Warnings for Start/End */}
+{metadata && (metadata.startInFloodZone || metadata.endInFloodZone) && (
+  <View style={{ gap: 6, marginBottom: 12 }}>
+    {metadata.startInFloodZone && (
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 6,
+        backgroundColor: "#FEF3C7", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 }}>
+        <Ionicons name="warning" size={14} color="#D97706" />
+        <Text style={{ fontSize: 12, color: "#92400E", flex: 1 }}>
+          Điểm xuất phát đang nằm trong vùng ngập. Hãy cẩn thận khi di chuyển.
+        </Text>
+      </View>
+    )}
+    {metadata.endInFloodZone && (
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 6,
+        backgroundColor: "#FEF3C7", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 }}>
+        <Ionicons name="warning" size={14} color="#D97706" />
+        <Text style={{ fontSize: 12, color: "#92400E", flex: 1 }}>
+          Điểm đến đang nằm trong vùng ngập. Hãy cẩn thận khi đến nơi.
+        </Text>
+      </View>
+    )}
+  </View>
+)}
+```
+
+### Không cần sửa
+- `SafeRouteAlternatives.tsx` — không có data mới cần hiển thị
+- `safe-route.service.ts` — API thực trả về fields mới tự động
+- `useSafeRoute.ts` — đã lưu `metadata` nguyên vẹn, fields mới sẽ flow through
+- `app/(tabs)/map/index.tsx` — truyền `safeRoute.metadata` trực tiếp, không cần đổi
+
+### Test
+
+1. Test route bình thường → không hiện banner
+2. Test route có start trong flood zone → hiện banner "Điểm xuất phát..."
+3. Test route có end trong flood zone → hiện banner "Điểm đến..."
+4. Test cả 2 → hiện cả 2 banner
+5. `npx tsc --noEmit` — không có type error

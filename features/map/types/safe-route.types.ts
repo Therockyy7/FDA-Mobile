@@ -4,7 +4,7 @@ import type { TransportMode } from "../components/routes/RouteDirectionPanel";
 
 // ==================== ENUMS & CONSTANTS ====================
 
-export type RouteProfile = "car" | "bike" | "foot";
+export type RouteProfile = "car" | "motorcycle" | "bike" | "foot";
 
 export type RouteSafetyStatus = "Safe" | "Caution" | "Dangerous" | "Blocked";
 
@@ -19,7 +19,8 @@ export const SAFETY_STATUS_FROM_API: Record<number, RouteSafetyStatus> = {
 // Map UI transport mode → API route profile
 export const TRANSPORT_MODE_TO_PROFILE: Record<TransportMode, RouteProfile> = {
   car: "car",
-  motorbike: "car", // GraphHopper has no motorbike profile
+  motorbike: "motorcycle",
+  bicycle: "bike",
   walk: "foot",
 };
 
@@ -112,6 +113,8 @@ export interface SafeRouteApiResponse {
     totalFloodZones: number;
     alternativeRouteCount: number;
     generatedAt: string;
+    startInFloodZone: boolean;
+    endInFloodZone: boolean;
   };
 }
 
@@ -154,4 +157,6 @@ export interface RouteMetadata {
   totalFloodZones: number;
   alternativeRouteCount: number;
   generatedAt: string;
+  startInFloodZone: boolean;
+  endInFloodZone: boolean;
 }

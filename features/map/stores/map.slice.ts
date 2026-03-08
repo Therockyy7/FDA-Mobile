@@ -8,6 +8,7 @@ import type {
   FloodSeverityFeature,
   FloodSeverityGeoJSON,
   FloodStatusParams,
+  FloodZoneProperties,
   MapLayerSettings,
   SensorUpdateData,
 } from "../types/map-layers.types";
@@ -370,8 +371,8 @@ const mapSlice = createSlice({
           const incomingPoints = action.payload.features.filter(
             (f) => f.geometry.type === "Point"
           ) as FloodSeverityFeature[];
-          const incomingLines = action.payload.features.filter(
-            (f) => f.geometry.type === "LineString"
+          const incomingPolygons = action.payload.features.filter(
+            (f) => f.geometry.type === "Polygon"
           );
 
           // Merge Point features by stationId
@@ -387,11 +388,19 @@ const mapSlice = createSlice({
             }
           });
 
-          // Replace all LineString features with new ones from API
-          state.floodSeverity!.features = [
-            ...state.floodSeverity!.features.filter((f) => f.geometry.type === "Point"),
-            ...incomingLines,
-          ];
+          // Merge Polygon features by stationId (keep existing, update/add new)
+          incomingPolygons.forEach((incoming) => {
+            const incomingProps = incoming.properties as FloodZoneProperties;
+            const idx = state.floodSeverity!.features.findIndex(
+              (f) => f.geometry.type === "Polygon" &&
+                (f.properties as FloodZoneProperties).stationId === incomingProps.stationId
+            );
+            if (idx >= 0) {
+              state.floodSeverity!.features[idx] = incoming;
+            } else {
+              state.floodSeverity!.features.push(incoming);
+            }
+          });
 
           state.floodSeverity!.metadata = action.payload.metadata;
         }

@@ -104,7 +104,7 @@ export function MapHeader({
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          marginBottom: 12,
+          marginBottom: 2,
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
@@ -124,28 +124,21 @@ export function MapHeader({
             <Ionicons name="arrow-back" size={20} color={colors.text} />
           </TouchableOpacity>
 
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
             <View
               style={{
-                flexDirection: "row",
+                width: 28,
+                height: 28,
+                borderRadius: 8,
+                backgroundColor: "#3B82F6",
                 alignItems: "center",
-                marginBottom: 2,
+                justifyContent: "center",
+                marginRight: 8,
               }}
             >
-              <View
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 8,
-                  backgroundColor: "#3B82F6",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 8,
-                }}
-              >
-                <Ionicons name="water" size={16} color="white" />
-              </View>
-              <Text
+              <Ionicons name="water" size={16} color="white" />
+            </View>
+            {/* <Text
                 style={{
                   fontSize: 18,
                   fontWeight: "800",
@@ -153,38 +146,50 @@ export function MapHeader({
                 }}
               >
                 Bản đồ lũ lụt
-              </Text>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Ionicons name="location" size={12} color={colors.subtext} />
-              <Text
+              </Text> */}
+            <View>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Ionicons name="location" size={12} color={colors.subtext} />
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "600",
+                    color: colors.text,
+                    marginLeft: 4,
+                  }}
+                >
+                  Đà Nẵng City
+                </Text>
+              </View>
+              <View
                 style={{
-                  fontSize: 12,
-                  fontWeight: "600",
-                  color: colors.subtext,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginTop: 2,
                   marginLeft: 4,
                 }}
               >
-                Đà Nẵng City
-              </Text>
-              <View
-                style={{
-                  width: 4,
-                  height: 4,
-                  borderRadius: 2,
-                  backgroundColor: "#22C55E",
-                  marginHorizontal: 6,
-                }}
-              />
-              <Text
-                style={{
-                  fontSize: 11,
-                  fontWeight: "600",
-                  color: "#22C55E",
-                }}
-              >
-                Đang cập nhật
-              </Text>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <View
+                    style={{
+                      width: 5,
+                      height: 5,
+                      borderRadius: 3,
+                      backgroundColor: "#22C55E",
+                    }}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      fontWeight: "600",
+                      color: "#22C55E",
+                      marginLeft: 4,
+                    }}
+                  >
+                    Đang cập nhật
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
         </View>
@@ -228,7 +233,7 @@ export function MapHeader({
       </View>
 
       {/* Stats Bar - 4 Severity Levels */}
-      <View
+      {/* <View
         style={{
           flexDirection: "row",
           backgroundColor: colors.cardBg,
@@ -280,7 +285,7 @@ export function MapHeader({
             </Text>
           </View>
         ))}
-      </View>
+      </View> */}
     </View>
   );
 }

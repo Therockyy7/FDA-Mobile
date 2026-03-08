@@ -25,6 +25,7 @@ import { useFloodSignalR } from "~/features/map/hooks/useFloodSignalR";
 import {
   SEVERITY_COLORS,
   SEVERITY_LABELS,
+  type FloodSeverityFeature,
 } from "~/features/map/types/map-layers.types";
 import { useColorScheme } from "~/lib/useColorScheme";
 
@@ -52,7 +53,8 @@ export default function StationDetailScreen() {
   );
 
   const station = floodSeverity?.features.find(
-    (f) => f.properties.stationId === stationId,
+    (f): f is FloodSeverityFeature =>
+      f.geometry.type === "Point" && f.properties.stationId === stationId,
   );
 
   const colors = {

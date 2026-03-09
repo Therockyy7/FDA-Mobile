@@ -1,11 +1,12 @@
-// features/map/components/RouteDirectionPanel.tsx
+// features/map/components/routes/RouteDirectionPanel.tsx
 import React from "react";
 import {
-  View,
-  TouchableOpacity,
-  TextInput,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Text } from "~/components/ui/text";
@@ -16,27 +17,66 @@ interface RouteDirectionPanelProps {
   visible: boolean;
   onClose: () => void;
 
-  originLabel: string;        // đã là tên đường hiện tại
+  // Origin
+  originText: string;
+  onOriginChange: (value: string) => void;
+  isUsingGPSOrigin: boolean;
+  onUseGPSAsOrigin: () => void;
+  onPickOriginOnMap: () => void;
+  hasOriginCoord: boolean;
+
+  // Destination
   destinationText: string;
   onDestinationChange: (value: string) => void;
+  isUsingGPSDest: boolean;
+  onUseGPSAsDest: () => void;
+  onPickDestinationOnMap: () => void;
+  hasDestinationCoord: boolean;
 
+  // Swap
+  onSwap: () => void;
+
+  // Transport
   transportMode: TransportMode;
   onModeChange: (mode: TransportMode) => void;
 
+  // Action
   onFindRoute: () => void;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
 export function RouteDirectionPanel({
   visible,
   onClose,
-  originLabel,
+  originText,
+  onOriginChange,
+  isUsingGPSOrigin,
+  onUseGPSAsOrigin,
+  onPickOriginOnMap,
+  hasOriginCoord,
   destinationText,
   onDestinationChange,
+  isUsingGPSDest,
+  onUseGPSAsDest,
+  onPickDestinationOnMap,
+  hasDestinationCoord,
+  onSwap,
   transportMode,
   onModeChange,
   onFindRoute,
+  isLoading,
+  error,
 }: RouteDirectionPanelProps) {
   if (!visible) return null;
+
+  const hasOrigin = isUsingGPSOrigin || hasOriginCoord;
+  const hasDest =
+    isUsingGPSDest ||
+    hasDestinationCoord ||
+    destinationText.trim().length > 0;
+  const canFindRoute = hasOrigin && hasDest;
+  const isDisabled = isLoading || !canFindRoute;
 
   return (
     <KeyboardAvoidingView
@@ -50,12 +90,7 @@ export function RouteDirectionPanel({
       }}
       keyboardVerticalOffset={Platform.OS === "ios" ? 48 : 0}
     >
-      <View
-        style={{
-          paddingHorizontal: 16,
-          paddingTop: 50, // tránh header/status bar
-        }}
-      >
+      <View style={{ paddingHorizontal: 16, paddingTop: 50 }}>
         <View
           style={{
             backgroundColor: "white",
@@ -86,62 +121,102 @@ export function RouteDirectionPanel({
             >
               Chỉ đường an toàn
             </Text>
-            <TouchableOpacity onPress={onClose} hitSlop={8}>
+            <TouchableOpacity
+              onPress={onClose}
+              hitSlop={8}
+              disabled={isLoading}
+            >
               <Ionicons name="close" size={18} color="#6B7280" />
             </TouchableOpacity>
           </View>
 
-          {/* Origin & Destination */}
-          <View style={{ gap: 8, marginBottom: 10 }}>
-            {/* From: hiển thị tên đường hiện tại */}
+          {/* Origin & Destination with Swap */}
+          <View style={{ flexDirection: "row", gap: 8, marginBottom: 10 }}>
+            {/* Left: dot connector */}
             <View
               style={{
-                flexDirection: "row",
                 alignItems: "center",
-                backgroundColor: "#F3F4F6",
-                borderRadius: 999,
-                paddingHorizontal: 10,
-                paddingVertical: 8,
+                justifyContent: "center",
+                paddingVertical: 4,
+                width: 20,
               }}
             >
-              <Ionicons name="radio-button-on" size={14} color="#22C55E" />
-              <Text
+              <View
                 style={{
-                  marginLeft: 8,
-                  fontSize: 13,
-                  color: "#4B5563",
-                  fontWeight: "500",
-                }}
-                numberOfLines={1}
-              >
-                {originLabel || "Vị trí hiện tại"}
-              </Text>
-            </View>
-
-            {/* To */}
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: "#EEF2FF",
-                borderRadius: 999,
-                paddingHorizontal: 10,
-                paddingVertical: 8,
-              }}
-            >
-              <Ionicons name="location-outline" size={16} color="#4F46E5" />
-              <TextInput
-                value={destinationText}
-                onChangeText={onDestinationChange}
-                placeholder="Nhập địa điểm muốn đến..."
-                placeholderTextColor="#9CA3AF"
-                style={{
-                  flex: 1,
-                  marginLeft: 8,
-                  fontSize: 13,
-                  color: "#111827",
+                  width: 10,
+                  height: 10,
+                  borderRadius: 5,
+                  backgroundColor: "#22C55E",
                 }}
               />
+              <View
+                style={{
+                  width: 2,
+                  flex: 1,
+                  backgroundColor: "#D1D5DB",
+                  marginVertical: 2,
+                }}
+              />
+              <View
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 5,
+                  backgroundColor: "#EF4444",
+                }}
+              />
+            </View>
+
+            {/* Center: inputs */}
+            <View style={{ flex: 1, gap: 8 }}>
+              {/* Origin Input */}
+              <LocationInput
+                value={
+                  isUsingGPSOrigin ? "Vị trí hiện tại" : originText
+                }
+                onChangeText={onOriginChange}
+                placeholder="Nhập điểm đi..."
+                isCurrentLocation={isUsingGPSOrigin}
+                hasCoord={hasOriginCoord}
+                onPickOnMap={onPickOriginOnMap}
+                onUseGPS={onUseGPSAsOrigin}
+                showGPSButton={!isUsingGPSOrigin}
+                editable={!isLoading && !isUsingGPSOrigin}
+                accentColor="#22C55E"
+              />
+
+              {/* Destination Input */}
+              <LocationInput
+                value={
+                  isUsingGPSDest
+                    ? "Vị trí hiện tại"
+                    : destinationText
+                }
+                onChangeText={onDestinationChange}
+                placeholder="Nhập điểm đến..."
+                isCurrentLocation={isUsingGPSDest}
+                hasCoord={hasDestinationCoord}
+                onPickOnMap={onPickDestinationOnMap}
+                onUseGPS={onUseGPSAsDest}
+                showGPSButton={!isUsingGPSDest}
+                editable={!isLoading && !isUsingGPSDest}
+                accentColor="#4F46E5"
+              />
+            </View>
+
+            {/* Right: swap button */}
+            <View style={{ justifyContent: "center" }}>
+              <TouchableOpacity
+                onPress={onSwap}
+                disabled={isLoading}
+                style={{
+                  padding: 6,
+                  backgroundColor: "#F3F4F6",
+                  borderRadius: 999,
+                }}
+              >
+                <Ionicons name="swap-vertical" size={18} color="#6B7280" />
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -155,15 +230,10 @@ export function RouteDirectionPanel({
             }}
           >
             <Text
-              style={{
-                fontSize: 12,
-                color: "#6B7280",
-                fontWeight: "500",
-              }}
+              style={{ fontSize: 12, color: "#6B7280", fontWeight: "500" }}
             >
               Phương tiện
             </Text>
-
             <View
               style={{
                 flexDirection: "row",
@@ -210,12 +280,27 @@ export function RouteDirectionPanel({
             </View>
           </View>
 
-          {/* Button find route */}
+          {/* Error message */}
+          {error && (
+            <View
+              style={{
+                backgroundColor: "#FEF2F2",
+                borderRadius: 8,
+                padding: 8,
+                marginBottom: 8,
+              }}
+            >
+              <Text style={{ fontSize: 12, color: "#DC2626" }}>{error}</Text>
+            </View>
+          )}
+
+          {/* Find route button */}
           <TouchableOpacity
             onPress={onFindRoute}
+            disabled={isDisabled}
             style={{
               marginTop: 4,
-              backgroundColor: "#2563EB",
+              backgroundColor: isDisabled ? "#93C5FD" : "#2563EB",
               borderRadius: 999,
               paddingVertical: 10,
               alignItems: "center",
@@ -224,20 +309,146 @@ export function RouteDirectionPanel({
               gap: 6,
             }}
           >
-            <Ionicons name="navigate" size={16} color="white" />
+            {isLoading ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Ionicons name="navigate" size={16} color="white" />
+            )}
             <Text
-              style={{
-                color: "white",
-                fontWeight: "700",
-                fontSize: 13,
-              }}
+              style={{ color: "white", fontWeight: "700", fontSize: 13 }}
             >
-              Tìm đường an toàn nhất
+              {isLoading ? "Đang tìm đường..." : "Tìm đường an toàn nhất"}
             </Text>
           </TouchableOpacity>
         </View>
       </View>
     </KeyboardAvoidingView>
+  );
+}
+
+// ==================== SUB-COMPONENTS ====================
+
+function LocationInput({
+  value,
+  onChangeText,
+  placeholder,
+  isCurrentLocation,
+  hasCoord,
+  onPickOnMap,
+  onUseGPS,
+  showGPSButton,
+  editable,
+  accentColor,
+}: {
+  value: string;
+  onChangeText: (text: string) => void;
+  placeholder: string;
+  isCurrentLocation: boolean;
+  hasCoord: boolean;
+  onPickOnMap: () => void;
+  onUseGPS: () => void;
+  showGPSButton: boolean;
+  editable: boolean;
+  accentColor: string;
+}) {
+  const bgColor = isCurrentLocation
+    ? "#DCFCE7"
+    : hasCoord
+      ? "#DCFCE7"
+      : "#F3F4F6";
+
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: bgColor,
+        borderRadius: 999,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        gap: 4,
+      }}
+    >
+      {isCurrentLocation ? (
+        // Current location badge (tappable to clear)
+        <TouchableOpacity
+          onPress={onUseGPS}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            flex: 1,
+            gap: 6,
+          }}
+        >
+          <Ionicons name="navigate-circle" size={16} color="#16A34A" />
+          <Text
+            style={{
+              fontSize: 13,
+              color: "#16A34A",
+              fontWeight: "600",
+              flex: 1,
+            }}
+            numberOfLines={1}
+          >
+            Vị trí hiện tại
+          </Text>
+        </TouchableOpacity>
+      ) : (
+        // Text input
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor="#9CA3AF"
+          editable={editable}
+          style={{
+            flex: 1,
+            fontSize: 13,
+            color: "#111827",
+            paddingVertical: 2,
+          }}
+        />
+      )}
+
+      {/* Quick GPS button */}
+      {showGPSButton && (
+        <TouchableOpacity
+          onPress={onUseGPS}
+          hitSlop={6}
+          style={{
+            padding: 4,
+            backgroundColor: "#D1FAE5",
+            borderRadius: 999,
+          }}
+        >
+          <Ionicons name="navigate-circle" size={14} color="#16A34A" />
+        </TouchableOpacity>
+      )}
+
+      {/* Pick on map button */}
+      <TouchableOpacity
+        onPress={onPickOnMap}
+        hitSlop={6}
+        style={{
+          padding: 4,
+          backgroundColor: accentColor + "20",
+          borderRadius: 999,
+        }}
+      >
+        <Ionicons name="map" size={14} color={accentColor} />
+      </TouchableOpacity>
+
+      {/* Clear button when current location is active */}
+      {isCurrentLocation && (
+        <TouchableOpacity
+          onPress={() => onChangeText("")}
+          hitSlop={6}
+          style={{ padding: 4 }}
+        >
+          <Ionicons name="close-circle" size={14} color="#9CA3AF" />
+        </TouchableOpacity>
+      )}
+    </View>
   );
 }
 

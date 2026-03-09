@@ -2,10 +2,11 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { View } from "react-native";
-import { Marker, Polyline } from "react-native-maps";
+import { Marker } from "react-native-maps";
 import { Text } from "~/components/ui/text";
 import { FloodRoute, MOCK_SENSORS } from "../../constants/map-data";
 import { getStatusColor } from "../../lib/map-utils";
+import { FloodedRoutePolyline } from "./FloodedRoutePolyline";
 
 interface WaterFlowRouteProps {
   route: FloodRoute;
@@ -18,19 +19,9 @@ export function WaterFlowRoute({
   isSelected,
   onPress,
 }: WaterFlowRouteProps) {
-  const colors = getStatusColor(route.status);
-
-  const getMainColor = () => {
-    if (route.status === "danger") return "#EF4444";
-    if (route.status === "warning") return "#F59E0B";
-    return "#3B82F6";
-  };
-
-  const getHighlightColor = () => {
-    if (route.status === "danger") return "#FECACA";
-    if (route.status === "warning") return "#FDE68A";
-    return "#BFDBFE";
-  };
+  // Extract start and end for snap-to-road API
+  const startPoint = route.coordinates[0];
+  const endPoint = route.coordinates[route.coordinates.length - 1];
 
   const routeSensors = useMemo(() => {
     if (!route.sensorIds) return [];
@@ -39,58 +30,16 @@ export function WaterFlowRoute({
 
   return (
     <>
-      {/* White border */}
-      <Polyline
-        coordinates={route.coordinates}
-        strokeColor="white"
-        strokeWidth={(route.strokeWidth || 6) + 4}
-        lineJoin="round"
-        lineCap="round"
+      {/* Snap-to-road Polyline */}
+      <FloodedRoutePolyline
+        start={startPoint}
+        end={endPoint}
+        status={route.status}
+        strokeWidth={route.strokeWidth || 6}
+        isSelected={isSelected}
+        onPress={onPress}
         zIndex={10}
       />
-
-      {/* Main route color */}
-      <Polyline
-        coordinates={route.coordinates}
-        strokeColor={getMainColor()}
-        strokeWidth={route.strokeWidth || 6}
-        lineJoin="round"
-        lineCap="round"
-        zIndex={11}
-        tappable
-        onPress={onPress}
-      />
-
-      {/* Inner highlight */}
-      <Polyline
-        coordinates={route.coordinates}
-        strokeColor={getHighlightColor()}
-        strokeWidth={(route.strokeWidth || 6) * 0.4}
-        lineJoin="round"
-        lineCap="round"
-        zIndex={12}
-      />
-
-      {/* Flow dots */}
-      <Polyline
-        coordinates={route.coordinates}
-        strokeColor="rgba(255,255,255,0.6)"
-        strokeWidth={(route.strokeWidth || 6) * 0.4}
-        lineDashPattern={[15, 25]}
-        lineCap="round"
-        zIndex={13}
-      />
-
-      {/* Selected state */}
-      {isSelected && (
-        <Polyline
-          coordinates={route.coordinates}
-          strokeColor={colors.main}
-          strokeWidth={1}
-          lineDashPattern={[10, 10]}
-          zIndex={14}
-        />
-      )}
 
       {/* Compact Sensor Markers */}
       {routeSensors.map((sensor) => {

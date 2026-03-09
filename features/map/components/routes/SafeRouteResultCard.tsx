@@ -1,0 +1,265 @@
+// features/map/components/routes/SafeRouteResultCard.tsx
+
+import React from "react";
+import { Animated, TouchableOpacity, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Text } from "~/components/ui/text";
+import { formatDistance, formatDuration } from "../../lib/polyline-utils";
+import type {
+  DecodedRoute,
+  FloodWarningDto,
+  RouteMetadata,
+  RouteSafetyStatus,
+} from "../../types/safe-route.types";
+import {
+  SAFETY_STATUS_COLORS,
+  SAFETY_STATUS_ICONS,
+  SAFETY_STATUS_LABELS,
+} from "../../types/safe-route.types";
+
+interface SafeRouteResultCardProps {
+  route: DecodedRoute;
+  floodWarnings: FloodWarningDto[];
+  metadata: RouteMetadata | null;
+  overallSafetyStatus: RouteSafetyStatus;
+  onClose: () => void;
+  onShowWarnings: () => void;
+  slideAnim: Animated.Value;
+}
+
+export function SafeRouteResultCard({
+  route,
+  floodWarnings,
+  metadata,
+  overallSafetyStatus,
+  onClose,
+  onShowWarnings,
+  slideAnim,
+}: SafeRouteResultCardProps) {
+  const statusColor = SAFETY_STATUS_COLORS[overallSafetyStatus];
+  const statusLabel = SAFETY_STATUS_LABELS[overallSafetyStatus];
+  const statusIcon = SAFETY_STATUS_ICONS[overallSafetyStatus] as any;
+
+  return (
+    <Animated.View
+      style={{
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 30,
+        transform: [{ translateY: slideAnim }],
+      }}
+    >
+      <View
+        style={{
+          marginHorizontal: 12,
+          marginBottom: 16,
+          backgroundColor: "white",
+          borderRadius: 20,
+          padding: 16,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.15,
+          shadowRadius: 12,
+          elevation: 10,
+        }}
+      >
+        {/* Header: Status + Close */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 12,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: statusColor + "20",
+              paddingHorizontal: 10,
+              paddingVertical: 5,
+              borderRadius: 999,
+              gap: 6,
+            }}
+          >
+            <Ionicons name={statusIcon} size={16} color={statusColor} />
+            <Text
+              style={{
+                fontSize: 13,
+                fontWeight: "700",
+                color: statusColor,
+              }}
+            >
+              {statusLabel}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={onClose} hitSlop={8}>
+            <Ionicons name="close-circle" size={24} color="#9CA3AF" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Route Info Grid */}
+        <View
+          style={{
+            flexDirection: "row",
+            gap: 8,
+            marginBottom: 12,
+          }}
+        >
+          {/* Distance */}
+          <InfoBox
+            icon="speedometer-outline"
+            label="Khoảng cách"
+            value={formatDistance(route.distance)}
+          />
+          {/* Time */}
+          <InfoBox
+            icon="time-outline"
+            label="Thời gian"
+            value={formatDuration(route.time)}
+          />
+          {/* Risk Score */}
+          <InfoBox
+            icon="shield-outline"
+            label="Rủi ro"
+            value={`${route.floodRiskScore}/100`}
+            valueColor={
+              route.floodRiskScore > 60
+                ? "#EF4444"
+                : route.floodRiskScore > 30
+                  ? "#F59E0B"
+                  : "#10B981"
+            }
+          />
+        </View>
+
+        {/* Risk Progress Bar */}
+        <View style={{ marginBottom: 12 }}>
+          <View
+            style={{
+              height: 6,
+              backgroundColor: "#F1F5F9",
+              borderRadius: 999,
+              overflow: "hidden",
+            }}
+          >
+            <View
+              style={{
+                height: "100%",
+                width: `${Math.min(route.floodRiskScore, 100)}%`,
+                backgroundColor:
+                  route.floodRiskScore > 60
+                    ? "#EF4444"
+                    : route.floodRiskScore > 30
+                      ? "#F59E0B"
+                      : "#10B981",
+                borderRadius: 999,
+              }}
+            />
+          </View>
+        </View>
+
+        {/* Footer: Warnings + Metadata */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          {floodWarnings.length > 0 ? (
+            <TouchableOpacity
+              onPress={onShowWarnings}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+                backgroundColor: "#FEF3C7",
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                borderRadius: 999,
+              }}
+            >
+              <Ionicons name="warning" size={14} color="#D97706" />
+              <Text
+                style={{ fontSize: 12, fontWeight: "600", color: "#92400E" }}
+              >
+                {floodWarnings.length} cảnh báo ngập
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+              <Text
+                style={{ fontSize: 12, fontWeight: "500", color: "#059669" }}
+              >
+                Không có cảnh báo
+              </Text>
+            </View>
+          )}
+
+          {metadata && (
+            <Text style={{ fontSize: 11, color: "#9CA3AF" }}>
+              {metadata.totalFloodZones} vùng ngập gần đây
+            </Text>
+          )}
+        </View>
+      </View>
+    </Animated.View>
+  );
+}
+
+function InfoBox({
+  icon,
+  label,
+  value,
+  valueColor,
+}: {
+  icon: any;
+  label: string;
+  value: string;
+  valueColor?: string;
+}) {
+  return (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "#F8FAFC",
+        borderRadius: 12,
+        padding: 10,
+        alignItems: "center",
+      }}
+    >
+      <Ionicons name={icon} size={18} color="#64748B" />
+      <Text
+        style={{
+          fontSize: 10,
+          color: "#94A3B8",
+          marginTop: 2,
+          fontWeight: "500",
+        }}
+      >
+        {label}
+      </Text>
+      <Text
+        style={{
+          fontSize: 14,
+          fontWeight: "700",
+          color: valueColor || "#1E293B",
+          marginTop: 2,
+        }}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}

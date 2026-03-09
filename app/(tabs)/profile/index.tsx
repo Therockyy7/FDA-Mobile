@@ -2,7 +2,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
 import { Alert, Platform, StatusBar } from "react-native";
-import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
+import Animated, {
+  useAnimatedScrollHandler,
+  useSharedValue,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ModalChangePassword from "~/features/auth/components/ModalChangePassword";
@@ -30,7 +33,7 @@ export default function ProfileScreen() {
   const signOut = useSignOut();
   const user = useUser();
   const { isDarkColorScheme, setColorScheme } = useColorScheme();
-  
+
   // Reanimated shared value for smooth scroll animation (UI thread)
   const scrollY = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler((event) => {
@@ -57,8 +60,9 @@ export default function ProfileScreen() {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [changePwLoading, setChangePwLoading] = useState(false);
   const [changePwError, setChangePwError] = useState<string | null>(null);
+  const [checkingPassword, setCheckingPassword] = useState(false);
+  const [hasPassword, setHasPassword] = useState(true); // Default true for safety
 
- 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -84,8 +88,8 @@ export default function ProfileScreen() {
       setEmail(user.email || "");
       setPhone(user.phoneNumber || "");
       setOriginalPhone(user.phoneNumber || "");
-      
-      const userAny = user as any; 
+
+      const userAny = user as any;
       setCreatedAt(userAny.createdAt || "");
       setStatus(userAny.status || "");
       setRoles(user.roles || []);
@@ -97,8 +101,11 @@ export default function ProfileScreen() {
 
   const handlePickAvatar = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert("Quyền truy cập", "Cần cấp quyền truy cập thư viện ảnh để thay đổi avatar.");
+    if (status !== "granted") {
+      Alert.alert(
+        "Quyền truy cập",
+        "Cần cấp quyền truy cập thư viện ảnh để thay đổi avatar.",
+      );
       return;
     }
 
@@ -114,10 +121,9 @@ export default function ProfileScreen() {
     }
   };
 
+  // Trong ProfileScreen.tsx
 
-// Trong ProfileScreen.tsx
-
-const handleSaveChanges = async () => {
+  const handleSaveChanges = async () => {
     try {
       setIsUpdating(true);
       const formData = new FormData();
@@ -126,18 +132,19 @@ const handleSaveChanges = async () => {
       formData.append("fullName", fullName.trim());
 
       // 2. AvatarUrl (✅ BỔ SUNG: Gửi lại URL cũ nếu có)
-      // Nếu user không chọn ảnh mới (newAvatarUri là null), ta cần gửi lại avatarUrl cũ 
+      // Nếu user không chọn ảnh mới (newAvatarUri là null), ta cần gửi lại avatarUrl cũ
       // để Backend biết là "tôi muốn giữ nguyên ảnh cũ".
       formData.append("avatarUrl", user?.avatarUrl || "");
 
       // 3. AvatarFile (Chỉ gửi khi có ảnh mới)
       if (newAvatarUri) {
         // Xử lý path cho Android
-        const uri = Platform.OS === "android" && !newAvatarUri.startsWith("file://")
+        const uri =
+          Platform.OS === "android" && !newAvatarUri.startsWith("file://")
             ? `file://${newAvatarUri}`
             : newAvatarUri;
 
-        const filename = uri.split('/').pop() || "avatar.jpg";
+        const filename = uri.split("/").pop() || "avatar.jpg";
         const match = /\.(\w+)$/.exec(filename);
         const type = match ? `image/${match[1]}` : `image/jpeg`;
 
@@ -153,10 +160,10 @@ const handleSaveChanges = async () => {
 
       if (res.data.success) {
         const updatedProfile = res.data.profile;
-        
+
         dispatch(setUser(updatedProfile));
         await AsyncStorage.setItem("user_data", JSON.stringify(updatedProfile));
-        
+
         setNewAvatarUri(null);
         Alert.alert("Thành công", "Cập nhật hồ sơ thành công!");
       }
@@ -164,49 +171,88 @@ const handleSaveChanges = async () => {
       console.error("API Error:", err);
       // Log response data để debug lỗi server trả về
       if (err.response) {
-          console.log("Server data:", err.response.data);
-          console.log("Server status:", err.response.status);
+        console.log("Server data:", err.response.data);
+        console.log("Server status:", err.response.status);
       }
-      
-      const message = err?.response?.data?.message || "Lỗi cập nhật. Vui lòng thử lại.";
+
+      const message =
+        err?.response?.data?.message || "Lỗi cập nhật. Vui lòng thử lại.";
       Alert.alert("Lỗi", message);
     } finally {
       setIsUpdating(false);
     }
-};
-
+  };
 
   const handleConfirmLogout = async () => {
-  try {
-    setIsLoggingOut(true); 
+    try {
+      setIsLoggingOut(true);
 
-    await signOut();
-    setIsLoggingOut(false);
-    setShowLogoutModal(false);
-    router.replace("/(tabs)");
+      await signOut();
+      setIsLoggingOut(false);
+      setShowLogoutModal(false);
+      router.replace("/(tabs)");
+    } catch (err) {
+      console.error("Logout error:", err);
+      Alert.alert("Lỗi", "Có lỗi xảy ra khi đăng xuất.");
 
-  } catch (err) {
-    console.error("Logout error:", err);
-    Alert.alert("Lỗi", "Có lỗi xảy ra khi đăng xuất.");
-    
-    setIsLoggingOut(false);
-    setShowLogoutModal(false); 
-  }
-};
+      setIsLoggingOut(false);
+      setShowLogoutModal(false);
+    }
+  };
 
-  const handleSubmitChangePassword = async ({ currentPassword, newPassword }: any) => {
+  // Check if user has password before showing change password modal
+  const handleOpenChangePassword = async () => {
+    const identifier = user?.email || user?.phoneNumber;
+    if (!identifier) {
+      Alert.alert("Lỗi", "Không tìm thấy thông tin tài khoản.");
+      return;
+    }
+
+    try {
+      setCheckingPassword(true);
+      const res = await AuthService.checkIdentifier(identifier);
+      const { hasPassword: userHasPassword } = res.data;
+
+      setHasPassword(userHasPassword);
+      setShowChangePassword(true);
+    } catch (err: any) {
+      console.error("Check identifier error:", err);
+      // If check fails, assume user has password for safety
+      setHasPassword(true);
+      setShowChangePassword(true);
+    } finally {
+      setCheckingPassword(false);
+    }
+  };
+
+  const handleSubmitChangePassword = async ({
+    currentPassword,
+    newPassword,
+  }: any) => {
     try {
       setChangePwLoading(true);
       setChangePwError(null);
-      if (!user?.email) {
-        setChangePwError("Không tìm thấy email tài khoản.");
-        return;
+
+      if (hasPassword) {
+        // User đã có password -> dùng API change-password
+        await AuthService.changePassword({
+          currentPassword,
+          newPassword,
+          confirmPassword: newPassword,
+        });
+      } else {
+        // User chưa có password -> dùng API set-password
+        if (!user?.email) {
+          setChangePwError("Không tìm thấy email tài khoản.");
+          return;
+        }
+        await AuthService.setPassWord({
+          email: user.email,
+          newPassword,
+          confirmPassword: newPassword,
+        });
       }
-      await AuthService.setPassWord({
-        email: user.email,
-        newPassword,
-        confirmPassword: newPassword,
-      });
+
       Alert.alert("Thành công", "Mật khẩu đã được cập nhật!");
       setShowChangePassword(false);
     } catch (err: any) {
@@ -224,7 +270,10 @@ const handleSaveChanges = async () => {
       await ProfileService.sendPhoneOTP(phone);
       setShowPhoneOTPModal(true);
     } catch (err: any) {
-      Alert.alert("Lỗi", err?.response?.data?.message || "Không thể gửi mã OTP.");
+      Alert.alert(
+        "Lỗi",
+        err?.response?.data?.message || "Không thể gửi mã OTP.",
+      );
     }
   };
 
@@ -262,7 +311,7 @@ const handleSaveChanges = async () => {
       setPhoneOtpError(null);
       setPhoneOtp("");
       Alert.alert("Thông báo", "Mã xác thực mới đã được gửi!");
-    } catch (err: any) {
+    } catch {
       Alert.alert("Lỗi", "Không thể gửi lại OTP.");
     }
   };
@@ -271,24 +320,33 @@ const handleSaveChanges = async () => {
   const displayName = fullName || user?.email || "Người dùng";
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDarkColorScheme ? "#0F172A" : "#F9FAFB" }}>
-      <StatusBar barStyle={isDarkColorScheme ? "light-content" : "dark-content"} backgroundColor={isDarkColorScheme ? "#1E293B" : "#3B82F6"} translucent />
-      
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: isDarkColorScheme ? "#0F172A" : "#F9FAFB",
+      }}
+    >
+      <StatusBar
+        barStyle={isDarkColorScheme ? "light-content" : "dark-content"}
+        backgroundColor={isDarkColorScheme ? "#1E293B" : "#3B82F6"}
+        translucent
+      />
+
       <ProfileHeader
         displayName={displayName}
         email={email}
         avatarUrl={displayAvatar}
         // ✅ Thay đổi: Mở modal thay vì gọi API ngay
-        onLogout={() => setShowLogoutModal(true)} 
+        onLogout={() => setShowLogoutModal(true)}
         createdAt={createdAt}
         role={roles}
         status={status}
         onPickAvatar={handlePickAvatar}
         scrollY={scrollY}
       />
-      
-      <Animated.ScrollView 
-        style={{ flex: 1 }} 
+
+      <Animated.ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 120 }}
         scrollEventThrottle={16}
         onScroll={scrollHandler}
@@ -301,44 +359,51 @@ const handleSaveChanges = async () => {
           setPhone={setPhone}
           address={address}
           setAddress={setAddress}
-          onChangePassword={() => setShowChangePassword(true)}
+          onChangePassword={handleOpenChangePassword}
           isEmailVerified={isEmailVerified}
           isPhoneVerified={isPhoneVerified}
           provider={provider}
           originalPhone={originalPhone}
           onVerifyPhone={handleSendPhoneOTP}
+          isCheckingPassword={checkingPassword}
         />
-        
+
         <NotificationSettingsSection
-          emergencyAlerts={emergencyAlerts} setEmergencyAlerts={setEmergencyAlerts}
-          weatherUpdates={weatherUpdates} setWeatherUpdates={setWeatherUpdates}
-          trafficAlerts={trafficAlerts} setTrafficAlerts={setTrafficAlerts}
-          weeklyReport={weeklyReport} setWeeklyReport={setWeeklyReport}
+          emergencyAlerts={emergencyAlerts}
+          setEmergencyAlerts={setEmergencyAlerts}
+          weatherUpdates={weatherUpdates}
+          setWeatherUpdates={setWeatherUpdates}
+          trafficAlerts={trafficAlerts}
+          setTrafficAlerts={setTrafficAlerts}
+          weeklyReport={weeklyReport}
+          setWeeklyReport={setWeeklyReport}
         />
-        
+
         <AppSettingsSection
           darkMode={isDarkColorScheme}
-          setDarkMode={(value) => setColorScheme(value ? 'dark' : 'light')}
-          autoRefresh={autoRefresh} setAutoRefresh={setAutoRefresh}
-          soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled}
+          setDarkMode={(value) => setColorScheme(value ? "dark" : "light")}
+          autoRefresh={autoRefresh}
+          setAutoRefresh={setAutoRefresh}
+          soundEnabled={soundEnabled}
+          setSoundEnabled={setSoundEnabled}
         />
-        
+
         <OtherSettingsSection />
-        
+
         <SaveButton onPress={handleSaveChanges} loading={isUpdating} />
-        
+
         {/* Change Password Modal */}
         <ModalChangePassword
           visible={showChangePassword}
           loading={changePwLoading}
           error={changePwError}
-          requireCurrentPassword={true}
+          requireCurrentPassword={hasPassword}
           onSubmit={handleSubmitChangePassword}
           onClose={() => setShowChangePassword(false)}
         />
 
         {/* ✅ Confirm Logout Modal */}
-        <ModalConfirmLogout 
+        <ModalConfirmLogout
           visible={showLogoutModal}
           loading={isLoggingOut}
           onConfirm={handleConfirmLogout}
@@ -361,7 +426,6 @@ const handleSaveChanges = async () => {
           onResend={handleResendPhoneOTP}
           error={phoneOtpError}
         />
-
       </Animated.ScrollView>
     </SafeAreaView>
   );

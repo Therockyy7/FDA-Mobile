@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { getFCMToken } from "~/features/alerts/fcm/getFCMToken";
 import { ProfileService } from "~/features/profile/services/profile.service";
 import { AuthService } from "../services/auth.service";
 
@@ -87,18 +88,18 @@ export const initializeAuth = createAsyncThunk(
     try {
       // Ưu tiên lấy từ Storage trước cho nhanh để hiện UI
       let user = storedUser ? JSON.parse(storedUser) : null;
-      
+
       // Sau đó gọi API để update thông tin mới nhất (ngầm)
       const res = await ProfileService.getProfile();
       user = res.data.profile as User;
-      
+
       // Cập nhật lại user mới nhất vào storage
       await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
 
-      return { 
-        isAuthenticated: true, 
-        user, 
-        accessToken, 
+      return {
+        isAuthenticated: true,
+        user,
+        accessToken,
         refreshToken,
         expiresAt: (await AsyncStorage.getItem(EXPIRES_AT_KEY)) || undefined
       };
@@ -125,11 +126,14 @@ export const signIn = createAsyncThunk<
   { rejectValue: AuthError } // Config
 >("auth/signIn", async ({ email, password }, { rejectWithValue }) => {
   try {
+    const fcmToken = await getFCMToken();
+
     const res = await AuthService.loginUnified({
       identifier: email,
       otpCode: null,
       password,
       deviceInfo: "mobile-app",
+      fcmToken,
     });
 
     const { accessToken, refreshToken, expiresAt } = res.data;
@@ -142,12 +146,12 @@ export const signIn = createAsyncThunk<
     await saveAuthData({ accessToken, refreshToken, expiresAt }, profile);
 
     // Return data for extraReducers
-    return { 
-      user: profile, 
-      accessToken, 
-      refreshToken, 
-      expiresAt, 
-      isNewUser: false 
+    return {
+      user: profile,
+      accessToken,
+      refreshToken,
+      expiresAt,
+      isNewUser: false
     };
   } catch (err: any) {
     const message = err?.response?.data?.message || "Đăng nhập thất bại.";
@@ -162,25 +166,28 @@ export const verifyLogin = createAsyncThunk<
   { rejectValue: AuthError }
 >("auth/verifyLogin", async (payload, { rejectWithValue }) => {
   try {
+    const fcmToken = await getFCMToken();
+
     const res = await AuthService.loginUnified({
       identifier: payload.email,
       otpCode: payload.otpCode,
       password: payload.password,
       deviceInfo: payload.deviceInfo,
+      fcmToken,
     });
 
     const { accessToken, refreshToken, expiresAt } = res.data;
     const profileRes = await ProfileService.getProfile(accessToken);
-    const profile = profileRes.data.profile ;
+    const profile = profileRes.data.profile;
 
     await saveAuthData({ accessToken, refreshToken, expiresAt }, profile);
 
-    return { 
-      user: profile, 
-      accessToken, 
-      refreshToken, 
-      expiresAt, 
-      isNewUser: false 
+    return {
+      user: profile,
+      accessToken,
+      refreshToken,
+      expiresAt,
+      isNewUser: false
     };
   } catch (err: any) {
     return rejectWithValue({ message: err?.response?.data?.message || "Đăng nhập thất bại." });
@@ -195,16 +202,19 @@ export const verifyOtpLogin = createAsyncThunk<
   { rejectValue: AuthError }
 >("auth/verifyOtpLogin", async ({ identifier, otpCode }, { rejectWithValue }) => {
   try {
+    const fcmToken = await getFCMToken();
+
     const res = await AuthService.loginUnified({
       identifier,
       otpCode,
       password: null,
       deviceInfo: "mobile-app",
+      fcmToken,
     });
 
     // Check trường hợp logic riêng của backend bạn
     if (res.data?.success === false || !res.data.accessToken) {
-       return rejectWithValue({ message: res.data.message || "OTP không hợp lệ" });
+      return rejectWithValue({ message: res.data.message || "OTP không hợp lệ" });
     }
 
     const { accessToken, refreshToken, expiresAt } = res.data;
@@ -213,13 +223,13 @@ export const verifyOtpLogin = createAsyncThunk<
 
     await saveAuthData({ accessToken, refreshToken, expiresAt }, profile);
 
-    // Giả sử logic check new user nằm ở đây, tạm thời để false hoặc lấy từ res.data nếu có
-    return { 
-      user: profile, 
-      accessToken, 
-      refreshToken, 
-      expiresAt, 
-      isNewUser: res.data.isNewUser || false // Lấy từ response nếu có
+    // Lấy isNewUser từ response nếu có
+    return {
+      user: profile,
+      accessToken,
+      refreshToken,
+      expiresAt,
+      isNewUser: res.data.isNewUser || false
     };
   } catch (err: any) {
     return rejectWithValue({ message: err?.response?.data?.message || "Xác thực OTP thất bại." });
@@ -243,18 +253,18 @@ export const signInByGoogle = createAsyncThunk<
 
     await AsyncStorage.setItem("user_data", JSON.stringify(fullProfile));
 
-    return { 
-      user: fullProfile, 
-      accessToken, 
-      refreshToken, 
+    return {
+      user: fullProfile,
+      accessToken,
+      refreshToken,
       expiresAt,
-      isNewUser: isNewUser || false 
+      isNewUser: isNewUser || false
     };
   } catch (err: any) {
     console.error("Redux Google Login Error:", err);
     return rejectWithValue({ message: "Không thể lấy thông tin người dùng." });
   }
-}); 
+});
 
 // 6. Sign Out
 export const signOut = createAsyncThunk(
@@ -272,13 +282,13 @@ export const resendOtp = createAsyncThunk<
   { rejectValue: AuthError }
 >("auth/resendOtp", async ({ identifier }, { rejectWithValue }) => {
   try {
-   
+
     await AuthService.sendOTP(identifier);
 
     return;
   } catch (err: any) {
-    return rejectWithValue({ 
-      message: err?.response?.data?.message || "Gửi lại mã thất bại. Vui lòng thử lại." 
+    return rejectWithValue({
+      message: err?.response?.data?.message || "Gửi lại mã thất bại. Vui lòng thử lại."
     });
   }
 });
@@ -300,9 +310,9 @@ const handleLoginSuccess = (state: AuthState, action: PayloadAction<AuthSuccessP
 // ⚠️ Thay đổi: Tham số thứ 2 đổi từ "action" thành "error" (AuthError | undefined)
 // Lý do: Để khớp với cách gọi "handleLoginError(state, action.payload)"
 const handleLoginError = (state: AuthState, error: AuthError | undefined) => {
-   state.error = error?.message || "Lỗi xác thực không xác định";
-   // Lưu ý: Không set status = 'unauthenticated' ở đây 
-   // để tránh việc App tự động chuyển màn hình khi đang nhập liệu sai
+  state.error = error?.message || "Lỗi xác thực không xác định";
+  // Lưu ý: Không set status = 'unauthenticated' ở đây 
+  // để tránh việc App tự động chuyển màn hình khi đang nhập liệu sai
 };
 
 // --- SLICE ---
@@ -313,7 +323,7 @@ const authSlice = createSlice({
     setUser(state, action: PayloadAction<User | null>) {
       const newUser = action.payload;
       state.user = newUser;
-    
+
       if (state.session) {
         state.session.user = newUser;
       }
@@ -328,7 +338,7 @@ const authSlice = createSlice({
     },
     // ✅ Action quan trọng cho TourGuide
     finishOnboarding: (state) => {
-        state.isNewUser = false;
+      state.isNewUser = false;
     }
   },
   extraReducers: (builder) => {
@@ -365,7 +375,7 @@ const authSlice = createSlice({
       // SignIn (Password)
       .addCase(signIn.fulfilled, handleLoginSuccess)
       .addCase(signIn.rejected, (state, action) => handleLoginError(state, action.payload))
-      
+
       // VerifyLogin (Password + OTP)
       .addCase(verifyLogin.fulfilled, handleLoginSuccess)
       .addCase(verifyLogin.rejected, (state, action) => handleLoginError(state, action.payload))
@@ -389,5 +399,5 @@ const authSlice = createSlice({
 });
 
 // Export Actions & Reducer
-export const {setUser, setSession, setStatus, finishOnboarding } = authSlice.actions;
+export const { setUser, setSession, setStatus, finishOnboarding } = authSlice.actions;
 export default authSlice.reducer;

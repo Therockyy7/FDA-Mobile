@@ -3,16 +3,19 @@ import { useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "~/app/store";
 import {
-  DEFAULT_MAP_SETTINGS,
-  fetchAreas,
-  fetchFloodSeverity,
-  loadMapSettings,
-  saveMapSettings,
-  setBaseMap,
-  setOpacity,
-  toggleOverlay,
+    DEFAULT_MAP_SETTINGS,
+    fetchAreas,
+    fetchFloodSeverity,
+    loadMapSettings,
+    saveMapSettings,
+    setBaseMap,
+    setOpacity,
+    toggleOverlay,
 } from "../stores/map.slice";
-import type { FloodStatusParams, MapLayerSettings } from "../types/map-layers.types";
+import type {
+    FloodStatusParams,
+    MapLayerSettings,
+} from "../types/map-layers.types";
 
 const SAVE_DEBOUNCE_MS = 500;
 
@@ -21,16 +24,28 @@ export function useMapLayerSettings() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Selectors with safe defaults
-  const settings = useSelector((state: RootState) => state.map?.settings ?? DEFAULT_MAP_SETTINGS);
-  const floodSeverity = useSelector((state: RootState) => state.map?.floodSeverity ?? null);
+  const settings = useSelector(
+    (state: RootState) => state.map?.settings ?? DEFAULT_MAP_SETTINGS,
+  );
+  const floodSeverity = useSelector(
+    (state: RootState) => state.map?.floodSeverity ?? null,
+  );
   const areas = useSelector((state: RootState) => state.map?.areas ?? []);
-  const loading = useSelector((state: RootState) => state.map?.loading ?? false);
-  const floodLoading = useSelector((state: RootState) => state.map?.floodLoading ?? false);
-  const areasLoading = useSelector((state: RootState) => state.map?.areasLoading ?? false);
-  const settingsLoaded = useSelector((state: RootState) => state.map?.settingsLoaded ?? false);
+  const loading = useSelector(
+    (state: RootState) => state.map?.loading ?? false,
+  );
+  const floodLoading = useSelector(
+    (state: RootState) => state.map?.floodLoading ?? false,
+  );
+  const areasLoading = useSelector(
+    (state: RootState) => state.map?.areasLoading ?? false,
+  );
+  const settingsLoaded = useSelector(
+    (state: RootState) => state.map?.settingsLoaded ?? false,
+  );
   const error = useSelector((state: RootState) => state.map?.error ?? null);
   const isAuthenticated = useSelector(
-    (state: RootState) => state.auth?.status === "authenticated"
+    (state: RootState) => state.auth?.status === "authenticated",
   );
 
   // Load settings on mount (if not already loaded)
@@ -40,12 +55,8 @@ export function useMapLayerSettings() {
     }
   }, [dispatch, isAuthenticated, settingsLoaded]);
 
-  // Load flood severity when flood layer is enabled
-  useEffect(() => {
-    if (settings.overlays.flood && !floodSeverity) {
-      dispatch(fetchFloodSeverity(undefined));
-    }
-  }, [dispatch, settings.overlays.flood, floodSeverity]);
+  // Note: flood severity is fetched by MapScreen with viewport bounds,
+  // not here, to avoid duplicate calls without bounds.
 
   // Debounced save function
   const debouncedSave = useCallback(
@@ -57,7 +68,7 @@ export function useMapLayerSettings() {
         dispatch(saveMapSettings({ settings: newSettings, isAuthenticated }));
       }, SAVE_DEBOUNCE_MS);
     },
-    [dispatch, isAuthenticated]
+    [dispatch, isAuthenticated],
   );
 
   // Toggle overlay and save
@@ -73,7 +84,7 @@ export function useMapLayerSettings() {
       };
       debouncedSave(newSettings);
     },
-    [dispatch, settings, debouncedSave]
+    [dispatch, settings, debouncedSave],
   );
 
   // Set base map and save
@@ -83,7 +94,7 @@ export function useMapLayerSettings() {
       const newSettings = { ...settings, baseMap };
       debouncedSave(newSettings);
     },
-    [dispatch, settings, debouncedSave]
+    [dispatch, settings, debouncedSave],
   );
 
   // Set opacity and save
@@ -96,7 +107,7 @@ export function useMapLayerSettings() {
       };
       debouncedSave(newSettings);
     },
-    [dispatch, settings, debouncedSave]
+    [dispatch, settings, debouncedSave],
   );
 
   // Refresh flood severity data
@@ -104,12 +115,12 @@ export function useMapLayerSettings() {
     (params?: FloodStatusParams) => {
       dispatch(fetchFloodSeverity(params));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Refresh areas data
   const refreshAreas = useCallback(() => {
-    dispatch(fetchAreas());
+    return dispatch(fetchAreas()).unwrap();
   }, [dispatch]);
 
   return {

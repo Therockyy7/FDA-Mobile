@@ -1,12 +1,15 @@
 // features/map/stores/map.slice.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { AreaService } from "~/features/areas/services/area.service";
 import { MapService } from "../services/map.service";
 import type {
   AreaWithStatus,
+  FloodSeverityFeature,
   FloodSeverityGeoJSON,
   FloodStatusParams,
-  MapLayerSettings
+  MapLayerSettings,
+  SensorUpdateData,
 } from "../types/map-layers.types";
 
 // Constants
@@ -150,12 +153,12 @@ export const fetchAreas = createAsyncThunk<
 >("map/fetchAreas", async (_, { rejectWithValue }) => {
   try {
     // Fetch all areas
-    const areas = await MapService.getAreas();
+    const areas = await AreaService.getAreas();
     
     // Fetch status for each area in parallel
     const areasWithStatus = await Promise.all(
       areas.map(async (area) => {
-        const status = await MapService.getAreaStatus(area.id);
+        const status = await AreaService.getAreaStatus(area.id);
         return {
           ...area,
           status: status.status,
@@ -167,7 +170,7 @@ export const fetchAreas = createAsyncThunk<
       })
     );
     
-    console.log(`✅ Loaded ${areasWithStatus.length} areas with status`);
+    // console.log(`✅ Loaded ${areasWithStatus.length} areas with status`);
     return areasWithStatus;
   } catch (error: any) {
     console.error("Failed to fetch areas:", error);
@@ -258,6 +261,70 @@ const mapSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+
+    /**
+     * Apply a real-time sensor update from SignalR.
+     * Merges into existing floodSeverity by stationId.
+     */
+    applyRealtimeUpdate: (
+      state,
+      action: PayloadAction<SensorUpdateData>
+    ) => {
+      const update = action.payload;
+
+      // If REST hasn't loaded yet, ignore
+      if (!state.floodSeverity) return;
+
+      const existingIndex = state.floodSeverity.features.findIndex(
+        (f) => f.geometry.type === "Point" && (f as FloodSeverityFeature).properties.stationId === update.stationId
+      );
+
+      if (existingIndex >= 0) {
+        // Update existing station in place (Immer handles immutability)
+        const feature = state.floodSeverity.features[existingIndex] as FloodSeverityFeature;
+        const props = feature.properties;
+        props.waterLevel = update.waterLevel;
+        props.distance = update.distance;
+        props.sensorHeight = update.sensorHeight;
+        props.unit = update.unit;
+        props.severity = update.severity;
+        props.severityLevel = update.severityLevel;
+        props.markerColor = update.markerColor;
+        props.alertLevel = update.alertLevel;
+        props.measuredAt = update.measuredAt;
+        // Update coordinates in case station moved
+        feature.geometry.coordinates = [update.longitude, update.latitude];
+      } else {
+        // Append new station
+        const newFeature: FloodSeverityFeature = {
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [update.longitude, update.latitude],
+          },
+          properties: {
+            stationId: update.stationId,
+            stationCode: update.stationCode,
+            stationName: update.stationName,
+            locationDesc: null,
+            roadName: null,
+            waterLevel: update.waterLevel,
+            distance: update.distance,
+            sensorHeight: update.sensorHeight,
+            unit: update.unit,
+            measuredAt: update.measuredAt,
+            severity: update.severity,
+            severityLevel: update.severityLevel,
+            stationStatus: "active",
+            lastSeenAt: null,
+            markerColor: update.markerColor,
+            alertLevel: update.alertLevel,
+          },
+        };
+        state.floodSeverity.features.push(newFeature);
+        state.floodSeverity.metadata.totalStations += 1;
+      }
+    },
   },
   extraReducers: (builder) => {
     // Load settings
@@ -267,7 +334,7 @@ const mapSlice = createSlice({
         state.error = null;
       })
       .addCase(loadMapSettings.fulfilled, (state, action) => {
-        console.log("✅ Settings loaded:", action.payload);
+      
         state.settings = action.payload;
         state.loading = false;
         state.settingsLoaded = true;
@@ -296,7 +363,38 @@ const mapSlice = createSlice({
       .addCase(fetchFloodSeverity.fulfilled, (state, action) => {
         console.log("✅ Flood severity loaded:", action.payload);
 
-        state.floodSeverity = action.payload;
+        // Merge: keep existing stations, update/add from new response
+        if (!state.floodSeverity) {
+          state.floodSeverity = action.payload;
+        } else {
+          const incomingPoints = action.payload.features.filter(
+            (f) => f.geometry.type === "Point"
+          ) as FloodSeverityFeature[];
+          const incomingLines = action.payload.features.filter(
+            (f) => f.geometry.type === "LineString"
+          );
+
+          // Merge Point features by stationId
+          incomingPoints.forEach((incoming) => {
+            const idx = state.floodSeverity!.features.findIndex(
+              (f) => f.geometry.type === "Point" &&
+                (f as FloodSeverityFeature).properties.stationId === incoming.properties.stationId
+            );
+            if (idx >= 0) {
+              state.floodSeverity!.features[idx] = incoming;
+            } else {
+              state.floodSeverity!.features.push(incoming);
+            }
+          });
+
+          // Replace all LineString features with new ones from API
+          state.floodSeverity!.features = [
+            ...state.floodSeverity!.features.filter((f) => f.geometry.type === "Point"),
+            ...incomingLines,
+          ];
+
+          state.floodSeverity!.metadata = action.payload.metadata;
+        }
         state.floodLoading = false;
       })
       .addCase(fetchFloodSeverity.rejected, (state, action) => {
@@ -311,7 +409,6 @@ const mapSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchAreas.fulfilled, (state, action) => {
-        console.log("✅ Areas loaded:", action.payload.length);
         state.areas = action.payload;
         state.areasLoading = false;
       })
@@ -330,6 +427,7 @@ export const {
   resetSettings,
   clearFloodSeverity,
   clearError,
+  applyRealtimeUpdate,
 } = mapSlice.actions;
 
 // Export reducer

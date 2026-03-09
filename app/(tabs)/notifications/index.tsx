@@ -47,12 +47,12 @@ export default function NotificationsScreen() {
   }, []);
 
   const handleMapPress = useCallback((notificationId: string) => {
-    console.log("View map for notification:", notificationId);
+    // console.log("View map for notification:", notificationId);
     router.push("/map" as any);
   }, [router]);
 
   const handleDirectionsPress = useCallback((notificationId: string) => {
-    console.log("Get directions for notification:", notificationId);
+    // console.log("Get directions for notification:", notificationId);
   }, []);
 
   const unreadCount = useMemo(
@@ -87,7 +87,7 @@ export default function NotificationsScreen() {
       <NotificationsHeader
         unreadCount={unreadCount}
         onFilterPress={() => {
-          console.log("Open filter modal");
+          // console.log("Open filter modal");
         }}
       />
 

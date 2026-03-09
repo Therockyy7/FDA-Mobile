@@ -9,10 +9,10 @@ type MapType = "standard" | "satellite" | "hybrid";
 
 interface MapHeaderProps {
   stats: {
-    safe: number; // < 1.0m
-    caution: number; // 1.0 - 1.9m
-    warning: number; // 2.0 - 2.9m
-    critical: number; // >= 3.0m
+    safe: number; // < 10 cm
+    caution: number; // 10-20 cm
+    warning: number; // 20-40 cm
+    critical: number; // >= 40 cm
   };
   mapType: MapType;
   onMapTypeChange: () => void;

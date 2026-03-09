@@ -7,12 +7,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { AlertSettingsService } from "../services/alert-settings.service";
 import type {
-  AlertSettingsColors,
-  AlertSettingsFormData,
-  AlertSettingsHeaderColors,
-  AlertSeverity,
-  NotificationChannels,
-  QuietHours,
+    AlertSettingsColors,
+    AlertSettingsFormData,
+    AlertSettingsHeaderColors,
+    AlertSeverity,
+    NotificationChannels,
+    QuietHours,
 } from "../types/alert-settings.types";
 import AlertSettingsHeader from "./alert-settings/AlertSettingsHeader";
 import MinimumSeveritySection from "./alert-settings/MinimumSeveritySection";

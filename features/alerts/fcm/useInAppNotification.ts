@@ -32,18 +32,18 @@ export const useInAppNotification = () => {
         useState<InAppNotificationPayload | null>(null);
     const [visible, setVisible] = useState(false);
 
-    const translateY = useRef(new Animated.Value(-120)).current;
+    const translateY = useRef(new Animated.Value(-150)).current;
     const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const dismiss = useCallback(() => {
         if (dismissTimer.current) clearTimeout(dismissTimer.current);
         Animated.timing(translateY, {
-            toValue: -120,
+            toValue: -200,
             duration: ANIMATION_DURATION_MS,
             useNativeDriver: true,
         }).start(() => {
             setVisible(false);
-            setNotification(null);
+            // Optionally we can setNotification(null) but it's safe to keep data until next
         });
     }, [translateY]);
 
@@ -59,17 +59,24 @@ export const useInAppNotification = () => {
                 data,
             };
 
+            console.log("🔥 [DEBUG] useInAppNotification -> payload generated:", payload);
+
             setNotification(payload);
             setVisible(true);
 
-            // Reset and animate slide-in
-            translateY.setValue(-120);
+            console.log("🔥 [DEBUG] useInAppNotification -> animating in...");
 
-            Animated.timing(translateY, {
-                toValue: 0,
-                duration: ANIMATION_DURATION_MS,
-                useNativeDriver: true,
-            }).start();
+            // Wait a tick for React tree to reconcile 'visible=true'
+            setTimeout(() => {
+                translateY.setValue(-200);
+                Animated.timing(translateY, {
+                    toValue: 0,
+                    duration: 400, // slightly slower for observation
+                    useNativeDriver: true,
+                }).start(() => {
+                    console.log("🔥 [DEBUG] useInAppNotification -> animation completed");
+                });
+            }, 50);
 
             // Auto dismiss
             dismissTimer.current = setTimeout(() => {

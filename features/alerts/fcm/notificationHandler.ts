@@ -1,6 +1,7 @@
 // features/alerts/fcm/notificationHandler.ts
 import messaging, {
     FirebaseMessagingTypes,
+    getInitialNotification
 } from "@react-native-firebase/messaging";
 
 /**
@@ -152,7 +153,7 @@ export const registerBackgroundTapHandler = (
 export const checkKilledStateNotification = async (
     onNavigate?: (data: FCMNotificationData) => void,
 ): Promise<void> => {
-    const remoteMessage = await messaging().getInitialNotification();
+    const remoteMessage = await getInitialNotification(messaging());
     if (remoteMessage) {
         handleMessage(remoteMessage, "KILLED_STATE", onNavigate);
     }

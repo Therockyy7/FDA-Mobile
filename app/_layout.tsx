@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
-import { ActivityIndicator, Platform, View } from "react-native";
+import { ActivityIndicator, Platform, View, ToastAndroid, Alert } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
@@ -84,7 +84,15 @@ function RootStack() {
   useEffect(() => {
     return initFCM(
       (data) => navigateToNotification(data),  // onNavigate (background/killed tap)
-      (data) => triggerNotification(data),      // onShowBanner (foreground)
+      (data) => {
+        console.log("🔥 [DEBUG] _layout.tsx -> onShowBanner called with data:", data);
+        if (Platform.OS === 'android') {
+           ToastAndroid.show("Có thông báo mới (Foreground)!", ToastAndroid.LONG);
+        } else {
+           Alert.alert("Có thông báo mới (Foreground)!", data.title ?? "");
+        }
+        triggerNotification(data);
+      },      // onShowBanner (foreground)
     );
   }, [navigateToNotification, triggerNotification]);
 
@@ -104,24 +112,26 @@ function RootStack() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1, zIndex: 9999 }}>
       <SafeAreaProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="community" />
-          <Stack.Screen name="alerts" />
-        </Stack>
-      </SafeAreaProvider>
+        <View style={{ flex: 1 }}>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="community" />
+            <Stack.Screen name="alerts" />
+          </Stack>
 
-      {/* ── In-App FCM Notification Banner ── */}
-      <InAppNotificationBanner
-        notification={notification}
-        visible={visible}
-        translateY={translateY}
-        onPress={(n) => n.data && navigateToNotification(n.data)}
-        onDismiss={dismiss}
-      />
+          {/* ── In-App FCM Notification Banner ── */}
+          <InAppNotificationBanner
+            notification={notification}
+            visible={visible}
+            translateY={translateY}
+            onPress={(n) => n.data && navigateToNotification(n.data)}
+            onDismiss={dismiss}
+          />
+        </View>
+      </SafeAreaProvider>
 
       <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
     </GestureHandlerRootView>

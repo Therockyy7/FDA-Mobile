@@ -38,7 +38,7 @@ export const useInAppNotification = () => {
     const dismiss = useCallback(() => {
         if (dismissTimer.current) clearTimeout(dismissTimer.current);
         Animated.timing(translateY, {
-            toValue: -200,
+            toValue: -150,
             duration: ANIMATION_DURATION_MS,
             useNativeDriver: true,
         }).start(() => {
@@ -68,7 +68,7 @@ export const useInAppNotification = () => {
 
             // Wait a tick for React tree to reconcile 'visible=true'
             setTimeout(() => {
-                translateY.setValue(-200);
+                translateY.setValue(-150);
                 Animated.timing(translateY, {
                     toValue: 0,
                     duration: 400, // slightly slower for observation

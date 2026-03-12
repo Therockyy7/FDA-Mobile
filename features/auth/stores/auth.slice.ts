@@ -244,9 +244,11 @@ export const signInByGoogle = createAsyncThunk<
 >("auth/signInByGoogle", async (payload, { rejectWithValue }) => {
   try {
     const { accessToken, refreshToken, expiresAt, isNewUser } = payload;
+    
+    // Yêu cầu quyền thông báo & lấy token sau khi Google cấp SDK token
+    await getFCMToken();
 
     await saveAuthData({ accessToken, refreshToken, expiresAt }, payload.user);
-
 
     const profileRes = await ProfileService.getProfile(accessToken);
     const fullProfile = profileRes.data.profile as User;

@@ -55,11 +55,11 @@ export const InAppNotificationBanner: React.FC<
     : SEVERITY_CONFIG.INFO;
 
   const themeColors = {
-    cardBg: isDarkColorScheme ? "#1A1A1A" : "hsl(240 10% 3.9%)", // Dark grey cho dark mode
-    borderColor: isDarkColorScheme ? "#333333" : "#E5E7EB",
-    title: isDarkColorScheme ? "#FFFFFF" : "#1F2937", // Trắng cho dark, tối cho light
-    body: isDarkColorScheme ? "#E5E7EB" : "#4B5563", // Xám sáng cho dark, xám tối cho light
-    closeIcon: isDarkColorScheme ? "#9CA3AF" : "#6B7280",
+    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF", // Dark navy cho dark, trắng cho light
+    borderColor: isDarkColorScheme ? "#334155" : "#E2E8F0",
+    title: isDarkColorScheme ? "#F8FAFC" : "#0F172A",
+    body: isDarkColorScheme ? "#CBD5E1" : "#475569",
+    closeIcon: isDarkColorScheme ? "#94A3B8" : "#64748B",
   };
 
   return (
@@ -141,8 +141,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 12,
     right: 12,
-    zIndex: 99999,
-    elevation: 10,
+    zIndex: 999999,
+    elevation: 9999,
     // Soft shadow
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },

@@ -1,6 +1,12 @@
 // features/alerts/fcm/getFCMToken.ts
-import messaging from "@react-native-firebase/messaging";
-import { Platform } from "react-native";
+import {
+    AuthorizationStatus,
+    getMessaging,
+    getToken,
+    onTokenRefresh,
+    requestPermission,
+} from "@react-native-firebase/messaging";
+import { PermissionsAndroid, Platform } from "react-native";
 
 /**
  * Requests notification permission from the user.
@@ -8,16 +14,23 @@ import { Platform } from "react-native";
  * @returns true if permission was granted, false otherwise
  */
 export const requestNotificationPermission = async (): Promise<boolean> => {
-    // Android < 13 permissions are granted by default
-    if (Platform.OS === "android") {
-        return true;
+    // 1. Android 13+ requires explicit POST_NOTIFICATIONS runtime permission
+    if (Platform.OS === "android" && Platform.Version >= 33) {
+        const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+            console.log("[FCM] Android 13+ Notification permission denied");
+            return false;
+        }
     }
 
-    // iOS — must explicitly request
-    const authStatus = await messaging().requestPermission();
+    // 2. Dùng hàm của Firebase để xin quyền cho iOS (và đăng ký trên Android)
+    const authStatus = await requestPermission(getMessaging());
+    
     const enabled =
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+        authStatus === AuthorizationStatus.AUTHORIZED ||
+        authStatus === AuthorizationStatus.PROVISIONAL;
 
     console.log("[FCM] Permission status:", authStatus, "| Enabled:", enabled);
     return enabled;
@@ -36,7 +49,7 @@ export const getFCMToken = async (): Promise<string | null> => {
             return null;
         }
 
-        const token = await messaging().getToken();
+        const token = await getToken(getMessaging());
         console.log("[FCM] Token:", token);
         return token;
     } catch (error) {
@@ -51,7 +64,7 @@ export const getFCMToken = async (): Promise<string | null> => {
  * @returns unsubscribe function
  */
 export const onFCMTokenRefresh = (callback: (token: string) => void) => {
-    return messaging().onTokenRefresh((token) => {
+    return onTokenRefresh(getMessaging(), (token) => {
         console.log("[FCM] Token refreshed:", token);
         callback(token);
     });

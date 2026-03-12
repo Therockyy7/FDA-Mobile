@@ -10,9 +10,9 @@
  * This file is imported at the very top of `app/_layout.tsx` via:
  *   import "~/features/alerts/fcm/initFCM";
  */
-import messaging, {
-    FirebaseMessagingTypes,
-} from "@react-native-firebase/messaging";
+
+import { getMessaging, setBackgroundMessageHandler } from "@react-native-firebase/messaging";
+
 import {
     checkKilledStateNotification,
     FCMNotificationData,
@@ -21,8 +21,15 @@ import {
 } from "./notificationHandler";
 
 // ─── Background / killed-app data handler (module-level) ──────────────────────
-messaging().setBackgroundMessageHandler(
-    async (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
+// messaging().setBackgroundMessageHandler(
+//     async (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
+//         console.log("[FCM][BACKGROUND_DATA] Message received:", remoteMessage);
+//         // Perform silent data processing here (e.g. update badge, AsyncStorage)
+//     }
+// );
+
+setBackgroundMessageHandler(getMessaging(),
+    async (remoteMessage) => {
         console.log("[FCM][BACKGROUND_DATA] Message received:", remoteMessage);
         // Perform silent data processing here (e.g. update badge, AsyncStorage)
     }

@@ -1,7 +1,10 @@
 // features/alerts/fcm/notificationHandler.ts
-import messaging, {
+import {
     FirebaseMessagingTypes,
-    getInitialNotification
+    getInitialNotification,
+    getMessaging,
+    onMessage,
+    onNotificationOpenedApp
 } from "@react-native-firebase/messaging";
 
 /**
@@ -101,34 +104,33 @@ export const registerForegroundHandler = (
     onShowBanner?: (data: FCMNotificationData) => void,
     onNavigate?: (data: FCMNotificationData) => void,
 ) => {
-    return messaging().onMessage(
-        async (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
-            // Always log the message
-            handleMessage(remoteMessage, "FOREGROUND", undefined);
-            // Show in-app banner if callback provided; otherwise navigate directly
-            const data = {
-                title: remoteMessage.notification?.title
-                    ? String(remoteMessage.notification.title)
-                    : undefined,
-                body: remoteMessage.notification?.body
-                    ? String(remoteMessage.notification.body)
-                    : undefined,
-                notificationId: remoteMessage.data?.notificationId
-                    ? String(remoteMessage.data.notificationId)
-                    : undefined,
-                alertId: remoteMessage.data?.alertId
-                    ? String(remoteMessage.data.alertId)
-                    : undefined,
-                timestamp: remoteMessage.data?.timestamp
-                    ? String(remoteMessage.data.timestamp)
-                    : undefined,
-            };
-            if (onShowBanner) {
-                onShowBanner(data);
-            } else {
-                onNavigate?.(data);
-            }
-        },
+    return onMessage(getMessaging(), async (remoteMessage) => {
+        // Always log the message
+        handleMessage(remoteMessage, "FOREGROUND", undefined);
+        // Show in-app banner if callback provided; otherwise navigate directly
+        const data = {
+            title: remoteMessage.notification?.title
+                ? String(remoteMessage.notification.title)
+                : undefined,
+            body: remoteMessage.notification?.body
+                ? String(remoteMessage.notification.body)
+                : undefined,
+            notificationId: remoteMessage.data?.notificationId
+                ? String(remoteMessage.data.notificationId)
+                : undefined,
+            alertId: remoteMessage.data?.alertId
+                ? String(remoteMessage.data.alertId)
+                : undefined,
+            timestamp: remoteMessage.data?.timestamp
+                ? String(remoteMessage.data.timestamp)
+                : undefined,
+        };
+        if (onShowBanner) {
+            onShowBanner(data);
+        } else {
+            onNavigate?.(data);
+        }
+    },
     );
 };
 
@@ -139,10 +141,9 @@ export const registerForegroundHandler = (
 export const registerBackgroundTapHandler = (
     onNavigate?: (data: FCMNotificationData) => void,
 ) => {
-    return messaging().onNotificationOpenedApp(
-        (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
-            handleMessage(remoteMessage, "BACKGROUND_TAP", onNavigate);
-        },
+    return onNotificationOpenedApp(getMessaging(), (remoteMessage) => {
+        handleMessage(remoteMessage, "BACKGROUND_TAP", onNavigate);
+    },
     );
 };
 
@@ -153,7 +154,7 @@ export const registerBackgroundTapHandler = (
 export const checkKilledStateNotification = async (
     onNavigate?: (data: FCMNotificationData) => void,
 ): Promise<void> => {
-    const remoteMessage = await getInitialNotification(messaging());
+    const remoteMessage = await getInitialNotification(getMessaging());
     if (remoteMessage) {
         handleMessage(remoteMessage, "KILLED_STATE", onNavigate);
     }

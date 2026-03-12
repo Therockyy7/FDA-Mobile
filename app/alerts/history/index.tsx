@@ -4,12 +4,14 @@ import React, { useMemo, useState } from "react";
 import {
   Alert,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import AlertHistoryCard from "~/features/alerts/components/alert-history/AlertHistoryCard";
 import AlertHistoryChips from "~/features/alerts/components/alert-history/AlertHistoryChips";
 import AlertHistoryHeader from "~/features/alerts/components/alert-history/AlertHistoryHeader";

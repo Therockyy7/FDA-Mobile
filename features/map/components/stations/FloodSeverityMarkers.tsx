@@ -3,10 +3,10 @@ import React, { useMemo } from "react";
 import { Marker } from "react-native-maps";
 import { useMapLayerSettings } from "../../hooks/useMapLayerSettings";
 import {
-    SEVERITY_COLORS,
-    SEVERITY_LABELS,
-    type FloodSeverityFeature,
-    isPointFeature,
+  isPointFeature,
+  SEVERITY_COLORS,
+  SEVERITY_LABELS,
+  type FloodSeverityFeature,
 } from "../../types/map-layers.types";
 
 interface FloodSeverityMarkersProps {
@@ -25,32 +25,34 @@ export function FloodSeverityMarkers({
     }
 
     // Filter to only Point features with valid coordinates
-    return floodSeverity.features.filter((feature): feature is FloodSeverityFeature => {
-      if (!isPointFeature(feature)) return false;
+    return floodSeverity.features.filter(
+      (feature): feature is FloodSeverityFeature => {
+        if (!isPointFeature(feature)) return false;
 
-      const { properties, geometry } = feature;
+        const { properties, geometry } = feature;
 
-      // Validate coordinates exist
-      if (!geometry?.coordinates || geometry.coordinates.length < 2) {
-        console.warn(`⚠️ Invalid coordinates for ${properties.stationName}`);
-        return false;
-      }
+        // Validate coordinates exist
+        if (!geometry?.coordinates || geometry.coordinates.length < 2) {
+          console.warn(`⚠️ Invalid coordinates for ${properties.stationName}`);
+          return false;
+        }
 
-      const [longitude, latitude] = geometry.coordinates;
+        const [longitude, latitude] = geometry.coordinates;
 
-      // Validate lat/lng are valid numbers
-      if (
-        typeof latitude !== "number" ||
-        typeof longitude !== "number" ||
-        isNaN(latitude) ||
-        isNaN(longitude)
-      ) {
-        console.warn(`⚠️ Invalid lat/lng for ${properties.stationName}`);
-        return false;
-      }
+        // Validate lat/lng are valid numbers
+        if (
+          typeof latitude !== "number" ||
+          typeof longitude !== "number" ||
+          isNaN(latitude) ||
+          isNaN(longitude)
+        ) {
+          console.warn(`⚠️ Invalid lat/lng for ${properties.stationName}`);
+          return false;
+        }
 
-      return true;
-    });
+        return true;
+      },
+    );
   }, [settings.overlays.flood, floodSeverity?.features]);
 
   // Don't render if no markers (keep stale markers visible during re-fetch)
@@ -58,15 +60,16 @@ export function FloodSeverityMarkers({
     return null;
   }
 
-
   return (
     <>
       {markers.map((feature) => {
         const { properties, geometry } = feature;
         const [longitude, latitude] = geometry.coordinates;
 
-        const color = properties.markerColor ||
-          SEVERITY_COLORS[properties.severity] || SEVERITY_COLORS.unknown;
+        const color =
+          properties.markerColor ||
+          SEVERITY_COLORS[properties.severity] ||
+          SEVERITY_COLORS.unknown;
         const label =
           SEVERITY_LABELS[properties.severity] || SEVERITY_LABELS.unknown;
 

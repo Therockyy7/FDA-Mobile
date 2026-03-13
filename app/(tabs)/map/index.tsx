@@ -93,8 +93,8 @@ export default function MapScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showLayerSheet, setShowLayerSheet] = useState(false);
   const [showNavSearch, setShowNavSearch] = useState(false);
-  const [selectedStation, setSelectedStation] =
-    useState<FloodSeverityFeature | null>(null);
+  const [selectedStationId, setSelectedStationId] =
+    useState<string | null>(null);
   const [areaDisplayMode, setAreaDisplayMode] = useState<"user" | "admin">(
     "user",
   );
@@ -108,8 +108,18 @@ export default function MapScreen() {
   const loadedBoundsRef = useRef<ViewportBounds | null>(null);
   const lastZoomModeRef = useRef<MapZoomMode | null>(null);
 
-  const { settings, areas, refreshFloodSeverity, refreshAreas } =
+  const { settings, areas, floodSeverity, refreshFloodSeverity, refreshAreas } =
     useMapLayerSettings();
+
+  // Get selected station from Redux store (real-time updates via SignalR)
+  const selectedStation = useMemo(() => {
+    if (!selectedStationId || !floodSeverity?.features) return null;
+    return floodSeverity.features.find(
+      (f): f is FloodSeverityFeature =>
+        f.geometry.type === "Point" &&
+        (f as FloodSeverityFeature).properties.stationId === selectedStationId
+    ) ?? null;
+  }, [selectedStationId, floodSeverity]);
 
   // Connect to SignalR for real-time flood updates
   useFloodSignalR(settings.overlays.flood);
@@ -359,7 +369,7 @@ export default function MapScreen() {
     clearSelections: () => {
       setSelectedRoute(null);
       setSelectedZone(null);
-      setSelectedStation(null);
+      setSelectedStationId(null);
     },
   });
 
@@ -913,7 +923,7 @@ export default function MapScreen() {
                 setSelectedArea(null);
                 setSelectedRoute(null);
                 setSelectedZone(null);
-                setSelectedStation(feature);
+                setSelectedStationId(feature.properties.stationId);
 
                 const LATITUDE_OFFSET = 0.008;
                 mapRef.current?.animateToRegion(
@@ -1005,7 +1015,7 @@ export default function MapScreen() {
           {!selectedRoute &&
             !selectedZone &&
             !selectedArea &&
-            !selectedStation &&
+            !selectedStationId &&
             !isRoutingUIVisible &&
             !safeRoute.hasResults &&
             !isAdjustingRadius &&
@@ -1035,7 +1045,7 @@ export default function MapScreen() {
           !selectedRoute &&
           !selectedZone &&
           !selectedArea &&
-          !selectedStation &&
+          !selectedStationId &&
           !isAdjustingRadius &&
           !showCreateAreaSheet && (
             <TouchableOpacity
@@ -1150,18 +1160,17 @@ export default function MapScreen() {
 
         {/* Flood Station Bottom Sheet */}
         <MapBottomSheet
-          isOpen={!!selectedStation}
-          onClose={() => setSelectedStation(null)}
+          isOpen={!!selectedStationId}
+          onClose={() => setSelectedStationId(null)}
           snapPoints={["40%", "55%"]}
         >
-          {selectedStation && (
+          {selectedStationId && selectedStation && (
             <FloodStationCard
               station={selectedStation}
-              onClose={() => setSelectedStation(null)}
+              onClose={() => setSelectedStationId(null)}
               onViewDetails={() => {
-                const stationId = selectedStation.properties.stationId;
-                setSelectedStation(null);
-                router.push(`/map/${stationId}`);
+                setSelectedStationId(null);
+                router.push(`/map/${selectedStationId}`);
               }}
             />
           )}

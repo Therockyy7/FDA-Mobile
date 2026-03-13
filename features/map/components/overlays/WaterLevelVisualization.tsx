@@ -1,14 +1,14 @@
 // features/map/components/WaterLevelVisualization.tsx
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
-    Easing,
-    useAnimatedStyle,
-    useSharedValue,
-    withRepeat,
-    withSequence,
-    withTiming,
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
 } from "react-native-reanimated";
 import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
 import { Text } from "~/components/ui/text";
@@ -19,7 +19,7 @@ interface WaterLevelVisualizationProps {
   unit: string;
   severity: "safe" | "caution" | "warning" | "critical" | "unknown";
   severityColor: string;
-  maxLevel?: number; // Maximum level for scale (default: 300cm)
+  maxLevel?: number; // Maximum level for scale (default: 500cm for better visualization)
 }
 
 const VIS_HEIGHT = 240;
@@ -33,13 +33,27 @@ export function WaterLevelVisualization({
   maxLevel = 300,
 }: WaterLevelVisualizationProps) {
   const { isDarkColorScheme } = useColorScheme();
+  const prevWaterLevelRef = useRef<number | null>(null);
 
-  // Convert water level to cm
+  // Default max level for visualization
+  const DEFAULT_MAX_LEVEL = 500;
+
+  // Convert water level to cm (handles both "cm" and "m" units)
   const waterLevelCm =
-    waterLevel !== null ? (unit === "m" ? waterLevel * 100 : waterLevel) : 0;
+    waterLevel !== null
+      ? unit === "m"
+        ? waterLevel * 100
+        : waterLevel
+      : 0;
+
+  // Use dynamic max level based on actual water level, minimum 300cm
+  const effectiveMaxLevel = Math.max(
+    maxLevel || DEFAULT_MAX_LEVEL,
+    Math.ceil(waterLevelCm / 100) * 150 + 100
+  );
 
   // Calculate water height as percentage of max
-  const waterPercent = Math.min((waterLevelCm / maxLevel) * 100, 100);
+  const waterPercent = Math.min((waterLevelCm / effectiveMaxLevel) * 100, 100);
   const waterHeightPx = (waterPercent / 100) * VIS_HEIGHT;
 
   // Animation values
@@ -47,33 +61,51 @@ export function WaterLevelVisualization({
   const waveOffset2 = useSharedValue(0);
   const waterFillHeight = useSharedValue(0);
 
-   
+  // Track if this is the initial render
+  const isFirstRender = useRef(true);
+
+  // Wave animations - run once on mount
   useEffect(() => {
-    // Wave animation 1
+    // Wave animation 1 - always running
     waveOffset1.value = withRepeat(
       withSequence(
         withTiming(8, { duration: 1200, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-8, { duration: 1200, easing: Easing.inOut(Easing.sin) })
+        withTiming(-8, { duration: 1200, easing: Easing.inOut(Easing.sin) }),
       ),
       -1,
-      true
+      true,
     );
 
-    // Wave animation 2 (offset)
+    // Wave animation 2 (offset) - always running
     waveOffset2.value = withRepeat(
       withSequence(
         withTiming(-6, { duration: 1000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(6, { duration: 1000, easing: Easing.inOut(Easing.sin) })
+        withTiming(6, { duration: 1000, easing: Easing.inOut(Easing.sin) }),
       ),
       -1,
-      true
+      true,
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    // Water fill animation
+  // Water level animation - runs on waterHeightPx changes
+  useEffect(() => {
+    // Only animate water level changes after initial render
+    if (isFirstRender.current) {
+      waterFillHeight.value = waterHeightPx;
+      isFirstRender.current = false;
+      prevWaterLevelRef.current = waterLevel;
+      return;
+    }
+
+    // Animate water level change smoothly
     waterFillHeight.value = withTiming(waterHeightPx, {
-      duration: 1500,
+      duration: 800,
       easing: Easing.out(Easing.cubic),
     });
+
+    prevWaterLevelRef.current = waterLevel;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [waterHeightPx]);
 
   const wave1Style = useAnimatedStyle(() => ({
@@ -97,10 +129,19 @@ export function WaterLevelVisualization({
     columnBg: isDarkColorScheme ? "#0F172A" : "#E2E8F0",
   };
 
-  // Generate scale markers
-  const scaleMarkers = [0, 50, 100, 150, 200, 250, 300].filter(
-    (v) => v <= maxLevel
-  );
+  // Generate scale markers based on effective max level
+  const getScaleMarkers = () => {
+    const markers = [];
+    const step = effectiveMaxLevel > 400 ? 100 : 50;
+    for (let i = 0; i <= effectiveMaxLevel; i += step) {
+      markers.push(i);
+    }
+    if (!markers.includes(effectiveMaxLevel)) {
+      markers.push(effectiveMaxLevel);
+    }
+    return markers;
+  };
+  const scaleMarkers = getScaleMarkers();
 
   // Get alert message based on level
   const getAlertMessage = () => {
@@ -126,12 +167,9 @@ export function WaterLevelVisualization({
         {/* Scale Column (Left) */}
         <View style={styles.scaleContainer}>
           {scaleMarkers.map((level) => {
-            const yPos = VIS_HEIGHT - (level / maxLevel) * VIS_HEIGHT;
+            const yPos = VIS_HEIGHT - (level / effectiveMaxLevel) * VIS_HEIGHT;
             return (
-              <View
-                key={level}
-                style={[styles.scaleMark, { top: yPos - 8 }]}
-              >
+              <View key={level} style={[styles.scaleMark, { top: yPos - 8 }]}>
                 <Text style={[styles.scaleText, { color: colors.subtext }]}>
                   {level}
                 </Text>
@@ -146,13 +184,9 @@ export function WaterLevelVisualization({
 
         {/* Water Column */}
         <View style={styles.columnContainer}>
-          <View
-            style={[styles.column, { backgroundColor: colors.columnBg }]}
-          >
+          <View style={[styles.column, { backgroundColor: colors.columnBg }]}>
             {/* Water Fill */}
-            <Animated.View
-              style={[styles.waterFill, waterFillStyle]}
-            >
+            <Animated.View style={[styles.waterFill, waterFillStyle]}>
               {/* Wave Layer 1 */}
               <Animated.View style={[styles.waveLayer, wave1Style]}>
                 <Svg
@@ -162,8 +196,16 @@ export function WaterLevelVisualization({
                 >
                   <Defs>
                     <LinearGradient id="waveGrad1" x1="0" y1="0" x2="0" y2="1">
-                      <Stop offset="0" stopColor={severityColor} stopOpacity="0.9" />
-                      <Stop offset="1" stopColor={severityColor} stopOpacity="0.7" />
+                      <Stop
+                        offset="0"
+                        stopColor={severityColor}
+                        stopOpacity="0.9"
+                      />
+                      <Stop
+                        offset="1"
+                        stopColor={severityColor}
+                        stopOpacity="0.7"
+                      />
                     </LinearGradient>
                   </Defs>
                   <Path
@@ -176,7 +218,9 @@ export function WaterLevelVisualization({
               </Animated.View>
 
               {/* Wave Layer 2 */}
-              <Animated.View style={[styles.waveLayer, styles.waveLayer2, wave2Style]}>
+              <Animated.View
+                style={[styles.waveLayer, styles.waveLayer2, wave2Style]}
+              >
                 <Svg
                   width={COLUMN_WIDTH + 20}
                   height={16}
@@ -192,7 +236,9 @@ export function WaterLevelVisualization({
               </Animated.View>
 
               {/* Water body */}
-              <View style={[styles.waterBody, { backgroundColor: severityColor }]}>
+              <View
+                style={[styles.waterBody, { backgroundColor: severityColor }]}
+              >
                 {/* Bubbles effect */}
                 <View style={[styles.bubble, styles.bubble1]} />
                 <View style={[styles.bubble, styles.bubble2]} />
@@ -201,12 +247,7 @@ export function WaterLevelVisualization({
             </Animated.View>
 
             {/* Column border glow */}
-            <View
-              style={[
-                styles.columnGlow,
-                { shadowColor: severityColor },
-              ]}
-            />
+            <View style={[styles.columnGlow, { shadowColor: severityColor }]} />
           </View>
 
           {/* Current Level Indicator */}
@@ -242,7 +283,10 @@ export function WaterLevelVisualization({
 
       {/* Status Message */}
       <View
-        style={[styles.statusContainer, { backgroundColor: `${severityColor}15` }]}
+        style={[
+          styles.statusContainer,
+          { backgroundColor: `${severityColor}15` },
+        ]}
       >
         <View style={[styles.statusDot, { backgroundColor: severityColor }]} />
         <Text style={[styles.statusText, { color: colors.text }]}>

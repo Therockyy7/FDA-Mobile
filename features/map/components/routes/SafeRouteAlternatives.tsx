@@ -14,27 +14,19 @@ interface SafeRouteAlternativesProps {
   routes: DecodedRoute[];
   selectedIndex: number;
   onSelectRoute: (index: number) => void;
-  showResultCard?: boolean;
+  onExitRouting: () => void;
 }
 
 export function SafeRouteAlternatives({
   routes,
   selectedIndex,
   onSelectRoute,
-  showResultCard = false,
+  onExitRouting,
 }: SafeRouteAlternativesProps) {
   if (routes.length <= 1) return null;
 
   return (
-    <View
-      style={{
-        position: "absolute",
-        bottom: showResultCard ? 230 : 24,
-        left: 0,
-        right: 0,
-        zIndex: 35,
-      }}
-    >
+    <View>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -43,6 +35,26 @@ export function SafeRouteAlternatives({
           gap: 8,
         }}
       >
+        {/* Close button */}
+        <TouchableOpacity
+          onPress={onExitRouting}
+          activeOpacity={0.8}
+          style={{
+            backgroundColor: "#F1F5F9",
+            borderRadius: 14,
+            padding: 10,
+            minWidth: 44,
+            borderWidth: 1,
+            borderColor: "#E2E8F0",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons name="close" size={20} color="#64748B" />
+          <Text style={{ fontSize: 10, color: "#64748B", marginTop: 2 }}>
+            Đóng
+          </Text>
+        </TouchableOpacity>
         {routes.map((route, index) => {
           const isSelected = index === selectedIndex;
           const color = SAFETY_STATUS_COLORS[route.safetyStatus];
@@ -97,13 +109,21 @@ export function SafeRouteAlternatives({
 
               {/* Distance & Time */}
               <View style={{ flexDirection: "row", gap: 8 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-                  <Ionicons name="speedometer-outline" size={12} color="#64748B" />
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
+                >
+                  <Ionicons
+                    name="speedometer-outline"
+                    size={12}
+                    color="#64748B"
+                  />
                   <Text style={{ fontSize: 11, color: "#64748B" }}>
                     {formatDistance(route.distance)}
                   </Text>
                 </View>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
+                >
                   <Ionicons name="time-outline" size={12} color="#64748B" />
                   <Text style={{ fontSize: 11, color: "#64748B" }}>
                     {formatDuration(route.time)}

@@ -13,6 +13,17 @@ import type {
 import { SAFETY_STATUS_FROM_API } from "../types/safe-route.types";
 
 /**
+ * Map floodRiskScore to safety status.
+ * 0 = safe, higher = more dangerous, capped at 100.
+ */
+function getStatusFromRiskScore(score: number): RouteSafetyStatus {
+  if (score === 0) return "Safe";
+  if (score <= 20) return "Caution";
+  if (score < 100) return "Dangerous";
+  return "Blocked";
+}
+
+/**
  * Convert GeoJSON [lng, lat] coordinates to LatLng[].
  */
 export function geoJsonCoordsToLatLng(coords: number[][]): LatLng[] {
@@ -49,7 +60,7 @@ export function parseRouteResponse(response: SafeRouteApiResponse): {
         ),
         distance: routeProps.distanceMeters,
         time: routeProps.durationSeconds * 1000, // convert to ms
-        safetyStatus: overallStatus,
+        safetyStatus: getStatusFromRiskScore(routeProps.floodRiskScore),
         floodRiskScore: routeProps.floodRiskScore,
         instructions: routeProps.instructions,
         isPrimary: true,
@@ -66,7 +77,7 @@ export function parseRouteResponse(response: SafeRouteApiResponse): {
         ),
         distance: routeProps.distanceMeters,
         time: routeProps.durationSeconds * 1000,
-        safetyStatus: overallStatus,
+        safetyStatus: getStatusFromRiskScore(routeProps.floodRiskScore),
         floodRiskScore: routeProps.floodRiskScore,
         instructions: routeProps.instructions,
         isPrimary: false,
@@ -98,6 +109,8 @@ export function parseRouteResponse(response: SafeRouteApiResponse): {
     totalFloodZones: response.metadata.totalFloodZones,
     alternativeRouteCount: response.metadata.alternativeRouteCount,
     generatedAt: response.metadata.generatedAt,
+    startInFloodZone: response.metadata.startInFloodZone ?? false,
+    endInFloodZone: response.metadata.endInFloodZone ?? false,
   };
 
   return { primaryRoute, alternativeRoutes, floodWarnings, metadata };

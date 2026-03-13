@@ -1,15 +1,14 @@
 // features/map/components/routes/SafeRouteResultCard.tsx
 
-import React from "react";
-import { Animated, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { formatDistance, formatDuration } from "../../lib/polyline-utils";
 import type {
   DecodedRoute,
   FloodWarningDto,
   RouteMetadata,
-  RouteSafetyStatus,
 } from "../../types/safe-route.types";
 import {
   SAFETY_STATUS_COLORS,
@@ -21,40 +20,26 @@ interface SafeRouteResultCardProps {
   route: DecodedRoute;
   floodWarnings: FloodWarningDto[];
   metadata: RouteMetadata | null;
-  overallSafetyStatus: RouteSafetyStatus;
   onClose: () => void;
   onShowWarnings: () => void;
-  slideAnim: Animated.Value;
 }
 
 export function SafeRouteResultCard({
   route,
   floodWarnings,
   metadata,
-  overallSafetyStatus,
   onClose,
   onShowWarnings,
-  slideAnim,
 }: SafeRouteResultCardProps) {
-  const statusColor = SAFETY_STATUS_COLORS[overallSafetyStatus];
-  const statusLabel = SAFETY_STATUS_LABELS[overallSafetyStatus];
-  const statusIcon = SAFETY_STATUS_ICONS[overallSafetyStatus] as any;
+  const statusColor = SAFETY_STATUS_COLORS[route.safetyStatus];
+  const statusLabel = SAFETY_STATUS_LABELS[route.safetyStatus];
+  const statusIcon = SAFETY_STATUS_ICONS[route.safetyStatus] as any;
 
   return (
-    <Animated.View
-      style={{
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 30,
-        transform: [{ translateY: slideAnim }],
-      }}
-    >
+    <View>
       <View
         style={{
           marginHorizontal: 12,
-          marginBottom: 16,
           backgroundColor: "white",
           borderRadius: 20,
           padding: 16,
@@ -162,6 +147,49 @@ export function SafeRouteResultCard({
           </View>
         </View>
 
+        {/* Flood Zone Banners for Start/End */}
+        {metadata && (metadata.startInFloodZone || metadata.endInFloodZone) && (
+          <View style={{ gap: 6, marginBottom: 12 }}>
+            {metadata.startInFloodZone && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 8,
+                  backgroundColor: "#FEF3C7",
+                  borderRadius: 8,
+                  paddingHorizontal: 10,
+                  paddingVertical: 8,
+                }}
+              >
+                <Ionicons name="warning" size={14} color="#D97706" />
+                <Text style={{ fontSize: 12, color: "#92400E", flex: 1 }}>
+                  Điểm xuất phát đang nằm trong vùng ngập. Hãy cẩn thận khi di
+                  chuyển.
+                </Text>
+              </View>
+            )}
+            {metadata.endInFloodZone && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 8,
+                  backgroundColor: "#FEF3C7",
+                  borderRadius: 8,
+                  paddingHorizontal: 10,
+                  paddingVertical: 8,
+                }}
+              >
+                <Ionicons name="warning" size={14} color="#D97706" />
+                <Text style={{ fontSize: 12, color: "#92400E", flex: 1 }}>
+                  Điểm đến đang nằm trong vùng ngập. Hãy cẩn thận khi đến nơi.
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Footer: Warnings + Metadata */}
         <View
           style={{
@@ -214,7 +242,7 @@ export function SafeRouteResultCard({
           )}
         </View>
       </View>
-    </Animated.View>
+    </View>
   );
 }
 

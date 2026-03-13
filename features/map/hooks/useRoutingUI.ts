@@ -81,9 +81,7 @@ export function useRoutingUI() {
   // When user types in origin, disable "current location" mode
   const handleOriginTextChange = useCallback((text: string) => {
     setOriginText(text);
-    if (text.length > 0) {
-      setIsUsingGPSOrigin(false);
-    }
+    setIsUsingGPSOrigin(false);
   }, []);
 
   // When user types in destination, disable "current location" mode

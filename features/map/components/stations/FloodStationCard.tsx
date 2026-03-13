@@ -485,8 +485,14 @@ export function FloodStationCard({
 
 // Memoize component to prevent unnecessary re-renders
 export default React.memo(FloodStationCard, (prevProps, nextProps) => {
-  // Only re-render if station ID changes
+  // Re-render if station ID changes OR if waterLevel/severity changes (for real-time updates)
+  const prevStation = prevProps.station?.properties;
+  const nextStation = nextProps.station?.properties;
+
   return (
-    prevProps.station?.properties?.stationId === nextProps.station?.properties?.stationId
+    prevStation?.stationId === nextStation?.stationId &&
+    prevStation?.waterLevel === nextStation?.waterLevel &&
+    prevStation?.severity === nextStation?.severity &&
+    prevStation?.measuredAt === nextStation?.measuredAt
   );
 });

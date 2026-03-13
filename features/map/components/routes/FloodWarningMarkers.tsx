@@ -1,9 +1,9 @@
 // features/map/components/routes/FloodWarningMarkers.tsx
 
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View } from "react-native";
 import { Marker, Polygon } from "react-native-maps";
-import { Ionicons } from "@expo/vector-icons";
 import type { FloodWarningDto } from "../../types/safe-route.types";
 
 interface FloodWarningMarkersProps {

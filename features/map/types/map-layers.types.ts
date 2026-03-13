@@ -64,40 +64,42 @@ export interface FloodSeverityFeature {
   properties: FloodSeverityProperties;
 }
 
-// Road segment (LineString) between two stations
-export interface RoadSegmentProperties {
-  roadName: string;
-  startStationId: string;
-  endStationId: string;
-  startSeverityLevel: number;
-  endSeverityLevel: number;
-  startColor: string;
-  endColor: string;
+// Flood zone polygon around stations with severity >= warning
+export interface FloodZoneProperties {
+  featureType: "floodZone";
+  stationId: string;
+  stationCode: string;
+  stationName: string;
+  severity: "warning" | "critical";
+  severityLevel: number;
+  waterLevel: number;
+  fillColor: string;
+  fillOpacity: number;
 }
 
-export interface RoadSegmentFeature {
+export interface FloodZoneFeature {
   type: "Feature";
   geometry: {
-    type: "LineString";
-    coordinates: [number, number][]; // array of [longitude, latitude]
+    type: "Polygon";
+    coordinates: [number, number][][]; // array of rings, each ring is array of [lng, lat]
   };
-  properties: RoadSegmentProperties;
+  properties: FloodZoneProperties;
 }
 
 // Union type for all features in the flood FeatureCollection
-export type FloodFeature = FloodSeverityFeature | RoadSegmentFeature;
+export type FloodFeature = FloodSeverityFeature | FloodZoneFeature;
 
 // Type guards
 export function isPointFeature(f: FloodFeature): f is FloodSeverityFeature {
   return f.geometry.type === "Point";
 }
-export function isLineStringFeature(f: FloodFeature): f is RoadSegmentFeature {
-  return f.geometry.type === "LineString";
+export function isPolygonFeature(f: FloodFeature): f is FloodZoneFeature {
+  return f.geometry.type === "Polygon";
 }
 
 export interface FloodSeverityMetadata {
   totalStations: number;
-  roadSegments?: number;
+  floodZones?: number;
   stationsWithData?: number;
   stationsNoData?: number;
   generatedAt: string;

@@ -1,6 +1,14 @@
-// features/alerts/fcm/InAppNotificationBanner.tsx
-import React from "react";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useEffect } from "react";
+import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+  type SharedValue,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from "~/lib/useColorScheme";
 import {
@@ -8,202 +16,272 @@ import {
   NotificationSeverity,
 } from "./useInAppNotification";
 
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const DISMISS_THRESHOLD = SCREEN_WIDTH * 0.25;
+
 interface InAppNotificationBannerProps {
   notification: InAppNotificationPayload | null;
   visible: boolean;
-  translateY: Animated.Value;
+  translateY: SharedValue<number>;
   onPress?: (notification: InAppNotificationPayload) => void;
   onDismiss?: () => void;
 }
 
-// ── Severity config – understated palette ────────────────────────────────────
 const SEVERITY_CONFIG: Record<
   NotificationSeverity,
-  { dot: string; label: string; labelColor: string }
+  {
+    accent: string;
+    chipBg: string;
+    chipText: string;
+    label: string;
+  }
 > = {
   CRITICAL: {
-    dot: "#EF4444",
+    accent: "#DC2626",
+    chipBg: "#FEE2E2",
+    chipText: "#B91C1C",
     label: "Nguy hiểm",
-    labelColor: "#F87171",
   },
   WARNING: {
-    dot: "#F97316",
+    accent: "#EA580C",
+    chipBg: "#FFEDD5",
+    chipText: "#C2410C",
     label: "Cảnh báo",
-    labelColor: "#FB923C",
   },
   CAUTION: {
-    dot: "#EAB308",
+    accent: "#CA8A04",
+    chipBg: "#FEF9C3",
+    chipText: "#A16207",
     label: "Chú ý",
-    labelColor: "#FACC15",
   },
   INFO: {
-    dot: "#3B82F6",
+    accent: "#2563EB",
+    chipBg: "#DBEAFE",
+    chipText: "#1D4ED8",
     label: "Thông báo",
-    labelColor: "#60A5FA",
   },
 };
 
-// ── Component ────────────────────────────────────────────────────────────────
 export const InAppNotificationBanner: React.FC<
   InAppNotificationBannerProps
 > = ({ notification, visible, translateY, onPress, onDismiss }) => {
   const insets = useSafeAreaInsets();
   const { isDarkColorScheme } = useColorScheme();
 
-  const cfg = notification
-    ? SEVERITY_CONFIG[notification.severity]
-    : SEVERITY_CONFIG.INFO;
+  const translateX = useSharedValue(0);
 
-  const themeColors = {
-    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF", // Dark navy cho dark, trắng cho light
-    borderColor: isDarkColorScheme ? "#334155" : "#E2E8F0",
+  // Reset translateX mỗi khi banner hiện lại, tránh bị kẹt ngoài màn hình sau swipe dismiss
+  useEffect(() => {
+    if (visible) {
+      translateX.value = 0;
+    }
+  }, [visible, translateX]);
+
+  const panGesture = Gesture.Pan()
+    .onUpdate((e) => {
+      translateX.value = e.translationX;
+    })
+    .onEnd(() => {
+      if (Math.abs(translateX.value) > DISMISS_THRESHOLD) {
+        const direction = translateX.value > 0 ? SCREEN_WIDTH : -SCREEN_WIDTH;
+        translateX.value = withTiming(direction, { duration: 180 }, () => {
+          "worklet";
+          if (onDismiss) runOnJS(onDismiss)();
+        });
+      } else {
+        translateX.value = withSpring(0);
+      }
+    });
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: translateY.value },
+      { translateX: translateX.value },
+    ],
+  }));
+
+  if (!visible || !notification) return null;
+
+  const cfg = SEVERITY_CONFIG[notification.severity] ?? SEVERITY_CONFIG.INFO;
+
+  const colors = {
+    cardBg: isDarkColorScheme ? "#0F172A" : "#FFFFFF",
+    border: isDarkColorScheme ? "#1E293B" : "#E2E8F0",
     title: isDarkColorScheme ? "#F8FAFC" : "#0F172A",
     body: isDarkColorScheme ? "#CBD5E1" : "#475569",
-    closeIcon: isDarkColorScheme ? "#94A3B8" : "#64748B",
+    meta: isDarkColorScheme ? "#94A3B8" : "#64748B",
+    close: isDarkColorScheme ? "#CBD5E1" : "#475569",
+    shadow: "#000000",
   };
 
   return (
-    <Animated.View
-      pointerEvents={visible ? "auto" : "none"}
-      style={[
-        styles.container,
-        { top: insets.top + 10, transform: [{ translateY }] },
-      ]}
-    >
-      <Pressable
-        onPress={() => {
-          onDismiss?.();
-          if (notification) onPress?.(notification);
-        }}
-        style={[
-          styles.card,
-          {
-            backgroundColor: themeColors.cardBg,
-            borderColor: themeColors.borderColor,
-          },
-        ]}
-      >
-        {/* Left accent bar */}
-        <View style={[styles.accentBar, { backgroundColor: cfg.dot }]} />
-
-        {/* Content */}
-        <View style={styles.content}>
-          {/* Top row: label chip + close */}
-          <View style={styles.topRow}>
-            <View style={styles.labelRow}>
-              <View style={[styles.dot, { backgroundColor: cfg.dot }]} />
-              <Text style={[styles.labelText, { color: cfg.labelColor }]}>
-                {cfg.label}
-              </Text>
-              <Text style={styles.source}>· FDA Alert</Text>
-            </View>
-            <Pressable
-              onPress={(e) => {
-                e.stopPropagation();
-                onDismiss?.();
-              }}
-              hitSlop={{ top: 15, right: 15, bottom: 15, left: 15 }}
+    <View style={styles.host} pointerEvents="box-none">
+      <GestureDetector gesture={panGesture}>
+        <Animated.View
+          style={[
+            styles.bannerWrap,
+            {
+              top: insets.top + 10,
+            },
+            animatedStyle,
+          ]}
+        >
+          <Pressable onPress={() => onPress?.(notification)}>
+            <View
+              style={[
+                styles.card,
+                {
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.border,
+                  shadowColor: colors.shadow,
+                },
+              ]}
             >
-              <Text
-                style={[styles.closeIcon, { color: themeColors.closeIcon }]}
-              >
-                ✕
-              </Text>
-            </Pressable>
-          </View>
+              <View
+                style={[styles.accentBar, { backgroundColor: cfg.accent }]}
+              />
 
-          {/* Title */}
-          <Text
-            style={[styles.title, { color: themeColors.title }]}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {notification?.title ?? ""}
-          </Text>
+              <View style={styles.content}>
+                <View style={styles.topRow}>
+                  <View style={styles.leftTop}>
+                    <View
+                      style={[styles.chip, { backgroundColor: cfg.chipBg }]}
+                    >
+                      <View
+                        style={[styles.dot, { backgroundColor: cfg.accent }]}
+                      />
+                      <Text style={[styles.chipText, { color: cfg.chipText }]}>
+                        {cfg.label}
+                      </Text>
+                    </View>
 
-          {/* Body */}
-          <Text
-            style={[styles.body, { color: themeColors.body }]}
-            numberOfLines={2}
-            ellipsizeMode="tail"
-          >
-            {notification?.body ?? ""}
-          </Text>
-        </View>
-      </Pressable>
-    </Animated.View>
+                    <Text style={[styles.sourceText, { color: colors.meta }]}>
+                      FDA Alert
+                    </Text>
+                  </View>
+
+                  <Pressable
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      onDismiss?.();
+                    }}
+                    hitSlop={{ top: 12, right: 12, bottom: 12, left: 12 }}
+                    style={styles.closeButton}
+                  >
+                    <Text style={[styles.closeText, { color: colors.close }]}>
+                      ✕
+                    </Text>
+                  </Pressable>
+                </View>
+
+                <Text
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  style={[styles.title, { color: colors.title }]}
+                >
+                  {notification.title}
+                </Text>
+
+                <Text
+                  numberOfLines={2}
+                  ellipsizeMode="tail"
+                  style={[styles.body, { color: colors.body }]}
+                >
+                  {notification.body}
+                </Text>
+              </View>
+            </View>
+          </Pressable>
+        </Animated.View>
+      </GestureDetector>
+    </View>
   );
 };
 
-// ── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: {
+  host: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 99999,
+    elevation: 99999,
+  },
+  bannerWrap: {
     position: "absolute",
     left: 12,
     right: 12,
-    zIndex: 999999,
-    elevation: 9999,
-    // Soft shadow
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
+    zIndex: 99999,
+    elevation: 99999,
   },
   card: {
-    flexDirection: "row",
-    borderRadius: 14,
+    minHeight: 84,
+    borderRadius: 18,
     borderWidth: 1,
     overflow: "hidden",
+    flexDirection: "row",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 18,
+    elevation: 14,
   },
   accentBar: {
-    width: 3,
-    flexShrink: 0,
+    width: 4,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   topRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
-    marginBottom: 5,
+    marginBottom: 8,
   },
-  labelRow: {
+  leftTop: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
+    gap: 8,
+    flexShrink: 1,
+  },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    gap: 6,
   },
   dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 999,
   },
-  labelText: {
+  chipText: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  sourceText: {
     fontSize: 11,
     fontWeight: "600",
-    letterSpacing: 0.3,
   },
-  source: {
-    fontSize: 11,
-    color: "#475569",
-    fontWeight: "400",
+  closeButton: {
+    marginLeft: 12,
+    paddingTop: 2,
+    paddingHorizontal: 4,
   },
-  title: {
+  closeText: {
     fontSize: 14,
     fontWeight: "700",
-    marginBottom: 3,
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: "800",
     lineHeight: 20,
+    marginBottom: 3,
   },
   body: {
     fontSize: 13,
     lineHeight: 18,
-  },
-  closeIcon: {
-    fontSize: 12,
-    fontWeight: "600",
+    fontWeight: "500",
   },
 });
-
-export default InAppNotificationBanner;

@@ -214,7 +214,7 @@ export default function AlertHistoryScreen() {
             dropdownOpen={severityDropdownOpen}
             onToggleDropdown={() => setSeverityDropdownOpen((prev) => !prev)}
             onSelectSeverity={(severity) => {
-              if (severityCounts[severity] === 0) {
+              if (severity !== "all" && severityCounts[severity] === 0) {
                 Alert.alert(
                   "Không có dữ liệu",
                   "Không có cảnh báo cho mức này.",

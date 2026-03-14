@@ -138,15 +138,24 @@ export function AddressSearchSheet({
       animationType="none"
       onRequestClose={handleClose}
     >
+      {/* 1. Tách lớp Backdrop nền đen ra ngoài và dùng absolute để phủ kín */}
+      <Pressable
+        style={{
+          position: "absolute",
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: colors.overlay,
+        }}
+        onPress={handleClose}
+      />
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
+        behavior="padding" // Bắt buộc dùng padding cho cả iOS/Android
+        style={{ flex: 1, justifyContent: "flex-end" }} // Đẩy nội dung xuống đáy
+        pointerEvents="box-none" // Cho phép bấm xuyên qua khoảng không bên trên để tắt sheet
       >
-        {/* Backdrop */}
-        <Pressable
-          style={[styles.overlay, { backgroundColor: colors.overlay }]}
-          onPress={handleClose}
-        />
+       
 
         {/* Sheet Content */}
         <Animated.View
@@ -343,14 +352,15 @@ export function AddressSearchSheet({
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-  },
+  // overlay: {
+  //   flex: 1,
+  // },
   sheet: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
+    // position: "absolute",
+    // bottom: 0,
+    // left: 0,
+    // right: 0,
+    width: "100%",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: SCREEN_HEIGHT * 0.7,

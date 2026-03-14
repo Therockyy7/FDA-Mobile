@@ -330,7 +330,6 @@ export default function MapScreen() {
     draftAddress,
     setSelectedArea,
     setDraftAreaRadius,
-    setDraftAreaCenter,
     handleAreaPress,
     handleCloseAreaCard,
     handleDeleteArea,
@@ -360,6 +359,7 @@ export default function MapScreen() {
     // Error states and handlers
     areaError,
     handleCloseErrorModal,
+    updateDraftAreaFromMapCenter,
   } = useControlArea({
     mapRef,
     region,
@@ -517,8 +517,16 @@ export default function MapScreen() {
     (newRegion: Region) => {
       onRegionChangeComplete(newRegion);
       fetchMarkersInViewPort(newRegion);
+
+      // Update draft area center when map moves (center-based approach)
+      if (isAdjustingRadius) {
+        updateDraftAreaFromMapCenter({
+          latitude: newRegion.latitude,
+          longitude: newRegion.longitude,
+        });
+      }
     },
-    [onRegionChangeComplete, fetchMarkersInViewPort],
+    [onRegionChangeComplete, fetchMarkersInViewPort, isAdjustingRadius, updateDraftAreaFromMapCenter],
   );
 
   return (
@@ -794,15 +802,13 @@ export default function MapScreen() {
               />
             ))}
 
-          {/* Draft Area Preview Circle - Draggable during Step 1 */}
+          {/* Draft Area Preview Circle - follows map center automatically */}
           {draftAreaCenter && (
             <AreaPreviewCircle
               center={draftAreaCenter}
               radiusMeters={draftAreaRadius}
               visible={isAdjustingRadius || showCreateAreaSheet}
-              onCenterChange={
-                isAdjustingRadius ? setDraftAreaCenter : undefined
-              }
+              onCenterChange={undefined}
             />
           )}
 

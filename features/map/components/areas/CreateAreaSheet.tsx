@@ -3,17 +3,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useState } from "react";
 import {
-    ActivityIndicator,
-    Dimensions,
-    Keyboard,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    Pressable,
-    ScrollView,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Dimensions,
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Pressable,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -100,18 +99,26 @@ function CreateAreaSheetContent({
 
   return (
     <>
-      <Pressable
-        style={{ flex: 1, backgroundColor: colors.overlay }}
+      {/* <Pressable
+        style={{
+          position: "absolute",
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: colors.overlay,
+        }}
         onPress={onClose}
-      />
+      /> */}
 
       <Animated.View
         entering={FadeIn.duration(200)}
         style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
+          // position: "absolute",
+          // bottom: 0,
+          // left: 0,
+          // right: 0,
+          width: "100%",
           backgroundColor: colors.background,
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
@@ -206,6 +213,7 @@ function CreateAreaSheetContent({
           }}
           showsVerticalScrollIndicator={false}
           bounces={false}
+          keyboardShouldPersistTaps="handled"
         >
           {/* Name Input */}
           <Animated.View entering={FadeInDown.delay(100).duration(300)}>
@@ -434,9 +442,25 @@ export function CreateAreaSheet(props: CreateAreaSheetProps) {
       animationType="none"
       onRequestClose={props.onClose}
     >
+      {/* 1. Lớp nền đen Overlay cố định, không bị ảnh hưởng bởi bàn phím */}
+      <Pressable
+        style={{
+          position: "absolute",
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+        }}
+        onPress={props.onClose}
+      />
+
+      {/* 2. Phần xử lý bàn phím và đẩy Bottom Sheet */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
+        // Bắt buộc dùng "padding" cho cả iOS và Android khi Modal transparent
+        behavior="padding"
+        style={{ flex: 1, justifyContent: "flex-end" }}
+        pointerEvents="box-none" // Cho phép click xuyên qua khoảng trống bên trên
       >
         <CreateAreaSheetContent {...props} />
       </KeyboardAvoidingView>

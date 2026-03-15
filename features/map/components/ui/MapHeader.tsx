@@ -158,7 +158,7 @@ export function MapHeader({
                     marginLeft: 4,
                   }}
                 >
-                  Đà Nẵng City
+                  Đà Nẵng
                 </Text>
               </View>
               <View

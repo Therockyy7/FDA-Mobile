@@ -9,32 +9,32 @@ const SEVERITY_LEVELS = [
   {
     key: "safe",
     label: "An toàn",
-    range: "< 1.0m",
-    color: "#22C55E",       // Green
+    range: "< 10cm",
+    color: "#22C55E", // Green
     bgColor: "#DCFCE7",
     icon: "checkmark-circle" as const,
   },
   {
     key: "caution",
     label: "Chú ý",
-    range: "1.0 - 1.9m",
-    color: "#EAB308",       // Yellow
+    range: "10 - 20cm",
+    color: "#EAB308", // Yellow
     bgColor: "#FEF9C3",
     icon: "information-circle" as const,
   },
   {
     key: "warning",
     label: "Cảnh báo",
-    range: "2.0 - 2.9m",
-    color: "#F97316",       // Orange
+    range: "20 - 40cm",
+    color: "#F97316", // Orange
     bgColor: "#FFEDD5",
     icon: "alert-circle" as const,
   },
   {
     key: "critical",
     label: "Nguy hiểm",
-    range: "≥ 3.0m",
-    color: "#EF4444",       // Red
+    range: "≥ 40cm",
+    color: "#EF4444", // Red
     bgColor: "#FEE2E2",
     icon: "warning" as const,
   },
@@ -61,7 +61,9 @@ const Legend = () => {
       }}
     >
       {/* Header */}
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+      <View
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}
+      >
         <View
           style={{
             width: 28,
@@ -88,7 +90,10 @@ const Legend = () => {
 
       <View style={{ gap: 8 }}>
         {SEVERITY_LEVELS.map((level) => (
-          <View key={level.key} style={{ flexDirection: "row", alignItems: "center" }}>
+          <View
+            key={level.key}
+            style={{ flexDirection: "row", alignItems: "center" }}
+          >
             <View
               style={{
                 width: 32,

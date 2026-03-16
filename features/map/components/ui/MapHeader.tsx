@@ -108,7 +108,7 @@ export function MapHeader({
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={() => router.back()}
             style={{
               width: 40,
@@ -122,7 +122,7 @@ export function MapHeader({
             activeOpacity={0.7}
           >
             <Ionicons name="arrow-back" size={20} color={colors.text} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
             <View
@@ -134,6 +134,7 @@ export function MapHeader({
                 alignItems: "center",
                 justifyContent: "center",
                 marginRight: 8,
+                marginLeft: 12,
               }}
             >
               <Ionicons name="water" size={16} color="white" />

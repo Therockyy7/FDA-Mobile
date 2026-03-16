@@ -55,20 +55,11 @@ const TabsLayout = () => {
         }}
       >
         <Tabs.Screen
-          name="index"
+          name="home"
           options={{
             title: "Trang chủ",
             tabBarIcon: ({ color, size }) => (
               <Feather name="home" size={size} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="map"
-          options={{
-            title: "Bản đồ",
-            tabBarIcon: ({ color, size }) => (
-              <Feather name="map" size={size} color={color} />
             ),
           }}
         />
@@ -92,6 +83,17 @@ const TabsLayout = () => {
             },
           }}
         />
+
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: "Bản đồ",
+            tabBarIcon: ({ color, size }) => (
+              <Feather name="map" size={size} color={color} />
+            ),
+          }}
+        />
+
         <Tabs.Screen
           name="notifications"
           options={{

@@ -19,7 +19,7 @@ export interface AreaError {
 }
 
 type UseControlAreaParams = {
-  mapRef: React.RefObject<MapView>;
+  mapRef: React.RefObject<MapView | null>;
   region: Region | null;
   refreshAreas: () => void | Promise<void>;
   clearSelections: () => void;

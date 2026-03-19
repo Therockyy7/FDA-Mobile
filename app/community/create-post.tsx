@@ -27,8 +27,10 @@ export default function CreatePostScreen() {
   const [showCamera, setShowCamera] = useState(false);
   const [mediaList, setMediaList] = useState<CapturedMedia[]>([]);
   const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
+  const [locationAddress, setLocationAddress] = useState<string>("");
   const [locationLoading, setLocationLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(-1);
 
   // Lấy GPS khi vào màn hình
   useEffect(() => {
@@ -48,6 +50,29 @@ export default function CreatePostScreen() {
           accuracy: Location.Accuracy.High,
         });
         setCurrentLocation(location);
+
+        // Chuyển tọa độ thành địa chỉ
+        try {
+          const [result] = await Location.reverseGeocodeAsync({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
+          if (result) {
+            const parts = [
+              result.streetNumber ? `${result.streetNumber}` : null,
+              result.street ? `${result.street}` : null,
+              result.subregion ? `${result.subregion}` : null,
+              result.city ? `${result.city}` : null,
+              result.region ? `${result.region}` : null,
+            ].filter(Boolean);
+            setLocationAddress(parts.join(", "));
+          }
+        } catch (geoError) {
+          console.error("Lỗi reverse geocode:", geoError);
+          setLocationAddress(
+            `${location.coords.latitude.toFixed(6)}, ${location.coords.longitude.toFixed(6)}`
+          );
+        }
       } catch (error) {
         console.error("Lỗi lấy vị trí:", error);
         Alert.alert("Lỗi", "Không thể lấy vị trí hiện tại");
@@ -101,14 +126,23 @@ export default function CreatePostScreen() {
           name: m.uri.split("/").pop() || "video.mp4",
         }));
 
-      const response = await CommunityService.createFloodReport({
-        latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude,
-        description: content.trim(),
-        severity,
-        photos: photos.length > 0 ? photos : undefined,
-        videos: videos.length > 0 ? videos : undefined,
-      });
+      const response = await CommunityService.createFloodReport(
+        {
+          latitude: currentLocation.coords.latitude,
+          longitude: currentLocation.coords.longitude,
+          address: locationAddress || undefined,
+          description: content.trim(),
+          severity,
+          photos: photos.length > 0 ? photos : undefined,
+          videos: videos.length > 0 ? videos : undefined,
+        },
+        (progressEvent) => {
+          if (progressEvent.total) {
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(percent);
+          }
+        }
+      );
 
       if (response.success) {
         Alert.alert(
@@ -123,7 +157,12 @@ export default function CreatePostScreen() {
       }
     } catch (error: any) {
       console.error("Lỗi submit:", error);
-      if (error.response?.status === 429) {
+      if (error.response?.status === 413) {
+        Alert.alert(
+          "File quá lớn",
+          "Tổng dung lượng ảnh/video quá lớn (vượt giới hạn máy chủ). Vui lòng gửi file nhẹ hơn hoặc ngắn hơn (Tối đa 50MB cho video)."
+        );
+      } else if (error.response?.status === 429) {
         const retryAfter = error.response?.data?.retryAfterSeconds || 3;
         Alert.alert(
           "Quá nhanh",
@@ -134,6 +173,7 @@ export default function CreatePostScreen() {
       }
     } finally {
       setSubmitting(false);
+      setUploadProgress(-1);
     }
   };
 
@@ -167,7 +207,12 @@ export default function CreatePostScreen() {
               disabled={!canSubmit || submitting}
             >
               {submitting ? (
-                <ActivityIndicator size="small" color="white" />
+                <View className="flex-row items-center gap-1.5">
+                  <ActivityIndicator size="small" color="white" />
+                  {uploadProgress > -1 && (
+                    <Text className="text-white text-xs font-bold">{uploadProgress}%</Text>
+                  )}
+                </View>
               ) : (
                 <Text className="text-xs font-semibold text-white">Đăng</Text>
               )}
@@ -184,6 +229,8 @@ export default function CreatePostScreen() {
             <Text className="text-xs text-slate-500 dark:text-slate-400">
               {locationLoading
                 ? "Đang lấy vị trí..."
+                : locationAddress
+                ? locationAddress
                 : currentLocation
                 ? `Vĩ độ: ${currentLocation.coords.latitude.toFixed(6)}, Kinh độ: ${currentLocation.coords.longitude.toFixed(6)}`
                 : "Chưa lấy được vị trí"}

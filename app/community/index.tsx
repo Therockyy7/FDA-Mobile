@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
@@ -72,20 +73,6 @@ export default function CommunityScreen() {
     }
   }, []);
 
-  const handleToggleLike = (postId: string) => {
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === postId
-          ? {
-              ...p,
-              isLikedByMe: !p.isLikedByMe,
-              likesCount: p.likesCount + (p.isLikedByMe ? -1 : 1),
-            }
-          : p,
-      ),
-    );
-  };
-
   const handleReport = (postId: string) => {
     console.log("report", postId);
   };
@@ -128,9 +115,12 @@ export default function CommunityScreen() {
     fetchCommunityReports(filterId);
   };
 
-  useEffect(() => {
-    fetchCommunityReports();
-  }, [activeFilter, fetchCommunityReports]);
+  // Reload posts when screen comes into focus (e.g., after edit/create)
+  useFocusEffect(
+    useCallback(() => {
+      fetchCommunityReports();
+    }, [fetchCommunityReports])
+  );
 
   const renderHeader = () => (
     <View>
@@ -322,7 +312,6 @@ export default function CommunityScreen() {
           <View className="px-4">
             <PostCard
               post={item}
-              onToggleLike={handleToggleLike}
               onPressReport={handleReport}
             />
           </View>

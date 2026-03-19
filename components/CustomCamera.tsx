@@ -118,7 +118,7 @@ export function CustomCamera({ onClose, onDone }: CustomCameraProps) {
         facing={facing}
         ref={cameraRef}
         mode={cameraMode}
-        videoQuality="720p"
+        videoQuality="480p"
       >
         {/* Nút Đóng */}
         <View style={{ position: "absolute", top: 48, left: 16, zIndex: 10 }}>

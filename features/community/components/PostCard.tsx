@@ -2,8 +2,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import React, { useEffect, useState } from "react";
-import { Dimensions, Image, TouchableOpacity, View } from "react-native";
+import { Alert, Dimensions, Image, Modal, TouchableOpacity, View } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
+import ImageViewing from "react-native-image-viewing";
 import { Text } from "~/components/ui/text";
 import { Media, Post } from "../types/post-types";
 import { CommunityService } from "../services/community.service";
@@ -16,8 +17,11 @@ const MEDIA_HEIGHT = MEDIA_WIDTH;
 
 interface PostCardProps {
   post: Post;
-  onToggleLike?: (postId: string) => void;
+  isOwner?: boolean;
+  onUpvote?: (postId: string, newScore: number, userVote: number) => void;
+  onDownvote?: (postId: string, newScore: number, userVote: number) => void;
   onPressReport?: (postId: string) => void;
+  onDeletePost?: (postId: string) => void;
 }
 
 const getMediaFromPost = (post: Post): Media[] => {
@@ -97,12 +101,122 @@ function VideoWithControls({
   );
 }
 
-export function PostCard({ post, onToggleLike, onPressReport }: PostCardProps) {
+export function PostCard({
+  post,
+  isOwner = false,
+  onUpvote,
+  onDownvote,
+  onPressReport,
+  onDeletePost,
+}: PostCardProps) {
   const router = useRouter();
   const media = getMediaFromPost(post);
+  
+  // Format media images for ImageViewing
+  const imageUris = media
+    .filter((m) => m.mediaType === "photo")
+    .map((m) => ({ uri: m.mediaUrl }));
+    
+  // Since videos are not supported by image-viewer directly without custom renderers, 
+  // we either map images only or figure out indices
+  
   const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
   const [userAvatar, setUserAvatar] = useState<string | null>(post.authorAvatarUrl || null);
   const [userName, setUserName] = useState<string>(post.authorName);
+  const [showMenu, setShowMenu] = useState(false);
+  const [displayScore, setDisplayScore] = useState(post.trustScore || post.score || 0);
+  const [userVote, setUserVote] = useState<number>(post.isLikedByMe ? 1 : 0);
+  const [voting, setVoting] = useState(false);
+  const [isImageViewVisible, setIsImageViewVisible] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Sync when post changes (e.g., refresh from parent)
+  useEffect(() => {
+    setDisplayScore(post.trustScore || post.score || 0);
+    setUserVote(post.isLikedByMe ? 1 : 0);
+  }, [post.trustScore, post.score, post.isLikedByMe]);
+
+  const handleUpvote = async () => {
+    if (voting) return;
+
+    if (isOwner) {
+      Alert.alert("Thông báo", "Bạn không thể vote cho bài đăng của chính mình.");
+      return;
+    }
+
+    const isUnvoting = userVote === 1;
+    const newVote = isUnvoting ? 0 : 1;
+    
+    const prevScore = Number(displayScore) || 0;
+    const prevVote = userVote;
+    let newScore = prevScore;
+    
+    if (isUnvoting) {
+      newScore = prevScore - 1;
+    } else {
+      newScore = prevScore + (prevVote === -1 ? 2 : 1);
+    }
+    
+    setDisplayScore(newScore);
+    setUserVote(newVote);
+    setVoting(true);
+    
+    try {
+      const response = await CommunityService.voteFloodReport(post.id, newVote as any);
+      if (response && typeof response.newScore === 'number') {
+        setDisplayScore(response.newScore);
+        setUserVote(response.userVote);
+        onUpvote?.(post.id, response.newScore, response.userVote);
+      }
+    } catch (error: any) {
+      setDisplayScore(prevScore);
+      setUserVote(prevVote);
+      console.error("Lỗi upvote optimistics:", error.response?.data || error);
+    } finally {
+      setVoting(false);
+    }
+  };
+
+  const handleDownvote = async () => {
+    if (voting) return;
+    
+    if (isOwner) {
+      Alert.alert("Thông báo", "Bạn không thể vote cho bài đăng của chính mình.");
+      return;
+    }
+
+    const isUnvoting = userVote === -1;
+    const newVote = isUnvoting ? 0 : -1;
+    
+    const prevScore = Number(displayScore) || 0;
+    const prevVote = userVote;
+    let newScore = prevScore;
+    
+    if (isUnvoting) {
+      newScore = prevScore + 1;
+    } else {
+      newScore = prevScore - (prevVote === 1 ? 2 : 1);
+    }
+    
+    setDisplayScore(newScore);
+    setUserVote(newVote);
+    setVoting(true);
+    
+    try {
+      const response = await CommunityService.voteFloodReport(post.id, newVote as any);
+      if (response && typeof response.newScore === 'number') {
+        setDisplayScore(response.newScore);
+        setUserVote(response.userVote);
+        onDownvote?.(post.id, response.newScore, response.userVote);
+      }
+    } catch (error: any) {
+      setDisplayScore(prevScore);
+      setUserVote(prevVote);
+      console.error("Lỗi downvote optimistics:", error.response?.data || error);
+    } finally {
+      setVoting(false);
+    }
+  };
 
   // Fetch user info từ API
   useEffect(() => {
@@ -141,6 +255,38 @@ export function PostCard({ post, onToggleLike, onPressReport }: PostCardProps) {
     } as any);
   };
 
+  const handleEdit = () => {
+    setShowMenu(false);
+    router.push({
+      pathname: "/community/edit-post",
+      params: { postId: post.id },
+    } as any);
+  };
+
+  const handleDelete = () => {
+    setShowMenu(false);
+    Alert.alert(
+      "Xóa bài đăng",
+      "Bạn có chắc muốn xóa bài đăng này không?",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Xóa",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await CommunityService.deleteFloodReport(post.id);
+              onDeletePost?.(post.id);
+            } catch (error) {
+              console.error("Lỗi khi xóa bài:", error);
+              Alert.alert("Lỗi", "Không thể xóa bài đăng");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const statusLabel =
     post.waterLevelStatus === "safe"
       ? "An toàn"
@@ -177,16 +323,27 @@ export function PostCard({ post, onToggleLike, onPressReport }: PostCardProps) {
         );
       }
       return (
-        <View
-          className="rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 items-center justify-center"
-          style={{ width: MEDIA_WIDTH, height: MEDIA_HEIGHT }}
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => {
+            const photoIndex = imageUris.findIndex(i => i.uri === firstMedia.mediaUrl);
+            if (photoIndex >= 0) {
+              setCurrentImageIndex(photoIndex);
+              setIsImageViewVisible(true);
+            }
+          }}
         >
-          <Image
-            source={{ uri: firstMedia.mediaUrl }}
-            style={{ width: "100%", height: "100%" }}
-            resizeMode="cover"
-          />
-        </View>
+          <View
+            className="rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 items-center justify-center"
+            style={{ width: MEDIA_WIDTH, height: MEDIA_HEIGHT }}
+          >
+            <Image
+              source={{ uri: firstMedia.mediaUrl }}
+              style={{ width: "100%", height: "100%" }}
+              resizeMode="cover"
+            />
+          </View>
+        </TouchableOpacity>
       );
     }
 
@@ -216,13 +373,24 @@ export function PostCard({ post, onToggleLike, onPressReport }: PostCardProps) {
               );
             }
             return (
-              <View className="items-center justify-center" style={{ width: MEDIA_WIDTH, height: MEDIA_HEIGHT }}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => {
+                  const photoIndex = imageUris.findIndex(i => i.uri === item.mediaUrl);
+                  if (photoIndex >= 0) {
+                    setCurrentImageIndex(photoIndex);
+                    setIsImageViewVisible(true);
+                  }
+                }}
+                className="items-center justify-center" 
+                style={{ width: MEDIA_WIDTH, height: MEDIA_HEIGHT }}
+              >
                 <Image
                   source={{ uri: item.mediaUrl }}
                   style={{ width: "100%", height: "100%" }}
                   resizeMode="cover"
                 />
-              </View>
+              </TouchableOpacity>
             );
           }}
         />
@@ -298,10 +466,64 @@ export function PostCard({ post, onToggleLike, onPressReport }: PostCardProps) {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => onPressReport?.(post.id)} hitSlop={8}>
+        <TouchableOpacity onPress={() => setShowMenu(true)} hitSlop={8}>
           <Ionicons name="ellipsis-horizontal" size={20} color="#64748B" />
         </TouchableOpacity>
       </View>
+
+      {/* Action Menu Modal */}
+      <Modal
+        visible={showMenu}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowMenu(false)}
+      >
+        <TouchableOpacity
+          className="flex-1 bg-black/40"
+          activeOpacity={1}
+          onPress={() => setShowMenu(false)}
+        >
+          <View className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-2xl pb-8">
+            {isOwner ? (
+              <>
+                <TouchableOpacity
+                  className="flex-row items-center gap-3 px-4 py-4"
+                  onPress={handleEdit}
+                >
+                  <Ionicons name="create-outline" size={22} color="#0EA5E9" />
+                  <Text className="text-slate-900 dark:text-white text-base">Chỉnh sửa bài đăng</Text>
+                </TouchableOpacity>
+                <View className="h-px bg-slate-200 dark:bg-slate-700 mx-4" />
+                <TouchableOpacity
+                  className="flex-row items-center gap-3 px-4 py-4"
+                  onPress={handleDelete}
+                >
+                  <Ionicons name="trash-outline" size={22} color="#EF4444" />
+                  <Text className="text-red-500 text-base">Xóa bài đăng</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TouchableOpacity
+                className="flex-row items-center gap-3 px-4 py-4"
+                onPress={() => {
+                  setShowMenu(false);
+                  onPressReport?.(post.id);
+                }}
+              >
+                <Ionicons name="flag-outline" size={22} color="#F97316" />
+                <Text className="text-slate-900 dark:text-white text-base">Báo cáo bài đăng</Text>
+              </TouchableOpacity>
+            )}
+            <View className="h-px bg-slate-200 dark:bg-slate-700 mx-4" />
+            <TouchableOpacity
+              className="items-center py-4"
+              onPress={() => setShowMenu(false)}
+            >
+              <Text className="text-slate-500 text-base">Hủy</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       {/* 2. Media (Tràn viền, không padding) */}
       {media.length > 0 && (
@@ -316,33 +538,37 @@ export function PostCard({ post, onToggleLike, onPressReport }: PostCardProps) {
         <View className="flex-row items-center gap-4">
           {/* Upvote */}
           <TouchableOpacity
-            onPress={() => onToggleLike?.(post.id)}
+            onPress={handleUpvote}
             className="flex-row items-center gap-1.5"
             activeOpacity={0.7}
+            disabled={voting}
           >
             <Ionicons
               name={
-                post.isLikedByMe ? "arrow-up-circle" : "arrow-up-circle-outline"
+                userVote === 1 ? "arrow-up-circle" : "arrow-up-circle-outline"
               }
               size={28}
-              color={post.isLikedByMe ? "#10B981" : "#64748B"}
+              color={userVote === 1 ? "#10B981" : "#64748B"}
             />
             <Text
-              className={`text-sm font-bold ${post.isLikedByMe ? "text-emerald-500" : "text-slate-900 dark:text-white"}`}
+              className={`text-sm font-bold ${userVote === 1 ? "text-emerald-500" : "text-slate-900 dark:text-white"}`}
             >
-              {post.trustScore || post.score || 0}
+              {displayScore}
             </Text>
           </TouchableOpacity>
 
           {/* Downvote */}
           <TouchableOpacity
-            onPress={() => onToggleLike?.(post.id)}
+            onPress={handleDownvote}
             activeOpacity={0.7}
+            disabled={voting}
           >
             <Ionicons
-              name="arrow-down-circle-outline"
+              name={
+                userVote === -1 ? "arrow-down-circle" : "arrow-down-circle-outline"
+              }
               size={28}
-              color="#64748B"
+              color={userVote === -1 ? "#EF4444" : "#64748B"}
             />
           </TouchableOpacity>
 
@@ -401,6 +627,18 @@ export function PostCard({ post, onToggleLike, onPressReport }: PostCardProps) {
           {post.createdAt}
         </Text>
       </TouchableOpacity>
+      
+      {/* 5. Image Viewer Modal */}
+      {imageUris.length > 0 && (
+        <ImageViewing
+          images={imageUris}
+          imageIndex={currentImageIndex}
+          visible={isImageViewVisible}
+          onRequestClose={() => setIsImageViewVisible(false)}
+          swipeToCloseEnabled={true}
+          doubleTapToZoomEnabled={true}
+        />
+      )}
     </View>
   );
 }

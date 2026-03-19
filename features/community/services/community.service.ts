@@ -101,6 +101,28 @@ export interface CreateFloodReportParams {
   videos?: { uri: string; type: string; name: string }[];
 }
 
+export interface UpdateFloodReportParams {
+  address?: string;
+  description?: string;
+  severity?: "low" | "medium" | "high";
+  mediaFilesToAdd?: { uri: string; type: string; name: string }[];
+  mediaToDelete?: string[];
+}
+
+export interface DeleteFloodReportResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface VoteFloodReportResponse {
+  success: boolean;
+  message: string;
+  newScore: number;
+  userVote: number;
+}
+
+export type VoteType = 1 | -1;
+
 export const CommunityService = {
   async getCommunityReports(params: CommunityReportsParams = {}): Promise<CommunityReportsResponse> {
     const response = await apiClient.get<CommunityReportsResponse>(
@@ -139,7 +161,78 @@ export const CommunityService = {
     return response.data;
   },
 
-  async createFloodReport(params: CreateFloodReportParams): Promise<CreateFloodReportResponse> {
+  async updateFloodReport(id: string, params: UpdateFloodReportParams): Promise<CreateFloodReportResponse> {
+    const formData = new FormData();
+
+    if (params.address !== undefined) {
+      formData.append("address", params.address);
+    }
+    if (params.description !== undefined) {
+      formData.append("description", params.description);
+    }
+    if (params.severity !== undefined) {
+      formData.append("severity", params.severity);
+    }
+
+    // Append new media files
+    if (params.mediaFilesToAdd) {
+      params.mediaFilesToAdd.forEach((media) => {
+        formData.append("mediaFilesToAdd", {
+          uri: media.uri,
+          type: media.type,
+          name: media.name,
+        } as any);
+      });
+    }
+
+    // Append media IDs to delete
+    if (params.mediaToDelete) {
+      params.mediaToDelete.forEach((mediaId) => {
+        formData.append("mediaToDelete", mediaId);
+      });
+    }
+
+    const response = await apiClient.put<CreateFloodReportResponse>(
+      `/api/v1/flood-reports/${id}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        transformRequest: (data) => data,
+      }
+    );
+    return response.data;
+  },
+
+  async deleteFloodReport(id: string): Promise<DeleteFloodReportResponse> {
+    const response = await apiClient.delete<DeleteFloodReportResponse>(
+      `/api/v1/flood-reports/${id}`
+    );
+    return response.data;
+  },
+
+  async voteFloodReport(id: string, voteType: VoteType): Promise<VoteFloodReportResponse> {
+    try {
+      const response = await apiClient.post<VoteFloodReportResponse>(
+        `/api/v1/flood-reports/${id}/vote`,
+        { voteType }
+      );
+      return response.data;
+    } catch (error: any) {
+      if (error.response) {
+        console.error("API response error:", JSON.stringify(error.response.data, null, 2));
+      } else {
+        console.error("API request error:", error.message);
+      }
+      throw error;
+    }
+  },
+
+  async createFloodReport(
+    params: CreateFloodReportParams,
+    onUploadProgress?: (progressEvent: any) => void
+  ): Promise<CreateFloodReportResponse> {
     const formData = new FormData();
 
     formData.append("latitude", params.latitude.toString());
@@ -183,6 +276,8 @@ export const CommunityService = {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        timeout: 300000, // 5 minutes timeout for large media uploads
+        onUploadProgress,
         transformRequest: (data) => data,
       }
     );

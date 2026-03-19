@@ -93,7 +93,6 @@ export default function PostDetailScreen() {
         {/* Dùng lại PostCard cho phần nội dung chính */}
         <PostCard
           post={post}
-          onToggleLike={() => {}}
           onPressReport={() => {}}
         />
 

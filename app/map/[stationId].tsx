@@ -2,7 +2,7 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   ScrollView,
   StatusBar,
@@ -25,6 +25,7 @@ import { useFloodSignalR } from "~/features/map/hooks/useFloodSignalR";
 import {
   SEVERITY_COLORS,
   SEVERITY_LABELS,
+  type FloodSeverityFeature,
 } from "~/features/map/types/map-layers.types";
 import { useColorScheme } from "~/lib/useColorScheme";
 
@@ -51,9 +52,16 @@ export default function StationDetailScreen() {
     (state: RootState) => state.map?.floodSeverity,
   );
 
-  const station = floodSeverity?.features.find(
-    (f) => f.properties.stationId === stationId,
-  );
+  // Memoize station lookup to ensure we get real-time updates
+  const station = useMemo(() => {
+    if (!floodSeverity?.features) return null;
+    return (
+      floodSeverity.features.find(
+        (f): f is FloodSeverityFeature =>
+          f.geometry.type === "Point" && f.properties.stationId === stationId,
+      ) ?? null
+    );
+  }, [floodSeverity, stationId]);
 
   const colors = {
     background: isDarkColorScheme ? "#0F172A" : "#F1F5F9",

@@ -88,6 +88,8 @@
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "prettier-plugin-tailwindcss": "^0.5.14",
+    "reactotron-react-native": "^5.1.18",
+    "reactotron-redux": "^3.2.1",
     "tailwindcss": "^3.4.17",
     "typescript": "~5.9.2"
   },

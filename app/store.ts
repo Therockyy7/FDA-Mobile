@@ -15,6 +15,13 @@ import adminAreaReducer from "../features/areas/stores/admin-area.slice";
 import authReducer, { AuthState } from "../features/auth/stores/auth.slice";
 import mapReducer, { MapState } from "../features/map/stores/map.slice";
 
+// Reactotron - chỉ dùng trong dev
+let reactotronEnhancer: any;
+if (__DEV__) {
+  const reactotron = require("../reactotron.config").default;
+  reactotronEnhancer = reactotron.createEnhancer?.();
+}
+
 const authPersistConfig = {
   key: "auth",
   storage: AsyncStorage,
@@ -41,6 +48,10 @@ export const store = configureStore({
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
     }),
+  enhancers: (getDefault) =>
+    reactotronEnhancer
+      ? getDefault().concat(reactotronEnhancer)
+      : getDefault(),
 });
 
 export const persistor = persistStore(store);

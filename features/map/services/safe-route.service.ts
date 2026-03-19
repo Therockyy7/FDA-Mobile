@@ -109,11 +109,13 @@ export const SafeRouteService = {
         "/api/v1/routing/safe-route",
         params
       );
-      console.log("📦 Safe route response received, features:", res.data.data?.features?.length);
+      const routeNames = res.data.data?.features?.map((f: any) => f.properties?.name) ?? [];
+      console.log("📦 Safe route response received, features:", res.data.data?.features?.length, "routes:", routeNames);
       return res.data;
-    } catch {
-      console.log("⚠️ Safe route API not available, using mock data");
-      return MOCK_RESPONSE;
+    } catch (error) {
+      console.error("❌ Safe route API error:", error);
+      throw error;
+      // return MOCK_RESPONSE;
     }
   },
 };

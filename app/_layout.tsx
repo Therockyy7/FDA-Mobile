@@ -3,7 +3,12 @@ import "~/features/alerts/fcm/initFCM";
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { DarkTheme, DefaultTheme, Theme } from "@react-navigation/native";
+import {
+  DarkTheme,
+  DefaultTheme,
+  Theme,
+  ThemeProvider,
+} from "@react-navigation/native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -30,6 +35,7 @@ const LIGHT_THEME: Theme = {
   ...DefaultTheme,
   colors: NAV_THEME.light,
 };
+
 const DARK_THEME: Theme = {
   ...DarkTheme,
   colors: NAV_THEME.dark,
@@ -44,7 +50,6 @@ const useIsomorphicLayoutEffect =
     ? React.useEffect
     : React.useLayoutEffect;
 
-// Configure Google Sign-In once at module level
 GoogleSignin.configure({
   webClientId:
     "176554472012-dm1lfi1lq24m5i1p5lb3e4rvlp4gsgpe.apps.googleusercontent.com",
@@ -53,38 +58,53 @@ GoogleSignin.configure({
 
 function RootStack() {
   const hasMounted = React.useRef(false);
-  const segments = useSegments();
+  useSegments();
+
   const { isDarkColorScheme } = useColorScheme();
   const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
+
   const dispatch = useAppDispatch();
   const authLoading = useAppSelector((state) => state.auth.loading);
 
-  // Navigation callback for FCM taps
   const navigateToNotification = useNotificationNavigation();
 
-  // In-app notification banner (for foreground FCM messages)
   const { notification, visible, translateY, triggerNotification, dismiss } =
     useInAppNotification();
 
   useIsomorphicLayoutEffect(() => {
     if (hasMounted.current) return;
+
     if (Platform.OS === "web") {
       document.documentElement.classList.add("bg-background");
     }
+
     setIsColorSchemeLoaded(true);
     hasMounted.current = true;
   }, []);
 
-  // 1. Initialize auth state on app start
   useEffect(() => {
     dispatch(initializeAuth());
   }, [dispatch]);
 
-  // 2. Initialize FCM — foreground shows banner; background/killed navigate directly
   useEffect(() => {
     return initFCM(
-      (data) => navigateToNotification(data),  // onNavigate (background/killed tap)
-      (data) => triggerNotification(data),      // onShowBanner (foreground)
+      (data) => {
+        navigateToNotification(data);
+      },
+      (data) => {
+        console.log("🔥 [DEBUG] _layout -> foreground message:", data);
+
+        // if (Platform.OS === "android") {
+        //   ToastAndroid.show(
+        //     "Có thông báo mới (Foreground)!",
+        //     ToastAndroid.LONG,
+        //   );
+        // } else {
+        //   Alert.alert("Có thông báo mới (Foreground)!", data.title ?? "");
+        // }
+
+        triggerNotification(data);
+      },
     );
   }, [navigateToNotification, triggerNotification]);
 
@@ -106,22 +126,29 @@ function RootStack() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="community" />
-          <Stack.Screen name="alerts" />
-        </Stack>
-      </SafeAreaProvider>
+        <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
+          <View style={{ flex: 1 }}>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="community" />
+              <Stack.Screen name="alerts" />
+            </Stack>
 
-      {/* ── In-App FCM Notification Banner ── */}
-      <InAppNotificationBanner
-        notification={notification}
-        visible={visible}
-        translateY={translateY}
-        onPress={(n) => n.data && navigateToNotification(n.data)}
-        onDismiss={dismiss}
-      />
+            <InAppNotificationBanner
+              notification={notification}
+              visible={visible}
+              translateY={translateY}
+              onPress={(n) => {
+                if (n.data) {
+                  navigateToNotification(n.data);
+                }
+              }}
+              onDismiss={dismiss}
+            />
+          </View>
+        </ThemeProvider>
+      </SafeAreaProvider>
 
       <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
     </GestureHandlerRootView>

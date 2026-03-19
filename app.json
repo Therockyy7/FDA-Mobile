@@ -61,13 +61,22 @@
         }
       ],
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Cho phép FDA App truy cập camera để chụp ảnh/video ngập lụt.",
+          "microphonePermission": "Cho phép FDA App truy cập microphone để quay video ngập lụt.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
             "compileSdkVersion": 35
           }
         }
-      ]
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true

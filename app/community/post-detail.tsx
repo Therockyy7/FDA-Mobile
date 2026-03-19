@@ -56,8 +56,6 @@ export default function PostDetailScreen() {
         <PostCard
           post={post}
           onToggleLike={() => {}}
-          onPressComments={() => {}}
-          onPressShare={() => {}}
           onPressReport={() => {}}
         />
 

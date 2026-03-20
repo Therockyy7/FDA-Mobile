@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { getFCMToken } from "~/features/alerts/fcm/getFCMToken";
+import { getFCMToken, registerFCMToken, onFCMTokenRefresh } from "~/features/alerts/fcm/getFCMToken";
 import { ProfileService } from "~/features/profile/services/profile.service";
 import { AuthService } from "../services/auth.service";
 
@@ -95,6 +95,12 @@ export const initializeAuth = createAsyncThunk(
 
       // Cập nhật lại user mới nhất vào storage
       await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
+
+      // Gửi FCM token lên backend mỗi khi app mở (token có thể đã thay đổi)
+      registerFCMToken().catch(() => {});
+
+      // Lắng nghe khi Firebase refresh token → tự động gửi lên backend
+      onFCMTokenRefresh();
 
       return {
         isAuthenticated: true,
@@ -245,8 +251,8 @@ export const signInByGoogle = createAsyncThunk<
   try {
     const { accessToken, refreshToken, expiresAt, isNewUser } = payload;
     
-    // Yêu cầu quyền thông báo & lấy token sau khi Google cấp SDK token
-    await getFCMToken();
+    // Yêu cầu quyền thông báo & lấy token, rồi gửi lên backend
+    await registerFCMToken();
 
     await saveAuthData({ accessToken, refreshToken, expiresAt }, payload.user);
 

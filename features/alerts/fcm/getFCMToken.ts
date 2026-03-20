@@ -7,6 +7,7 @@ import {
     requestPermission,
 } from "@react-native-firebase/messaging";
 import { PermissionsAndroid, Platform } from "react-native";
+import { ProfileService } from "~/features/profile/services/profile.service";
 
 /**
  * Requests notification permission from the user.
@@ -59,13 +60,48 @@ export const getFCMToken = async (): Promise<string | null> => {
 };
 
 /**
- * Listens for FCM token refresh and calls the provided callback.
- * Call this once during app initialization.
+ * Lấy FCM token và gửi lên Backend qua PUT /api/v1/profile/fcm-token.
+ * Gọi hàm này khi:
+ *  - App mở và user đã đăng nhập (initializeAuth)
+ *  - Sau khi đăng nhập Google (vì Google login không gửi fcmToken qua body login)
+ * @returns FCM token string hoặc null
+ */
+export const registerFCMToken = async (): Promise<string | null> => {
+    try {
+        const token = await getFCMToken();
+        if (token) {
+            await ProfileService.updateFcmToken(token);
+            console.log("[FCM] Token registered to backend successfully");
+        }
+        return token;
+    } catch (error: any) {
+        console.error(
+            "[FCM] Error registering token to backend:", 
+            error.message, 
+            error.response?.data || "No response data"
+        );
+        return null;
+    }
+};
+
+/**
+ * Listens for FCM token refresh and automatically sends the new token to backend.
+ * Call this once during app initialization (khi user đã đăng nhập).
  * @returns unsubscribe function
  */
-export const onFCMTokenRefresh = (callback: (token: string) => void) => {
-    return onTokenRefresh(getMessaging(), (token) => {
+export const onFCMTokenRefresh = (callback?: (token: string) => void) => {
+    return onTokenRefresh(getMessaging(), async (token) => {
         console.log("[FCM] Token refreshed:", token);
-        callback(token);
+
+        // Tự động gửi token mới lên backend
+        try {
+            await ProfileService.updateFcmToken(token);
+            console.log("[FCM] Refreshed token sent to backend successfully");
+        } catch (error) {
+            console.error("[FCM] Error sending refreshed token to backend:", error);
+        }
+
+        // Gọi callback bổ sung nếu có
+        callback?.(token);
     });
 };

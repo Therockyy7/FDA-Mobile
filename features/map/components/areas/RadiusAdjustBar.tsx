@@ -114,7 +114,7 @@ export function RadiusAdjustBar({
               Chọn vùng theo dõi
             </Text>
             <Text style={{ fontSize: 11, color: colors.subtext }}>
-              Nhấn lên bản đồ hoặc kéo để di chuyển
+              Kéo bản đồ để di chuyển vòng tròn
             </Text>
           </View>
         </View>

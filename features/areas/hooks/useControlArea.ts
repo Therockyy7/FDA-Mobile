@@ -23,6 +23,7 @@ type UseControlAreaParams = {
   region: Region | null;
   refreshAreas: () => void | Promise<void>;
   clearSelections: () => void;
+  onMapCenterChange?: (coordinate: { latitude: number; longitude: number }) => void;
 };
 
 // Default radius for new areas (meters)
@@ -36,6 +37,7 @@ export function useControlArea({
   region,
   refreshAreas,
   clearSelections,
+  onMapCenterChange,
 }: UseControlAreaParams) {
   // Selected area state
   const [selectedArea, setSelectedArea] = useState<AreaWithStatus | null>(null);
@@ -428,15 +430,23 @@ export function useControlArea({
     setIsAdjustingRadius(true);
   }, []);
 
-  // Handle map press to update draft area center during Step 1
+  // Handle map press - no longer needed for area creation (now uses center-based approach)
   const handleMapPress = useCallback(
     (event: MapPressEvent) => {
-      if (isAdjustingRadius && draftAreaCenter) {
-        // Allow tap on map to change position
-        setDraftAreaCenter(event.nativeEvent.coordinate);
+      // Tap to set position is disabled when using center-based approach
+      // The circle now follows the map center automatically
+    },
+    [],
+  );
+
+  // Update draft area center when map moves (center-based approach)
+  const updateDraftAreaFromMapCenter = useCallback(
+    (coordinate: { latitude: number; longitude: number }) => {
+      if (isAdjustingRadius) {
+        setDraftAreaCenter(coordinate);
       }
     },
-    [isAdjustingRadius, draftAreaCenter],
+    [isAdjustingRadius],
   );
 
   // Start edit mode from external params (from Areas tab navigation)
@@ -561,6 +571,7 @@ export function useControlArea({
     handleCreateAreaSubmit,
     handleCloseCreateArea,
     handleMapPress,
+    updateDraftAreaFromMapCenter,
     // NEW: Option selection handlers
     handleOptionSelect,
     handleAddressSelected,

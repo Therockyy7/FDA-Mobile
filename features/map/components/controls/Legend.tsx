@@ -61,7 +61,9 @@ const Legend = () => {
       }}
     >
       {/* Header */}
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+      <View
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}
+      >
         <View
           style={{
             width: 28,
@@ -88,7 +90,10 @@ const Legend = () => {
 
       <View style={{ gap: 8 }}>
         {SEVERITY_LEVELS.map((level) => (
-          <View key={level.key} style={{ flexDirection: "row", alignItems: "center" }}>
+          <View
+            key={level.key}
+            style={{ flexDirection: "row", alignItems: "center" }}
+          >
             <View
               style={{
                 width: 32,

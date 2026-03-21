@@ -615,6 +615,47 @@ function LayerToggleSheetContent({
                 />
               </View>
 
+              {/* Community Reports Layer */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: 16,
+                  borderRadius: 16,
+                  backgroundColor: colors.cardBg,
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 10,
+                      backgroundColor: "#10B98120",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Ionicons name="people" size={20} color="#10B981" />
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 15, fontWeight: "600", color: colors.text }}>
+                      Báo cáo cộng đồng
+                    </Text>
+                    <Text style={{ fontSize: 12, color: colors.subtext }}>
+                      Phản ánh từ người dân
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={settings.overlays.communityReports}
+                  onValueChange={() => toggleOverlay("communityReports")}
+                  trackColor={{ false: colors.border, true: "#10B98180" }}
+                  thumbColor={settings.overlays.communityReports ? "#10B981" : "#f4f3f4"}
+                />
+              </View>
+
               {/* Weather Opacity Slider */}
               {settings.overlays.weather && (
                 <View

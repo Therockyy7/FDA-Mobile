@@ -13,6 +13,7 @@
     },
     "android": {
       "package": "com.fda.mobile",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.ACCESS_COARSE_LOCATION",
@@ -84,7 +85,9 @@
           }
         }
       ],
-      "expo-video"
+      "expo-video",
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging"
     ],
     "experiments": {
       "typedRoutes": true

@@ -6,6 +6,7 @@ export interface OverlaySettings {
   flood: boolean;
   traffic: boolean;
   weather: boolean;
+  communityReports: boolean;
 }
 
 export interface OpacitySettings {

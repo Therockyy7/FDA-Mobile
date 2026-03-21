@@ -139,22 +139,22 @@ export function useControlArea({
 
     // Check if user has reached free limit
     try {
-      console.log("🔍 Checking area count...");
+      // console.log("🔍 Checking area count...");
       const areas = await AreaService.getAreas();
       const count = areas.length;
-      console.log(`📊 Area count: ${count}/${FREE_AREA_LIMIT}`);
+      // console.log(`📊 Area count: ${count}/${FREE_AREA_LIMIT}`);
       setCurrentAreaCount(count);
 
       if (count >= FREE_AREA_LIMIT) {
         // Show premium limit modal instead of creation options
-        console.log("🔒 LIMIT REACHED! Showing premium modal...");
+        // console.log("🔒 LIMIT REACHED! Showing premium modal...");
         setIsCheckingLimit(false);
         setShowPremiumLimitModal(true);
         return;
       }
 
       // Under limit, show creation options
-      console.log("✅ Under limit, showing creation options...");
+      // console.log("✅ Under limit, showing creation options...");
       setIsCheckingLimit(false);
       setShowCreationOptions(true);
     } catch (error) {
@@ -191,7 +191,7 @@ export function useControlArea({
           const location = await Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.High,
           });
-          console.log("Location GPS:", location);
+          // console.log("Location GPS:", location);
 
           const { latitude, longitude } = location.coords;
 
@@ -215,7 +215,7 @@ export function useControlArea({
               ].filter(Boolean); // Remove null/undefined values
 
               addressText = addressParts.join(", ");
-              console.log("Reverse geocoded address:", addressText);
+              // console.log("Reverse geocoded address:", addressText);
             }
           } catch (geocodeError) {
             console.warn("Reverse geocoding failed:", geocodeError);

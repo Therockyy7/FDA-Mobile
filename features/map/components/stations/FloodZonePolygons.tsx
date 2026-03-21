@@ -15,7 +15,7 @@ export function FloodZonePolygons() {
     const polygons = floodSeverity.features.filter(
       (f): f is FloodZoneFeature => isPolygonFeature(f)
     );
-    console.log(`[FloodZonePolygons] total features: ${floodSeverity.features.length}, polygons: ${polygons.length}, geometry types: ${[...new Set(floodSeverity.features.map(f => f.geometry.type))]}`);
+    // console.log(`[FloodZonePolygons] total features: ${floodSeverity.features.length}, polygons: ${polygons.length}, geometry types: ${[...new Set(floodSeverity.features.map(f => f.geometry.type))]}`);
     return polygons;
   }, [settings.overlays.flood, floodSeverity?.features]);
 

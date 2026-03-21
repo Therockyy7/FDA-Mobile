@@ -16,6 +16,9 @@ import MapView, {
   PROVIDER_GOOGLE,
   Region,
 } from "react-native-maps";
+import { NearbyFloodReport } from "~/features/community/services/community.service";
+import { CommunityReportSheet } from "~/features/map/components/reports/CommunityReportSheet";
+
 import { useAppDispatch, useAppSelector } from "~/app/hooks";
 import { Text } from "~/components/ui/text";
 import { AreaCreationErrorModal } from "~/features/areas/components/AreaCreationErrorModal";
@@ -109,8 +112,15 @@ export default function MapScreen() {
   const loadedBoundsRef = useRef<ViewportBounds | null>(null);
   const lastZoomModeRef = useRef<MapZoomMode | null>(null);
 
-  const { settings, areas, floodSeverity, refreshFloodSeverity, refreshAreas } =
-    useMapLayerSettings();
+  const {
+    settings,
+    areas,
+    floodSeverity,
+    communityReports,
+    refreshFloodSeverity,
+    refreshAreas,
+    refreshNearbyFloodReports,
+  } = useMapLayerSettings();
 
   // Get selected station from Redux store (real-time updates via SignalR)
   const selectedStation = useMemo(() => {
@@ -159,6 +169,9 @@ export default function MapScreen() {
     showDetailPanels,
     clearSelection,
   } = useFloodSelection();
+
+  const [selectedCommunityReport, setSelectedCommunityReport] =
+    useState<NearbyFloodReport | null>(null);
 
   const {
     streetViewLocation,
@@ -210,16 +223,39 @@ export default function MapScreen() {
 
   // Initial load of flood severity markers and areas when component mounts
   useEffect(() => {
+    // Load markers for initial region with buffer
+    const initialBounds = getBufferedBounds(DANANG_CENTER);
+    loadedBoundsRef.current = initialBounds;
+    lastZoomModeRef.current = getZoomMode(DANANG_CENTER.latitudeDelta);
+
     if (settings.overlays.flood) {
-      // Load markers for initial region with buffer
-      const initialBounds = getBufferedBounds(DANANG_CENTER);
-      loadedBoundsRef.current = initialBounds;
-      lastZoomModeRef.current = getZoomMode(DANANG_CENTER.latitudeDelta);
       refreshFloodSeverity(initialBounds);
-      // Load areas
-      refreshAreas();
     }
-  }, [settings.overlays.flood, refreshFloodSeverity, refreshAreas]);
+
+    if (settings.overlays.communityReports) {
+      const radiusMeters = (DANANG_CENTER.latitudeDelta / 2) * 111320;
+      console.log("📢 Fetching community reports:", {
+        lat: DANANG_CENTER.latitude,
+        lng: DANANG_CENTER.longitude,
+        radiusMeters: Math.round(radiusMeters),
+      });
+      refreshNearbyFloodReports({
+        latitude: DANANG_CENTER.latitude,
+        longitude: DANANG_CENTER.longitude,
+        radiusMeters: Math.round(radiusMeters),
+        hours: 720,
+      });
+    }
+
+    // Load areas
+    refreshAreas();
+  }, [
+    settings.overlays.flood,
+    settings.overlays.communityReports,
+    refreshFloodSeverity,
+    refreshAreas,
+    refreshNearbyFloodReports,
+  ]);
 
   // Fetch Admin Areas if not already loaded
   useEffect(() => {
@@ -487,7 +523,8 @@ export default function MapScreen() {
   const fetchMarkersInViewPort = useMemo(
     () =>
       debounce((newRegion: Region) => {
-        if (!settings.overlays.flood) return;
+        if (!settings.overlays.flood && !settings.overlays.communityReports)
+          return;
 
         const currentZoomMode = getZoomMode(newRegion.latitudeDelta);
         const zoomModeChanged = currentZoomMode !== lastZoomModeRef.current;
@@ -508,9 +545,27 @@ export default function MapScreen() {
           `📍 Fetching markers [${currentZoomMode}]:`,
           bufferedBounds,
         );
-        refreshFloodSeverity(bufferedBounds);
+
+        if (settings.overlays.flood) {
+          refreshFloodSeverity(bufferedBounds);
+        }
+
+        if (settings.overlays.communityReports) {
+          const radiusMeters = (newRegion.latitudeDelta / 2) * 111320;
+          refreshNearbyFloodReports({
+            latitude: newRegion.latitude,
+            longitude: newRegion.longitude,
+            radiusMeters: Math.round(radiusMeters),
+            hours: 720, // 30 days
+          });
+        }
       }, 400),
-    [refreshFloodSeverity, settings.overlays.flood],
+    [
+      refreshFloodSeverity,
+      refreshNearbyFloodReports,
+      settings.overlays.flood,
+      settings.overlays.communityReports,
+    ],
   );
 
   const handleRegionChange = useCallback(
@@ -919,6 +974,82 @@ export default function MapScreen() {
           {/* Flood Zone Polygons (rendered below station markers) */}
           <FloodZonePolygons />
 
+          {/* Community Reports */}
+          {settings.overlays.communityReports &&
+            communityReports.map((report) => {
+              const severityColor =
+                report.severity === "high"
+                  ? "#DC2626"
+                  : report.severity === "medium"
+                    ? "#EA580C"
+                    : "#059669";
+              return (
+                <Marker
+                  key={`community-report-${report.id}`}
+                  coordinate={{
+                    latitude: report.latitude,
+                    longitude: report.longitude,
+                  }}
+                  onPress={() => {
+                    setSelectedArea(null);
+                    setSelectedRoute(null);
+                    setSelectedZone(null);
+                    setSelectedStationId(null);
+                    setSelectedCommunityReport(report);
+                    const LATITUDE_OFFSET = 0.008;
+                    mapRef.current?.animateToRegion(
+                      {
+                        latitude: report.latitude - LATITUDE_OFFSET,
+                        longitude: report.longitude,
+                        latitudeDelta: 0.03,
+                        longitudeDelta: 0.02,
+                      },
+                      400,
+                    );
+                  }}
+                >
+                  <View
+                    style={{
+                      alignItems: "center",
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: 19,
+                        backgroundColor: severityColor,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderWidth: 3,
+                        borderColor: "white",
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 4,
+                        elevation: 6,
+                      }}
+                    >
+                      <Ionicons name="megaphone" size={18} color="white" />
+                    </View>
+                    <View
+                      style={{
+                        width: 0,
+                        height: 0,
+                        borderLeftWidth: 6,
+                        borderRightWidth: 6,
+                        borderTopWidth: 8,
+                        borderLeftColor: "transparent",
+                        borderRightColor: "transparent",
+                        borderTopColor: "white",
+                        marginTop: -2,
+                      }}
+                    />
+                  </View>
+                </Marker>
+              );
+            })}
+
           {/* Flood Severity Markers from API */}
           <FloodSeverityMarkers
             onMarkerPress={useCallback(
@@ -1128,6 +1259,20 @@ export default function MapScreen() {
             <RouteDetailCard
               route={selectedRoute}
               onClose={() => setSelectedRoute(null)}
+            />
+          )}
+        </MapBottomSheet>
+
+        {/* Community Report Bottom Sheet */}
+        <MapBottomSheet
+          isOpen={!!selectedCommunityReport}
+          onClose={() => setSelectedCommunityReport(null)}
+          snapPoints={["60%", "90%"]}
+        >
+          {selectedCommunityReport && (
+            <CommunityReportSheet
+              report={selectedCommunityReport}
+              onClose={() => setSelectedCommunityReport(null)}
             />
           )}
         </MapBottomSheet>

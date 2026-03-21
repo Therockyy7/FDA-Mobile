@@ -2,6 +2,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AreaService } from "~/features/areas/services/area.service";
+import {
+  CommunityService,
+  NearbyFloodReport,
+  NearbyFloodReportsParams,
+  NearbyFloodReportsResponse,
+} from "~/features/community/services/community.service";
 import { MapService } from "../services/map.service";
 import type {
   AreaWithStatus,
@@ -23,6 +29,7 @@ export const DEFAULT_MAP_SETTINGS: MapLayerSettings = {
     flood: true,
     traffic: false,
     weather: false,
+    communityReports: true,
   },
   opacity: {
     flood: 80,
@@ -35,6 +42,7 @@ export interface MapState {
   settings: MapLayerSettings;
   floodSeverity: FloodSeverityGeoJSON | null;
   areas: AreaWithStatus[];
+  communityReports: NearbyFloodReport[];
   loading: boolean;
   floodLoading: boolean;
   areasLoading: boolean;
@@ -46,6 +54,7 @@ const initialState: MapState = {
   settings: DEFAULT_MAP_SETTINGS,
   floodSeverity: null,
   areas: [],
+  communityReports: [],
   loading: false,
   floodLoading: false,
   areasLoading: false,
@@ -66,14 +75,30 @@ export const loadMapSettings = createAsyncThunk<
   { rejectValue: string }
 >("map/loadSettings", async (isAuthenticated, { rejectWithValue }) => {
   try {
+    let loaded: MapLayerSettings | null | undefined;
     if (isAuthenticated) {
       // Fetch from backend for logged-in users
-      return await MapService.getMapLayerPreferences();
+      loaded = await MapService.getMapLayerPreferences();
     } else {
       // Load from AsyncStorage for guests
       const stored = await AsyncStorage.getItem(GUEST_MAP_SETTINGS_KEY);
-      return stored ? JSON.parse(stored) : DEFAULT_MAP_SETTINGS;
+      loaded = stored ? JSON.parse(stored) : null;
     }
+    // Merge with defaults to handle new fields (e.g. communityReports)
+    // Also handles case where loaded is null/undefined
+    if (!loaded) return DEFAULT_MAP_SETTINGS;
+    return {
+      ...DEFAULT_MAP_SETTINGS,
+      ...loaded,
+      overlays: {
+        ...DEFAULT_MAP_SETTINGS.overlays,
+        ...(loaded.overlays || {}),
+      },
+      opacity: {
+        ...DEFAULT_MAP_SETTINGS.opacity,
+        ...(loaded.opacity || {}),
+      },
+    };
   } catch (error: any) {
     console.error("Failed to load map settings:", error);
     return rejectWithValue(error?.message || "Không thể tải cài đặt bản đồ");
@@ -89,21 +114,27 @@ export const saveMapSettings = createAsyncThunk<
   MapLayerSettings,
   { settings: MapLayerSettings; isAuthenticated: boolean },
   { rejectValue: string }
->("map/saveSettings", async ({ settings, isAuthenticated }, { rejectWithValue }) => {
-  try {
-    if (isAuthenticated) {
-      // Sync to backend for logged-in users
-      await MapService.updateMapLayerPreferences(settings);
-    } else {
-      // Save to AsyncStorage for guests
-      await AsyncStorage.setItem(GUEST_MAP_SETTINGS_KEY, JSON.stringify(settings));
+>(
+  "map/saveSettings",
+  async ({ settings, isAuthenticated }, { rejectWithValue }) => {
+    try {
+      if (isAuthenticated) {
+        // Sync to backend for logged-in users
+        await MapService.updateMapLayerPreferences(settings);
+      } else {
+        // Save to AsyncStorage for guests
+        await AsyncStorage.setItem(
+          GUEST_MAP_SETTINGS_KEY,
+          JSON.stringify(settings),
+        );
+      }
+      return settings;
+    } catch (error: any) {
+      console.error("Failed to save map settings:", error);
+      return rejectWithValue(error?.message || "Không thể lưu cài đặt bản đồ");
     }
-    return settings;
-  } catch (error: any) {
-    console.error("Failed to save map settings:", error);
-    return rejectWithValue(error?.message || "Không thể lưu cài đặt bản đồ");
-  }
-});
+  },
+);
 
 /**
  * Sync guest settings to backend after login
@@ -155,7 +186,7 @@ export const fetchAreas = createAsyncThunk<
   try {
     // Fetch all areas
     const areas = await AreaService.getAreas();
-    
+
     // Fetch status for each area in parallel
     const areasWithStatus = await Promise.all(
       areas.map(async (area) => {
@@ -168,14 +199,35 @@ export const fetchAreas = createAsyncThunk<
           contributingStations: status.contributingStations,
           evaluatedAt: status.evaluatedAt,
         };
-      })
+      }),
     );
-    
+
     // console.log(`✅ Loaded ${areasWithStatus.length} areas with status`);
     return areasWithStatus;
   } catch (error: any) {
     console.error("Failed to fetch areas:", error);
     return rejectWithValue(error?.message || "Không thể tải dữ liệu vùng");
+  }
+});
+
+/**
+ * Fetch nearby community flood reports
+ */
+export const fetchNearbyFloodReports = createAsyncThunk<
+  NearbyFloodReportsResponse,
+  NearbyFloodReportsParams,
+  { rejectValue: string }
+>("map/fetchNearbyFloodReports", async (params, { rejectWithValue }) => {
+  try {
+    console.log("📢 Calling getNearbyFloodReports with params:", params);
+    const result = await CommunityService.getNearbyFloodReports(params);
+    console.log(
+      `✅ Nearby flood reports: ${result.reports?.length || 0} reports found`,
+    );
+    return result;
+  } catch (error: any) {
+    console.error("Failed to fetch nearby reports:", error);
+    return rejectWithValue(error?.message || "Không thể tải báo cáo cộng đồng");
   }
 });
 
@@ -189,7 +241,7 @@ const mapSlice = createSlice({
      */
     toggleOverlay: (
       state,
-      action: PayloadAction<keyof MapLayerSettings["overlays"]>
+      action: PayloadAction<keyof MapLayerSettings["overlays"]>,
     ) => {
       if (!state.settings) {
         state.settings = {
@@ -224,7 +276,7 @@ const mapSlice = createSlice({
       action: PayloadAction<{
         layer: keyof MapLayerSettings["opacity"];
         value: number;
-      }>
+      }>,
     ) => {
       if (!state.settings) {
         state.settings = {
@@ -267,22 +319,23 @@ const mapSlice = createSlice({
      * Apply a real-time sensor update from SignalR.
      * Merges into existing floodSeverity by stationId.
      */
-    applyRealtimeUpdate: (
-      state,
-      action: PayloadAction<SensorUpdateData>
-    ) => {
+    applyRealtimeUpdate: (state, action: PayloadAction<SensorUpdateData>) => {
       const update = action.payload;
 
       // If REST hasn't loaded yet, ignore
       if (!state.floodSeverity) return;
 
       const existingIndex = state.floodSeverity.features.findIndex(
-        (f) => f.geometry.type === "Point" && (f as FloodSeverityFeature).properties.stationId === update.stationId
+        (f) =>
+          f.geometry.type === "Point" &&
+          (f as FloodSeverityFeature).properties.stationId === update.stationId,
       );
 
       if (existingIndex >= 0) {
         // Update existing station in place (Immer handles immutability)
-        const feature = state.floodSeverity.features[existingIndex] as FloodSeverityFeature;
+        const feature = state.floodSeverity.features[
+          existingIndex
+        ] as FloodSeverityFeature;
         const props = feature.properties;
         props.waterLevel = update.waterLevel;
         props.distance = update.distance;
@@ -335,7 +388,6 @@ const mapSlice = createSlice({
         state.error = null;
       })
       .addCase(loadMapSettings.fulfilled, (state, action) => {
-      
         state.settings = action.payload;
         state.loading = false;
         state.settingsLoaded = true;
@@ -362,24 +414,26 @@ const mapSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchFloodSeverity.fulfilled, (state, action) => {
-        console.log("✅ Flood severity loaded:", action.payload);
+        // console.log("✅ Flood severity loaded:", action.payload);
 
         // Merge: keep existing stations, update/add from new response
         if (!state.floodSeverity) {
           state.floodSeverity = action.payload;
         } else {
           const incomingPoints = action.payload.features.filter(
-            (f) => f.geometry.type === "Point"
+            (f) => f.geometry.type === "Point",
           ) as FloodSeverityFeature[];
           const incomingPolygons = action.payload.features.filter(
-            (f) => f.geometry.type === "Polygon"
+            (f) => f.geometry.type === "Polygon",
           );
 
           // Merge Point features by stationId
           incomingPoints.forEach((incoming) => {
             const idx = state.floodSeverity!.features.findIndex(
-              (f) => f.geometry.type === "Point" &&
-                (f as FloodSeverityFeature).properties.stationId === incoming.properties.stationId
+              (f) =>
+                f.geometry.type === "Point" &&
+                (f as FloodSeverityFeature).properties.stationId ===
+                  incoming.properties.stationId,
             );
             if (idx >= 0) {
               state.floodSeverity!.features[idx] = incoming;
@@ -392,8 +446,10 @@ const mapSlice = createSlice({
           incomingPolygons.forEach((incoming) => {
             const incomingProps = incoming.properties as FloodZoneProperties;
             const idx = state.floodSeverity!.features.findIndex(
-              (f) => f.geometry.type === "Polygon" &&
-                (f.properties as FloodZoneProperties).stationId === incomingProps.stationId
+              (f) =>
+                f.geometry.type === "Polygon" &&
+                (f.properties as FloodZoneProperties).stationId ===
+                  incomingProps.stationId,
             );
             if (idx >= 0) {
               state.floodSeverity!.features[idx] = incoming;
@@ -424,6 +480,21 @@ const mapSlice = createSlice({
       .addCase(fetchAreas.rejected, (state, action) => {
         state.areasLoading = false;
         state.error = action.payload || "Lỗi tải dữ liệu vùng";
+      });
+
+    // Fetch nearby flood reports
+    builder
+      .addCase(fetchNearbyFloodReports.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchNearbyFloodReports.fulfilled, (state, action) => {
+        state.communityReports = action.payload.reports || [];
+        state.loading = false;
+      })
+      .addCase(fetchNearbyFloodReports.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Lỗi tải báo cáo cộng đồng";
       });
   },
 });

@@ -7,6 +7,7 @@ import {
     requestPermission,
 } from "@react-native-firebase/messaging";
 import { PermissionsAndroid, Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ProfileService } from "~/features/profile/services/profile.service";
 
 /**
@@ -70,8 +71,13 @@ export const registerFCMToken = async (): Promise<string | null> => {
     try {
         const token = await getFCMToken();
         if (token) {
-            await ProfileService.updateFcmToken(token);
-            console.log("[FCM] Token registered to backend successfully");
+            const refreshToken = await AsyncStorage.getItem("refresh_token");
+            if (refreshToken) {
+                await ProfileService.updateFcmToken(token);
+                console.log("[FCM] Token registered to backend successfully");
+            } else {
+                console.log("[FCM] Token fetched but user is not logged in, skipping backend registration");
+            }
         }
         return token;
     } catch (error: any) {
@@ -95,8 +101,13 @@ export const onFCMTokenRefresh = (callback?: (token: string) => void) => {
 
         // Tự động gửi token mới lên backend
         try {
-            await ProfileService.updateFcmToken(token);
-            console.log("[FCM] Refreshed token sent to backend successfully");
+            const refreshToken = await AsyncStorage.getItem("refresh_token");
+            if (refreshToken) {
+                await ProfileService.updateFcmToken(token);
+                console.log("[FCM] Refreshed token sent to backend successfully");
+            } else {
+                console.log("[FCM] Refreshed token fetched but user is not logged in, skipping backend registration");
+            }
         } catch (error) {
             console.error("[FCM] Error sending refreshed token to backend:", error);
         }

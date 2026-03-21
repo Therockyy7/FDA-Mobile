@@ -123,7 +123,40 @@ export interface VoteFloodReportResponse {
 
 export type VoteType = 1 | -1;
 
+export interface NearbyFloodReportsParams {
+  latitude: number;
+  longitude: number;
+  radiusMeters: number;
+  hours: number;
+}
+
+export interface NearbyFloodReport {
+  id: string;
+  latitude: number;
+  longitude: number;
+  severity: "low" | "medium" | "high";
+  createdAt: string;
+  distanceMeters: number;
+}
+
+export interface NearbyFloodReportsResponse {
+  success: boolean;
+  message: string;
+  count: number;
+  consensusLevel: string;
+  consensusMessage: string;
+  reports: NearbyFloodReport[];
+}
+
 export const CommunityService = {
+  async getNearbyFloodReports(params: NearbyFloodReportsParams): Promise<NearbyFloodReportsResponse> {
+    const response = await apiClient.post<NearbyFloodReportsResponse>(
+      "/api/v1/flood-reports/nearby",
+      params
+    );
+    return response.data;
+  },
+
   async getCommunityReports(params: CommunityReportsParams = {}): Promise<CommunityReportsResponse> {
     const response = await apiClient.get<CommunityReportsResponse>(
       "/api/v1/flood-reports/community",

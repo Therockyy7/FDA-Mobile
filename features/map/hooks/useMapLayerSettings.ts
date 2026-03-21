@@ -6,6 +6,7 @@ import {
     DEFAULT_MAP_SETTINGS,
     fetchAreas,
     fetchFloodSeverity,
+    fetchNearbyFloodReports,
     loadMapSettings,
     saveMapSettings,
     setBaseMap,
@@ -16,6 +17,7 @@ import type {
     FloodStatusParams,
     MapLayerSettings,
 } from "../types/map-layers.types";
+import { NearbyFloodReportsParams } from "~/features/community/services/community.service";
 
 const SAVE_DEBOUNCE_MS = 500;
 
@@ -31,6 +33,9 @@ export function useMapLayerSettings() {
     (state: RootState) => state.map?.floodSeverity ?? null,
   );
   const areas = useSelector((state: RootState) => state.map?.areas ?? []);
+  const communityReports = useSelector(
+    (state: RootState) => state.map?.communityReports ?? [],
+  );
   const loading = useSelector(
     (state: RootState) => state.map?.loading ?? false,
   );
@@ -118,6 +123,14 @@ export function useMapLayerSettings() {
     [dispatch],
   );
 
+  // Refresh nearby community reports
+  const refreshNearbyFloodReports = useCallback(
+    (params: NearbyFloodReportsParams) => {
+      dispatch(fetchNearbyFloodReports(params));
+    },
+    [dispatch],
+  );
+
   // Refresh areas data
   const refreshAreas = useCallback(() => {
     return dispatch(fetchAreas()).unwrap();
@@ -128,6 +141,7 @@ export function useMapLayerSettings() {
     settings,
     floodSeverity,
     areas,
+    communityReports,
     loading,
     floodLoading,
     areasLoading,
@@ -140,5 +154,6 @@ export function useMapLayerSettings() {
     setOpacity: handleSetOpacity,
     refreshFloodSeverity,
     refreshAreas,
+    refreshNearbyFloodReports,
   };
 }

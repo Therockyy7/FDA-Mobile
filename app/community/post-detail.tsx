@@ -55,9 +55,6 @@ export default function PostDetailScreen() {
       <ScrollView className="flex-1">
         <PostCard
           post={post}
-          onToggleLike={() => {}}
-          onPressComments={() => {}}
-          onPressShare={() => {}}
           onPressReport={() => {}}
         />
 

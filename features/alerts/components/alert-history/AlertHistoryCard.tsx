@@ -4,8 +4,8 @@ import React from "react";
 import { View } from "react-native";
 import { Text } from "~/components/ui/text";
 import type {
-  AlertHistoryItem,
-  AlertHistorySeverity,
+    AlertHistoryItem,
+    AlertHistorySeverity,
 } from "../../types/alert-history.types";
 import AlertHistoryChannelsRow from "./AlertHistoryChannelsRow";
 import AlertHistoryValueCard from "./AlertHistoryValueCard";

@@ -1,5 +1,9 @@
 // features/home/components/EmergencyAlertBanner.tsx
-import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import {
+  Ionicons,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
@@ -32,7 +36,7 @@ export function EmergencyAlertBanner({ alert }: EmergencyAlertBannerProps) {
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
     pulse.start();
     return () => pulse.stop();
@@ -117,7 +121,14 @@ export function EmergencyAlertBanner({ alert }: EmergencyAlertBannerProps) {
             {/* Main Content */}
             <View style={{ padding: 18 }}>
               {/* Top Row: Badge + Time */}
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 14,
+                }}
+              >
                 {/* Severity Badge */}
                 <View
                   style={{
@@ -129,16 +140,39 @@ export function EmergencyAlertBanner({ alert }: EmergencyAlertBannerProps) {
                     borderRadius: 20,
                   }}
                 >
-                  <MaterialCommunityIcons name="alert-circle" size={14} color="white" />
-                  <Text style={{ color: "white", fontSize: 11, fontWeight: "800", marginLeft: 6, letterSpacing: 1 }}>
+                  <MaterialCommunityIcons
+                    name="alert-circle"
+                    size={14}
+                    color="white"
+                  />
+                  <Text
+                    style={{
+                      color: "white",
+                      fontSize: 11,
+                      fontWeight: "800",
+                      marginLeft: 6,
+                      letterSpacing: 1,
+                    }}
+                  >
                     {config.badge}
                   </Text>
                 </View>
 
                 {/* Time ago */}
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Ionicons name="time-outline" size={12} color="rgba(255,255,255,0.7)" />
-                  <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, fontWeight: "500", marginLeft: 4 }}>
+                  <Ionicons
+                    name="time-outline"
+                    size={12}
+                    color="rgba(255,255,255,0.7)"
+                  />
+                  <Text
+                    style={{
+                      color: "rgba(255,255,255,0.7)",
+                      fontSize: 11,
+                      fontWeight: "500",
+                      marginLeft: 4,
+                    }}
+                  >
                     {alert.time}
                   </Text>
                 </View>
@@ -217,9 +251,26 @@ export function EmergencyAlertBanner({ alert }: EmergencyAlertBannerProps) {
                 }}
               >
                 {/* Location */}
-                <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
-                  <Ionicons name="location" size={14} color="rgba(255,255,255,0.7)" />
-                  <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: "500", marginLeft: 4 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    flex: 1,
+                  }}
+                >
+                  <Ionicons
+                    name="location"
+                    size={14}
+                    color="rgba(255,255,255,0.7)"
+                  />
+                  <Text
+                    style={{
+                      color: "rgba(255,255,255,0.7)",
+                      fontSize: 12,
+                      fontWeight: "500",
+                      marginLeft: 4,
+                    }}
+                  >
                     Phát hành: {alert.date}
                   </Text>
                 </View>
@@ -238,8 +289,17 @@ export function EmergencyAlertBanner({ alert }: EmergencyAlertBannerProps) {
                   }}
                   activeOpacity={0.8}
                 >
-                  <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>Xem chi tiết</Text>
-                  <Ionicons name="chevron-forward" size={14} color="white" style={{ marginLeft: 4 }} />
+                  <Text
+                    style={{ color: "white", fontSize: 12, fontWeight: "700" }}
+                  >
+                    Xem chi tiết
+                  </Text>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={14}
+                    color="white"
+                    style={{ marginLeft: 4 }}
+                  />
                 </TouchableOpacity>
               </View>
             </View>

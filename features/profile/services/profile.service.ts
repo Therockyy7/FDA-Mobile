@@ -28,4 +28,12 @@ export const ProfileService = {
   updatePhoneNumber: (data: { newPhoneNumber: string; otpCode: string }) => {
     return apiClient.post("/api/v1/user-profile/update-phoneNumber", data);
   },
+
+  /**
+   * Cập nhật FCM token cho user hiện tại.
+   * Gọi khi app mở (user đã đăng nhập) hoặc khi Firebase refresh token.
+   */
+  updateFcmToken: (fcmToken: string) => {
+    return apiClient.put("/api/v1/profile/fcm-token", { fcmToken });
+  },
 };

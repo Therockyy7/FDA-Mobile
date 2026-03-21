@@ -4,12 +4,14 @@ import React, { useMemo, useState } from "react";
 import {
   Alert,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import AlertHistoryCard from "~/features/alerts/components/alert-history/AlertHistoryCard";
 import AlertHistoryChips from "~/features/alerts/components/alert-history/AlertHistoryChips";
 import AlertHistoryHeader from "~/features/alerts/components/alert-history/AlertHistoryHeader";
@@ -212,7 +214,7 @@ export default function AlertHistoryScreen() {
             dropdownOpen={severityDropdownOpen}
             onToggleDropdown={() => setSeverityDropdownOpen((prev) => !prev)}
             onSelectSeverity={(severity) => {
-              if (severityCounts[severity] === 0) {
+              if (severity !== "all" && severityCounts[severity] === 0) {
                 Alert.alert(
                   "Không có dữ liệu",
                   "Không có cảnh báo cho mức này.",

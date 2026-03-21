@@ -9,10 +9,10 @@ type MapType = "standard" | "satellite" | "hybrid";
 
 interface MapHeaderProps {
   stats: {
-    safe: number; // < 1.0m
-    caution: number; // 1.0 - 1.9m
-    warning: number; // 2.0 - 2.9m
-    critical: number; // >= 3.0m
+    safe: number; // < 10 cm
+    caution: number; // 10-20 cm
+    warning: number; // 20-40 cm
+    critical: number; // >= 40 cm
   };
   mapType: MapType;
   onMapTypeChange: () => void;
@@ -108,7 +108,7 @@ export function MapHeader({
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={() => router.back()}
             style={{
               width: 40,
@@ -122,7 +122,7 @@ export function MapHeader({
             activeOpacity={0.7}
           >
             <Ionicons name="arrow-back" size={20} color={colors.text} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
             <View
@@ -134,6 +134,7 @@ export function MapHeader({
                 alignItems: "center",
                 justifyContent: "center",
                 marginRight: 8,
+                marginLeft: 12,
               }}
             >
               <Ionicons name="water" size={16} color="white" />

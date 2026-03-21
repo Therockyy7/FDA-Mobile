@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { Tabs, useRouter } from "expo-router";
 import { useState } from "react";
+import { Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LoginRequiredOverlay } from "~/features/auth/components/LoginRequiredOverlay";
 import { useAuthLoading, useUser } from "~/features/auth/stores/hooks";
@@ -55,20 +56,11 @@ const TabsLayout = () => {
         }}
       >
         <Tabs.Screen
-          name="index"
+          name="home"
           options={{
             title: "Trang chủ",
             tabBarIcon: ({ color, size }) => (
               <Feather name="home" size={size} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="map"
-          options={{
-            title: "Bản đồ",
-            tabBarIcon: ({ color, size }) => (
-              <Feather name="map" size={size} color={color} />
             ),
           }}
         />
@@ -92,6 +84,49 @@ const TabsLayout = () => {
             },
           }}
         />
+
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: "Bản đồ",
+            tabBarIcon: ({ focused }) => (
+              <View
+                style={{
+                  top: Platform.OS === "ios" ? -10 : -15,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: 58,
+                  height: 58,
+                  borderRadius: 29,
+                  backgroundColor: tabBarColors.background,
+                  shadowColor: focused
+                    ? tabBarColors.activeColor
+                    : tabBarColors.inactiveColor,
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.4,
+                  shadowRadius: 10,
+                  elevation: 5,
+                }}
+              >
+                <View
+                  style={{
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                    backgroundColor: focused
+                      ? tabBarColors.activeColor
+                      : tabBarColors.inactiveColor,
+                  }}
+                >
+                  <Feather name="map" size={24} color="#FFFFFF" />
+                </View>
+              </View>
+            ),
+          }}
+        />
+
         <Tabs.Screen
           name="notifications"
           options={{

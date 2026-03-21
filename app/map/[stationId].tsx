@@ -55,10 +55,12 @@ export default function StationDetailScreen() {
   // Memoize station lookup to ensure we get real-time updates
   const station = useMemo(() => {
     if (!floodSeverity?.features) return null;
-    return floodSeverity.features.find(
-      (f): f is FloodSeverityFeature =>
-        f.geometry.type === "Point" && f.properties.stationId === stationId,
-    ) ?? null;
+    return (
+      floodSeverity.features.find(
+        (f): f is FloodSeverityFeature =>
+          f.geometry.type === "Point" && f.properties.stationId === stationId,
+      ) ?? null
+    );
   }, [floodSeverity, stationId]);
 
   const colors = {

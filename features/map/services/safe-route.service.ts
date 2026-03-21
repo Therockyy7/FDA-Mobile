@@ -53,9 +53,21 @@ const MOCK_RESPONSE: SafeRouteResponse = {
           durationSeconds: 421,
           floodRiskScore: 100,
           instructions: [
-            { distance: 119.332, time: 14320, text: "Di chuyển trên Đường Giang Châu 2" },
-            { distance: 758.032, time: 59325, text: "Rẽ trái vào Đường Bùi Tá Hán" },
-            { distance: 2591.797, time: 167287, text: "Rẽ trái vào Đường Lê Văn Hiến" },
+            {
+              distance: 119.332,
+              time: 14320,
+              text: "Di chuyển trên Đường Giang Châu 2",
+            },
+            {
+              distance: 758.032,
+              time: 59325,
+              text: "Rẽ trái vào Đường Bùi Tá Hán",
+            },
+            {
+              distance: 2591.797,
+              time: 167287,
+              text: "Rẽ trái vào Đường Lê Văn Hiến",
+            },
             { distance: 1090.45, time: 59479, text: "Rẽ trái" },
             { distance: 0, time: 0, text: "Đến nơi" },
           ],
@@ -95,22 +107,33 @@ const MOCK_RESPONSE: SafeRouteResponse = {
       totalFloodZones: 1,
       alternativeRouteCount: 0,
       generatedAt: new Date().toISOString(),
+      startInFloodZone: false,
+      endInFloodZone: false,
     },
   },
 };
 
 export const SafeRouteService = {
   getSafeRoute: async (
-    params: SafeRouteRequest
+    params: SafeRouteRequest,
   ): Promise<SafeRouteResponse> => {
     try {
       console.log("🛣️ Calling safe route API:", params);
+      const startTime = performance.now();
       const res = await apiClient.post<SafeRouteResponse>(
         "/api/v1/routing/safe-route",
-        params
+        params,
       );
-      const routeNames = res.data.data?.features?.map((f: any) => f.properties?.name) ?? [];
-      console.log("📦 Safe route response received, features:", res.data.data?.features?.length, "routes:", routeNames);
+      const elapsed = performance.now() - startTime;
+      const routeNames =
+        res.data.data?.features?.map((f: any) => f.properties?.name) ?? [];
+      console.log(`⏱️ Safe route request took ${elapsed.toFixed(0)}ms`);
+      console.log(
+        "📦 Safe route response received, features:",
+        res.data.data?.features?.length,
+        "routes:",
+        routeNames,
+      );
       return res.data;
     } catch (error) {
       console.error("❌ Safe route API error:", error);

@@ -1,13 +1,17 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
-import { SafeAreaView, ScrollView, StatusBar, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { ScrollView, StatusBar, View } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+
 import AlertThresholdsFooter from "~/features/alerts/components/alert-thresholds/AlertThresholdsFooter";
 import AlertThresholdsHeader from "~/features/alerts/components/alert-thresholds/AlertThresholdsHeader";
 import GlobalThresholdCard from "~/features/alerts/components/alert-thresholds/GlobalThresholdCard";
 import ThresholdCard from "~/features/alerts/components/alert-thresholds/ThresholdCard";
 import ThresholdSectionTitle from "~/features/alerts/components/alert-thresholds/ThresholdSectionTitle";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 type SeverityKey = "info" | "caution" | "warning" | "critical";
 
@@ -48,7 +52,13 @@ export default function AlertThresholdsScreen() {
     [isDarkColorScheme],
   );
 
-  const global = { info: 1.0, caution: 2.5, warning: 4.0, critical: 6.0, unit: "m" };
+  const global = {
+    info: 1.0,
+    caution: 2.5,
+    warning: 4.0,
+    critical: 6.0,
+    unit: "m",
+  };
   const [custom, setCustom] = useState<Record<SeverityKey, number>>({
     info: 1.2,
     caution: 1.0,
@@ -106,7 +116,11 @@ export default function AlertThresholdsScreen() {
         title="Ngưỡng cảnh báo"
         topInset={insets.top}
         onBack={() => router.back()}
-        colors={{ overlay: colors.overlay, borderSoft: colors.borderSoft, text: colors.text }}
+        colors={{
+          overlay: colors.overlay,
+          borderSoft: colors.borderSoft,
+          text: colors.text,
+        }}
       />
 
       <ScrollView
@@ -117,7 +131,10 @@ export default function AlertThresholdsScreen() {
           paddingBottom: footerHeight + 10,
         }}
       >
-        <ThresholdSectionTitle title="Mặc định toàn hệ thống" colors={{ text: colors.text }} />
+        <ThresholdSectionTitle
+          title="Mặc định toàn hệ thống"
+          colors={{ text: colors.text }}
+        />
         <GlobalThresholdCard
           global={global}
           colors={{
@@ -129,7 +146,10 @@ export default function AlertThresholdsScreen() {
           }}
         />
 
-        <ThresholdSectionTitle title="Ngưỡng tùy chỉnh của bạn" colors={{ text: colors.text }} />
+        <ThresholdSectionTitle
+          title="Ngưỡng tùy chỉnh của bạn"
+          colors={{ text: colors.text }}
+        />
 
         <View style={{ paddingHorizontal: 16, gap: 10 }}>
           <ThresholdCard
@@ -224,7 +244,11 @@ export default function AlertThresholdsScreen() {
         canSave={canSave}
         onReset={resetToDefault}
         onSave={save}
-        colors={{ overlay: colors.overlay, borderSoft: colors.borderSoft, primary: colors.primary }}
+        colors={{
+          overlay: colors.overlay,
+          borderSoft: colors.borderSoft,
+          primary: colors.primary,
+        }}
       />
     </SafeAreaView>
   );

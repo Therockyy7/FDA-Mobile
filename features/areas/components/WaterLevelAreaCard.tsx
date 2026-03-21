@@ -104,17 +104,17 @@ const formatRelativeTime = (dateString?: string) => {
 // Get water level percentage for progress bar
 const getWaterLevelPercentage = (
   waterLevel: number,
-  maxLevel = 100,
+  maxLevel = 50,
 ): number => {
   return Math.min((waterLevel / maxLevel) * 100, 100);
 };
 
-// Get progress bar color based on percentage
-const getProgressColor = (percentage: number): readonly [string, string] => {
-  if (percentage >= 80) return ["#EF4444", "#DC2626"] as const;
-  if (percentage >= 60) return ["#F97316", "#EA580C"] as const;
-  if (percentage >= 40) return ["#F59E0B", "#D97706"] as const;
-  return ["#10B981", "#059669"] as const;
+// Get progress bar color based on water level (cm)
+const getProgressColor = (waterLevel: number): readonly [string, string] => {
+  if (waterLevel >= 40) return ["#EF4444", "#DC2626"] as const; // Nguy hiểm
+  if (waterLevel >= 20) return ["#F97316", "#EA580C"] as const; // Cảnh báo
+  if (waterLevel >= 10) return ["#EAB308", "#CA8A04"] as const; // Chú ý
+  return ["#22C55E", "#15803D"] as const; // An toàn
 };
 
 export function WaterLevelAreaCard({
@@ -141,7 +141,7 @@ export function WaterLevelAreaCard({
 
   const stationCount = status?.contributingStations?.length || 0;
   const waterLevelPercentage = getWaterLevelPercentage(maxWaterLevel);
-  const progressColor = getProgressColor(waterLevelPercentage);
+  const progressColor = getProgressColor(maxWaterLevel);
 
   // Pulse animation for warning status
   useEffect(() => {
@@ -331,12 +331,12 @@ export function WaterLevelAreaCard({
                     height: 120,
                     borderRadius: 60,
                     backgroundColor: isDarkColorScheme
-                      ? `${statusConfig.main}20`
-                      : `${statusConfig.main}15`,
+                      ? `${progressColor[0]}20`
+                      : `${progressColor[0]}15`,
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: 4,
-                    borderColor: statusConfig.main,
+                    borderColor: progressColor[0],
                     position: "relative",
                     overflow: "hidden",
                   }}
@@ -360,14 +360,14 @@ export function WaterLevelAreaCard({
                     <MaterialCommunityIcons
                       name="waves"
                       size={22}
-                      color={statusConfig.main}
+                      color={progressColor[0]}
                       style={{ marginBottom: 2 }}
                     />
                     <Text
                       style={{
                         fontSize: 36,
                         fontWeight: "900",
-                        color: statusConfig.main,
+                        color: progressColor[0],
                         lineHeight: 40,
                         letterSpacing: -1,
                       }}
@@ -378,7 +378,7 @@ export function WaterLevelAreaCard({
                       style={{
                         fontSize: 12,
                         fontWeight: "800",
-                        color: statusConfig.main,
+                        color: progressColor[0],
                         letterSpacing: 2,
                         opacity: 0.9,
                       }}

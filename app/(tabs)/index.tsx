@@ -396,6 +396,7 @@ export default function MapScreen() {
     // Error states and handlers
     areaError,
     handleCloseErrorModal,
+    updateDraftAreaFromMapCenter,
   } = useControlArea({
     mapRef,
     region,
@@ -572,8 +573,9 @@ export default function MapScreen() {
     (newRegion: Region) => {
       onRegionChangeComplete(newRegion);
       fetchMarkersInViewPort(newRegion);
+      updateDraftAreaFromMapCenter(newRegion);
     },
-    [onRegionChangeComplete, fetchMarkersInViewPort],
+    [onRegionChangeComplete, fetchMarkersInViewPort, updateDraftAreaFromMapCenter],
   );
 
   return (

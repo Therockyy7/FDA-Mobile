@@ -203,7 +203,7 @@ export default function AreasScreen() {
     (area: Area) => {
       // Navigate to map with area's position and edit mode
       router.push({
-        pathname: "/map",
+        pathname: "/" as any,
         params: {
           editAreaId: area.id,
           editLat: area.latitude.toString(),
@@ -258,7 +258,7 @@ export default function AreasScreen() {
 
   // Navigate to map to create area
   const handleCreateArea = useCallback(() => {
-    router.push("/map");
+    router.push("/");
   }, [router]);
 
   // Navigate to alert settings

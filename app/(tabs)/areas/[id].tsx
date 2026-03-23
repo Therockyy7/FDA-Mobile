@@ -471,7 +471,7 @@ export default function AreaDetailScreen() {
                 onPress={() => {
                   // Navigate to map with edit mode
                   router.push({
-                    pathname: "/map",
+                    pathname: "/",
                     params: {
                       editAreaId: area.id,
                       editLat: area.latitude.toString(),
@@ -1012,9 +1012,8 @@ export default function AreaDetailScreen() {
           isDark={isDarkColorScheme}
         />
 
-        {/* View on Map Button */}
         <TouchableOpacity
-          onPress={() => router.push("/map")}
+          onPress={() => router.push("/")}
           activeOpacity={0.85}
         >
           <LinearGradient

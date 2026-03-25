@@ -128,7 +128,7 @@ export function FloodHistorySection({
     subtext: isDark ? "#94A3B8" : "#6B7280",
     border: isDark ? "#334155" : "#E2E8F0",
     tabBg: isDark ? "#0F172A" : "#F1F5F9",
-    tabActive: isDark ? "#3B82F6" : "#3B82F6",
+    tabActive: isDark ? "#007AFF" : "#007AFF",
   };
 
   // Handle refresh for current tab
@@ -167,7 +167,7 @@ export function FloodHistorySection({
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Ionicons name="bar-chart" size={18} color="#3B82F6" />
+          <Ionicons name="bar-chart" size={18} color="#007AFF" />
           <Text style={{ fontSize: 14, fontWeight: "700", color: colors.text }}>
             Biểu đồ mực nước
           </Text>
@@ -299,7 +299,7 @@ export function FloodHistorySection({
             Không thể tải dữ liệu. Nhấn nút làm mới để thử lại.
           </Text>
           <TouchableOpacity onPress={handleRefresh}>
-            <Text style={{ fontSize: 12, fontWeight: "700", color: "#3B82F6" }}>
+            <Text style={{ fontSize: 12, fontWeight: "700", color: "#007AFF" }}>
               Thử lại
             </Text>
           </TouchableOpacity>

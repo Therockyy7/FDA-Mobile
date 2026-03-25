@@ -41,7 +41,7 @@ export function PlaceSearchSheet({
   onUseGPS,
   showGPSOption = false,
   placeholder = "Tìm kiếm địa điểm...",
-  accentColor = "#3B82F6",
+  accentColor = "#007AFF",
   initialQuery = "",
 }: PlaceSearchSheetProps) {
   const insets = useSafeAreaInsets();

@@ -14,7 +14,7 @@ export function AlertChannelsStatus({ channels }: AlertChannelsStatusProps) {
   const { isDarkColorScheme } = useColorScheme();
 
   const colors = {
-    active: "#3B82F6",
+    active: "#007AFF",
     inactive: isDarkColorScheme ? "#64748B" : "#9CA3AF",
   };
 

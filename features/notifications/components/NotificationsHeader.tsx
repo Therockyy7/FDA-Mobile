@@ -58,7 +58,7 @@ export function NotificationsHeader({
                 marginRight: 10,
               }}
             >
-              <Ionicons name="notifications" size={20} color="#3B82F6" />
+              <Ionicons name="notifications" size={20} color="#007AFF" />
             </View>
             <Text
               style={{

@@ -38,7 +38,7 @@ export function DateRangePicker({
     text: isDark ? "#F1F5F9" : "#1F2937",
     subtext: isDark ? "#94A3B8" : "#6B7280",
     border: isDark ? "#334155" : "#E2E8F0",
-    primary: "#3B82F6",
+    primary: "#007AFF",
     inputBg: isDark ? "#0F172A" : "#F8FAFC",
   };
 

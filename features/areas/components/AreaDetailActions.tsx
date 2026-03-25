@@ -13,7 +13,7 @@ export function AreaDetailActions({ onShowMap, onDelete }: Props) {
   return (
     <View className="px-4 mt-6 gap-3">
       <TouchableOpacity
-        className="flex-row items-center justify-center gap-2 py-4 rounded-xl bg-blue-500 active:bg-blue-600"
+        className="flex-row items-center justify-center gap-2 py-4 rounded-xl bg-[#007AFF] active:bg-[#0055B3]"
         activeOpacity={0.8}
         onPress={onShowMap}
       >

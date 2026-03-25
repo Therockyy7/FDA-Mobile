@@ -171,5 +171,5 @@ export const FILTER_OPTIONS: FilterOption[] = [
   { key: "all", label: "Tất cả" },
   { key: "critical", label: "Khẩn cấp", color: "#DC2626" },
   { key: "high", label: "Quan trọng", color: "#F59E0B" },
-  { key: "medium", label: "Thông báo", color: "#3B82F6" },
+  { key: "medium", label: "Thông báo", color: "#007AFF" },
 ];

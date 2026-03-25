@@ -57,3 +57,31 @@ export interface StatusConfig {
   icon: "checkmark-circle" | "alert-circle" | "alert" | "warning";
   iconColor: string;
 }
+
+export interface WeatherData {
+  temperature: number;
+  humidity: number;
+  rainChance: number;
+  windSpeed: number;
+  condition: "sunny" | "cloudy" | "rainy" | "stormy" | "partly-cloudy";
+  conditionText: string;
+  updatedAt: string;
+}
+
+export interface RainfallForecastItem {
+  hour: string;
+  amount: number; // mm
+  level: "none" | "light" | "moderate" | "heavy" | "extreme";
+}
+
+export interface AiRiskSummary {
+  riskLevel: "low" | "medium" | "high" | "critical";
+  riskLabelVn: string;
+  probability: number;
+  dominantFactor: string;
+  dominantFactorVn: string;
+  recommendation: string;
+  areaId: string;
+  areaName: string;
+  updatedAt: string;
+}

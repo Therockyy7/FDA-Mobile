@@ -118,7 +118,7 @@ export function NotificationCard({
                       width: 10,
                       height: 10,
                       borderRadius: 5,
-                      backgroundColor: "#3B82F6",
+                      backgroundColor: "#007AFF",
                       marginLeft: 8,
                     }}
                   />
@@ -254,12 +254,12 @@ export function NotificationCard({
                   width: 32,
                   height: 32,
                   borderRadius: 8,
-                  backgroundColor: "#3B82F620",
+                  backgroundColor: "#007AFF20",
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
-                <Ionicons name="water" size={16} color="#3B82F6" />
+                <Ionicons name="water" size={16} color="#007AFF" />
               </View>
               <View>
                 <Text
@@ -348,7 +348,7 @@ export function NotificationCard({
                   justifyContent: "center",
                   paddingVertical: 12,
                   borderRadius: 12,
-                  backgroundColor: "#3B82F6",
+                  backgroundColor: "#007AFF",
                   gap: 6,
                 }}
                 activeOpacity={0.8}

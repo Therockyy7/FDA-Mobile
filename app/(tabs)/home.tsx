@@ -1,26 +1,34 @@
 // app/(tabs)/home.tsx
 import React, { useEffect, useState } from "react";
-import { RefreshControl, ScrollView, StatusBar, View } from "react-native";
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StatusBar,
+  View,
+} from "react-native";
 
 import { TabLoadingScreen } from "~/components/ui/TabLoadingScreen";
-import { CityOverviewStats } from "~/features/home/components/CityOverviewStats";
+import { Text } from "~/components/ui/text";
 import { CommunityBanner } from "~/features/home/components/CommunityBanner";
 import { EmergencyAlertBanner } from "~/features/home/components/EmergencyAlertBanner";
 import { HomeHeader } from "~/features/home/components/HomeHeader";
-import { MonitoredAreasSection } from "~/features/home/components/MonitoredAreasSection";
-import { QuickActionsGrid } from "~/features/home/components/QuickActionsGrid";
-import {
-    DANANG_STATS,
-    HOME_AREAS,
-    MOCK_ALERT,
-    QUICK_ACTIONS,
-} from "~/features/home/constants/home-data";
+import { WeatherInsightsSection } from "~/features/home/components/WeatherInsightsSection";
+import { MOCK_ALERT } from "~/features/home/constants/home-data";
+import { useHomeWeatherData } from "~/features/home/hooks/useHomeWeatherData";
 
 export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initial loading effect
+  const {
+    meteo,
+    rainfallForecast,
+    aiRisk,
+    loading: weatherLoading,
+    refresh: refreshWeather,
+  } = useHomeWeatherData();
+
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 850);
     return () => clearTimeout(timer);
@@ -28,7 +36,10 @@ export default function HomeScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await Promise.all([
+      refreshWeather(),
+      new Promise((resolve) => setTimeout(resolve, 1000)),
+    ]);
     setRefreshing(false);
   };
 
@@ -40,10 +51,10 @@ export default function HomeScreen() {
         translucent
       />
 
-      {/* Loading Screen */}
-      <TabLoadingScreen visible={isLoading} message="Đang tải trang chủ..." />
+      <TabLoadingScreen visible={isLoading} message="Đang tải..." />
 
-      <HomeHeader notificationCount={0} />
+      {/* Header with real weather */}
+      <HomeHeader notificationCount={0} meteo={meteo} />
 
       <ScrollView
         className="flex-1"
@@ -53,15 +64,27 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        {/* Emergency Alert (only when active) */}
         <EmergencyAlertBanner alert={MOCK_ALERT} />
 
-        <QuickActionsGrid actions={QUICK_ACTIONS} />
+        {/* ═══ WEATHER SECTION ═══ */}
+        {weatherLoading && !meteo ? (
+          <View className="px-4 py-8 items-center">
+            <ActivityIndicator size="small" color="#06B6D4" />
+            <Text className="text-slate-400 text-xs mt-2">
+              Đang tải dữ liệu thời tiết...
+            </Text>
+          </View>
+        ) : meteo ? (
+          <WeatherInsightsSection
+            meteo={meteo}
+            rainfallForecast={rainfallForecast}
+            aiRisk={aiRisk}
+          />
+        ) : null}
 
+        {/* ═══ COMMUNITY SECTION ═══ */}
         <CommunityBanner />
-
-        <MonitoredAreasSection areas={HOME_AREAS} />
-
-        <CityOverviewStats stats={DANANG_STATS} />
       </ScrollView>
     </View>
   );

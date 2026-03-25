@@ -110,7 +110,7 @@ const ProfileHeader: React.FC<Props> = ({
   });
 
   const colors = {
-    gradientStart: isDarkColorScheme ? "#1E3A5F" : "#3B82F6",
+    gradientStart: isDarkColorScheme ? "#1E3A5F" : "#007AFF",
     gradientEnd: isDarkColorScheme ? "#0F172A" : "#1D4ED8",
   };
 
@@ -261,7 +261,7 @@ const ProfileHeader: React.FC<Props> = ({
           {/* Avatar with Camera Button */}
           <View
             style={{
-              shadowColor: "#3B82F6",
+              shadowColor: "#007AFF",
               shadowOffset: { width: 0, height: 0 },
               shadowOpacity: 0.4,
               shadowRadius: 15,

@@ -148,7 +148,7 @@ export default function SignInScreen() {
             <View style={{ flex: 0.35, alignItems: 'center', justifyContent: 'center', paddingTop: 20, paddingBottom: 16 }}>
               {/* App Icon with Glow Effect */}
               <View style={{
-                shadowColor: '#3B82F6',
+                shadowColor: '#007AFF',
                 shadowOffset: { width: 0, height: 0 },
                 shadowOpacity: 0.8,
                 shadowRadius: 30,
@@ -165,7 +165,7 @@ export default function SignInScreen() {
                   borderColor: 'rgba(59, 130, 246, 0.4)',
                   marginBottom: 16,
                 }}>
-                  <Ionicons name="water" size={52} color="#60A5FA" />
+                  <Ionicons name="water" size={52} color="#38BDF8" />
                 </View>
               </View>
               
@@ -236,7 +236,7 @@ export default function SignInScreen() {
                           borderColor: error ? '#EF4444' : 'rgba(71, 85, 105, 0.5)',
                           paddingHorizontal: 16,
                         }}>
-                          <Ionicons name="person" size={20} color={error ? "#EF4444" : "#60A5FA"} />
+                          <Ionicons name="person" size={20} color={error ? "#EF4444" : "#38BDF8"} />
                           <Input
                             value={value}
                             onChangeText={onChange}
@@ -287,11 +287,11 @@ export default function SignInScreen() {
                     width: '100%',
                     height: 60,
                     borderRadius: 16,
-                    backgroundColor: '#3B82F6',
+                    backgroundColor: '#007AFF',
                     flexDirection: 'row',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    shadowColor: '#3B82F6',
+                    shadowColor: '#007AFF',
                     shadowOffset: { width: 0, height: 8 },
                     shadowOpacity: 0.4,
                     shadowRadius: 16,
@@ -347,9 +347,9 @@ export default function SignInScreen() {
               <View style={{ marginTop: 32, alignItems: 'center' }}>
                 <Text style={{ color: '#475569', fontSize: 11, textAlign: 'center', paddingHorizontal: 32, lineHeight: 18 }}>
                   Bằng việc tiếp tục, bạn đồng ý với{' '}
-                  <Text style={{ color: '#60A5FA' }}>Điều khoản dịch vụ</Text>
+                  <Text style={{ color: '#38BDF8' }}>Điều khoản dịch vụ</Text>
                   {' '}và{' '}
-                  <Text style={{ color: '#60A5FA' }}>Chính sách bảo mật</Text>
+                  <Text style={{ color: '#38BDF8' }}>Chính sách bảo mật</Text>
                   {' '}của chúng tôi.
                 </Text>
               </View>

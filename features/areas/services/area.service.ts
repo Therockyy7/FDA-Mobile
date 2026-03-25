@@ -1,22 +1,22 @@
 // features/areas/services/area.service.ts
 import {
-    AdminAreaParams,
-    AdminAreaResponse
+  AdminAreaParams,
+  AdminAreaResponse,
 } from "~/features/areas/types/admin-area.types";
 import type {
-    FloodDataPoint,
-    FloodHistoryData,
-    FloodHistoryResponse,
-    FloodSeverity,
-    FloodStatisticsData,
-    FloodStatisticsResponse,
-    FloodTrendDataPoint,
-    FloodTrendsData,
-    FloodTrendsResponse,
+  FloodDataPoint,
+  FloodHistoryData,
+  FloodHistoryResponse,
+  FloodSeverity,
+  FloodStatisticsData,
+  FloodStatisticsResponse,
+  FloodTrendDataPoint,
+  FloodTrendsData,
+  FloodTrendsResponse,
 } from "~/features/areas/types/flood-history.types";
 import type {
-    Area,
-    AreaStatusResponse,
+  Area,
+  AreaStatusResponse,
 } from "~/features/map/types/map-layers.types";
 import { apiClient } from "~/lib/api-client";
 
@@ -218,8 +218,8 @@ export const AreaService = {
       // console.log("📊 Fetching flood history:", url);
 
       const res = await apiClient.get<FloodHistoryResponse>(url);
-      // return res.data.data;
-      return generateMockFloodHistory(params);
+      return res.data.data;
+      // return generateMockFloodHistory(params);
     } catch {
       console.warn("⚠️ Flood history API unavailable, using mock data");
       return generateMockFloodHistory(params);
@@ -260,8 +260,8 @@ export const AreaService = {
       // console.log("📈 Fetching flood trends:", url);
 
       const res = await apiClient.get<FloodTrendsResponse>(url);
-      // return res.data.data;
-      return generateMockFloodTrends(params);
+      return res.data.data;
+      // return generateMockFloodTrends(params);
     } catch {
       console.warn("⚠️ Flood trends API unavailable, using mock data");
       return generateMockFloodTrends(params);

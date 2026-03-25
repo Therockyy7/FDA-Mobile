@@ -385,7 +385,7 @@ export function ApiAreaCard({
         >
           {/* Radius */}
           <View style={{ flex: 1, alignItems: "center" }}>
-            <MaterialCommunityIcons name="radius-outline" size={18} color="#3B82F6" />
+            <MaterialCommunityIcons name="radius-outline" size={18} color="#007AFF" />
             <Text style={{ fontSize: 9, color: colors.subtext, marginTop: 3, fontWeight: "600" }}>
               BÁN KÍNH
             </Text>
@@ -486,14 +486,14 @@ export function ApiAreaCard({
                   width: 36,
                   height: 36,
                   borderRadius: 12,
-                  backgroundColor: isDarkColorScheme ? "#3B82F620" : "#EFF6FF",
+                  backgroundColor: isDarkColorScheme ? "#007AFF20" : "#EFF6FF",
                   alignItems: "center",
                   justifyContent: "center",
                   borderWidth: 1,
-                  borderColor: isDarkColorScheme ? "#3B82F640" : "#BFDBFE",
+                  borderColor: isDarkColorScheme ? "#007AFF40" : "#BFDBFE",
                 }}
               >
-                <Ionicons name="pencil" size={16} color="#3B82F6" />
+                <Ionicons name="pencil" size={16} color="#007AFF" />
               </TouchableOpacity>
             )}
             {onDelete && (

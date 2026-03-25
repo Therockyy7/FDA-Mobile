@@ -118,7 +118,7 @@ function RootStack() {
           justifyContent: "center",
         }}
       >
-        <ActivityIndicator color="#3B82F6" />
+        <ActivityIndicator color="#007AFF" />
       </View>
     );
   }

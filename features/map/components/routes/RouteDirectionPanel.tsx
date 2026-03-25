@@ -168,7 +168,7 @@ export function RouteDirectionPanel({
                   width: 8,
                   height: 8,
                   borderRadius: 4,
-                  backgroundColor: "#3B82F6",
+                  backgroundColor: "#007AFF",
                 }}
               />
               <View

@@ -49,7 +49,7 @@ function LayerToggleSheetContent({
     text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
     subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
     border: isDarkColorScheme ? "#475569" : "#E2E8F0",
-    accent: "#3B82F6",
+    accent: "#007AFF",
     overlay: "rgba(0, 0, 0, 0.5)",
   };
 
@@ -469,12 +469,12 @@ function LayerToggleSheetContent({
                       width: 40,
                       height: 40,
                       borderRadius: 10,
-                      backgroundColor: "#3B82F620",
+                      backgroundColor: "#007AFF20",
                       alignItems: "center",
                       justifyContent: "center",
                     }}
                   >
-                    <MaterialCommunityIcons name="water" size={20} color="#3B82F6" />
+                    <MaterialCommunityIcons name="water" size={20} color="#007AFF" />
                   </View>
                   <View>
                     <Text style={{ fontSize: 15, fontWeight: "600", color: colors.text }}>

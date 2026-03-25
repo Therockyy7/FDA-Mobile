@@ -1,4 +1,5 @@
 import { apiClient } from "~/lib/api-client";
+import { getInfoAsync } from "expo-file-system/legacy";
 
 export interface Media {
   id: string;
@@ -195,6 +196,25 @@ export const CommunityService = {
   },
 
   async updateFloodReport(id: string, params: UpdateFloodReportParams): Promise<CreateFloodReportResponse> {
+    // === LOG FILE SIZE BEFORE UPLOAD ===
+    if (params.mediaFilesToAdd && params.mediaFilesToAdd.length > 0) {
+      let totalSize = 0;
+      for (const file of params.mediaFilesToAdd) {
+        try {
+          const info = await getInfoAsync(file.uri);
+          if (info.exists && 'size' in info) {
+            const sizeMB = (info.size / (1024 * 1024)).toFixed(2);
+            totalSize += info.size;
+            console.log(`📁 [Update Upload] ${file.name} | Size: ${sizeMB} MB | Type: ${file.type}`);
+          }
+        } catch {
+          console.warn(`⚠️ [Update Upload] Cannot read size for: ${file.uri}`);
+        }
+      }
+      console.log(`📦 [Update Upload] Total: ${(totalSize / (1024 * 1024)).toFixed(2)} MB (${params.mediaFilesToAdd.length} files)`);
+    }
+    // === END LOG ===
+
     const formData = new FormData();
 
     if (params.address !== undefined) {
@@ -266,6 +286,27 @@ export const CommunityService = {
     params: CreateFloodReportParams,
     onUploadProgress?: (progressEvent: any) => void
   ): Promise<CreateFloodReportResponse> {
+    // === LOG FILE SIZE BEFORE UPLOAD ===
+    let totalSize = 0;
+    const allFiles = [
+      ...(params.photos || []).map(f => ({ ...f, label: "photo" })),
+      ...(params.videos || []).map(f => ({ ...f, label: "video" })),
+    ];
+    for (const file of allFiles) {
+      try {
+        const info = await getInfoAsync(file.uri);
+        if (info.exists && 'size' in info) {
+          const sizeMB = (info.size / (1024 * 1024)).toFixed(2);
+          totalSize += info.size;
+          console.log(`📁 [Upload] ${file.label}: ${file.name} | Size: ${sizeMB} MB | Type: ${file.type}`);
+        }
+      } catch {
+        console.warn(`⚠️ [Upload] Cannot read size for: ${file.uri}`);
+      }
+    }
+    console.log(`📦 [Upload] Total upload size: ${(totalSize / (1024 * 1024)).toFixed(2)} MB (${allFiles.length} files)`);
+    // === END LOG ===
+
     const formData = new FormData();
 
     formData.append("latitude", params.latitude.toString());
@@ -301,7 +342,7 @@ export const CommunityService = {
       });
     }
 
-    // Let axios auto-set Content-Type with boundary for FormData
+    // Let RN auto-set Content-Type with boundary for FormData
     const response = await apiClient.post<CreateFloodReportResponse>(
       "/api/v1/flood-reports",
       formData,

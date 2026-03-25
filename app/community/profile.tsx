@@ -125,7 +125,7 @@ export default function ProfileScreen() {
       totalTrustScore > 100
         ? "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
         : totalTrustScore > 50
-          ? "text-blue-500 bg-blue-50 dark:bg-blue-950/30"
+          ? "text-[#007AFF] bg-blue-50 dark:bg-blue-950/30"
           : "text-slate-500 bg-slate-100 dark:bg-slate-800";
     const trustIcon =
       totalTrustScore > 100
@@ -183,7 +183,7 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
              ): (
                  <View className={`px-4 py-2 rounded-full flex-row items-center gap-1.5 shadow-sm border border-slate-100 dark:border-slate-800 ${trustColor}`}>
-                   <Ionicons name={trustIcon as any} size={16} color={totalTrustScore > 100 ? "#10B981" : totalTrustScore > 50 ? "#3B82F6" : "#64748B"} />
+                   <Ionicons name={trustIcon as any} size={16} color={totalTrustScore > 100 ? "#10B981" : totalTrustScore > 50 ? "#007AFF" : "#64748B"} />
                    <Text className="text-xs font-bold">{trustLevel}</Text>
                  </View>
              )}
@@ -228,15 +228,15 @@ export default function ProfileScreen() {
 
             <View className="flex-1 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-3xl border border-blue-100 dark:border-blue-800/30 items-start relative overflow-hidden">
               <View className="absolute -right-4 -bottom-4 opacity-10">
-                <Ionicons name="shield-checkmark" size={100} color="#3B82F6" />
+                <Ionicons name="shield-checkmark" size={100} color="#007AFF" />
               </View>
               <View className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-900 shadow-sm items-center justify-center mb-3">
-                <Ionicons name="star" size={20} color="#3B82F6" />
+                <Ionicons name="star" size={20} color="#007AFF" />
               </View>
               <Text className="text-3xl font-black text-blue-900 dark:text-blue-100">
                 {totalTrustScore}
               </Text>
-              <Text className="text-sm font-semibold text-blue-600 dark:text-blue-300 mt-1">
+              <Text className="text-sm font-semibold text-[#0055B3] dark:text-blue-300 mt-1">
                 Điểm tin cậy
               </Text>
             </View>

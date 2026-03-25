@@ -30,8 +30,8 @@ export function ChartPeriodSelector({
 
   const colors = {
     background: isDark ? "#1E293B" : "#F1F5F9",
-    selectedBg: isDark ? "#3B82F6" : "#FFFFFF",
-    selectedText: isDark ? "#FFFFFF" : "#3B82F6",
+    selectedBg: isDark ? "#007AFF" : "#FFFFFF",
+    selectedText: isDark ? "#FFFFFF" : "#007AFF",
     normalText: isDark ? "#94A3B8" : "#64748B",
     customBg: isDark ? "#0F172A" : "#E2E8F0",
   };
@@ -144,11 +144,11 @@ export function ChartPeriodSelector({
             borderRadius: 8,
           }}
         >
-          <Ionicons name="calendar" size={14} color="#3B82F6" />
-          <Text style={{ fontSize: 12, fontWeight: "600", color: "#3B82F6" }}>
+          <Ionicons name="calendar" size={14} color="#007AFF" />
+          <Text style={{ fontSize: 12, fontWeight: "600", color: "#007AFF" }}>
             {customDateLabel}
           </Text>
-          <Ionicons name="chevron-down" size={14} color="#3B82F6" />
+          <Ionicons name="chevron-down" size={14} color="#007AFF" />
         </TouchableOpacity>
       )}
     </View>

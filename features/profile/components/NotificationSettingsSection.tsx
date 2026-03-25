@@ -48,7 +48,7 @@ const NotificationSettingsSection: React.FC<Props> = ({
     text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
     subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
     border: isDarkColorScheme ? "#334155" : "#E2E8F0",
-    sectionTitle: isDarkColorScheme ? "#60A5FA" : "#3B82F6",
+    sectionTitle: isDarkColorScheme ? "#38BDF8" : "#007AFF",
     divider: isDarkColorScheme ? "#334155" : "#F1F5F9",
     trackOff: isDarkColorScheme ? "#475569" : "#D1D5DB",
     thumbOff: isDarkColorScheme ? "#94A3B8" : "#F3F4F6",
@@ -71,7 +71,7 @@ const NotificationSettingsSection: React.FC<Props> = ({
     {
       id: "weather",
       icon: "rainy",
-      iconColor: "#3B82F6",
+      iconColor: "#007AFF",
       iconBgLight: "#DBEAFE",
       iconBgDark: "#1E3A5F",
       title: "Cập nhật thời tiết",
@@ -79,7 +79,7 @@ const NotificationSettingsSection: React.FC<Props> = ({
       value: weatherUpdates,
       onValueChange: setWeatherUpdates,
       trackColorOn: "#93C5FD",
-      thumbColorOn: "#3B82F6",
+      thumbColorOn: "#007AFF",
     },
     {
       id: "traffic",

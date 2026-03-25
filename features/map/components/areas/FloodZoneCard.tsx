@@ -196,7 +196,7 @@ export function FloodZoneCard({ zone, slideAnim, onClose }: FloodZoneCardProps) 
             }}
           >
             <View style={{ alignItems: "center" }}>
-              <Ionicons name="speedometer-outline" size={24} color="#3B82F6" />
+              <Ionicons name="speedometer-outline" size={24} color="#007AFF" />
               <Text
                 style={{
                   fontSize: 11,

@@ -20,7 +20,7 @@ export enum ActivityColor {
   GREEN = 'bg-green-500',
   ORANGE = 'bg-orange-500',
   RED = 'bg-red-500',
-  BLUE = 'bg-blue-500', 
+  BLUE = 'bg-[#007AFF]', 
   GRAY = 'bg-gray-500',
 }
 

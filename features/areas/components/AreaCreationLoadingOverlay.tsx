@@ -128,7 +128,7 @@ export function AreaCreationLoadingOverlay({
           {/* Rotating Ring */}
           <Animated.View style={[styles.rotatingRing, ringAnimatedStyle]}>
             <LinearGradient
-              colors={["#10B981", "#3B82F6", "#8B5CF6", "#10B981"]}
+              colors={["#10B981", "#007AFF", "#8B5CF6", "#10B981"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.gradientRing}

@@ -193,8 +193,8 @@ export function FloodHistoryChart({
           initialSpacing={15}
           endSpacing={15}
           thickness={2.5}
-          color="#3B82F6"
-          dataPointsColor="#3B82F6"
+          color="#007AFF"
+          dataPointsColor="#007AFF"
           dataPointsRadius={4}
           dataPointsHeight={8}
           dataPointsWidth={8}
@@ -219,9 +219,9 @@ export function FloodHistoryChart({
           yAxisLabelWidth={35}
           pointerConfig={{
             pointerStripHeight: height - 120,
-            pointerStripColor: "#3B82F6",
+            pointerStripColor: "#007AFF",
             pointerStripWidth: 2,
-            pointerColor: "#3B82F6",
+            pointerColor: "#007AFF",
             radius: 6,
             pointerLabelWidth: 100,
             pointerLabelHeight: 50,

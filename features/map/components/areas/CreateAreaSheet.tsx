@@ -44,7 +44,7 @@ function formatRadius(meters: number): string {
 // Quick select tags for area names
 const AREA_TAGS = [
   { id: "home", label: "Nhà", icon: "home", color: "#10B981" },
-  { id: "office", label: "Công ty", icon: "business", color: "#3B82F6" },
+  { id: "office", label: "Công ty", icon: "business", color: "#007AFF" },
   { id: "school", label: "Trường học", icon: "school", color: "#F59E0B" },
   { id: "market", label: "Chợ", icon: "cart", color: "#EF4444" },
   { id: "hospital", label: "Bệnh viện", icon: "medkit", color: "#EC4899" },
@@ -71,7 +71,7 @@ function CreateAreaSheetContent({
     subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
     border: isDarkColorScheme ? "#475569" : "#E2E8F0",
     inputBg: isDarkColorScheme ? "#0F172A" : "#F1F5F9",
-    accent: "#3B82F6",
+    accent: "#007AFF",
     overlay: "rgba(0, 0, 0, 0.5)",
   };
 
@@ -144,7 +144,7 @@ function CreateAreaSheetContent({
 
         {/* Header */}
         <LinearGradient
-          colors={["#3B82F6", "#2563EB"]}
+          colors={["#007AFF", "#2563EB"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{

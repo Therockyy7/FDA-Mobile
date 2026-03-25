@@ -89,9 +89,9 @@ export const AdminAreaPolygon = React.memo(
     if (!coordinates.length) return null;
 
     const strokeColor = isSelected
-      ? "#3B82F6"
+      ? "#007AFF"
       : isDarkColorScheme
-        ? "#60A5FA" // Blue-400
+        ? "#38BDF8" // Blue-400
         : "#2563EB"; // Blue-600
 
     const fillColor = isSelected

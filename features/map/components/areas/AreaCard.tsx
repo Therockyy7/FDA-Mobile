@@ -170,7 +170,7 @@ export function AreaCard({
           {maxWaterLevel !== undefined && maxWaterLevel > 0 && (
             <View style={{ alignItems: "center", marginBottom: 24, marginTop: 8 }}>
               <LinearGradient
-                colors={["#06B6D4", "#3B82F6"]} // Cyan to Blue gradient
+                colors={["#06B6D4", "#007AFF"]} // Cyan to Blue gradient
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
@@ -416,12 +416,12 @@ export function AreaCard({
                   justifyContent: "center",
                   gap: 6,
                   borderWidth: 1,
-                  borderColor: "#3B82F6",
+                  borderColor: "#007AFF",
                 }}
                 activeOpacity={0.8}
               >
-                <Ionicons name="pencil" size={16} color="#3B82F6" />
-                <Text style={{ fontSize: 13, fontWeight: "700", color: "#3B82F6" }}>
+                <Ionicons name="pencil" size={16} color="#007AFF" />
+                <Text style={{ fontSize: 13, fontWeight: "700", color: "#007AFF" }}>
                   Sửa
                 </Text>
               </TouchableOpacity>

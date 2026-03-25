@@ -142,7 +142,7 @@ export function RouteCallout({ route }: RouteCalloutProps) {
         <Text style={{ fontSize: 11, color: "#9CA3AF" }}>
           Ngưỡng an toàn: {route.maxLevel}cm
         </Text>
-        <Text style={{ fontSize: 11, fontWeight: "600", color: "#3B82F6" }}>
+        <Text style={{ fontSize: 11, fontWeight: "600", color: "#007AFF" }}>
           Chi tiết →
         </Text>
       </View>

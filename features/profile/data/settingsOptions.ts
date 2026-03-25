@@ -3,7 +3,7 @@ export const settingsOptions = [
     title: "Account Settings",
     subtitle: "Email, password, security",
     icon: "user",
-    color: "bg-blue-500",
+    color: "bg-[#007AFF]",
   },
   {
     title: "Notifications",

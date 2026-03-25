@@ -29,8 +29,8 @@ export function FactorsCard({
       label: "Độ Dốc Địa Hình",
       value: slope.percentage,
       description: slope.description,
-      color: "#3B82F6",
-      gradientColors: ["#3B82F6", "#60A5FA"],
+      color: "#007AFF",
+      gradientColors: ["#007AFF", "#38BDF8"],
     },
     {
       icon: "water",
@@ -81,13 +81,13 @@ export function FactorsCard({
               width: 40,
               height: 40,
               borderRadius: 12,
-              backgroundColor: "#3B82F620",
+              backgroundColor: "#007AFF20",
               alignItems: "center",
               justifyContent: "center",
               marginRight: 12,
             }}
           >
-            <Ionicons name="analytics" size={20} color="#3B82F6" />
+            <Ionicons name="analytics" size={20} color="#007AFF" />
           </View>
           <Text
             style={{

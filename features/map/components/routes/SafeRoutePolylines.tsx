@@ -23,7 +23,7 @@ export function SafeRoutePolylines({
       {routes.map((route, index) => {
         const isSelected = index === selectedIndex;
         const color =
-          SAFETY_STATUS_COLORS[route.safetyStatus] || "#3B82F6";
+          SAFETY_STATUS_COLORS[route.safetyStatus] || "#007AFF";
 
         if (isSelected) {
           return (

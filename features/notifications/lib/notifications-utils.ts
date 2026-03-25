@@ -21,7 +21,7 @@ export const getPriorityConfig = (priority: NotificationPriority): PriorityConfi
       level: "2"
     },
     medium: {
-      color: "#3B82F6",
+      color: "#007AFF",
       bgColor: "#DBEAFE",
       darkBgColor: "#1E3A8A",
       icon: "information-circle",

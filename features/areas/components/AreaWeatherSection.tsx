@@ -28,7 +28,7 @@ export function AreaWeatherSection({
             icon: "rainy",
             label: "Lượng mưa 24h",
             value: `${rainfall24h}mm`,
-            color: "#3B82F6",
+            color: "#007AFF",
             bg: "#EFF6FF",
           },
           {

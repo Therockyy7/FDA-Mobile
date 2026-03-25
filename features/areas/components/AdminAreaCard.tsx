@@ -20,7 +20,7 @@ export function AdminAreaCard({ area, onPress }: AdminAreaCardProps) {
     text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
     subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
     iconBg: isDarkColorScheme ? "rgba(59, 130, 246, 0.15)" : "#EFF6FF",
-    iconColor: "#3B82F6",
+    iconColor: "#007AFF",
   };
 
   return (
@@ -95,7 +95,7 @@ export function AdminAreaCard({ area, onPress }: AdminAreaCardProps) {
 
       <View>
         <LinearGradient
-          colors={["#3B82F6", "#2563EB"]}
+          colors={["#007AFF", "#2563EB"]}
           style={{
             width: 36,
             height: 36,

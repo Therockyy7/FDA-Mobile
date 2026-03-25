@@ -130,7 +130,7 @@ export function MapHeader({
                 width: 28,
                 height: 28,
                 borderRadius: 8,
-                backgroundColor: "#3B82F6",
+                backgroundColor: "#007AFF",
                 alignItems: "center",
                 justifyContent: "center",
                 marginRight: 8,
@@ -222,7 +222,7 @@ export function MapHeader({
               width: 40,
               height: 40,
               borderRadius: 12,
-              backgroundColor: "#3B82F6",
+              backgroundColor: "#007AFF",
               alignItems: "center",
               justifyContent: "center",
             }}

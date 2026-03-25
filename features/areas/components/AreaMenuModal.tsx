@@ -78,7 +78,7 @@ export function AreaMenuModal({
                 width: 44,
                 height: 44,
                 borderRadius: 22,
-                backgroundColor: "#3B82F6",
+                backgroundColor: "#007AFF",
                 alignItems: "center",
                 justifyContent: "center",
               }}
@@ -95,7 +95,7 @@ export function AreaMenuModal({
             >
               Chỉnh sửa khu vực
             </Text>
-            <Ionicons name="chevron-forward" size={20} color="#60A5FA" />
+            <Ionicons name="chevron-forward" size={20} color="#38BDF8" />
           </TouchableOpacity>
 
           <TouchableOpacity

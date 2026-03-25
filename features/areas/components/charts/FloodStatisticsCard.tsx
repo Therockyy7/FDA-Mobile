@@ -302,14 +302,14 @@ export function FloodStatisticsCard({
                   alignItems: "center",
                 }}
               >
-                <Ionicons name="analytics" size={18} color="#3B82F6" />
+                <Ionicons name="analytics" size={18} color="#007AFF" />
               </View>
               <View>
                 <Text style={{ fontSize: 10, color: colors.subtext }}>
                   Mực nước trung bình
                 </Text>
                 <Text
-                  style={{ fontSize: 18, fontWeight: "800", color: "#3B82F6" }}
+                  style={{ fontSize: 18, fontWeight: "800", color: "#007AFF" }}
                 >
                   {Math.round(summary.avgWaterLevel * 100)}cm
                 </Text>

@@ -75,7 +75,7 @@ const Legend = () => {
             marginRight: 8,
           }}
         >
-          <MaterialCommunityIcons name="water" size={16} color="#3B82F6" />
+          <MaterialCommunityIcons name="water" size={16} color="#007AFF" />
         </View>
         <Text
           style={{

@@ -519,7 +519,7 @@ export function WaterLevelAreaCard({
               <MaterialCommunityIcons
                 name="radius-outline"
                 size={20}
-                color="#3B82F6"
+                color="#007AFF"
               />
               <Text
                 style={{
@@ -680,15 +680,15 @@ export function WaterLevelAreaCard({
                     height: 38,
                     borderRadius: 12,
                     backgroundColor: isDarkColorScheme
-                      ? "#3B82F620"
+                      ? "#007AFF20"
                       : "#EFF6FF",
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: 1,
-                    borderColor: isDarkColorScheme ? "#3B82F640" : "#BFDBFE",
+                    borderColor: isDarkColorScheme ? "#007AFF40" : "#BFDBFE",
                   }}
                 >
-                  <Ionicons name="pencil" size={16} color="#3B82F6" />
+                  <Ionicons name="pencil" size={16} color="#007AFF" />
                 </TouchableOpacity>
               )}
               {onDelete && (

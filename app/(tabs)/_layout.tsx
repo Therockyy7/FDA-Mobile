@@ -28,7 +28,7 @@ const TabsLayout = () => {
   const tabBarColors = {
     background: isDarkColorScheme ? "#0F172A" : "#FFFFFF",
     borderColor: isDarkColorScheme ? "#1E293B" : "#E2E8F0",
-    activeColor: isDarkColorScheme ? "#60A5FA" : "#3B82F6",
+    activeColor: isDarkColorScheme ? "#38BDF8" : "#007AFF",
     inactiveColor: isDarkColorScheme ? "#64748B" : "#94A3B8",
   };
 

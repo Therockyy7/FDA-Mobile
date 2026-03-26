@@ -16,7 +16,7 @@ export interface InAppNotificationPayload {
   data?: FCMNotificationData;
 }
 
-const BANNER_DURATION_MS = 15000;
+export const BANNER_DURATION_MS = 10000;
 const ANIMATION_DURATION_MS = 320;
 const HIDDEN_TRANSLATE_Y = -140;
 

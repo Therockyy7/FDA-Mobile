@@ -2,10 +2,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import LottieView from "lottie-react-native";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import LottieView from "lottie-react-native";
 
 export function CommunityBanner() {
   const router = useRouter();
@@ -57,7 +57,7 @@ export function CommunityBanner() {
         >
           {/* Subtle network animation background */}
           <LottieView
-            source={require("../../../assets/animations/pulse.json")}
+            source={require("../../../assets/animations/heartbeat-pulse.json")}
             autoPlay
             loop
             speed={0.5}
@@ -76,7 +76,16 @@ export function CommunityBanner() {
               <Ionicons name="share-social" size={28} color="white" />
             </View>
             <View className="flex-1">
-              <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 11, fontWeight: "600", marginBottom: 2, textTransform: "uppercase", letterSpacing: 0.5 }}>
+              <Text
+                style={{
+                  color: "rgba(255,255,255,0.8)",
+                  fontSize: 11,
+                  fontWeight: "600",
+                  marginBottom: 2,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                }}
+              >
                 Mạng lưới cộng đồng
               </Text>
               <Text className="text-white text-base font-extrabold leading-5">
@@ -91,19 +100,43 @@ export function CommunityBanner() {
               <Text className="text-white text-lg font-black tracking-tighter">
                 42
               </Text>
-              <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 10, fontWeight: "500" }}>Bài đăng mới</Text>
+              <Text
+                style={{
+                  color: "rgba(255,255,255,0.6)",
+                  fontSize: 10,
+                  fontWeight: "500",
+                }}
+              >
+                Bài đăng mới
+              </Text>
             </View>
             <View className="flex-1 items-center border-r border-white/10">
               <Text className="text-amber-300 text-lg font-black tracking-tighter">
                 3
               </Text>
-              <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 10, fontWeight: "500" }}>Cảnh báo khẩn</Text>
+              <Text
+                style={{
+                  color: "rgba(255,255,255,0.6)",
+                  fontSize: 10,
+                  fontWeight: "500",
+                }}
+              >
+                Cảnh báo khẩn
+              </Text>
             </View>
             <View className="flex-1 items-center">
               <Text className="text-emerald-300 text-lg font-black tracking-tighter">
                 12
               </Text>
-              <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 10, fontWeight: "500" }}>Đã an toàn</Text>
+              <Text
+                style={{
+                  color: "rgba(255,255,255,0.6)",
+                  fontSize: 10,
+                  fontWeight: "500",
+                }}
+              >
+                Đã an toàn
+              </Text>
             </View>
           </View>
         </LinearGradient>

@@ -1,14 +1,15 @@
-
 import { Ionicons } from "@expo/vector-icons";
+import { formatDistanceToNow } from "date-fns";
+import { vi } from "date-fns/locale";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { getCategoryIcon, getPriorityConfig } from "../lib/notifications-utils";
-import { Notification } from "../types/notifications-types";
+import { getPriorityConfig } from "../lib/notifications-utils";
+import { NotificationItem } from "../types/notifications-types";
 
 interface NotificationCardProps {
-  notification: Notification;
+  notification: NotificationItem;
   onPress: () => void;
   onMapPress?: () => void;
   onDirectionsPress?: () => void;
@@ -21,7 +22,7 @@ export function NotificationCard({
   onDirectionsPress,
 }: NotificationCardProps) {
   const { isDarkColorScheme } = useColorScheme();
-  const config = getPriorityConfig(notification.priority);
+  const config = getPriorityConfig(notification.severity);
 
   // Theme colors
   const colors = {
@@ -33,6 +34,15 @@ export function NotificationCard({
     buttonSecondary: isDarkColorScheme ? "#334155" : "#F3F4F6",
     buttonSecondaryText: isDarkColorScheme ? "#E2E8F0" : "#1F2937",
   };
+
+  const timeAgo = React.useMemo(() => {
+    try {
+      const date = new Date(notification.sentAt || notification.createdAt);
+      return formatDistanceToNow(date, { addSuffix: true, locale: vi });
+    } catch {
+      return "Vừa xong";
+    }
+  }, [notification]);
 
   return (
     <TouchableOpacity
@@ -84,7 +94,7 @@ export function NotificationCard({
             }}
           >
             <Ionicons
-              name={getCategoryIcon(notification.category)}
+              name={config.icon as any}
               size={26}
               color={config.color}
             />
@@ -103,7 +113,7 @@ export function NotificationCard({
               <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
                 <Text
                   style={{
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: "800",
                     color: colors.text,
                     flex: 1,
@@ -112,17 +122,6 @@ export function NotificationCard({
                 >
                   {notification.title}
                 </Text>
-                {!notification.isRead && (
-                  <View
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: 5,
-                      backgroundColor: "#007AFF",
-                      marginLeft: 8,
-                    }}
-                  />
-                )}
               </View>
             </View>
 
@@ -142,7 +141,7 @@ export function NotificationCard({
                   color: colors.subtext,
                 }}
               >
-                {notification.location}
+                {notification.stationName}
               </Text>
             </View>
 
@@ -168,7 +167,7 @@ export function NotificationCard({
                     color: colors.muted,
                   }}
                 >
-                  {notification.timeAgo}
+                  {timeAgo}
                 </Text>
               </View>
               
@@ -194,37 +193,21 @@ export function NotificationCard({
               </View>
             </View>
           </View>
-
-          {/* Chevron */}
-          <View
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 8,
-              backgroundColor: colors.border,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Ionicons name="chevron-forward" size={16} color={colors.subtext} />
-          </View>
         </View>
 
         {/* Description */}
-        {notification.description && (
-          <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "500",
-              color: colors.subtext,
-              lineHeight: 20,
-              marginBottom: 12,
-            }}
-            numberOfLines={2}
-          >
-            {notification.description}
-          </Text>
-        )}
+        <Text
+          style={{
+            fontSize: 14,
+            fontWeight: "500",
+            color: colors.subtext,
+            lineHeight: 20,
+            marginBottom: 12,
+          }}
+          numberOfLines={2}
+        >
+          {notification.content || notification.alertMessage}
+        </Text>
 
         {/* Stats Row */}
         <View
@@ -237,7 +220,7 @@ export function NotificationCard({
             borderTopColor: colors.border,
           }}
         >
-          {notification.waterLevel !== undefined && (
+          {notification.waterLevel !== undefined && notification.waterLevel !== null && (
             <View
               style={{
                 flex: 1,
@@ -283,7 +266,7 @@ export function NotificationCard({
             </View>
           )}
           
-          {notification.affectedArea && (
+          {notification.stationCode && (
             <View
               style={{
                 flex: 1,
@@ -305,7 +288,7 @@ export function NotificationCard({
                   justifyContent: "center",
                 }}
               >
-                <Ionicons name="resize-outline" size={16} color="#10B981" />
+                <Ionicons name="barcode-outline" size={16} color="#10B981" />
               </View>
               <View>
                 <Text
@@ -315,7 +298,7 @@ export function NotificationCard({
                     color: colors.text,
                   }}
                 >
-                  {notification.affectedArea}
+                  {notification.stationCode}
                 </Text>
                 <Text
                   style={{
@@ -323,77 +306,13 @@ export function NotificationCard({
                     color: colors.muted,
                   }}
                 >
-                  Diện tích
+                  Mã Trạm
                 </Text>
               </View>
             </View>
           )}
         </View>
 
-        {/* Actions */}
-        {notification.actions && (
-          <View
-            style={{
-              flexDirection: "row",
-              gap: 10,
-            }}
-          >
-            {notification.actions.viewMap && (
-              <TouchableOpacity
-                onPress={onMapPress}
-                style={{
-                  flex: 1,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  backgroundColor: "#007AFF",
-                  gap: 6,
-                }}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="map" size={16} color="white" />
-                <Text
-                  style={{
-                    fontSize: 13,
-                    fontWeight: "700",
-                    color: "white",
-                  }}
-                >
-                  Xem bản đồ
-                </Text>
-              </TouchableOpacity>
-            )}
-            {notification.actions.getDirections && (
-              <TouchableOpacity
-                onPress={onDirectionsPress}
-                style={{
-                  flex: 1,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  backgroundColor: colors.buttonSecondary,
-                  gap: 6,
-                }}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="navigate" size={16} color={colors.buttonSecondaryText} />
-                <Text
-                  style={{
-                    fontSize: 13,
-                    fontWeight: "700",
-                    color: colors.buttonSecondaryText,
-                  }}
-                >
-                  Lộ trình
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
       </View>
     </TouchableOpacity>
   );

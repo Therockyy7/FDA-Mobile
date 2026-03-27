@@ -26,6 +26,8 @@ import OtherSettingsSection from "~/features/profile/components/OtherSettingsSec
 import ProfileHeader from "~/features/profile/components/ProfileHeader";
 import ProfileInfoSection from "~/features/profile/components/ProfileInfoSection";
 import SaveButton from "~/features/profile/components/SaveButton";
+import SubscriptionSection from "~/features/profile/components/SubscriptionSection";
+import { useCurrentSubscription } from "~/features/plans/hooks/useCurrentSubscription";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function ProfileScreen() {
@@ -319,6 +321,14 @@ export default function ProfileScreen() {
   const displayAvatar = newAvatarUri || user?.avatarUrl;
   const displayName = fullName || user?.email || "Người dùng";
 
+  // Subscription data
+  const {
+    data: subscriptionData,
+    isLoading: isLoadingSubscription,
+    error: subscriptionError,
+    refetch: refetchSubscription,
+  } = useCurrentSubscription();
+
   return (
     <SafeAreaView
       style={{
@@ -351,6 +361,13 @@ export default function ProfileScreen() {
         scrollEventThrottle={16}
         onScroll={scrollHandler}
       >
+        <SubscriptionSection
+          subscription={subscriptionData?.subscription ?? null}
+          isLoading={isLoadingSubscription}
+          error={subscriptionError ? subscriptionError.message : null}
+          onRetry={refetchSubscription}
+        />
+
         <ProfileInfoSection
           fullName={fullName}
           setFullName={setFullName}

@@ -113,6 +113,7 @@ export default function MapScreen() {
   const lastZoomModeRef = useRef<MapZoomMode | null>(null);
 
   const {
+
     settings,
     areas,
     floodSeverity,
@@ -840,16 +841,18 @@ export default function MapScreen() {
           {/* Admin Areas Polygons */}
           {viewMode === "zones" &&
             areaDisplayMode === "admin" &&
-            adminAreas.map((area) => (
-              <AdminAreaPolygon
-                key={area.id}
-                area={area}
-                onPress={(selectedArea) => {
-                  setSelectedAdminArea(selectedArea);
-                  setShowAdminAreaConfirmModal(true);
-                }}
-              />
-            ))}
+            adminAreas.map((area) => {
+              return (
+                <AdminAreaPolygon
+                  key={area.id}
+                  area={area}
+                  onPress={(selectedArea) => {
+                    setSelectedAdminArea(selectedArea);
+                    setShowAdminAreaConfirmModal(true);
+                  }}
+                />
+              );
+            })}
 
           {/* Draft Area Preview Circle - Draggable during Step 1 */}
           {draftAreaCenter && (
@@ -1079,29 +1082,6 @@ export default function MapScreen() {
           />
         </MapView>
 
-        {/* Top Controls - Hide during create area mode and picking */}
-        {/* {!isRoutingUIVisible &&
-          !isPickingOnMap &&
-          !isAdjustingRadius &&
-          !showCreateAreaSheet && (
-            <View
-              style={{
-                position: "absolute",
-                top: 16,
-                left: 16,
-                right: 16,
-                zIndex: 10,
-              }}
-            >
-              <MapTopControls
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-              />
-            </View>
-          )} */}
-
         {/* Legend */}
         {showLegend && !isRoutingUIVisible && <Legend />}
 
@@ -1140,7 +1120,7 @@ export default function MapScreen() {
           </View>
         )}
 
-        {/* Map Controls - Hide during create area mode */}
+        {/* Map Controls - Hide during create area mode and when timeline is active */}
         <View
           style={{
             position: "absolute",

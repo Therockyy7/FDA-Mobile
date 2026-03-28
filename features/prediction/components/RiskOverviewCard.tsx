@@ -5,29 +5,38 @@ import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { getRiskConfig } from "../utils/adviceParser";
+import { getRiskConfigByLevel } from "../types/prediction.types";
 
 interface RiskOverviewCardProps {
-  riskLevel: "Low" | "Medium" | "High" | "Critical";
-  riskPercentage: number;
-  riskLabel: string;
+  probability: number;         // 0-1 from ensemble_prediction.probability
+  riskLevel: string;           // Vietnamese: "Thấp" | "Vang" | "Cam" | "Cao"
+  recommendation: string;     // Vietnamese recommendation text
+  confidence: string;         // e.g. "High (models agree)"
+  confidenceScore: number;    // 0-1
+  modelAgreementScore?: number; // 0-1
+  uncertaintyLevel?: string;  // "low" | "medium" | "high"
 }
 
 export function RiskOverviewCard({
+  probability,
   riskLevel,
-  riskPercentage,
-  riskLabel,
+  recommendation,
+  confidence,
+  confidenceScore,
+  modelAgreementScore,
+  uncertaintyLevel,
 }: RiskOverviewCardProps) {
   const { isDarkColorScheme } = useColorScheme();
-  const config = getRiskConfig(riskLevel);
+  const config = getRiskConfigByLevel(riskLevel);
+  const percentValue = probability * 100;
   const [animatedPercentage, setAnimatedPercentage] = useState(0);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setAnimatedPercentage(riskPercentage);
+      setAnimatedPercentage(percentValue);
     }, 500);
     return () => clearTimeout(timer);
-  }, [riskPercentage]);
+  }, [percentValue]);
 
   const size = 140;
   const strokeWidth = 12;
@@ -42,7 +51,7 @@ export function RiskOverviewCard({
       transition={{ type: "spring", damping: 20 }}
     >
       <LinearGradient
-        colors={config.gradientColors}
+        colors={config.gradient as unknown as [string, string]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{
@@ -75,7 +84,7 @@ export function RiskOverviewCard({
                 width: 48,
                 height: 48,
                 borderRadius: 16,
-                backgroundColor: config.bgColor,
+                backgroundColor: `${config.color}20`,
                 alignItems: "center",
                 justifyContent: "center",
                 marginRight: 12,
@@ -96,7 +105,7 @@ export function RiskOverviewCard({
                 Đánh Giá Tổng Quan
               </Text>
               <LinearGradient
-                colors={config.gradientColors}
+                colors={config.gradient as unknown as [string, string]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={{
@@ -125,7 +134,6 @@ export function RiskOverviewCard({
           <View style={{ alignItems: "center", marginBottom: 16 }}>
             <View style={{ width: size, height: size, position: "relative" }}>
               <Svg width={size} height={size}>
-                {/* Background Circle */}
                 <Circle
                   cx={size / 2}
                   cy={size / 2}
@@ -134,7 +142,6 @@ export function RiskOverviewCard({
                   strokeWidth={strokeWidth}
                   fill="none"
                 />
-                {/* Progress Circle */}
                 <Circle
                   cx={size / 2}
                   cy={size / 2}
@@ -148,7 +155,6 @@ export function RiskOverviewCard({
                   transform={`rotate(-90 ${size / 2} ${size / 2})`}
                 />
               </Svg>
-              {/* Center Content */}
               <View
                 style={{
                   position: "absolute",
@@ -180,20 +186,21 @@ export function RiskOverviewCard({
                     marginTop: 4,
                   }}
                 >
-                  Rủi Ro
+                  Xác Suất
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Risk Label */}
+          {/* Recommendation */}
           <View
             style={{
-              backgroundColor: config.bgColor,
+              backgroundColor: `${config.color}15`,
               borderRadius: 16,
               padding: 16,
               borderLeftWidth: 4,
               borderLeftColor: config.color,
+              marginBottom: 12,
             }}
           >
             <Text
@@ -202,11 +209,117 @@ export function RiskOverviewCard({
                 fontWeight: "600",
                 color: isDarkColorScheme ? "#E2E8F0" : "#334155",
                 lineHeight: 24,
-                textAlign: "center",
               }}
             >
-              Mức độ rủi ro <Text style={{ fontWeight: "900", color: config.color }}>{riskLabel.toLowerCase()}</Text> với xác suất {riskPercentage.toFixed(1)}%
+              {recommendation}
             </Text>
+          </View>
+
+          {/* Confidence & Agreement Row */}
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            {/* Confidence */}
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: isDarkColorScheme ? "#334155" : "#F1F5F9",
+                borderRadius: 12,
+                padding: 12,
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 10,
+                  fontWeight: "700",
+                  color: isDarkColorScheme ? "#94A3B8" : "#64748B",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.8,
+                  marginBottom: 4,
+                }}
+              >
+                Độ Tin Cậy
+              </Text>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "900",
+                  color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
+                }}
+              >
+                {(confidenceScore * 100).toFixed(0)}%
+              </Text>
+            </View>
+
+            {/* Model Agreement */}
+            {modelAgreementScore !== undefined && (
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: isDarkColorScheme ? "#334155" : "#F1F5F9",
+                  borderRadius: 12,
+                  padding: 12,
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 10,
+                    fontWeight: "700",
+                    color: isDarkColorScheme ? "#94A3B8" : "#64748B",
+                    textTransform: "uppercase",
+                    letterSpacing: 0.8,
+                    marginBottom: 4,
+                  }}
+                >
+                  Mô Hình Đồng Ý
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "900",
+                    color: modelAgreementScore > 0.8 ? "#16A34A" : modelAgreementScore > 0.5 ? "#CA8A04" : "#DC2626",
+                  }}
+                >
+                  {(modelAgreementScore * 100).toFixed(0)}%
+                </Text>
+              </View>
+            )}
+
+            {/* Uncertainty */}
+            {uncertaintyLevel && (
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: isDarkColorScheme ? "#334155" : "#F1F5F9",
+                  borderRadius: 12,
+                  padding: 12,
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 10,
+                    fontWeight: "700",
+                    color: isDarkColorScheme ? "#94A3B8" : "#64748B",
+                    textTransform: "uppercase",
+                    letterSpacing: 0.8,
+                    marginBottom: 4,
+                  }}
+                >
+                  Độ Bất Định
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "800",
+                    color: uncertaintyLevel === "high" ? "#DC2626" : uncertaintyLevel === "medium" ? "#CA8A04" : "#16A34A",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {uncertaintyLevel === "high" ? "Cao" : uncertaintyLevel === "medium" ? "TB" : "Thấp"}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </LinearGradient>

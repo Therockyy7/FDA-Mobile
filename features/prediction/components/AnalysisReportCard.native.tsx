@@ -37,7 +37,7 @@ interface AnalysisReportCardProps {
 interface RiskConfig {
   color: string;
   glowColor: string;
-  gradientColors: string[];
+  gradientColors: readonly [string, string];
   label: string;
   darkColor: string;
 }

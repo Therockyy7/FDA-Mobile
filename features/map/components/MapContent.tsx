@@ -1,4 +1,4 @@
-// app/(tabs)/MapContent.tsx
+// features/map/components/MapContent.tsx
 // MapView + all map children (markers, polygons, polylines).
 // No business logic — all data/callbacks passed as props.
 
@@ -56,6 +56,9 @@ interface Props {
   onCommunityReportPress: (report: any) => void;
   onFloodMarkerPress: (feature: FloodSeverityFeature) => void;
   openStreetView: (lat: number, lng: number) => void;
+  onAdminAreaPress: (area: any) => void;
+  onSafeRoutePress: (index: number) => void;
+  onDraftAreaCenterChange: (center: any) => void;
 }
 
 export function MapContent({
@@ -67,7 +70,7 @@ export function MapContent({
   isRoutingUIVisible, isUsingGPSOrigin, startCoord, originText, endCoord, destinationText,
   streetViewLocation, floodSeverity, communityReports,
   onRegionChangeComplete, onLongPress, onPress, onPanDrag,
-  onAreaPress, onRoutePress, onCommunityReportPress, onFloodMarkerPress, openStreetView,
+  onAreaPress, onRoutePress, onSafeRoutePress, onCommunityReportPress, onFloodMarkerPress, openStreetView, onAdminAreaPress, onDraftAreaCenterChange,
 }: Props) {
   return (
     <MapView
@@ -97,7 +100,7 @@ export function MapContent({
 
       {/* Admin Areas */}
       {viewMode === "zones" && areaDisplayMode === "admin" && adminAreas.map((area) => (
-        <AdminAreaPolygon key={area.id} area={area} onPress={(a) => a} />
+        <AdminAreaPolygon key={area.id} area={area} onPress={onAdminAreaPress} />
       ))}
 
       {/* Draft Area */}
@@ -106,7 +109,7 @@ export function MapContent({
           center={draftAreaCenter}
           radiusMeters={draftAreaRadius}
           visible={isAdjustingRadius || showCreateAreaSheet}
-          onCenterChange={isAdjustingRadius ? (c: any) => {} : undefined}
+          onCenterChange={isAdjustingRadius ? onDraftAreaCenterChange : undefined}
         />
       )}
 
@@ -117,7 +120,7 @@ export function MapContent({
 
       {/* Safe Route */}
       {safeRoute.hasResults && (
-        <SafeRoutePolylines routes={safeRoute.getAllRoutes()} selectedIndex={safeRoute.selectedRouteIndex} onRoutePress={() => {}} />
+        <SafeRoutePolylines routes={safeRoute.getAllRoutes()} selectedIndex={safeRoute.selectedRouteIndex} onRoutePress={onSafeRoutePress} />
       )}
       {safeRoute.hasResults && <FloodWarningMarkers warnings={safeRoute.floodWarnings} />}
 

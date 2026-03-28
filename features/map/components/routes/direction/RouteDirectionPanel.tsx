@@ -12,12 +12,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import type { LatLng } from "../../../types/safe-route.types";
-import type { TransportMode, RouteDirectionPanelProps } from "../../../types/routing.types";
+import type { RouteDirectionPanelProps } from "../../../types/routing.types";
 import { PlaceSearchSheet } from "../sheets/PlaceSearchSheet";
 import { LocationInput } from "./LocationInput";
 import { TransportModeButton } from "./TransportModeButton";
-
-export type { TransportMode };
 
 export function RouteDirectionPanel({
   visible,

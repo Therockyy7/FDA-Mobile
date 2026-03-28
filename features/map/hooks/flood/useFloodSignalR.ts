@@ -102,7 +102,7 @@ export function useFloodSignalR(enabled: boolean) {
   const unsubscribeFromStation = useCallback(async (stationId: string) => {
     try {
       const connection = getFloodHubConnection();
-      await connection.invoke("UnsubscribeToStation", stationId);
+      await connection.invoke("UnsubscribeFromStation", stationId);
     } catch {
       // non-critical
     }

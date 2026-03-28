@@ -83,6 +83,7 @@ interface Props {
   onAreaDisplayModeChange: (mode: "user" | "admin") => void;
   onConfirmRadius: () => void;
   onCancelCreation: () => void;
+  onCloseCreateArea: () => void;
   onCreateAreaSubmit: (data: { name: string; addressText: string }) => Promise<void>;
   onOptionSelect: (option: string) => void;
   onAddressSelected: (data: { latitude: number; longitude: number; address: string }) => void;
@@ -143,6 +144,7 @@ export function MapSheets({
   onAreaDisplayModeChange,
   onConfirmRadius,
   onCancelCreation,
+  onCloseCreateArea,
   onCreateAreaSubmit,
   onOptionSelect,
   onAddressSelected,
@@ -169,7 +171,7 @@ export function MapSheets({
       {/* Create Area */}
       <CreateAreaSheet
         visible={showCreateAreaSheet}
-        onClose={onCancelCreation}
+        onClose={onCloseCreateArea}
         onSubmit={onCreateAreaSubmit}
         radiusMeters={draftAreaRadius}
         isLoading={isCreatingArea}
@@ -228,7 +230,7 @@ export function MapSheets({
           />
           {showResultCard && (
             <SafeRouteResultCard
-              route={safeRoute.getSelectedRoute()}
+              route={safeRoute.getSelectedRoute()!}
               floodWarnings={safeRoute.floodWarnings}
               metadata={safeRoute.metadata}
               onClose={onCloseRouteResults}

@@ -266,11 +266,6 @@ export function useMapScreen(ctx: MapScreenCtx) {
     [safeRoute, mapRef, setShowResultCard],
   );
 
-  const handleClearAllRoutes = useCallback(() => {
-    setShowResultCard(false);
-    safeRoute.clearRoutes();
-  }, [safeRoute, setShowResultCard]);
-
   const handleCloseRouteResults = useCallback(() => {
     if (safeRoute.getAllRoutes().length <= 1) {
       setShowResultCard(false);
@@ -285,9 +280,10 @@ export function useMapScreen(ctx: MapScreenCtx) {
   const handleCloseRouting = useCallback(() => {
     if (nav.isNavigating) nav.stopNavigation();
     closeRouting();
-    handleClearAllRoutes();
+    setShowResultCard(false);
+    safeRoute.clearRoutes();
     resetRouting();
-  }, [nav, closeRouting, handleClearAllRoutes, resetRouting]);
+  }, [nav, closeRouting, setShowResultCard, safeRoute, resetRouting]);
 
   // ── Destination-first NAV FAB flow ───────────────────────────
   const handleNavDestinationSelected = useCallback(
@@ -420,7 +416,6 @@ export function useMapScreen(ctx: MapScreenCtx) {
     handleStopNavigation,
     handleFindRoute,
     handleSelectRoute,
-    handleClearAllRoutes,
     handleCloseRouteResults,
     handleCloseRouting,
     handleNavDestinationSelected,

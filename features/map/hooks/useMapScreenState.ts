@@ -1,4 +1,4 @@
-// app/(tabs)/useMapScreenState.ts
+// features/map/hooks/useMapScreenState.ts
 // Aggregates all state from hooks into a single object.
 // Reduces prop-drilling across MapScreen → child components.
 
@@ -219,7 +219,7 @@ export function useMapScreenState(): MapScreenState {
   const { mapType, viewMode, setViewMode, showLegend, toggleLegend, stats, handleMapTypeChange } = useMapDisplay();
 
   // Area control
-  const { selectedArea, isAdjustingRadius, showCreateAreaSheet, isCreatingArea, draftAreaCenter, draftAreaRadius, editingArea, showCreationOptions, showAddressSearch, draftAddress, setSelectedArea, setDraftAreaRadius, setDraftAreaCenter, handleAreaPress, handleCloseAreaCard, handleDeleteArea, handleStartCreateArea, handleStartEditArea, handleStartEditAreaFromParams, handleConfirmLocation, handleCancelCreateArea, handleCreateAreaSubmit, handleCloseCreateArea, handleMapPress: handleAreaMapPress, handleOptionSelect, handleAddressSelected, handleCloseCreationOptions, handleCloseAddressSearch, showPremiumLimitModal, currentAreaCount, freeAreaLimit, handleClosePremiumLimitModal, handleUpgradePremium, isCheckingLimit, isLoadingLocation, isLoadingSearch, areaError, handleCloseErrorModal, updateDraftAreaFromMapCenter } = useControlArea({ mapRef, region, refreshAreas, clearSelections: () => { setSelectedRoute(null); setSelectedZone(null); setSelectedStationId(null); } });
+  const { selectedArea, isAdjustingRadius, showCreateAreaSheet, isCreatingArea, draftAreaCenter, draftAreaRadius, editingArea, showCreationOptions, showAddressSearch, draftAddress, setSelectedArea, setDraftAreaRadius, setDraftAreaCenter, handleAreaPress, handleCloseAreaCard, handleDeleteArea, handleStartCreateArea, handleStartEditArea, handleStartEditAreaFromParams, handleConfirmLocation, handleCancelCreateArea, handleCreateAreaSubmit, handleCloseCreateArea, handleMapPress: handleAreaMapPress, handleOptionSelect, handleAddressSelected, handleCloseCreationOptions, handleCloseAddressSearch, showPremiumLimitModal, currentAreaCount, freeAreaLimit, handleClosePremiumLimitModal, handleUpgradePremium, isCheckingLimit, isLoadingLocation, isLoadingSearch, areaError, handleCloseErrorModal, updateDraftAreaFromMapCenter } = useControlArea({ mapRef, region, refreshAreas, clearSelections: () => { setSelectedRoute(null); setSelectedZone(null); setSelectedStationId(null); setSelectedCommunityReport(null); } });
 
   // Selected station
   const selectedStation = useMemo(() => {

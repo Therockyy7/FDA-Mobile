@@ -2,11 +2,20 @@
 // Convenience wrapper that aggregates all map data sources.
 // Delegates to flood/ hooks for flood data, plus area queries.
 
-import type { NearbyFloodReport } from "~/features/community/services/community.service";
-import type { FloodSeverityGeoJSON } from "../types/map-layers.types";
+import type { NearbyFloodReportsParams } from "~/features/community/services/community.service";
 import { useFloodLayerSettings, useFloodSignalR } from "./flood";
+import { useFloodData } from "./flood/useFloodData";
 import { useAdminAreasQuery } from "./queries/useAdminAreasQuery";
 import { useAreasQuery } from "./queries/useAreasQuery";
+import { useCommunityReportsQuery } from "./queries/useCommunityReportsQuery";
+import { DANANG_CENTER } from "../constants/map-data";
+
+const DEFAULT_COMMUNITY_PARAMS: NearbyFloodReportsParams = {
+  latitude: DANANG_CENTER.latitude,
+  longitude: DANANG_CENTER.longitude,
+  radiusMeters: Math.round((DANANG_CENTER.latitudeDelta / 2) * 111320),
+  hours: 720,
+};
 
 export function useMapData() {
   const {
@@ -25,6 +34,19 @@ export function useMapData() {
 
   // Real-time flood updates via SignalR
   useFloodSignalR(settings.overlays.flood);
+
+  // Flood severity data (REST + SignalR real-time merge)
+  const { floodSeverity, isLoading: floodLoading } = useFloodData(
+    null,
+    settings.overlays.flood,
+  );
+
+  // Community reports (initial load at Da Nang center)
+  const communityReportsQuery = useCommunityReportsQuery(
+    DEFAULT_COMMUNITY_PARAMS,
+    settings.overlays.communityReports,
+  );
+  const communityReports = communityReportsQuery.data ?? [];
 
   // User areas
   const areasQuery = useAreasQuery();
@@ -46,16 +68,16 @@ export function useMapData() {
     toggleOverlay,
     setBaseMap,
     setOpacity,
-    // Flood — consumed via useFloodData in MapScreen; placeholder here
-    floodSeverity: undefined as FloodSeverityGeoJSON | undefined,
-    floodLoading: false,
+    // Flood
+    floodSeverity,
+    floodLoading,
     refreshFloodSeverity,
     // User areas
     areas,
     areasLoading,
     refreshAreas,
-    // Community reports (loaded on demand by MapScreen with viewport params)
-    communityReports: [] as NearbyFloodReport[],
+    // Community reports
+    communityReports,
     refreshNearbyFloodReports,
     // Admin areas
     adminAreas,

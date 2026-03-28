@@ -213,6 +213,12 @@ export default function MapScreen() {
           onCommunityReportPress={handleCommunityReportPress}
           onFloodMarkerPress={handleFloodMarkerPress}
           openStreetView={s.openStreetView}
+          onAdminAreaPress={(area) => {
+            s.setSelectedAdminArea(area);
+            s.setShowAdminAreaConfirmModal(true);
+          }}
+          onSafeRoutePress={handleSelectRoute}
+          onDraftAreaCenterChange={s.setDraftAreaCenter}
         />
 
         {/* Floating UI */}
@@ -301,6 +307,7 @@ export default function MapScreen() {
           onAreaDisplayModeChange={s.setAreaDisplayMode}
           onConfirmRadius={s.handleConfirmLocation}
           onCancelCreation={s.handleCancelCreateArea}
+          onCloseCreateArea={s.handleCloseCreateArea}
           onCreateAreaSubmit={s.handleCreateAreaSubmit}
           onOptionSelect={s.handleOptionSelect}
           onAddressSelected={s.handleAddressSelected}

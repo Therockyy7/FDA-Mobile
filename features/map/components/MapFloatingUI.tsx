@@ -1,4 +1,4 @@
-// app/(tabs)/MapFloatingUI.tsx
+// features/map/components/MapFloatingUI.tsx
 // Floating controls, FAB, and place search sheet outside MapView.
 
 import { Ionicons } from "@expo/vector-icons";
@@ -106,7 +106,7 @@ export function MapFloatingUI({
     <>
       {/* Map Controls */}
       {showControls && (
-        <View style={styles.controlsContainer}>
+        <View style={[styles.controlsContainer, { bottom: selectedZone || selectedRoute || safeRouteHasResults ? 180 : 24 }]}>
           <MapControls
             onZoomIn={onZoomIn}
             onZoomOut={onZoomOut}
@@ -162,7 +162,6 @@ export function MapFloatingUI({
 const styles = StyleSheet.create({
   controlsContainer: {
     position: "absolute",
-    bottom: 24,
     right: 16,
     zIndex: 10,
   },

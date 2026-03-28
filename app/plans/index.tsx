@@ -5,6 +5,7 @@ import React from "react";
 import {
   ActivityIndicator,
   Dimensions,
+  Platform,
   RefreshControl,
   ScrollView,
   StatusBar,
@@ -19,6 +20,7 @@ import { useCurrentSubscription } from "~/features/plans/hooks/useCurrentSubscri
 import PricingPlansList from "~/features/plans/components/PricingPlansList";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { useUser } from "~/features/auth/stores/hooks";
+import { LinearGradient } from "expo-linear-gradient";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const IS_MOBILE = SCREEN_WIDTH < 768;
@@ -61,23 +63,37 @@ export default function PlansScreen() {
   const subscription = subscriptionData?.subscription ?? null;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top"]}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar
         barStyle="light-content"
-        backgroundColor={colors.headerBg}
-        translucent={false}
+        backgroundColor="transparent"
+        translucent
       />
 
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.headerBg }]}>
-        <View style={styles.headerContent}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Bảng giá</Text>
-          <View style={{ width: 40 }} />
-        </View>
-      </View>
+      <LinearGradient
+        colors={[
+          isDarkColorScheme ? "#1E3A5F" : "#007AFF",
+          isDarkColorScheme ? "#0F172A" : "#1D4ED8",
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <SafeAreaView edges={["top"]}>
+          <View style={styles.headerContent}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Bảng giá</Text>
+            <View style={{ width: 40 }} />
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
 
 
       <ScrollView
@@ -156,8 +172,8 @@ export default function PlansScreen() {
             isAuthenticated={isAuthenticated}
             isLoadingPlans={isLoadingPlans}
             isLoadingSubscription={isLoadingSubscription}
-            plansError={plansError?.message ?? null}
-            subscriptionError={subscriptionError?.message ?? null}
+            plansError={null}
+            subscriptionError={subscriptionError ? (subscriptionError as Error).message : null}
             onRetryPlans={() => refetchPlans()}
             onRetrySubscription={() => refetchSubscription()}
           />
@@ -165,24 +181,25 @@ export default function PlansScreen() {
 
         <View style={{ height: 100 }} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingBottom: 16,
   },
   headerContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginTop: Platform.OS === "ios" ? 0 : 10,
   },
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: 14,
     backgroundColor: "rgba(255,255,255,0.15)",
     alignItems: "center",
     justifyContent: "center",

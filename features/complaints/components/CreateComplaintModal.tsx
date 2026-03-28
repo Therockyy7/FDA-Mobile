@@ -15,6 +15,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import { paymentService } from "~/features/payment/services/payment.service";
 import { useColorScheme } from "~/lib/useColorScheme";
@@ -34,6 +35,7 @@ const CreateComplaintModal: React.FC<Props> = ({
 }) => {
   const { isDarkColorScheme } = useColorScheme();
   const isDark = isDarkColorScheme;
+  const insets = useSafeAreaInsets();
   
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
@@ -90,16 +92,22 @@ const CreateComplaintModal: React.FC<Props> = ({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "android" ? 0 : 0}
         style={[styles.overlay, { backgroundColor: colors.overlay }]}
       >
         <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={Keyboard.dismiss} />
         
-        <View style={[styles.container, { backgroundColor: colors.bg }]}>
+        <SafeAreaView 
+          edges={["bottom", "left", "right"]} 
+          style={[styles.container, { backgroundColor: colors.bg }]}
+        >
           <ScrollView
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: Platform.OS === "ios" ? 40 : 20 }}
+            contentContainerStyle={{ 
+              paddingBottom: Platform.OS === "ios" ? insets.bottom + 20 : 20 
+            }}
           >
             <TouchableWithoutFeedback>
               <View>
@@ -264,7 +272,7 @@ const CreateComplaintModal: React.FC<Props> = ({
               </View>
             </TouchableWithoutFeedback>
           </ScrollView>
-        </View>
+        </SafeAreaView>
       </KeyboardAvoidingView>
     </Modal>
   );

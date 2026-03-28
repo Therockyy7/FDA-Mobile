@@ -1,6 +1,21 @@
-// features/plans/components/PricingPlansList.tsx
-import React, { useState } from "react";
-import { Alert, Dimensions, ScrollView, StyleSheet, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { 
+  Alert, 
+  Dimensions, 
+  StyleSheet, 
+  View, 
+  Platform, 
+  StatusBar,
+} from "react-native";
+import Animated, { 
+  useSharedValue, 
+  useAnimatedScrollHandler,
+  withTiming,
+  withDelay,
+  withSequence,
+  runOnJS,
+  FadeInDown,
+} from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useColorScheme } from "~/lib/useColorScheme";
@@ -20,7 +35,10 @@ import {
 } from "~/features/payment/utils/payment-utils";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const IS_MOBILE = SCREEN_WIDTH < 768;
+const CARD_WIDTH = SCREEN_WIDTH * 0.82;
+const CARD_MARGIN = 12;
+const SNAP_INTERVAL = CARD_WIDTH + CARD_MARGIN * 2;
+const SIDE_SPACING = (SCREEN_WIDTH - CARD_WIDTH - CARD_MARGIN * 2) / 2;
 
 const getPlanRank = (code: string): number => {
   const map: Record<string, number> = { FREE: 0, PREMIUM: 1, MONITOR: 2 };
@@ -46,6 +64,7 @@ const PricingPlansList: React.FC<Props> = ({
   isLoadingSubscription = false,
 }) => {
   const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -60,9 +79,37 @@ const PricingPlansList: React.FC<Props> = ({
   const [downgradeDialogVisible, setDowngradeDialogVisible] = useState(false);
   const [downgradeLoading, setDowngradeLoading] = useState(false);
 
-  const colors = {
-    background: isDarkColorScheme ? "#0F172A" : "#F0F4F8",
-  };
+  // ─── Animation Shared Values ───────────────────────────────────────────────
+  const scrollX = useSharedValue(0);
+  const scrollViewRef = React.useRef<Animated.ScrollView>(null);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollX.value = event.contentOffset.x;
+    },
+  });
+
+  // ─── Guided Tour Animation ──────────────────────────────────────────────────
+  useEffect(() => {
+    // Spotlight/Guided Tour: Move through plans (Free -> Premium -> Monitor)
+    // Then snap back to Premium (index 1) which is usually the best choice
+    const premiumIdx = 1;
+    
+    const runTour = () => {
+        if (!scrollViewRef.current) return;
+        
+        // Sequence: Start -> Plan 2 (Monitor) -> Snap back to Plan 1 (Premium)
+        setTimeout(() => {
+            scrollViewRef.current?.scrollTo({ x: SNAP_INTERVAL * 2, animated: true });
+            
+            setTimeout(() => {
+                scrollViewRef.current?.scrollTo({ x: SNAP_INTERVAL * 1, animated: true });
+            }, 1000);
+        }, 1200);
+    };
+
+    runTour();
+  }, []);
 
   const handleActionPress = (plan: PricingPlan) => {
     if (!isAuthenticated) {
@@ -71,7 +118,7 @@ const PricingPlansList: React.FC<Props> = ({
         "Bạn cần đăng nhập để nâng cấp gói dịch vụ.",
         [
           { text: "Hủy", style: "cancel" },
-          { text: "Đăng nhập", onPress: () => {} },
+          { text: "Đăng nhập", onPress: () => router.push("/auth/login" as any) },
         ]
       );
       return;
@@ -88,23 +135,15 @@ const PricingPlansList: React.FC<Props> = ({
     if (isCurrentPlan) return;
 
     if (plan.code === "FREE") {
-      // Downgrade to FREE – show confirmation dialog
       setDowngradeDialogVisible(true);
-    } else if (planRank > currentRank) {
-      // Upgrade – show duration selection
-      setSelectedPlan(plan);
-      setDurationModalVisible(true);
-    } else if (planRank < currentRank) {
-      // Downgrade to a paid plan – also treat as upgrade (new subscription)
+    } else {
       setSelectedPlan(plan);
       setDurationModalVisible(true);
     }
   };
 
-  // ─── Upgrade: create payment link → navigate to processing ───────────
   const handleUpgradeConfirm = async (durationMonths: DurationMonths) => {
     if (!selectedPlan) return;
-
     setPaymentLoading(true);
     try {
       const response = await paymentService.createPaymentLink({
@@ -118,7 +157,6 @@ const PricingPlansList: React.FC<Props> = ({
       setSelectedPlan(null);
 
       if (response.success && response.data?.paymentUrl) {
-        // Navigate to processing screen with the payment URL
         router.push({
           pathname: "/payment/processing" as any,
           params: {
@@ -127,130 +165,97 @@ const PricingPlansList: React.FC<Props> = ({
           },
         });
       } else {
-        Alert.alert(
-          "Lỗi",
-          response.message || "Không thể tạo đường dẫn thanh toán. Vui lòng thử lại."
-        );
+        Alert.alert("Lỗi", response.message || "Không thể tạo thanh toán.");
       }
     } catch (error: any) {
-      const status = error?.response?.status;
-      const message = error?.response?.data?.message;
-
-      if (status === 400) {
-        Alert.alert("Lỗi", message || "Thời hạn không hợp lệ. Vui lòng chọn lại.");
-      } else if (status === 404) {
-        Alert.alert("Lỗi", "Gói dịch vụ không tìm thấy. Vui lòng thử lại.");
-      } else {
-        Alert.alert(
-          "Lỗi kết nối",
-          "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối internet."
-        );
-      }
+        Alert.alert("Lỗi", "Đã có sự cố xảy ra. Vui lòng thử lại sau.");
     } finally {
       setPaymentLoading(false);
     }
   };
 
-  // ─── Downgrade to FREE ───────────────────────────────────────────────
   const handleDowngradeConfirm = async () => {
     setDowngradeLoading(true);
-    console.log("🔽 [PricingPlansList] handleDowngradeConfirm called");
     try {
       const response = await paymentService.downgradeToFree();
-      console.log("🔽 [PricingPlansList] downgrade response:", JSON.stringify(response));
-
       setDowngradeDialogVisible(false);
-
       if (response.success) {
-        // Invalidate subscription cache
-        await queryClient.invalidateQueries({
-          queryKey: ["plans", "subscription", "current"],
-        });
-
-        Alert.alert(
-          "Hạ cấp thành công",
-          "Gói dịch vụ của bạn đã được chuyển về Miễn phí.",
-          [
-            {
-              text: "OK",
-              onPress: () => router.replace("/plans" as any),
-            },
-          ]
-        );
+        await queryClient.invalidateQueries({ queryKey: ["plans", "subscription", "current"] });
+        Alert.alert("Hạ cấp thành công", "Gói dịch vụ đã về Miễn phí.");
       } else {
-        console.warn("🔽 [PricingPlansList] downgrade response.success is false:", response);
-        Alert.alert("Lỗi", response.message || "Không thể hạ cấp gói. Vui lòng thử lại.");
+        Alert.alert("Lỗi", response.message || "Không thể hạ cấp.");
       }
     } catch (error: any) {
-      console.error("🔽 [PricingPlansList] downgrade CAUGHT error:");
-      console.error("  → error.response?.status:", error?.response?.status);
-      console.error("  → error.response?.data:", JSON.stringify(error?.response?.data));
-      console.error("  → error.message:", error?.message);
-      console.error("  → full error:", error);
-
-      const status = error?.response?.status;
-      const serverMessage = error?.response?.data?.message;
-
-      if (status === 404) {
-        Alert.alert("Lỗi", serverMessage || "Gói dịch vụ không tìm thấy.");
-      } else if (status === 400) {
-        Alert.alert("Lỗi", serverMessage || "Yêu cầu không hợp lệ.");
-      } else {
-        Alert.alert(
-          "Lỗi",
-          serverMessage || `Không thể hạ cấp gói dịch vụ (HTTP ${status || "unknown"}). Vui lòng thử lại sau.`
-        );
-      }
+      Alert.alert("Lỗi", "Vui lòng thử lại sau.");
     } finally {
       setDowngradeLoading(false);
     }
   };
 
-  const sortedPlans = [...plans].sort((a, b) => {
-    const order: Record<string, number> = { FREE: 0, PREMIUM: 1, MONITOR: 2 };
-    return (order[(a.code || "").toUpperCase()] ?? 99) - (order[(b.code || "").toUpperCase()] ?? 99);
-  });
+  const sortedPlans = [...plans].sort((a, b) => getPlanRank(a.code) - getPlanRank(b.code));
 
   return (
-    <>
-      <ScrollView
-        style={[styles.container, { backgroundColor: colors.background }]}
-        contentContainerStyle={styles.content}
+    <View style={[styles.mainWrapper, { backgroundColor: isDark ? "#0F172A" : "#F8FAFB" }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+      
+      <Animated.ScrollView
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        {/* Billing Toggle */}
-        <View style={styles.toggleSection}>
+        {/* Billing Toggle (Fixed at top of content) */}
+        <Animated.View 
+            entering={FadeInDown.duration(600).delay(200)}
+            style={styles.toggleContainer}
+        >
           <BillingToggle value={billingCycle} onChange={setBillingCycle} />
-        </View>
+        </Animated.View>
 
-        {/* Plan Cards */}
-        <View style={[styles.cardsContainer, IS_MOBILE && styles.cardsVertical]}>
-          {sortedPlans.map((plan) => (
-            <PricingCard
-              key={plan.id}
-              plan={plan}
-              billingCycle={billingCycle}
-              currentSubscription={currentSubscription}
-              isAuthenticated={isAuthenticated}
-              onActionPress={handleActionPress}
-              loading={isLoadingSubscription}
-              isMobile={IS_MOBILE}
-            />
+        {/* Snapping Carousel */}
+        <Animated.ScrollView
+          ref={scrollViewRef}
+          horizontal
+          pagingEnabled={false}
+          showsHorizontalScrollIndicator={false}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          snapToInterval={SNAP_INTERVAL}
+          decelerationRate="fast"
+          contentContainerStyle={styles.carouselContent}
+        >
+          {sortedPlans.map((plan, index) => (
+            <Animated.View 
+                key={plan.id}
+                entering={FadeInDown.duration(800).delay(400 + index * 150)}
+            >
+              <PricingCard
+                plan={plan}
+                index={index}
+                scrollX={scrollX}
+                billingCycle={billingCycle}
+                currentSubscription={currentSubscription}
+                isAuthenticated={isAuthenticated}
+                onActionPress={handleActionPress}
+                loading={isLoadingSubscription}
+                isMobile={true}
+              />
+            </Animated.View>
           ))}
-        </View>
+        </Animated.ScrollView>
 
-        {/* Feature Comparison Table */}
-        <FeatureComparisonTable plans={sortedPlans} />
-      </ScrollView>
+        {/* Feature Comparison Section */}
+        <Animated.View 
+            entering={FadeInDown.duration(800).delay(1000)}
+            style={styles.comparisonWrapper}
+        >
+          <FeatureComparisonTable plans={sortedPlans} />
+        </Animated.View>
+      </Animated.ScrollView>
 
-      {/* Duration Selection Modal (Upgrade) */}
+      {/* Modals */}
       {selectedPlan && (
         <DurationSelectionModal
           visible={durationModalVisible}
-          onClose={() => {
-            setDurationModalVisible(false);
-            setSelectedPlan(null);
-          }}
+          onClose={() => { setDurationModalVisible(false); setSelectedPlan(null); }}
           onConfirm={handleUpgradeConfirm}
           planName={selectedPlan.name}
           planCode={selectedPlan.code}
@@ -258,8 +263,6 @@ const PricingPlansList: React.FC<Props> = ({
           loading={paymentLoading}
         />
       )}
-
-      {/* Downgrade Confirmation Dialog */}
       <DowngradeConfirmDialog
         visible={downgradeDialogVisible}
         onClose={() => setDowngradeDialogVisible(false)}
@@ -267,21 +270,30 @@ const PricingPlansList: React.FC<Props> = ({
         loading={downgradeLoading}
         currentPlanName={currentSubscription?.planName}
       />
-    </>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { paddingHorizontal: 16, paddingTop: 16 },
-  toggleSection: { alignItems: "center", marginBottom: 24 },
-  cardsContainer: {
-    flexDirection: "row",
-    gap: 12,
-    alignItems: "stretch",
+  mainWrapper: {
+    flex: 1,
   },
-  cardsVertical: {
-    flexDirection: "column",
+  scrollContent: {
+    paddingTop: 20,
+    paddingBottom: 60,
+  },
+  toggleContainer: {
+    alignItems: "center",
+    marginBottom: 32,
+    zIndex: 10,
+  },
+  carouselContent: {
+    paddingHorizontal: SIDE_SPACING - CARD_MARGIN,
+    paddingBottom: 40,
+  },
+  comparisonWrapper: {
+      paddingHorizontal: 20,
+      marginTop: 20,
   },
 });
 

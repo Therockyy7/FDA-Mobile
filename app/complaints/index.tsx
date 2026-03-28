@@ -20,8 +20,9 @@ import CreateComplaintModal from "~/features/complaints/components/CreateComplai
 import { complaintService } from "~/features/complaints/services/complaint.service";
 import { Complaint } from "~/features/complaints/types/complaint-types";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { StatusFilter, StatusOption } from "~/components/ui/status-filter";
 
-const HEADER_MAX_HEIGHT = 80;
+const HEADER_MAX_HEIGHT = 135;
 const HEADER_MIN_HEIGHT = 50;
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
@@ -77,6 +78,7 @@ export default function ComplaintsScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "resolved" | "rejected">("all");
 
   const colors = {
     background: isDark ? "#0F172A" : "#F8FAFB",
@@ -99,6 +101,19 @@ export default function ComplaintsScreen() {
 
   const records = data?.data ?? [];
   const openCount = records.filter((r) => r.status === "open").length;
+  const resolvedCount = records.filter((r) => r.status === "resolved").length;
+  const rejectedCount = records.filter((r) => r.status === "rejected").length;
+
+  const filteredRecords = records.filter(
+    (r) => statusFilter === "all" || r.status === statusFilter
+  );
+
+  const filterOptions: StatusOption<"open" | "resolved" | "rejected">[] = [
+    { value: "all", label: "Tất cả", count: records.length },
+    { value: "open", label: "Đang xử lý", count: openCount },
+    { value: "resolved", label: "Đã giải quyết", count: resolvedCount },
+    { value: "rejected", label: "Bị từ chối", count: rejectedCount },
+  ];
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -179,19 +194,23 @@ export default function ComplaintsScreen() {
             Hỗ trợ & Khiếu nại
           </Animated.Text>
 
-          <TouchableOpacity
-            style={[styles.backBtn, { backgroundColor: colors.iconBg }]}
-            onPress={() => setIsModalVisible(true)}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="add" size={20} color={colors.accent} />
-          </TouchableOpacity>
+          <View style={styles.backBtn} />
         </View>
 
         <Animated.View style={{ opacity: subtitleOpacity, paddingHorizontal: 20, paddingBottom: 6 }}>
           <Text style={{ fontSize: 13, color: colors.subtext }}>
             {records.length > 0 ? `${openCount} khiếu nại đang chờ xử lý` : "Phiếu hỗ trợ của bạn"}
           </Text>
+        </Animated.View>
+
+        {/* Status Filter */}
+        <Animated.View style={{ opacity: subtitleOpacity, paddingBottom: 8 }}>
+          <StatusFilter
+            options={filterOptions}
+            selected={statusFilter}
+            onSelect={(val) => setStatusFilter(val as any)}
+            activeColor={colors.accent}
+          />
         </Animated.View>
       </Animated.View>
 
@@ -236,9 +255,27 @@ export default function ComplaintsScreen() {
           <EmptyState colors={colors} isDark={isDark} onNew={() => setIsModalVisible(true)} />
         )}
 
-        {!isLoading && !isError && records.length > 0 && (
+        {!isLoading && !isError && records.length > 0 && filteredRecords.length === 0 && (
+          <View style={styles.centerState}>
+            <View style={[styles.emptyInner, { backgroundColor: colors.iconBg, width: 80, height: 80, borderRadius: 40 }]}>
+              <Ionicons name="filter-outline" size={32} color={colors.accent} />
+            </View>
+            <Text style={[styles.stateTitle, { color: colors.text }]}>Không khớp bộ lọc</Text>
+            <Text style={[styles.stateText, { color: colors.subtext }]}>
+              Không tìm thấy khiếu nại nào ở trạng thái "{filterOptions.find(o => o.value === statusFilter)?.label}".
+            </Text>
+            <TouchableOpacity 
+              style={[styles.retryBtn, { backgroundColor: isDark ? "#334155" : "#F1F5F9", marginTop: 16 }]} 
+              onPress={() => setStatusFilter("all")}
+            >
+              <Text style={{ color: colors.text, fontWeight: "700" }}>Xóa bộ lọc</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {!isLoading && !isError && filteredRecords.length > 0 && (
           <View style={{ gap: 16 }}>
-            {records.map((r: Complaint) => {
+            {filteredRecords.map((r: Complaint) => {
               const formattedDate = new Date(r.createdAt).toLocaleDateString("vi-VN", {
                 day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"
               });

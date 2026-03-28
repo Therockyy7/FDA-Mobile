@@ -17,9 +17,10 @@ import { Text } from "~/components/ui/text";
 import { paymentService } from "~/features/payment/services/payment.service";
 import { PaymentRecord } from "~/features/payment/types/payment-types";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { StatusFilter, StatusOption } from "~/components/ui/status-filter";
 
 const PAGE_SIZE = 10;
-const HEADER_MAX_HEIGHT = 80;
+const HEADER_MAX_HEIGHT = 130;
 const HEADER_MIN_HEIGHT = 50;
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
@@ -125,6 +126,7 @@ export default function BillingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const scrollY = useRef(new Animated.Value(0)).current;
+  const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "pending" | "cancelled">("all");
 
   const colors = {
     background: isDark ? "#0F172A" : "#F8FAFB",
@@ -152,6 +154,17 @@ export default function BillingScreen() {
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const hasNext = page < totalPages;
   const hasPrev = page > 1;
+
+  const filteredRecords = records.filter(
+    (r) => statusFilter === "all" || r.status === statusFilter
+  );
+
+  const filterOptions: StatusOption<"paid" | "pending" | "cancelled">[] = [
+    { value: "all", label: "Tất cả" },
+    { value: "paid", label: "Giao dịch thành công" },
+    { value: "pending", label: "Đang chờ xử lý" },
+    { value: "cancelled", label: "Đã hủy" },
+  ];
 
   // Animated header values
   const headerHeight = scrollY.interpolate({
@@ -229,10 +242,20 @@ export default function BillingScreen() {
         </View>
 
         {/* Subtitle that fades on scroll */}
-        <Animated.View style={{ opacity: subtitleOpacity, paddingHorizontal: 20, paddingBottom: 10 }}>
+        <Animated.View style={{ opacity: subtitleOpacity, paddingHorizontal: 20, paddingBottom: 6 }}>
           <Text style={{ fontSize: 13, color: colors.subtext }}>
             {totalCount > 0 ? `${totalCount} giao dịch của bạn` : "Tra cứu tất cả giao dịch"}
           </Text>
+        </Animated.View>
+
+        {/* Status Filter */}
+        <Animated.View style={{ opacity: subtitleOpacity, paddingBottom: 8 }}>
+          <StatusFilter
+            options={filterOptions}
+            selected={statusFilter}
+            onSelect={(val) => setStatusFilter(val as any)}
+            activeColor={colors.accent}
+          />
         </Animated.View>
       </Animated.View>
 
@@ -293,22 +316,44 @@ export default function BillingScreen() {
             <View style={[styles.summaryPill, { backgroundColor: colors.cardBg, borderColor: colors.border }]}>
               <View style={[styles.summaryDot, { backgroundColor: colors.accent }]} />
               <Text style={[styles.summaryText, { color: colors.subtext }]}>
-                Tổng <Text style={{ color: colors.text, fontWeight: "700" }}>{totalCount}</Text> giao dịch
+                {statusFilter === "all" ? (
+                  <>Tổng <Text style={{ color: colors.text, fontWeight: "700" }}>{totalCount}</Text> giao dịch</>
+                ) : (
+                  <>Tìm thấy <Text style={{ color: colors.text, fontWeight: "700" }}>{filteredRecords.length}</Text> giao dịch phù hợp</>
+                )}
               </Text>
             </View>
 
             {/* Card */}
-            <View style={[styles.card, { backgroundColor: colors.cardBg, borderColor: colors.border, shadowColor: colors.shadow }]}>
-              {records.map((r, i) => (
-                <BillingRow
-                  key={r.id}
-                  record={r}
-                  colors={colors}
-                  isDark={isDark}
-                  isLast={i === records.length - 1}
-                />
-              ))}
-            </View>
+            {filteredRecords.length > 0 ? (
+              <View style={[styles.card, { backgroundColor: colors.cardBg, borderColor: colors.border, shadowColor: colors.shadow }]}>
+                {filteredRecords.map((r, i) => (
+                  <BillingRow
+                    key={r.id}
+                    record={r}
+                    colors={colors}
+                    isDark={isDark}
+                    isLast={i === filteredRecords.length - 1}
+                  />
+                ))}
+              </View>
+            ) : (
+              <View style={[styles.centerState, { paddingTop: 40 }]}>
+                 <View style={[styles.emptyInner, { backgroundColor: colors.iconBg, width: 72, height: 72, borderRadius: 36, marginBottom: 16 }]}>
+                  <Ionicons name="filter-outline" size={32} color={colors.accent} />
+                </View>
+                <Text style={[styles.stateText, { color: colors.text, fontWeight: "700", fontSize: 16 }]}>Không khớp kết quả</Text>
+                <Text style={[styles.stateText, { color: colors.subtext, fontSize: 13, marginTop: 4 }]}>
+                  Không có giao dịch nào ở trang này khớp với bộ lọc.
+                </Text>
+                <TouchableOpacity 
+                  style={[styles.retryBtn, { backgroundColor: isDark ? "#334155" : "#F1F5F9", marginTop: 16 }]} 
+                  onPress={() => setStatusFilter("all")}
+                >
+                  <Text style={{ color: colors.text, fontWeight: "700" }}>Xóa bộ lọc</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* Pagination */}
             <View style={styles.pagination}>

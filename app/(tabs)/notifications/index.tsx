@@ -20,6 +20,7 @@ import { NotificationsHeader } from "~/features/notifications/components/Notific
 import { useNotificationHistory } from "~/features/notifications/hooks/useNotificationHistory";
 import { NotificationItem } from "~/features/notifications/types/notifications-types";
 import { useColorScheme } from "~/lib/useColorScheme";
+import NotificationTabToggle from "~/features/notifications/components/NotificationTabToggle";
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -131,58 +132,11 @@ export default function NotificationsScreen() {
         onFilterPress={() => {}}
       />
 
-      {/* Segmented Control */}
-      <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
-        <View
-          style={{
-            flexDirection: "row",
-            backgroundColor: colors.tabBg,
-            borderRadius: 12,
-            padding: 4,
-          }}
-        >
-          <TouchableOpacity
-            style={{
-              flex: 1,
-              paddingVertical: 10,
-              backgroundColor: activeTab === "alerts" ? colors.activeTabBg : "transparent",
-              borderRadius: 8,
-              alignItems: "center",
-            }}
-            onPress={() => setActiveTab("alerts")}
-          >
-            <Text
-              style={{
-                fontWeight: "700",
-                fontSize: 14,
-                color: activeTab === "alerts" ? "#FFFFFF" : colors.inactiveText,
-              }}
-            >
-              Lịch sử cảnh báo
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={{
-              flex: 1,
-              paddingVertical: 10,
-              backgroundColor: activeTab === "news" ? colors.activeTabBg : "transparent",
-              borderRadius: 8,
-              alignItems: "center",
-            }}
-            onPress={() => setActiveTab("news")}
-          >
-            <Text
-              style={{
-                fontWeight: "700",
-                fontSize: 14,
-                color: activeTab === "news" ? "#FFFFFF" : colors.inactiveText,
-              }}
-            >
-              Tin tức & Cập nhật
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      {/* Sliding Segmented Toggle */}
+      <NotificationTabToggle 
+          activeTab={activeTab} 
+          onChange={setActiveTab} 
+      />
 
       {/* Mark All Read Button for News */}
       {activeTab === "news" && hasUnreadNews && (

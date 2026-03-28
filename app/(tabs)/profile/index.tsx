@@ -20,6 +20,9 @@ import { ProfileService } from "~/features/profile/services/profile.service";
 import { useRouter } from "expo-router";
 import { useAppDispatch } from "~/app/hooks";
 import { useSignOut, useUser } from "~/features/auth/stores/hooks";
+import ComplaintsSection from "~/features/complaints/components/ComplaintsSection";
+import BillingHistorySection from "~/features/payment/components/BillingHistorySection";
+import { useCurrentSubscription } from "~/features/plans/hooks/useCurrentSubscription";
 import AppSettingsSection from "~/features/profile/components/AppSettingsSection";
 import NotificationSettingsSection from "~/features/profile/components/NotificationSettingsSection";
 import OtherSettingsSection from "~/features/profile/components/OtherSettingsSection";
@@ -27,9 +30,6 @@ import ProfileHeader from "~/features/profile/components/ProfileHeader";
 import ProfileInfoSection from "~/features/profile/components/ProfileInfoSection";
 import SaveButton from "~/features/profile/components/SaveButton";
 import SubscriptionSection from "~/features/profile/components/SubscriptionSection";
-import BillingHistorySection from "~/features/payment/components/BillingHistorySection";
-import ComplaintsSection from "~/features/complaints/components/ComplaintsSection";
-import { useCurrentSubscription } from "~/features/plans/hooks/useCurrentSubscription";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function ProfileScreen() {
@@ -363,16 +363,6 @@ export default function ProfileScreen() {
         scrollEventThrottle={16}
         onScroll={scrollHandler}
       >
-        <SubscriptionSection
-          subscription={subscriptionData?.subscription ?? null}
-          isLoading={isLoadingSubscription}
-          error={subscriptionError ? subscriptionError.message : null}
-          onRetry={refetchSubscription}
-        />
-
-        <BillingHistorySection />
-        <ComplaintsSection />
-
         <ProfileInfoSection
           fullName={fullName}
           setFullName={setFullName}
@@ -389,7 +379,15 @@ export default function ProfileScreen() {
           onVerifyPhone={handleSendPhoneOTP}
           isCheckingPassword={checkingPassword}
         />
+        <SubscriptionSection
+          subscription={subscriptionData?.subscription ?? null}
+          isLoading={isLoadingSubscription}
+          error={subscriptionError ? subscriptionError.message : null}
+          onRetry={refetchSubscription}
+        />
 
+        <BillingHistorySection />
+        <ComplaintsSection />
         <NotificationSettingsSection
           emergencyAlerts={emergencyAlerts}
           setEmergencyAlerts={setEmergencyAlerts}

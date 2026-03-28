@@ -1,15 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useQueryClient } from "@tanstack/react-query";
 import { Text } from "~/components/ui/text";
 import { useCurrentSubscription } from "~/features/plans/hooks/useCurrentSubscription";
+import CancelSubscriptionDialog from "~/features/plans/components/CancelSubscriptionDialog";
+import { planService } from "~/features/plans/services/plan.service";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 const getTierColor = (tierCode: string) => {
@@ -69,8 +73,37 @@ const getStatusColor = (status: string) => {
 
 export default function CurrentPlanScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { isDarkColorScheme } = useColorScheme();
   const { data, isLoading, error } = useCurrentSubscription();
+
+  const [cancelDialogVisible, setCancelDialogVisible] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const handleCancelSubscription = async (reason: string) => {
+    if (!data?.subscription) return;
+    setIsCancelling(true);
+    try {
+      const resp = await planService.cancelSubscription({ cancelReason: reason });
+      setCancelDialogVisible(false);
+      if (resp.success) {
+        await queryClient.invalidateQueries({ queryKey: ["plans", "subscription", "current"] });
+        Alert.alert("Hủy thành công", "Gói dịch vụ của bạn đã được chuyển về Miễn phí.", [
+          { text: "OK", onPress: () => router.replace("/plans" as any) }
+        ]);
+      } else {
+        Alert.alert("Lỗi", resp.message || "Không thể hủy gói. Vui lòng thử lại.");
+      }
+    } catch (err: any) {
+      if (err?.response?.status === 401) {
+        // Let auth interceptor handle it
+      } else {
+        Alert.alert("Lỗi", err?.response?.data?.message || "Đã xảy ra lỗi khi hủy gói dịch vụ.");
+      }
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   const colors = {
     background: isDarkColorScheme ? "#0F172A" : "#F8FAFB",
@@ -359,7 +392,39 @@ export default function CurrentPlanScreen() {
             disableBorder
           />
         </View>
+
+        {/* Cancel Action */}
+        {(sub.tierCode || sub.tier || "").toUpperCase() !== "FREE" && (
+          <TouchableOpacity
+            style={{
+              marginTop: 24,
+              backgroundColor: isDarkColorScheme ? "rgba(239, 68, 68, 0.1)" : "#FEF2F2",
+              borderWidth: 1,
+              borderColor: "#EF4444",
+              borderRadius: 14,
+              paddingVertical: 16,
+              alignItems: "center",
+              flexDirection: "row",
+              justifyContent: "center",
+            }}
+            onPress={() => setCancelDialogVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="close-circle-outline" size={20} color="#EF4444" style={{ marginRight: 8 }} />
+            <Text style={{ color: "#EF4444", fontWeight: "700", fontSize: 15 }}>
+              Hủy gói dịch vụ
+            </Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
+
+      <CancelSubscriptionDialog
+        visible={cancelDialogVisible}
+        onClose={() => setCancelDialogVisible(false)}
+        onConfirm={handleCancelSubscription}
+        loading={isCancelling}
+        subscription={data?.subscription || null}
+      />
     </SafeAreaView>
   );
 }

@@ -52,3 +52,21 @@ export interface CurrentSubscriptionResponse {
 }
 
 export type BillingCycle = "monthly" | "yearly";
+
+export interface CancelSubscriptionRequest {
+  cancelReason?: string;
+}
+
+export interface CancelledSubscriptionData {
+  subscriptionId: string;
+  planName: string;
+  previousTier: string;
+  cancelledAt: string;
+  cancelReason: string | null;
+}
+
+export interface CancelSubscriptionResponse {
+  success: boolean;
+  message: string;
+  cancelledSubscription: CancelledSubscriptionData | null;
+}

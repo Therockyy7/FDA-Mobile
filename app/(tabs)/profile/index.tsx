@@ -27,6 +27,8 @@ import ProfileHeader from "~/features/profile/components/ProfileHeader";
 import ProfileInfoSection from "~/features/profile/components/ProfileInfoSection";
 import SaveButton from "~/features/profile/components/SaveButton";
 import SubscriptionSection from "~/features/profile/components/SubscriptionSection";
+import BillingHistorySection from "~/features/payment/components/BillingHistorySection";
+import ComplaintsSection from "~/features/complaints/components/ComplaintsSection";
 import { useCurrentSubscription } from "~/features/plans/hooks/useCurrentSubscription";
 import { useColorScheme } from "~/lib/useColorScheme";
 
@@ -367,6 +369,9 @@ export default function ProfileScreen() {
           error={subscriptionError ? subscriptionError.message : null}
           onRetry={refetchSubscription}
         />
+
+        <BillingHistorySection />
+        <ComplaintsSection />
 
         <ProfileInfoSection
           fullName={fullName}

@@ -14,6 +14,17 @@ class PlanService {
     );
     return response.data;
   }
+
+  async cancelSubscription(
+    payload: import("../types/plans-types").CancelSubscriptionRequest
+  ): Promise<import("../types/plans-types").CancelSubscriptionResponse> {
+    const response = await apiClient.delete<
+      import("../types/plans-types").CancelSubscriptionResponse
+    >("/api/v1/plan/subscription/cancel", {
+      data: payload,
+    });
+    return response.data;
+  }
 }
 
 export const planService = new PlanService();

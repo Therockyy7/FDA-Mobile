@@ -49,3 +49,7 @@ app-example
 # Firebase
 google-services.json
 GoogleService-Info.plist
+
+# Claude
+claude-*.json
+.claude/

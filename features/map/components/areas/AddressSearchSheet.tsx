@@ -22,6 +22,7 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
+import type { SearchResult } from "../../types/area.types";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -33,12 +34,6 @@ interface AddressSearchSheetProps {
     longitude: number;
     address: string;
   }) => void;
-}
-
-interface SearchResult {
-  address: string;
-  latitude: number;
-  longitude: number;
 }
 
 export function AddressSearchSheet({

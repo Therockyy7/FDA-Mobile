@@ -17,15 +17,18 @@ import MapView, {
   Region,
 } from "react-native-maps";
 import { NearbyFloodReport } from "~/features/community/services/community.service";
+import { AdminAreaConfirmModal } from "~/features/map/components/areas/AdminAreaConfirmModal";
+import { PickOnMapOverlay } from "~/features/map/components/overlays/PickOnMapOverlay";
+import { StreetViewHint } from "~/features/map/components/overlays/StreetViewHint";
+import { CommunityReportMarker } from "~/features/map/components/reports/CommunityReportMarker";
 import { CommunityReportSheet } from "~/features/map/components/reports/CommunityReportSheet";
+import { RouteMarkers } from "~/features/map/components/routes/RouteMarkers";
+import { STANDARD_MAP_STYLE } from "~/features/map/constants/map-style";
 
-import { useAppDispatch, useAppSelector } from "~/app/hooks";
-import { Text } from "~/components/ui/text";
 import { AreaCreationErrorModal } from "~/features/areas/components/AreaCreationErrorModal";
 import { AreaCreationLoadingOverlay } from "~/features/areas/components/AreaCreationLoadingOverlay";
 import { PremiumLimitModal } from "~/features/areas/components/PremiumLimitModal";
 import { useControlArea } from "~/features/areas/hooks/useControlArea";
-import { fetchAdminAreas } from "~/features/areas/stores/admin-area.slice";
 import { AddressSearchSheet } from "~/features/map/components/areas/AddressSearchSheet";
 import { AdminAreaPolygon } from "~/features/map/components/areas/AdminAreaPolygon";
 import { AreaCard } from "~/features/map/components/areas/AreaCard";
@@ -58,11 +61,9 @@ import {
   FLOOD_ROUTES,
   FloodRoute,
 } from "~/features/map/constants/map-data";
-import { useFloodSelection } from "~/features/map/hooks/useFloodSelection";
-import { useFloodSignalR } from "~/features/map/hooks/useFloodSignalR";
 import { useMapCamera } from "~/features/map/hooks/useMapCamera";
+import { useMapData } from "~/features/map/hooks/useMapData";
 import { useMapDisplay } from "~/features/map/hooks/useMapDisplay";
-import { useMapLayerSettings } from "~/features/map/hooks/useMapLayerSettings";
 import { useNavigation } from "~/features/map/hooks/useNavigation";
 import { useRoutingUI } from "~/features/map/hooks/useRoutingUI";
 import { useSafeRoute } from "~/features/map/hooks/useSafeRoute";
@@ -79,13 +80,11 @@ import {
 import { getRouteBounds } from "~/features/map/lib/polyline-utils";
 import { FloodSeverityFeature } from "~/features/map/types/map-layers.types";
 import type { LatLng } from "~/features/map/types/safe-route.types";
-import { useColorScheme } from "~/lib/useColorScheme";
 
-type MapType = "standard" | "satellite" | "hybrid";
+import type { MapType } from "~/features/map/types/map-display.types";
 
 export default function MapScreen() {
   const router = useRouter();
-  const { isDarkColorScheme } = useColorScheme();
   const params = useLocalSearchParams<{
     editAreaId?: string;
     editLat?: string;
@@ -95,7 +94,6 @@ export default function MapScreen() {
     editAddress?: string;
   }>();
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
   const [showLayerSheet, setShowLayerSheet] = useState(false);
   const [showNavSearch, setShowNavSearch] = useState(false);
   const [selectedStationId, setSelectedStationId] = useState<string | null>(
@@ -108,48 +106,40 @@ export default function MapScreen() {
     useState(false);
   const [selectedAdminArea, setSelectedAdminArea] = useState<any>(null);
 
-  const dispatch = useAppDispatch();
-  const { items: adminAreas } = useAppSelector((state) => state.adminAreas);
-
   const loadedBoundsRef = useRef<ViewportBounds | null>(null);
   const lastZoomModeRef = useRef<MapZoomMode | null>(null);
 
+  // ── Data (settings, flood, areas, community reports, adminAreas, SignalR) ──
   const {
 
     settings,
     areas,
     floodSeverity,
     communityReports,
+    adminAreas,
     refreshFloodSeverity,
     refreshAreas,
     refreshNearbyFloodReports,
-  } = useMapLayerSettings();
+  } = useMapData();
 
-  // Get selected station from Redux store (real-time updates via SignalR)
-  const selectedStation = useMemo(() => {
-    if (!selectedStationId || !floodSeverity?.features) return null;
-    return (
-      floodSeverity.features.find(
-        (f): f is FloodSeverityFeature =>
-          f.geometry.type === "Point" &&
-          (f as FloodSeverityFeature).properties.stationId ===
-            selectedStationId,
-      ) ?? null
-    );
-  }, [selectedStationId, floodSeverity]);
-
-  // Connect to SignalR for real-time flood updates
-  useFloodSignalR(settings.overlays.flood);
-
-  // Safe route state
+  // ── Safe route + flood map selection (merged) ──
   const safeRoute = useSafeRoute();
+  const {
+    selectedZone,
+    setSelectedZone,
+    selectedRoute,
+    setSelectedRoute,
+    showDetailPanels,
+  } = safeRoute;
+
+  // ── User location ──
   const { location: userLocation, permissionGranted: locationPermission } =
     useUserLocation();
+
   const [showResultCard, setShowResultCard] = useState(false);
   const [showWarningsSheet, setShowWarningsSheet] = useState(false);
 
-  // Navigation state (initialized after useMapCamera below)
-
+  // ── Map camera ──
   const {
     mapRef,
     region,
@@ -161,12 +151,10 @@ export default function MapScreen() {
     zoomIn,
     zoomOut,
     goToMyLocation,
-    setRegion,
-    focusOnZone,
     focusOnRoute,
   } = useMapCamera();
 
-  // Turn-by-turn navigation
+  // ── Turn-by-turn navigation ──
   const nav = useNavigation({
     route: safeRoute.getSelectedRoute(),
     mapRef,
@@ -178,26 +166,29 @@ export default function MapScreen() {
 
   const handleStopNavigation = useCallback(() => {
     nav.stopNavigation();
-    // Restore camera to route overview
-    const selectedRoute = safeRoute.getSelectedRoute();
-    if (selectedRoute) {
-      const bounds = getRouteBounds(selectedRoute.coordinates);
+    const currentRoute = safeRoute.getSelectedRoute();
+    if (currentRoute) {
+      const bounds = getRouteBounds(currentRoute.coordinates);
       mapRef.current?.animateToRegion(bounds, 600);
     }
   }, [nav, safeRoute, mapRef]);
 
-  const {
-    selectedZone,
-    setSelectedZone,
-    selectedRoute,
-    setSelectedRoute,
-    showDetailPanels,
-    clearSelection,
-  } = useFloodSelection();
+  // ── Selected station (derived from Redux via useMapData) ──
+  const selectedStation = useMemo(() => {
+    if (!selectedStationId || !floodSeverity?.features) return null;
+    return (
+      floodSeverity.features.find(
+        (f): f is FloodSeverityFeature =>
+          f.geometry.type === "Point" &&
+          (f as FloodSeverityFeature).properties.stationId === selectedStationId,
+      ) ?? null
+    );
+  }, [selectedStationId, floodSeverity]);
 
   const [selectedCommunityReport, setSelectedCommunityReport] =
     useState<NearbyFloodReport | null>(null);
 
+  // ── Street view ──
   const {
     streetViewLocation,
     setStreetViewLocation,
@@ -205,7 +196,7 @@ export default function MapScreen() {
     handleMapLongPress,
   } = useStreetView();
 
-  const routingUI = useRoutingUI();
+  // ── Routing UI (UI state + location data) ──
   const {
     isRoutingUIVisible,
     openRouting,
@@ -215,9 +206,11 @@ export default function MapScreen() {
     originText,
     setOriginText,
     startCoord,
+    setStartCoord,
     destinationText,
     setDestinationText,
     endCoord,
+    setEndCoord,
     isUsingGPSOrigin,
     selectGPSAsOrigin,
     isUsingGPSDest,
@@ -230,8 +223,9 @@ export default function MapScreen() {
     setPointFromMap,
     swapOriginDestination,
     resetRouting,
-  } = routingUI;
+  } = useRoutingUI();
 
+  // ── Map display (view mode, map type, legend) ──
   const {
     mapType,
     viewMode,
@@ -281,13 +275,6 @@ export default function MapScreen() {
     refreshAreas,
     refreshNearbyFloodReports,
   ]);
-
-  // Fetch Admin Areas if not already loaded
-  useEffect(() => {
-    if (adminAreas.length === 0) {
-      dispatch(fetchAdminAreas({ pageNumber: 1, pageSize: 100 }));
-    }
-  }, [dispatch, adminAreas.length]);
 
   useEffect(() => {
     setSelectedZone(null);
@@ -476,12 +463,12 @@ export default function MapScreen() {
   const handleNavDestinationSelected = useCallback(
     (coord: LatLng, label: string) => {
       // Set destination
-      routingUI.setEndCoord(coord);
-      routingUI.setDestinationText(label);
+      setEndCoord(coord);
+      setDestinationText(label);
       // Set origin as GPS by default
-      routingUI.selectGPSAsOrigin();
+      selectGPSAsOrigin();
       // Open routing panel
-      routingUI.openRouting();
+      openRouting();
       // Zoom to destination
       mapRef.current?.animateToRegion(
         {
@@ -494,7 +481,7 @@ export default function MapScreen() {
       );
       setShowNavSearch(false);
     },
-    [routingUI],
+    [setEndCoord, setDestinationText, selectGPSAsOrigin, openRouting, mapRef],
   );
 
   // ==================== PICK ON MAP: confirm center pin ====================
@@ -603,7 +590,11 @@ export default function MapScreen() {
       fetchMarkersInViewPort(newRegion);
       updateDraftAreaFromMapCenter(newRegion);
     },
-    [onRegionChangeComplete, fetchMarkersInViewPort, updateDraftAreaFromMapCenter],
+    [
+      onRegionChangeComplete,
+      fetchMarkersInViewPort,
+      updateDraftAreaFromMapCenter,
+    ],
   );
 
   // Detect user pan during navigation to disable camera follow
@@ -636,7 +627,7 @@ export default function MapScreen() {
           onPickOriginOnMap={startPickingOrigin}
           hasOriginCoord={startCoord !== null}
           onOriginPlaceSelected={(coord) => {
-            routingUI.setStartCoord(coord);
+            setStartCoord(coord);
             mapRef.current?.animateToRegion(
               {
                 latitude: coord.latitude,
@@ -657,7 +648,7 @@ export default function MapScreen() {
           onPickDestinationOnMap={startPickingDestination}
           hasDestinationCoord={endCoord !== null}
           onDestinationPlaceSelected={(coord) => {
-            routingUI.setEndCoord(coord);
+            setEndCoord(coord);
             mapRef.current?.animateToRegion(
               {
                 latitude: coord.latitude,
@@ -714,123 +705,12 @@ export default function MapScreen() {
         )}
 
         {/* Pick on Map: Center Pin (Grab-style) */}
-        {isPickingOnMap && (
-          <>
-            {/* Center pin marker */}
-            <View
-              pointerEvents="none"
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                zIndex: 50,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <View style={{ alignItems: "center", marginBottom: 36 }}>
-                <Ionicons
-                  name="location-sharp"
-                  size={40}
-                  color={pickingTarget === "origin" ? "#16A34A" : "#4F46E5"}
-                />
-                <View
-                  style={{
-                    width: 4,
-                    height: 4,
-                    borderRadius: 2,
-                    backgroundColor: "#374151",
-                    marginTop: -4,
-                  }}
-                />
-              </View>
-            </View>
-
-            {/* Bottom confirm card */}
-            <View
-              style={{
-                position: "absolute",
-                bottom: 24,
-                left: 16,
-                right: 16,
-                zIndex: 50,
-                backgroundColor: "white",
-                borderRadius: 16,
-                padding: 16,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: -2 },
-                shadowOpacity: 0.12,
-                shadowRadius: 8,
-                elevation: 8,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: "600",
-                  color: "#374151",
-                  marginBottom: 4,
-                }}
-              >
-                {pickingTarget === "origin" ? "Chọn điểm đi" : "Chọn điểm đến"}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: "#9CA3AF",
-                  marginBottom: 12,
-                }}
-              >
-                Di chuyển bản đồ để đặt vị trí tại điểm ghim
-              </Text>
-              <View style={{ flexDirection: "row", gap: 10 }}>
-                <TouchableOpacity
-                  onPress={cancelPicking}
-                  style={{
-                    flex: 1,
-                    paddingVertical: 12,
-                    borderRadius: 999,
-                    backgroundColor: "#F3F4F6",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "600",
-                      color: "#374151",
-                    }}
-                  >
-                    Hủy
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={handleConfirmPickOnMap}
-                  style={{
-                    flex: 1,
-                    paddingVertical: 12,
-                    borderRadius: 999,
-                    backgroundColor:
-                      pickingTarget === "origin" ? "#16A34A" : "#4F46E5",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "700",
-                      color: "white",
-                    }}
-                  >
-                    Xác nhận
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </>
-        )}
+        <PickOnMapOverlay
+          visible={isPickingOnMap}
+          pickingTarget={pickingTarget}
+          onConfirm={handleConfirmPickOnMap}
+          onCancel={cancelPicking}
+        />
 
         {/* Map View */}
         <MapView
@@ -853,28 +733,7 @@ export default function MapScreen() {
           mapType={settings.baseMap === "satellite" ? "satellite" : mapType}
           customMapStyle={
             mapType === "standard" && !settings.overlays.traffic
-              ? [
-                  {
-                    featureType: "water",
-                    elementType: "geometry",
-                    stylers: [{ color: "#A5D8FF" }],
-                  },
-                  {
-                    featureType: "landscape",
-                    elementType: "geometry",
-                    stylers: [{ color: "#F1F5F9" }],
-                  },
-                  {
-                    featureType: "road",
-                    elementType: "geometry",
-                    stylers: [{ color: "#FFFFFF" }],
-                  },
-                  {
-                    featureType: "road",
-                    elementType: "geometry.stroke",
-                    stylers: [{ color: "#E2E8F0" }],
-                  },
-                ]
+              ? STANDARD_MAP_STYLE
               : undefined
           }
         >
@@ -943,60 +802,16 @@ export default function MapScreen() {
             <FloodWarningMarkers warnings={safeRoute.floodWarnings} />
           )}
 
-          {/* Origin Pin */}
-          {isRoutingUIVisible &&
-            (() => {
-              const originMarkerCoord = isUsingGPSOrigin
-                ? userLocation
-                : startCoord;
-              if (!originMarkerCoord) return null;
-              return (
-                <Marker
-                  coordinate={originMarkerCoord}
-                  title="Điểm đi"
-                  description={
-                    isUsingGPSOrigin ? "Vị trí hiện tại" : originText
-                  }
-                  anchor={{ x: 0.5, y: 1 }}
-                >
-                  <View style={{ alignItems: "center" }}>
-                    <Ionicons name="location-sharp" size={40} color="#16A34A" />
-                    <View
-                      style={{
-                        width: 4,
-                        height: 4,
-                        borderRadius: 2,
-                        backgroundColor: "#374151",
-                        marginTop: -4,
-                      }}
-                    />
-                  </View>
-                </Marker>
-              );
-            })()}
-
-          {/* Destination Pin */}
-          {endCoord && isRoutingUIVisible && (
-            <Marker
-              coordinate={endCoord}
-              title="Điểm đến"
-              description={destinationText}
-              anchor={{ x: 0.5, y: 1 }}
-            >
-              <View style={{ alignItems: "center" }}>
-                <Ionicons name="location-sharp" size={40} color="#4F46E5" />
-                <View
-                  style={{
-                    width: 4,
-                    height: 4,
-                    borderRadius: 2,
-                    backgroundColor: "#374151",
-                    marginTop: -4,
-                  }}
-                />
-              </View>
-            </Marker>
-          )}
+          {/* Origin & Destination Pins */}
+          <RouteMarkers
+            isRoutingUIVisible={isRoutingUIVisible}
+            isUsingGPSOrigin={isUsingGPSOrigin}
+            userLocation={userLocation}
+            startCoord={startCoord}
+            originText={originText}
+            endCoord={endCoord}
+            destinationText={destinationText}
+          />
 
           {/* Street View Marker */}
           {streetViewLocation && (
@@ -1033,79 +848,20 @@ export default function MapScreen() {
 
           {/* Community Reports */}
           {settings.overlays.communityReports &&
-            communityReports.map((report) => {
-              const severityColor =
-                report.severity === "high"
-                  ? "#DC2626"
-                  : report.severity === "medium"
-                    ? "#EA580C"
-                    : "#059669";
-              return (
-                <Marker
-                  key={`community-report-${report.id}`}
-                  coordinate={{
-                    latitude: report.latitude,
-                    longitude: report.longitude,
-                  }}
-                  onPress={() => {
-                    setSelectedArea(null);
-                    setSelectedRoute(null);
-                    setSelectedZone(null);
-                    setSelectedStationId(null);
-                    setSelectedCommunityReport(report);
-                    const LATITUDE_OFFSET = 0.008;
-                    mapRef.current?.animateToRegion(
-                      {
-                        latitude: report.latitude - LATITUDE_OFFSET,
-                        longitude: report.longitude,
-                        latitudeDelta: 0.03,
-                        longitudeDelta: 0.02,
-                      },
-                      400,
-                    );
-                  }}
-                >
-                  <View
-                    style={{
-                      alignItems: "center",
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: 38,
-                        height: 38,
-                        borderRadius: 19,
-                        backgroundColor: severityColor,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderWidth: 3,
-                        borderColor: "white",
-                        shadowColor: "#000",
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.3,
-                        shadowRadius: 4,
-                        elevation: 6,
-                      }}
-                    >
-                      <Ionicons name="megaphone" size={18} color="white" />
-                    </View>
-                    <View
-                      style={{
-                        width: 0,
-                        height: 0,
-                        borderLeftWidth: 6,
-                        borderRightWidth: 6,
-                        borderTopWidth: 8,
-                        borderLeftColor: "transparent",
-                        borderRightColor: "transparent",
-                        borderTopColor: "white",
-                        marginTop: -2,
-                      }}
-                    />
-                  </View>
-                </Marker>
-              );
-            })}
+            communityReports.map((report) => (
+              <CommunityReportMarker
+                key={`community-report-${report.id}`}
+                report={report}
+                mapRef={mapRef}
+                onPress={(r) => {
+                  setSelectedArea(null);
+                  setSelectedRoute(null);
+                  setSelectedZone(null);
+                  setSelectedStationId(null);
+                  setSelectedCommunityReport(r);
+                }}
+              />
+            ))}
 
           {/* Flood Severity Markers from API */}
           <FloodSeverityMarkers
@@ -1138,39 +894,7 @@ export default function MapScreen() {
         {showLegend && !isRoutingUIVisible && <Legend />}
 
         {/* Street View Hint */}
-        {streetViewLocation && !isRoutingUIVisible && (
-          <View
-            style={{
-              position: "absolute",
-              top: 80,
-              right: 16,
-              backgroundColor: "rgba(245, 158, 11, 0.95)",
-              borderRadius: 16,
-              padding: 12,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.2,
-              shadowRadius: 8,
-              elevation: 6,
-              maxWidth: 200,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <Ionicons name="eye" size={16} color="white" />
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "600",
-                color: "white",
-                flex: 1,
-              }}
-            >
-              Nhấn marker để xem Street View
-            </Text>
-          </View>
-        )}
+        <StreetViewHint visible={!!streetViewLocation && !isRoutingUIVisible} />
 
         {/* Map Controls - Hide during create area mode and when timeline is active */}
         <View
@@ -1250,9 +974,9 @@ export default function MapScreen() {
           onSelectPlace={handleNavDestinationSelected}
           onPickOnMap={() => {
             setShowNavSearch(false);
-            routingUI.selectGPSAsOrigin();
-            routingUI.openRouting();
-            routingUI.startPickingDestination();
+            selectGPSAsOrigin();
+            openRouting();
+            startPickingDestination();
           }}
           onUseGPS={() => setShowNavSearch(false)}
           showGPSOption={false}
@@ -1293,20 +1017,6 @@ export default function MapScreen() {
             <RouteDetailCard
               route={selectedRoute}
               onClose={() => setSelectedRoute(null)}
-            />
-          )}
-        </MapBottomSheet>
-
-        {/* Community Report Bottom Sheet */}
-        <MapBottomSheet
-          isOpen={!!selectedCommunityReport}
-          onClose={() => setSelectedCommunityReport(null)}
-          snapPoints={["60%", "90%"]}
-        >
-          {selectedCommunityReport && (
-            <CommunityReportSheet
-              report={selectedCommunityReport}
-              onClose={() => setSelectedCommunityReport(null)}
             />
           )}
         </MapBottomSheet>
@@ -1386,132 +1096,14 @@ export default function MapScreen() {
         />
 
         {/* Admin Area Confirmation Modal */}
-        {showAdminAreaConfirmModal && selectedAdminArea && (
-          <View
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: "rgba(0, 0, 0, 0.6)",
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 1000,
-            }}
-          >
-            <View
-              style={{
-                backgroundColor: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-                borderRadius: 24,
-                padding: 24,
-                marginHorizontal: 20,
-                width: "90%",
-                maxWidth: 400,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.3,
-                shadowRadius: 20,
-                elevation: 10,
-              }}
-            >
-              <View style={{ alignItems: "center", marginBottom: 20 }}>
-                <View
-                  style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: 32,
-                    backgroundColor: "#3B82F620",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: 16,
-                  }}
-                >
-                  <Ionicons name="analytics" size={32} color="#3B82F6" />
-                </View>
-                <Text
-                  style={{
-                    fontSize: 20,
-                    fontWeight: "800",
-                    color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-                    marginBottom: 8,
-                    textAlign: "center",
-                  }}
-                >
-                  Xem Dự báo AI
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-                    textAlign: "center",
-                    lineHeight: 20,
-                  }}
-                >
-                  Bạn có muốn xem phân tích rủi ro ngập lụt của AI cho khu vực{" "}
-                  <Text style={{ fontWeight: "700", color: "#3B82F6" }}>
-                    {selectedAdminArea.name}
-                  </Text>
-                  ?
-                </Text>
-              </View>
-
-              <View style={{ gap: 12 }}>
-                <TouchableOpacity
-                  onPress={() => {
-                    setShowAdminAreaConfirmModal(false);
-                    router.push({
-                      pathname: "/prediction/[id]",
-                      params: {
-                        id: selectedAdminArea.id,
-                        name: selectedAdminArea.name,
-                      },
-                    });
-                  }}
-                  style={{
-                    backgroundColor: "#3B82F6",
-                    borderRadius: 16,
-                    padding: 16,
-                    alignItems: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#FFFFFF",
-                      fontSize: 16,
-                      fontWeight: "700",
-                    }}
-                  >
-                    Xem Dự báo
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => {
-                    setShowAdminAreaConfirmModal(false);
-                    setSelectedAdminArea(null);
-                  }}
-                  style={{
-                    backgroundColor: isDarkColorScheme ? "#334155" : "#F1F5F9",
-                    borderRadius: 16,
-                    padding: 16,
-                    alignItems: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: isDarkColorScheme ? "#F1F5F9" : "#64748B",
-                      fontSize: 16,
-                      fontWeight: "600",
-                    }}
-                  >
-                    Hủy
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        )}
+        <AdminAreaConfirmModal
+          visible={showAdminAreaConfirmModal}
+          adminArea={selectedAdminArea}
+          onClose={() => {
+            setShowAdminAreaConfirmModal(false);
+            setSelectedAdminArea(null);
+          }}
+        />
 
         {/* Step 1: Radius Adjust Bar */}
         <RadiusAdjustBar

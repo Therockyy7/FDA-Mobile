@@ -1,8 +1,6 @@
-
 import { useCallback, useState } from "react";
 import { Linking, Platform } from "react-native";
-
-type LatLng = { latitude: number; longitude: number };
+import type { LatLng } from "../types/safe-route.types";
 
 export function useStreetView() {
   const [streetViewLocation, setStreetViewLocation] = useState<LatLng | null>(

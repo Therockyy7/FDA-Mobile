@@ -4,8 +4,8 @@ import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
 import * as Speech from "expo-speech";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type MapView from "react-native-maps";
-import type { DecodedRoute, GeoJsonInstruction, LatLng } from "../types/safe-route.types";
+import type { GeoJsonInstruction, LatLng } from "../types/safe-route.types";
+import type { UseNavigationParams, VoiceLevel } from "../types/navigation.types";
 import {
   buildInstructionBoundaries,
   buildSegmentCumulativeDist,
@@ -15,13 +15,6 @@ import {
   lerpAngle,
   snapToPolyline,
 } from "../lib/navigation-utils";
-
-type VoiceLevel = "early" | "approach" | "now";
-
-interface UseNavigationParams {
-  route: DecodedRoute | null;
-  mapRef: React.RefObject<MapView | null>;
-}
 
 export function useNavigation({ route, mapRef }: UseNavigationParams) {
   const [isNavigating, setIsNavigating] = useState(false);

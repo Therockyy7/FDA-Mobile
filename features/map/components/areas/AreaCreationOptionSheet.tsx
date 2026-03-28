@@ -16,10 +16,11 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
+import type { CreationOption } from "../../types/area.types";
+
+export type { CreationOption };
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-
-export type CreationOption = "gps" | "search" | "map_center";
 
 interface AreaCreationOptionSheetProps {
   visible: boolean;

@@ -5,7 +5,8 @@ import { TouchableOpacity, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Text } from "~/components/ui/text";
 
-export type ViewMode = "zones" | "routes";
+import type { ViewMode } from "../../types/map-display.types";
+export type { ViewMode };
 
 interface ViewModeSelectorProps {
   mode: ViewMode;

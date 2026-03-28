@@ -4,8 +4,7 @@ import { useRouter } from "expo-router";
 import { Platform, StatusBar, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
-
-type MapType = "standard" | "satellite" | "hybrid";
+import type { MapType } from "../../types/map-display.types";
 
 interface MapHeaderProps {
   stats: {

@@ -57,7 +57,7 @@ export function CommunityBanner() {
         >
           {/* Subtle network animation background */}
           <LottieView
-            source={require("../../../assets/animations/pulse.json")}
+            source={require("../../../assets/animations/heartbeat-pulse.json")}
             autoPlay
             loop
             speed={0.5}

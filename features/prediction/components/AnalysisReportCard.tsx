@@ -321,9 +321,9 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
           >
             <View className="flex-row items-center gap-2 mb-4">
               <View
-                className={`w-8 h-8 rounded-lg items-center justify-center bg-blue-500/10`}
+                className={`w-8 h-8 rounded-lg items-center justify-center bg-[#007AFF]/10`}
               >
-                <Ionicons name="analytics" size={18} color="#3B82F6" />
+                <Ionicons name="analytics" size={18} color="#007AFF" />
               </View>
               <Text className={`font-bold text-base ${textColor}`}>
                 Yếu tố phân tích
@@ -338,7 +338,7 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
                       {factor.label}
                     </Text>
                     {factor.value && (
-                      <Text className="font-bold text-blue-500">
+                      <Text className="font-bold text-[#007AFF]">
                         {factor.value}
                       </Text>
                     )}
@@ -352,7 +352,7 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
                   {factor.value && (
                     <View className="h-1.5 w-full bg-gray-100 rounded-full mt-1 overflow-hidden">
                       <View
-                        className="h-full bg-blue-500 rounded-full"
+                        className="h-full bg-[#007AFF] rounded-full"
                         style={{ width: factor.value as DimensionValue }}
                       />
                     </View>
@@ -410,7 +410,7 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
             {/* Conclusion */}
             {data.conclusion && (
               <View
-                className={`mt-2 p-3 rounded-xl border-l-4 border-blue-500 ${isDarkColorScheme ? "bg-blue-900/20" : "bg-blue-50"}`}
+                className={`mt-2 p-3 rounded-xl border-l-4 border-[#007AFF] ${isDarkColorScheme ? "bg-blue-900/20" : "bg-blue-50"}`}
               >
                 <Text
                   className={`text-sm italic font-medium ${isDarkColorScheme ? "text-blue-200" : "text-blue-800"}`}

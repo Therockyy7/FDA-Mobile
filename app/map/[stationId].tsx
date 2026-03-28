@@ -241,7 +241,7 @@ export default function StationDetailScreen() {
         <Animated.View entering={FadeInDown.delay(400).duration(500)}>
           <View style={[styles.card, { backgroundColor: colors.cardBg }]}>
             <View style={styles.cardHeader}>
-              <Ionicons name="location" size={18} color="#3B82F6" />
+              <Ionicons name="location" size={18} color="#007AFF" />
               <Text style={[styles.cardTitle, { color: colors.text }]}>
                 Vị trí
               </Text>

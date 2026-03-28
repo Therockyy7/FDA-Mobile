@@ -62,7 +62,7 @@ export function NotificationFilters({
         {filters.map((filter) => {
           const isActive = activeFilter === filter.key;
           const backgroundColor = isActive
-            ? filter.color || "#3B82F6"
+            ? filter.color || "#007AFF"
             : colors.inactiveBg;
           const textColor = isActive ? "white" : colors.inactiveText;
 

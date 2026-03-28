@@ -151,14 +151,14 @@ export default function PredictionScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#3B82F6"]}
-            tintColor="#3B82F6"
+            colors={["#007AFF"]}
+            tintColor="#007AFF"
           />
         }
       >
         {loading && !refreshing ? (
           <View style={{ padding: 20 }}>
-            <ActivityIndicator size="large" color="#3B82F6" />
+            <ActivityIndicator size="large" color="#007AFF" />
             <Text
               style={{
                 marginTop: 16,
@@ -202,7 +202,7 @@ export default function PredictionScreen() {
               colors={
                 isDarkColorScheme
                   ? ["#1E3A8A", "#1E293B"]
-                  : ["#3B82F6", "#60A5FA"]
+                  : ["#007AFF", "#38BDF8"]
               }
               style={{
                 paddingHorizontal: 20,

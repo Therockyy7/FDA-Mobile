@@ -87,7 +87,7 @@ export default function ForgotPasswordScreen() {
           <View className="flex-1 justify-center items-center pb-20">
             {/* Visual Icon */}
             <View className="w-24 h-24 bg-blue-50 dark:bg-slate-800 rounded-3xl items-center justify-center mb-8 shadow-sm">
-              <Ionicons name="lock-closed" size={48} color="#3B82F6" />
+              <Ionicons name="lock-closed" size={48} color="#007AFF" />
             </View>
 
             <Text className="text-2xl font-bold text-slate-900 dark:text-white text-center mb-2">

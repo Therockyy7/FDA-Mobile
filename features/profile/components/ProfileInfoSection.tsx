@@ -65,7 +65,7 @@ const ProfileInfoSection: React.FC<Props> = ({
         {/* Provider Info (Read only) */}
         {provider && provider !== 'local' && (
             <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#EFF6FF', padding: 12, borderRadius: 12 }}>
-                <Ionicons name="logo-google" size={20} color="#3B82F6" />
+                <Ionicons name="logo-google" size={20} color="#007AFF" />
                 <Text style={{ marginLeft: 10, color: '#1E40AF', fontWeight: '600', fontSize: 14 }}>
                     Đăng nhập qua {getProviderName(provider)}
                 </Text>
@@ -173,7 +173,7 @@ const ProfileInfoSection: React.FC<Props> = ({
               <TouchableOpacity
                 onPress={onVerifyPhone}
                 style={{
-                  backgroundColor: '#3B82F6',
+                  backgroundColor: '#007AFF',
                   paddingHorizontal: 16,
                   paddingVertical: 14,
                   borderRadius: 12,
@@ -232,16 +232,16 @@ const ProfileInfoSection: React.FC<Props> = ({
           activeOpacity={0.7}
         >
           {isCheckingPassword ? (
-            <ActivityIndicator size="small" color="#3B82F6" />
+            <ActivityIndicator size="small" color="#007AFF" />
           ) : (
-            <Ionicons name="key-outline" size={18} color="#3B82F6" />
+            <Ionicons name="key-outline" size={18} color="#007AFF" />
           )}
           <Text
             style={{
               marginLeft: 8,
               fontSize: 14,
               fontWeight: "600",
-              color: "#3B82F6",
+              color: "#007AFF",
             }}
           >
             {isCheckingPassword ? "Đang kiểm tra..." : "Đổi mật khẩu"}

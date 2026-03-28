@@ -64,7 +64,7 @@ export default function EmailPasswordScreen() {
       
       {/* Background Gradient */}
       <LinearGradient
-        colors={isDarkColorScheme ? ["#1E3A5F", "#0F172A"] : ["#3B82F6", "#1D4ED8"]}
+        colors={isDarkColorScheme ? ["#1E3A5F", "#0F172A"] : ["#007AFF", "#1D4ED8"]}
         style={{ position: "absolute", top: 0, left: 0, right: 0, height: 280 }}
       />
 
@@ -201,7 +201,7 @@ export default function EmailPasswordScreen() {
             {/* Forgot Password */}
             {!isNew && (
               <TouchableOpacity onPress={() => router.push("/(auth)/forgot-password")} style={{ alignSelf: "flex-end", marginBottom: 24 }}>
-                <Text style={{ color: "#3B82F6", fontWeight: "600", fontSize: 14 }}>Quên mật khẩu?</Text>
+                <Text style={{ color: "#007AFF", fontWeight: "600", fontSize: 14 }}>Quên mật khẩu?</Text>
               </TouchableOpacity>
             )}
 
@@ -218,7 +218,7 @@ export default function EmailPasswordScreen() {
               }}
             >
               <LinearGradient
-                colors={["#3B82F6", "#1D4ED8"]}
+                colors={["#007AFF", "#1D4ED8"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{

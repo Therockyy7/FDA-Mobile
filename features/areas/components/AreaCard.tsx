@@ -308,11 +308,11 @@ export function AreaCard({
                 borderColor: isDarkColorScheme ? "rgba(59, 130, 246, 0.2)" : "#BFDBFE",
               }}
             >
-              <Ionicons name="water" size={18} color="#3B82F6" />
+              <Ionicons name="water" size={18} color="#007AFF" />
               <Text style={{ fontSize: 9, color: isDarkColorScheme ? "#93C5FD" : "#1E40AF", marginTop: 4, fontWeight: "600" }}>
                 Độ ẩm
               </Text>
-              <Text style={{ fontSize: 16, fontWeight: "800", color: isDarkColorScheme ? "#60A5FA" : "#1D4ED8" }}>
+              <Text style={{ fontSize: 16, fontWeight: "800", color: isDarkColorScheme ? "#38BDF8" : "#1D4ED8" }}>
                 {area.humidity}%
               </Text>
             </View>

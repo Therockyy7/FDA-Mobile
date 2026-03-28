@@ -332,7 +332,7 @@ export default function AreaDetailScreen() {
           onPress={() => router.back()}
           style={{
             marginTop: 20,
-            backgroundColor: "#3B82F6",
+            backgroundColor: "#007AFF",
             paddingHorizontal: 24,
             paddingVertical: 12,
             borderRadius: 12,
@@ -681,8 +681,8 @@ export default function AreaDetailScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={["#3B82F6"]}
-            tintColor="#3B82F6"
+            colors={["#007AFF"]}
+            tintColor="#007AFF"
             progressViewOffset={HEADER_MAX_HEIGHT}
           />
         }
@@ -817,7 +817,7 @@ export default function AreaDetailScreen() {
               <MaterialCommunityIcons
                 name="radius-outline"
                 size={20}
-                color="#3B82F6"
+                color="#007AFF"
               />
               <Text
                 style={{ fontSize: 10, color: colors.subtext, marginTop: 6 }}
@@ -914,7 +914,7 @@ export default function AreaDetailScreen() {
                   marginBottom: 14,
                 }}
               >
-                <Ionicons name="analytics" size={18} color="#3B82F6" />
+                <Ionicons name="analytics" size={18} color="#007AFF" />
                 <Text
                   style={{
                     fontSize: 14,
@@ -1017,7 +1017,7 @@ export default function AreaDetailScreen() {
           activeOpacity={0.85}
         >
           <LinearGradient
-            colors={["#3B82F6", "#2563EB"]}
+            colors={["#007AFF", "#2563EB"]}
             style={{
               borderRadius: 16,
               paddingVertical: 16,

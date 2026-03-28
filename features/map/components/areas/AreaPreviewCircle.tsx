@@ -14,7 +14,7 @@ interface AreaPreviewCircleProps {
   onCenterChange?: (newCenter: { latitude: number; longitude: number }) => void;
 }
 
-const PREVIEW_COLOR = "#3B82F6";
+const PREVIEW_COLOR = "#007AFF";
 
 export function AreaPreviewCircle({
   center,

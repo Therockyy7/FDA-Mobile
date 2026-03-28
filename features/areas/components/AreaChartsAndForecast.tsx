@@ -49,7 +49,7 @@ export function AreaChartsAndForecast({
             className={cn(
               "flex-1 py-3 rounded-xl items-center",
               selectedTab === "history"
-                ? "bg-blue-500"
+                ? "bg-[#007AFF]"
                 : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700",
             )}
             activeOpacity={0.7}
@@ -70,7 +70,7 @@ export function AreaChartsAndForecast({
             className={cn(
               "flex-1 py-3 rounded-xl items-center",
               selectedTab === "forecast"
-                ? "bg-blue-500"
+                ? "bg-[#007AFF]"
                 : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700",
             )}
             activeOpacity={0.7}
@@ -197,7 +197,7 @@ export function AreaChartsAndForecast({
                     <MaterialCommunityIcons
                       name="waves"
                       size={18}
-                      color="#3B82F6"
+                      color="#007AFF"
                     />
                     <Text className="text-slate-600 dark:text-slate-400 text-sm">
                       Mực nước:
@@ -207,7 +207,7 @@ export function AreaChartsAndForecast({
                     </Text>
                   </View>
                   <View className="flex-row items-center gap-2">
-                    <Ionicons name="rainy" size={18} color="#3B82F6" />
+                    <Ionicons name="rainy" size={18} color="#007AFF" />
                     <Text className="text-slate-600 dark:text-slate-400 text-sm">
                       Mưa:
                     </Text>

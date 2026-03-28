@@ -40,7 +40,7 @@ export function ViewModeSelector({
       >
         {mode === "zones" ? (
           <LinearGradient
-            colors={["#3B82F6", "#2563EB"]}
+            colors={["#007AFF", "#2563EB"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
@@ -106,7 +106,7 @@ export function ViewModeSelector({
       >
         {mode === "routes" ? (
           <LinearGradient
-            colors={["#3B82F6", "#2563EB"]}
+            colors={["#007AFF", "#2563EB"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{

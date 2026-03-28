@@ -3,7 +3,7 @@
 // import { MOCK_AREAS } from '~/features/areas/constants/areas-data';
 
 import { Area } from "~/features/areas/types/areas-types";
-import { Alert, CityStats, MonitoredArea, QuickAction } from "../types/home-types";
+import { AiRiskSummary, Alert, CityStats, MonitoredArea, QuickAction, RainfallForecastItem, WeatherData } from "../types/home-types";
 import { USER_AREAS } from '~/features/areas/constants/areas-data';
 
 
@@ -127,3 +127,34 @@ export const QUICK_ACTIONS: QuickAction[] = [
     color: "#8B5CF6",
   },
 ];
+
+export const WEATHER_DATA: WeatherData = {
+  temperature: 27,
+  humidity: 82,
+  rainChance: 75,
+  windSpeed: 18,
+  condition: "rainy",
+  conditionText: "Mưa rào",
+  updatedAt: "23:00",
+};
+
+export const RAINFALL_FORECAST: RainfallForecastItem[] = [
+  { hour: "00:00", amount: 12, level: "moderate" },
+  { hour: "03:00", amount: 25, level: "heavy" },
+  { hour: "06:00", amount: 35, level: "extreme" },
+  { hour: "09:00", amount: 18, level: "moderate" },
+  { hour: "12:00", amount: 8, level: "light" },
+  { hour: "15:00", amount: 3, level: "light" },
+];
+
+export const AI_RISK_SUMMARY: AiRiskSummary = {
+  riskLevel: "high",
+  riskLabelVn: "Rủi ro cao",
+  probability: 72,
+  dominantFactor: "rainfall_intensity",
+  dominantFactorVn: "Cường độ mưa",
+  recommendation: "Hạn chế di chuyển qua các vùng trũng và theo dõi thông tin cập nhật.",
+  areaId: "hai-chau-district",
+  areaName: "Quận Hải Châu",
+  updatedAt: "22:45",
+};

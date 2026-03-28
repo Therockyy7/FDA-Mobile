@@ -34,7 +34,7 @@ export function NotificationMetadata({
             borderRadius: 8,
           }}
         >
-          <MaterialCommunityIcons name="waves" size={16} color="#3B82F6" />
+          <MaterialCommunityIcons name="waves" size={16} color="#007AFF" />
           <Text
             style={{
               fontSize: 12,

@@ -328,7 +328,7 @@ export default function ProfileScreen() {
     >
       <StatusBar
         barStyle={isDarkColorScheme ? "light-content" : "dark-content"}
-        backgroundColor={isDarkColorScheme ? "#1E293B" : "#3B82F6"}
+        backgroundColor={isDarkColorScheme ? "#1E293B" : "#007AFF"}
         translucent
       />
 

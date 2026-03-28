@@ -53,7 +53,7 @@ export function FloodedRoutePolyline({
   const getMainColor = () => {
     if (status === "danger") return "#EF4444";
     if (status === "warning") return "#F59E0B";
-    return "#3B82F6";
+    return "#007AFF";
   };
 
   const getHighlightColor = () => {

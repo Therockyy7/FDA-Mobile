@@ -234,7 +234,7 @@ export function ErrorModal({
               activeOpacity={0.9}
             >
               <LinearGradient
-                colors={["#3B82F6", "#2563EB", "#1D4ED8"]}
+                colors={["#007AFF", "#2563EB", "#1D4ED8"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.closeButtonGradient}
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     borderRadius: 14,
-    shadowColor: "#3B82F6",
+    shadowColor: "#007AFF",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

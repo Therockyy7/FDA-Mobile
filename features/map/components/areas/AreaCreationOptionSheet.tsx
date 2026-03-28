@@ -203,7 +203,7 @@ export function AreaCreationOptionSheet({
             icon="navigate"
             title="Vị trí hiện tại"
             description="Sử dụng GPS của bạn làm tâm vùng theo dõi"
-            gradientColors={["#3B82F6", "#2563EB"]}
+            gradientColors={["#007AFF", "#2563EB"]}
             onPress={() => onSelectOption("gps")}
             delay={100}
             isLoading={isLoadingGps}

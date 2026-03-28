@@ -14,11 +14,11 @@ const SaveButton: React.FC<Props> = ({ onPress, loading = false }) => {
         onPress={onPress}
         disabled={loading}
         style={{
-          backgroundColor: loading ? "#93C5FD" : "#3B82F6",
+          backgroundColor: loading ? "#93C5FD" : "#007AFF",
           borderRadius: 16,
           paddingVertical: 16,
           alignItems: "center",
-          shadowColor: "#3B82F6",
+          shadowColor: "#007AFF",
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.3,
           shadowRadius: 8,

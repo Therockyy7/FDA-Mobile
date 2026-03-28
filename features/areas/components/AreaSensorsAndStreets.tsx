@@ -22,8 +22,8 @@ export function AreaSensorsAndStreets({
           activeOpacity={0.7}
         >
           <View className="flex-row items-center gap-3">
-            <View className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 items-center justify-center">
-              <MaterialIcons name="sensors" size={20} color="#3B82F6" />
+            <View className="w-10 h-10 rounded-full bg-[#007AFF]\/10 dark:bg-blue-900/30 items-center justify-center">
+              <MaterialIcons name="sensors" size={20} color="#007AFF" />
             </View>
             <View>
               <Text className="text-slate-900 dark:text-white text-base font-semibold">

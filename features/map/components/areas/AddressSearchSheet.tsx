@@ -62,7 +62,7 @@ export function AddressSearchSheet({
     border: isDarkColorScheme ? "#475569" : "#E2E8F0",
     inputBg: isDarkColorScheme ? "#0F172A" : "#F1F5F9",
     overlay: "rgba(0, 0, 0, 0.5)",
-    accent: "#3B82F6",
+    accent: "#007AFF",
     error: "#EF4444",
   };
 
@@ -242,7 +242,7 @@ export function AddressSearchSheet({
               <LinearGradient
                 colors={
                   searchQuery.trim()
-                    ? ["#3B82F6", "#2563EB"]
+                    ? ["#007AFF", "#2563EB"]
                     : [colors.border, colors.border]
                 }
                 style={styles.searchButton}

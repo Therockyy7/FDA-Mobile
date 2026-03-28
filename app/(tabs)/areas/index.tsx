@@ -317,7 +317,7 @@ export default function AreasScreen() {
                   width: 38,
                   height: 38,
                   borderRadius: 12,
-                  backgroundColor: "#3B82F6",
+                  backgroundColor: "#007AFF",
                   alignItems: "center",
                   justifyContent: "center",
                 }}
@@ -408,14 +408,14 @@ export default function AreasScreen() {
               paddingVertical: 12,
               borderBottomWidth: 2,
               borderBottomColor:
-                activeTab === "my-areas" ? "#3B82F6" : "transparent",
+                activeTab === "my-areas" ? "#007AFF" : "transparent",
               alignItems: "center",
             }}
           >
             <Text
               style={{
                 fontWeight: activeTab === "my-areas" ? "700" : "500",
-                color: activeTab === "my-areas" ? "#3B82F6" : colors.subtext,
+                color: activeTab === "my-areas" ? "#007AFF" : colors.subtext,
               }}
             >
               Khu vực của tôi
@@ -428,14 +428,14 @@ export default function AreasScreen() {
               paddingVertical: 12,
               borderBottomWidth: 2,
               borderBottomColor:
-                activeTab === "admin-areas" ? "#3B82F6" : "transparent",
+                activeTab === "admin-areas" ? "#007AFF" : "transparent",
               alignItems: "center",
             }}
           >
             <Text
               style={{
                 fontWeight: activeTab === "admin-areas" ? "700" : "500",
-                color: activeTab === "admin-areas" ? "#3B82F6" : colors.subtext,
+                color: activeTab === "admin-areas" ? "#007AFF" : colors.subtext,
               }}
             >
               Khu vực hệ thống
@@ -499,7 +499,7 @@ export default function AreasScreen() {
             </Text>
             <TouchableOpacity onPress={handleCreateArea} activeOpacity={0.8}>
               <LinearGradient
-                colors={["#3B82F6", "#2563EB"]}
+                colors={["#007AFF", "#2563EB"]}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -527,8 +527,8 @@ export default function AreasScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
-                colors={["#3B82F6"]}
-                tintColor="#3B82F6"
+                colors={["#007AFF"]}
+                tintColor="#007AFF"
               />
             }
           >
@@ -556,8 +556,8 @@ export default function AreasScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              colors={["#3B82F6"]}
-              tintColor="#3B82F6"
+              colors={["#007AFF"]}
+              tintColor="#007AFF"
             />
           }
         >

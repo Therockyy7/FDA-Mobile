@@ -355,7 +355,7 @@ export function AreaCreationErrorModal({
               activeOpacity={0.9}
             >
               <LinearGradient
-                colors={["#3B82F6", "#2563EB", "#1D4ED8"]}
+                colors={["#007AFF", "#2563EB", "#1D4ED8"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.primaryButtonGradient}
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     borderRadius: 14,
-    shadowColor: "#3B82F6",
+    shadowColor: "#007AFF",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
     shadowRadius: 12,

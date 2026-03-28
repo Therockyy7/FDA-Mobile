@@ -106,7 +106,7 @@ export default function NotificationsScreen() {
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh}
-            tintColor={isDarkColorScheme ? "#60A5FA" : "#3B82F6"}
+            tintColor={isDarkColorScheme ? "#38BDF8" : "#007AFF"}
           />
         }
       >

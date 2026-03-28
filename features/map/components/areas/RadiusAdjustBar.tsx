@@ -32,7 +32,7 @@ function formatRadius(meters: number): string {
 function getRadiusColor(value: number): string {
   const percentage = (value - MIN_RADIUS) / (MAX_RADIUS - MIN_RADIUS);
   if (percentage < 0.3) return "#10B981"; // Green for small
-  if (percentage < 0.6) return "#3B82F6"; // Blue for medium
+  if (percentage < 0.6) return "#007AFF"; // Blue for medium
   if (percentage < 0.85) return "#F97316"; // Orange for large
   return "#EF4444"; // Red for very large
 }
@@ -212,7 +212,7 @@ export function RadiusAdjustBar({
           style={{ flex: 2 }}
         >
           <LinearGradient
-            colors={["#3B82F6", "#2563EB"]}
+            colors={["#007AFF", "#2563EB"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{

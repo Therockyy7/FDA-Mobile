@@ -50,7 +50,7 @@ const OtherSettingsSection: React.FC = () => {
                 justifyContent: "center",
               }}
             >
-              <Ionicons name="help-circle" size={22} color="#3B82F6" />
+              <Ionicons name="help-circle" size={22} color="#007AFF" />
             </View>
             <Text
               style={{

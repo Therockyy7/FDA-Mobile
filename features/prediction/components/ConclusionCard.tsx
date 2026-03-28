@@ -30,7 +30,7 @@ export function ConclusionCard({ icon, text }: ConclusionCardProps) {
         style={{
           borderRadius: 24,
           padding: 20,
-          shadowColor: "#3B82F6",
+          shadowColor: "#007AFF",
           shadowOffset: { width: 0, height: 8 },
           shadowOpacity: 0.15,
           shadowRadius: 16,
@@ -74,7 +74,7 @@ export function ConclusionCard({ icon, text }: ConclusionCardProps) {
               style={{
                 fontSize: 12,
                 fontWeight: "600",
-                color: isDarkColorScheme ? "#93C5FD" : "#3B82F6",
+                color: isDarkColorScheme ? "#93C5FD" : "#007AFF",
               }}
             >
               Tổng hợp đánh giá
@@ -91,7 +91,7 @@ export function ConclusionCard({ icon, text }: ConclusionCardProps) {
             borderRadius: 16,
             padding: 18,
             borderLeftWidth: 4,
-            borderLeftColor: "#3B82F6",
+            borderLeftColor: "#007AFF",
           }}
         >
           <Text
@@ -118,14 +118,14 @@ export function ConclusionCard({ icon, text }: ConclusionCardProps) {
           <Ionicons
             name="shield-checkmark"
             size={16}
-            color={isDarkColorScheme ? "#93C5FD" : "#3B82F6"}
+            color={isDarkColorScheme ? "#93C5FD" : "#007AFF"}
             style={{ marginRight: 6 }}
           />
           <Text
             style={{
               fontSize: 12,
               fontWeight: "700",
-              color: isDarkColorScheme ? "#93C5FD" : "#3B82F6",
+              color: isDarkColorScheme ? "#93C5FD" : "#007AFF",
               textTransform: "uppercase",
               letterSpacing: 1,
             }}

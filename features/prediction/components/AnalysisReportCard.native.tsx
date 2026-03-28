@@ -357,12 +357,12 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
               <View
                 className={clsx(
                   "w-8 h-8 rounded-lg items-center justify-center",
-                  isDarkColorScheme ? "bg-blue-500/20" : "bg-blue-400/20"
+                  isDarkColorScheme ? "bg-[#007AFF]/20" : "bg-blue-400/20"
                 )}
               >
                 <TrendingUp
                   size={16}
-                  color={isDarkColorScheme ? "#60A5FA" : "#3B82F6"}
+                  color={isDarkColorScheme ? "#38BDF8" : "#007AFF"}
                 />
               </View>
               <RNText
@@ -417,12 +417,12 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
                     <View
                       className={clsx(
                         "w-10 h-10 rounded-xl items-center justify-center",
-                        isDarkColorScheme ? "bg-blue-500/20" : "bg-blue-400/30"
+                        isDarkColorScheme ? "bg-[#007AFF]/20" : "bg-blue-400/30"
                       )}
                     >
                       <metric.icon
                         size={20}
-                        color={isDarkColorScheme ? "#60A5FA" : "#3B82F6"}
+                        color={isDarkColorScheme ? "#38BDF8" : "#007AFF"}
                       />
                     </View>
                     <RNText

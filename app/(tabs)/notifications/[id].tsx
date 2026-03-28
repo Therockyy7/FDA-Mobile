@@ -60,7 +60,7 @@ export default function NotificationDetailScreen() {
           style={{
             paddingHorizontal: 32,
             paddingVertical: 14,
-            backgroundColor: "#3B82F6",
+            backgroundColor: "#007AFF",
             borderRadius: 12,
           }}
         >
@@ -199,12 +199,12 @@ export default function NotificationDetailScreen() {
                 width: 32,
                 height: 32,
                 borderRadius: 10,
-                backgroundColor: "#3B82F620",
+                backgroundColor: "#007AFF20",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Ionicons name="water" size={18} color="#3B82F6" />
+              <Ionicons name="water" size={18} color="#007AFF" />
             </View>
             <Text style={{ fontSize: 16, fontWeight: "700", color: colors.text }}>
               Mực nước hiện tại
@@ -320,13 +320,13 @@ export default function NotificationDetailScreen() {
                 width: 60,
                 height: 60,
                 borderRadius: 20,
-                backgroundColor: "#3B82F620",
+                backgroundColor: "#007AFF20",
                 alignItems: "center",
                 justifyContent: "center",
                 marginBottom: 12,
               }}
             >
-              <Ionicons name="map" size={28} color="#3B82F6" />
+              <Ionicons name="map" size={28} color="#007AFF" />
             </View>
             <Text style={{ fontSize: 16, fontWeight: "700", color: colors.text }}>
               Xem trên bản đồ
@@ -441,7 +441,7 @@ export default function NotificationDetailScreen() {
                 gap: 10,
                 paddingVertical: 16,
                 borderRadius: 16,
-                backgroundColor: "#3B82F6",
+                backgroundColor: "#007AFF",
               }}
             >
               <Ionicons name="map" size={20} color="white" />
@@ -465,8 +465,8 @@ export default function NotificationDetailScreen() {
                 borderColor: colors.border,
               }}
             >
-              <Ionicons name="navigate" size={20} color="#3B82F6" />
-              <Text style={{ fontSize: 16, fontWeight: "700", color: "#3B82F6" }}>
+              <Ionicons name="navigate" size={20} color="#007AFF" />
+              <Text style={{ fontSize: 16, fontWeight: "700", color: "#007AFF" }}>
                 Lộ trình tránh ngập
               </Text>
             </TouchableOpacity>

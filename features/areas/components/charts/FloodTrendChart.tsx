@@ -278,7 +278,7 @@ export function FloodTrendChart({
           barBorderRadius={4}
           showGradient
           gradientColor="rgba(59, 130, 246, 0.2)"
-          frontColor="#3B82F6"
+          frontColor="#007AFF"
           yAxisLabelSuffix="m"
           yAxisLabelWidth={35}
           renderTooltip={(item: { value: number }, index: number) => {
@@ -335,7 +335,7 @@ export function FloodTrendChart({
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <Ionicons name="water-outline" size={16} color="#3B82F6" />
+          <Ionicons name="water-outline" size={16} color="#007AFF" />
           <Text style={{ fontSize: 12, color: colors.subtext }}>
             <Text style={{ fontWeight: "700", color: colors.text }}>
               {data.summary.totalFloodHours}

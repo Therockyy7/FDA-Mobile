@@ -213,7 +213,7 @@ function ModeIcon({ active, icon, onPress }: ModeIconProps) {
           paddingHorizontal: 10,
           paddingVertical: 6,
           borderRadius: 999,
-          backgroundColor: active ? "#3B82F6" : "transparent",
+          backgroundColor: active ? "#007AFF" : "transparent",
           alignItems: "center",
           justifyContent: "center",
         }}

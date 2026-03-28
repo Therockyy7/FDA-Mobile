@@ -93,6 +93,19 @@ export const useSignOut = () => {
   return () => dispatch(signOut()).unwrap();
 };
 
+// Đăng ký (chưa có API, dùng tạm signIn flow)
+export const useSignUp = () => {
+  const dispatch = useAppDispatch();
+  return async (email: string, password: string) => {
+    try {
+      await dispatch(signIn({ email, password })).unwrap();
+      return { error: null };
+    } catch (error: any) {
+      return { error: error?.message || "Đăng ký thất bại" };
+    }
+  };
+};
+
 export const useResendOtp = () => {
   const dispatch = useAppDispatch();
   return (identifier: string) => 

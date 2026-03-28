@@ -37,7 +37,7 @@ interface AnalysisReportCardProps {
 interface RiskConfig {
   color: string;
   glowColor: string;
-  gradientColors: readonly [string, string];
+  gradientColors: readonly [string, string, ...string[]];
   label: string;
   darkColor: string;
 }
@@ -107,7 +107,7 @@ const getRiskConfig = (level: ParsedFloodData["level"]): RiskConfig => {
       return {
         color: "#EF4444",
         glowColor: "rgba(239, 68, 68, 0.4)",
-        gradientColors: ["#DC2626", "#EF4444"],
+        gradientColors: ["#DC2626", "#EF4444"] as const,
         label: "NGUY CẤP",
         darkColor: "#991B1B",
       };
@@ -115,7 +115,7 @@ const getRiskConfig = (level: ParsedFloodData["level"]): RiskConfig => {
       return {
         color: "#F97316",
         glowColor: "rgba(249, 115, 22, 0.4)",
-        gradientColors: ["#EA580C", "#F97316"],
+        gradientColors: ["#EA580C", "#F97316"] as const,
         label: "CAO",
         darkColor: "#9A3412",
       };
@@ -123,7 +123,7 @@ const getRiskConfig = (level: ParsedFloodData["level"]): RiskConfig => {
       return {
         color: "#F59E0B",
         glowColor: "rgba(245, 158, 11, 0.4)",
-        gradientColors: ["#D97706", "#F59E0B"],
+        gradientColors: ["#D97706", "#F59E0B"] as const,
         label: "TRUNG BÌNH",
         darkColor: "#92400E",
       };
@@ -131,7 +131,7 @@ const getRiskConfig = (level: ParsedFloodData["level"]): RiskConfig => {
       return {
         color: "#10B981",
         glowColor: "rgba(16, 185, 129, 0.4)",
-        gradientColors: ["#059669", "#10B981"],
+        gradientColors: ["#059669", "#10B981"] as const,
         label: "THẤP",
         darkColor: "#065F46",
       };

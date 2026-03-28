@@ -38,6 +38,7 @@ import { MapBottomSheet } from "~/features/map/components/common/MapBottomSheet"
 import { LayerToggleSheet } from "~/features/map/components/controls/LayerToggleSheet";
 import Legend from "~/features/map/components/controls/Legend";
 import { MapControls } from "~/features/map/components/controls/MapControls";
+import { NavigationHUD } from "~/features/map/components/navigation/NavigationHUD";
 import { MapLoadingOverlay } from "~/features/map/components/overlays/MapLoadingOverlay";
 import { FloodWarningMarkers } from "~/features/map/components/routes/FloodWarningMarkers";
 import { PlaceSearchSheet } from "~/features/map/components/routes/PlaceSearchSheet";
@@ -62,6 +63,7 @@ import { useFloodSignalR } from "~/features/map/hooks/useFloodSignalR";
 import { useMapCamera } from "~/features/map/hooks/useMapCamera";
 import { useMapDisplay } from "~/features/map/hooks/useMapDisplay";
 import { useMapLayerSettings } from "~/features/map/hooks/useMapLayerSettings";
+import { useNavigation } from "~/features/map/hooks/useNavigation";
 import { useRoutingUI } from "~/features/map/hooks/useRoutingUI";
 import { useSafeRoute } from "~/features/map/hooks/useSafeRoute";
 import { useStreetView } from "~/features/map/hooks/useStreetView";
@@ -146,6 +148,8 @@ export default function MapScreen() {
   const [showResultCard, setShowResultCard] = useState(false);
   const [showWarningsSheet, setShowWarningsSheet] = useState(false);
 
+  // Navigation state (initialized after useMapCamera below)
+
   const {
     mapRef,
     region,
@@ -161,6 +165,26 @@ export default function MapScreen() {
     focusOnZone,
     focusOnRoute,
   } = useMapCamera();
+
+  // Turn-by-turn navigation
+  const nav = useNavigation({
+    route: safeRoute.getSelectedRoute(),
+    mapRef,
+  });
+
+  const handleStartNavigation = useCallback(() => {
+    nav.startNavigation();
+  }, [nav]);
+
+  const handleStopNavigation = useCallback(() => {
+    nav.stopNavigation();
+    // Restore camera to route overview
+    const selectedRoute = safeRoute.getSelectedRoute();
+    if (selectedRoute) {
+      const bounds = getRouteBounds(selectedRoute.coordinates);
+      mapRef.current?.animateToRegion(bounds, 600);
+    }
+  }, [nav, safeRoute, mapRef]);
 
   const {
     selectedZone,
@@ -345,10 +369,13 @@ export default function MapScreen() {
   }, [safeRoute]);
 
   const handleCloseRouting = useCallback(() => {
+    if (nav.isNavigating) {
+      nav.stopNavigation();
+    }
     closeRouting();
     handleClearAllRoutes();
     resetRouting();
-  }, [closeRouting, handleClearAllRoutes, resetRouting]);
+  }, [nav, closeRouting, handleClearAllRoutes, resetRouting]);
 
   // ==================== AREA CONTROL ====================
 
@@ -579,6 +606,13 @@ export default function MapScreen() {
     [onRegionChangeComplete, fetchMarkersInViewPort, updateDraftAreaFromMapCenter],
   );
 
+  // Detect user pan during navigation to disable camera follow
+  const handleMapTouchStart = useCallback(() => {
+    if (nav.isNavigating && nav.isFollowingUser) {
+      nav.setIsFollowingUser(false);
+    }
+  }, [nav]);
+
   return (
     <View style={{ flex: 1, backgroundColor: "#0F172A" }}>
       <StatusBar
@@ -587,8 +621,10 @@ export default function MapScreen() {
         translucent
       />
 
-      {/* Header: show MapHeader normally, hide when routing panel is visible */}
-      {isRoutingUIVisible && !safeRoute.hasResults && !isPickingOnMap ? (
+      {/* Header: hide during navigation, show RouteDirectionPanel or MapHeader */}
+      {nav.isNavigating ? null : isRoutingUIVisible &&
+        !safeRoute.hasResults &&
+        !isPickingOnMap ? (
         <RouteDirectionPanel
           visible={true}
           onClose={handleCloseRouting}
@@ -661,6 +697,21 @@ export default function MapScreen() {
       <View style={{ flex: 1, position: "relative" }}>
         {/* Loading Overlay */}
         <MapLoadingOverlay visible={isLoading} />
+
+        {/* Navigation HUD (shown during active navigation) */}
+        {nav.isNavigating && (
+          <NavigationHUD
+            instruction={nav.currentInstruction}
+            nextInstruction={nav.nextInstruction}
+            distanceToNextTurn={nav.distanceToNextTurn}
+            remainingDistance={nav.remainingDistance}
+            remainingTime={nav.remainingTime}
+            isOffRoute={nav.isOffRoute}
+            isFollowingUser={nav.isFollowingUser}
+            onExit={handleStopNavigation}
+            onRecenter={nav.recenterCamera}
+          />
+        )}
 
         {/* Pick on Map: Center Pin (Grab-style) */}
         {isPickingOnMap && (
@@ -791,6 +842,7 @@ export default function MapScreen() {
           onRegionChangeComplete={handleRegionChange}
           onLongPress={handleMapLongPress}
           onPress={handleMapPress}
+          onPanDrag={handleMapTouchStart}
           showsUserLocation={locationPermission}
           showsMyLocationButton={false}
           showsCompass={false}
@@ -1259,36 +1311,53 @@ export default function MapScreen() {
           )}
         </MapBottomSheet>
 
-        {/* Safe Route Bottom Panel (alternatives + result card) */}
-        {safeRoute.hasResults && safeRoute.overallSafetyStatus && (
-          <View
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              zIndex: 35,
-              paddingBottom: 16,
-              gap: 10,
-            }}
-          >
-            <SafeRouteAlternatives
-              routes={safeRoute.getAllRoutes()}
-              selectedIndex={safeRoute.selectedRouteIndex}
-              onSelectRoute={handleSelectRoute}
-              onExitRouting={handleCloseRouting}
+        {/* Community Report Bottom Sheet */}
+        <MapBottomSheet
+          isOpen={!!selectedCommunityReport}
+          onClose={() => setSelectedCommunityReport(null)}
+          snapPoints={["60%", "90%"]}
+        >
+          {selectedCommunityReport && (
+            <CommunityReportSheet
+              report={selectedCommunityReport}
+              onClose={() => setSelectedCommunityReport(null)}
             />
-            {showResultCard && (
-              <SafeRouteResultCard
-                route={safeRoute.getSelectedRoute()!}
-                floodWarnings={safeRoute.floodWarnings}
-                metadata={safeRoute.metadata}
-                onClose={handleCloseRouteResults}
-                onShowWarnings={() => setShowWarningsSheet(true)}
+          )}
+        </MapBottomSheet>
+
+        {/* Safe Route Bottom Panel (alternatives + result card) — hidden during navigation */}
+        {safeRoute.hasResults &&
+          safeRoute.overallSafetyStatus &&
+          !nav.isNavigating && (
+            <View
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                zIndex: 35,
+                paddingBottom: 16,
+                gap: 10,
+              }}
+            >
+              <SafeRouteAlternatives
+                routes={safeRoute.getAllRoutes()}
+                selectedIndex={safeRoute.selectedRouteIndex}
+                onSelectRoute={handleSelectRoute}
+                onExitRouting={handleCloseRouting}
               />
-            )}
-          </View>
-        )}
+              {showResultCard && (
+                <SafeRouteResultCard
+                  route={safeRoute.getSelectedRoute()!}
+                  floodWarnings={safeRoute.floodWarnings}
+                  metadata={safeRoute.metadata}
+                  onClose={handleCloseRouteResults}
+                  onShowWarnings={() => setShowWarningsSheet(true)}
+                  onStartNavigation={handleStartNavigation}
+                />
+              )}
+            </View>
+          )}
 
         {/* Flood Station Bottom Sheet */}
         <MapBottomSheet

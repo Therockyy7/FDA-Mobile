@@ -22,6 +22,7 @@ interface SafeRouteResultCardProps {
   metadata: RouteMetadata | null;
   onClose: () => void;
   onShowWarnings: () => void;
+  onStartNavigation?: () => void;
 }
 
 export function SafeRouteResultCard({
@@ -30,6 +31,7 @@ export function SafeRouteResultCard({
   metadata,
   onClose,
   onShowWarnings,
+  onStartNavigation,
 }: SafeRouteResultCardProps) {
   const statusColor = SAFETY_STATUS_COLORS[route.safetyStatus];
   const statusLabel = SAFETY_STATUS_LABELS[route.safetyStatus];
@@ -241,6 +243,31 @@ export function SafeRouteResultCard({
             </Text>
           )}
         </View>
+
+        {/* Start Navigation Button */}
+        {onStartNavigation && (
+          <TouchableOpacity
+            onPress={onStartNavigation}
+            activeOpacity={0.85}
+            style={{
+              marginTop: 12,
+              backgroundColor: "#2563EB",
+              borderRadius: 999,
+              paddingVertical: 14,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+            }}
+          >
+            <Ionicons name="navigate" size={18} color="white" />
+            <Text
+              style={{ color: "white", fontWeight: "700", fontSize: 15 }}
+            >
+              Bắt đầu dẫn đường
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );

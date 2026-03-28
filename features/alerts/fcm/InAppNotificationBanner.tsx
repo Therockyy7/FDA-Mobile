@@ -95,9 +95,9 @@ export const InAppNotificationBanner: React.FC<
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateY: translateY.value },
-      { translateX: translateX.value },
-    ],
+      { translateY: translateY.value as number },
+      { translateX: translateX.value as number },
+    ] as any,
   }));
 
   if (!visible || !notification) return null;
@@ -123,7 +123,7 @@ export const InAppNotificationBanner: React.FC<
             {
               top: insets.top + 10,
             },
-            animatedStyle,
+            animatedStyle as any,
           ]}
         >
           <Pressable onPress={() => onPress?.(notification)}>

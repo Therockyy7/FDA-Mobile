@@ -22,12 +22,12 @@ export const getStatusConfig = (status: FloodLevel): StatusConfig => {
       icon: "alert",
       iconColor: "#EF4444",
     },
-    // critical: {
-    //   bg: "bg-rose-100 dark:bg-rose-900/30",
-    //   text: "text-rose-700 dark:text-rose-300",
-    //   icon: "warning",
-    //   iconColor: "#BE123C",
-    // },
+    critical: {
+      bg: "bg-rose-100 dark:bg-rose-900/30",
+      text: "text-rose-700 dark:text-rose-300",
+      icon: "warning",
+      iconColor: "#BE123C",
+    },
   };
   return configs[status];
 };

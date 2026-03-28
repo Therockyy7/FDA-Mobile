@@ -2,6 +2,8 @@ import * as React from "react";
 import { Text as RNText, TextProps } from "react-native";
 import { cn } from "~/lib/utils";
 
+export const TextClassContext = React.createContext<string | undefined>(undefined);
+
 export const Text = React.forwardRef<RNText, TextProps>(
   ({ className, ...props }, ref) => {
     return (

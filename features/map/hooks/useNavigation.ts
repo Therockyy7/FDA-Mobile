@@ -1,11 +1,10 @@
 // features/map/hooks/useNavigation.ts
+// Composition hook: navigation state + voice + GPS watcher.
 
 import * as Haptics from "expo-haptics";
-import * as Location from "expo-location";
-import * as Speech from "expo-speech";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { GeoJsonInstruction, LatLng } from "../types/safe-route.types";
-import type { UseNavigationParams, VoiceLevel } from "../types/navigation.types";
+import type { UseNavigationParams } from "../types/navigation.types";
 import {
   buildInstructionBoundaries,
   buildSegmentCumulativeDist,
@@ -15,122 +14,77 @@ import {
   lerpAngle,
   snapToPolyline,
 } from "../lib/navigation-utils";
+import { useNavigationState } from "./navigation/useNavigationState";
+import { useNavigationVoice } from "./navigation/useNavigationVoice";
+import { useGPSWatcher } from "./navigation/useGPSWatcher";
 
 export function useNavigation({ route, mapRef }: UseNavigationParams) {
-  const [isNavigating, setIsNavigating] = useState(false);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [userPosition, setUserPosition] = useState<LatLng | null>(null);
-  const [heading, setHeading] = useState(0);
-  const [distanceToNextTurn, setDistanceToNextTurn] = useState(0);
-  const [remainingDistance, setRemainingDistance] = useState(0);
-  const [remainingTime, setRemainingTime] = useState(0);
-  const [isOffRoute, setIsOffRoute] = useState(false);
-  const [isFollowingUser, setIsFollowingUser] = useState(true);
+  const state = useNavigationState();
+  const voice = useNavigationVoice();
+  const gps = useGPSWatcher();
 
-  const watcherRef = useRef<Location.LocationSubscription | null>(null);
   const instructionBoundariesRef = useRef<number[]>([]);
   const segmentCumulativeDistRef = useRef<number[]>([]);
-  const announcedRef = useRef<Map<number, Set<VoiceLevel>>>(new Map());
   const lastHeadingRef = useRef(0);
   const offRouteAlertedRef = useRef(false);
   const isNavigatingRef = useRef(false);
 
-  const speak = useCallback((text: string) => {
-    try {
-      Speech.stop();
-      Speech.speak(text, { language: "vi", rate: 1.0 });
-    } catch {
-      // TTS failure should not break navigation
-    }
-  }, []);
-
-  const announceForStep = useCallback(
-    (stepIndex: number, level: VoiceLevel, instruction: GeoJsonInstruction) => {
-      if (!announcedRef.current.has(stepIndex)) {
-        announcedRef.current.set(stepIndex, new Set());
-      }
-      const levels = announcedRef.current.get(stepIndex)!;
-      if (levels.has(level)) return;
-      levels.add(level);
-
-      switch (level) {
-        case "early":
-          speak(`Sau 500 mét, ${instruction.text}`);
-          break;
-        case "approach":
-          speak(instruction.text);
-          break;
-        case "now":
-          speak(`${instruction.text} ngay bây giờ`);
-          break;
-      }
-    },
-    [speak]
-  );
-
   const onLocationUpdate = useCallback(
-    (location: Location.LocationObject) => {
+    (location: import("expo-location").LocationObject) => {
       if (!route || !isNavigatingRef.current) return;
 
       const pos: LatLng = {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
       };
-      setUserPosition(pos);
+      state.setUserPosition(pos);
 
       const polyline = route.coordinates;
       const segCumDist = segmentCumulativeDistRef.current;
       const boundaries = instructionBoundariesRef.current;
 
-      // Snap to polyline
       const snap = snapToPolyline(pos, polyline, segCumDist);
 
       // Off-route check
       if (snap.distanceFromRoute > 50) {
-        setIsOffRoute(true);
+        state.setIsOffRoute(true);
         if (!offRouteAlertedRef.current) {
           offRouteAlertedRef.current = true;
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-          speak("Bạn đã lạc đường. Hãy quay lại tuyến đường.");
+          voice.speak("Bạn đã lạc đường. Hãy quay lại tuyến đường.");
         }
       } else {
-        setIsOffRoute(false);
+        state.setIsOffRoute(false);
         offRouteAlertedRef.current = false;
       }
 
-      // Current step
       const stepIdx = getCurrentStepIndex(snap.progressMeters, boundaries);
       const dist = getDistanceToNextTurn(snap.progressMeters, boundaries, stepIdx);
 
-      setCurrentStepIndex(stepIdx);
-      setDistanceToNextTurn(dist);
+      state.setCurrentStepIndex(stepIdx);
+      state.setDistanceToNextTurn(dist);
 
-      // Remaining
       const remDist = Math.max(0, route.distance - snap.progressMeters);
-      setRemainingDistance(remDist);
-      setRemainingTime(
-        route.distance > 0 ? (remDist / route.distance) * route.time : 0
+      state.setRemainingDistance(remDist);
+      state.setRemainingTime(
+        route.distance > 0 ? (remDist / route.distance) * route.time : 0,
       );
 
       // Voice announcements (3-level)
       if (stepIdx < route.instructions.length) {
         const inst = route.instructions[stepIdx];
         if (dist < 30) {
-          announceForStep(stepIdx, "now", inst);
+          voice.announceForStep(stepIdx, "now", inst);
         } else if (dist < 150) {
-          announceForStep(stepIdx, "approach", inst);
+          voice.announceForStep(stepIdx, "approach", inst);
         } else if (dist < 500) {
-          announceForStep(stepIdx, "early", inst);
+          voice.announceForStep(stepIdx, "early", inst);
         }
       }
 
       // Destination reached
-      if (
-        stepIdx >= route.instructions.length - 1 &&
-        dist < 20 &&
-        remDist < 30
-      ) {
-        speak("Bạn đã đến nơi.");
+      if (stepIdx >= route.instructions.length - 1 && dist < 20 && remDist < 30) {
+        voice.speak("Bạn đã đến nơi.");
         stopNavigation();
         return;
       }
@@ -140,154 +94,109 @@ export function useNavigation({ route, mapRef }: UseNavigationParams) {
       const rawHeading = computeBearing(pos, polyline[nextPointIdx]);
       const smoothed = lerpAngle(lastHeadingRef.current, rawHeading, 0.15);
       lastHeadingRef.current = smoothed;
-      setHeading(smoothed);
+      state.setHeading(smoothed);
 
-      // Camera follow
-      if (isFollowingUser && mapRef.current) {
+      if (state.isFollowingUser && mapRef.current) {
         const pitch = dist < 200 ? 20 : 45;
         mapRef.current.animateCamera(
-          {
-            center: pos,
-            heading: smoothed,
-            pitch,
-            zoom: 17,
-            altitude: 300,
-          },
-          { duration: 500 }
+          { center: pos, heading: smoothed, pitch, zoom: 17, altitude: 300 },
+          { duration: 500 },
         );
       }
     },
-    [route, mapRef, isFollowingUser, speak, announceForStep]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [route, mapRef, state.isFollowingUser, voice],
   );
 
   const startNavigation = useCallback(async () => {
     if (!route || route.coordinates.length < 2) return;
 
-    // Precompute
-    segmentCumulativeDistRef.current = buildSegmentCumulativeDist(
-      route.coordinates
-    );
-    instructionBoundariesRef.current = buildInstructionBoundaries(
-      route.instructions
-    );
-    announcedRef.current = new Map();
+    segmentCumulativeDistRef.current = buildSegmentCumulativeDist(route.coordinates);
+    instructionBoundariesRef.current = buildInstructionBoundaries(route.instructions);
+    voice.resetAnnounced();
     offRouteAlertedRef.current = false;
     lastHeadingRef.current = 0;
 
-    setCurrentStepIndex(0);
-    setDistanceToNextTurn(
-      route.instructions.length > 0 ? route.instructions[0].distance : 0
+    state.setCurrentStepIndex(0);
+    state.setDistanceToNextTurn(
+      route.instructions.length > 0 ? route.instructions[0].distance : 0,
     );
-    setRemainingDistance(route.distance);
-    setRemainingTime(route.time);
-    setIsOffRoute(false);
-    setIsFollowingUser(true);
-    setIsNavigating(true);
+    state.setRemainingDistance(route.distance);
+    state.setRemainingTime(route.time);
+    state.setIsOffRoute(false);
+    state.setIsFollowingUser(true);
+    state.setIsNavigating(true);
     isNavigatingRef.current = true;
 
-    // Haptic feedback
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    // Announce first instruction
     if (route.instructions.length > 0) {
-      speak(route.instructions[0].text);
+      voice.speak(route.instructions[0].text);
     }
 
-    // Start GPS watch
-    try {
-      const sub = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.BestForNavigation,
-          timeInterval: 1500,
-          distanceInterval: 5,
-        },
-        onLocationUpdate
-      );
-      watcherRef.current = sub;
-    } catch {
-      // Location watch failed — stop
-      setIsNavigating(false);
+    const started = await gps.startWatching(onLocationUpdate);
+    if (!started) {
+      state.setIsNavigating(false);
       isNavigatingRef.current = false;
     }
-  }, [route, onLocationUpdate, speak]);
+  }, [route, onLocationUpdate, voice, gps, state]);
 
   const stopNavigation = useCallback(() => {
-    watcherRef.current?.remove();
-    watcherRef.current = null;
+    gps.stopWatching();
     isNavigatingRef.current = false;
-
-    try {
-      Speech.stop();
-    } catch {
-      // ignore
-    }
-
-    setIsNavigating(false);
-    setCurrentStepIndex(0);
-    setUserPosition(null);
-    setHeading(0);
-    setDistanceToNextTurn(0);
-    setRemainingDistance(0);
-    setRemainingTime(0);
-    setIsOffRoute(false);
-    setIsFollowingUser(true);
-  }, []);
+    voice.speak("");  // clears queue via SpeechHapticsService.stop()
+    state.reset();
+  }, [gps, voice, state]);
 
   const recenterCamera = useCallback(() => {
-    setIsFollowingUser(true);
-    if (userPosition && mapRef.current) {
+    state.setIsFollowingUser(true);
+    if (state.userPosition && mapRef.current) {
       mapRef.current.animateCamera(
         {
-          center: userPosition,
+          center: state.userPosition,
           heading: lastHeadingRef.current,
           pitch: 45,
           zoom: 17,
           altitude: 300,
         },
-        { duration: 500 }
+        { duration: 500 },
       );
     }
-  }, [userPosition, mapRef]);
+  }, [state.userPosition, mapRef]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      watcherRef.current?.remove();
-      watcherRef.current = null;
+      gps.stopWatching();
       isNavigatingRef.current = false;
-      try {
-        Speech.stop();
-      } catch {
-        // ignore
-      }
     };
   }, []);
 
   const currentInstruction: GeoJsonInstruction | null =
-    route && isNavigating && currentStepIndex < route.instructions.length
-      ? route.instructions[currentStepIndex]
+    route && state.isNavigating && state.currentStepIndex < route.instructions.length
+      ? route.instructions[state.currentStepIndex]
       : null;
 
   const nextInstruction: GeoJsonInstruction | null =
-    route && isNavigating && currentStepIndex + 1 < route.instructions.length
-      ? route.instructions[currentStepIndex + 1]
+    route && state.isNavigating && state.currentStepIndex + 1 < route.instructions.length
+      ? route.instructions[state.currentStepIndex + 1]
       : null;
 
   return {
-    isNavigating,
+    isNavigating: state.isNavigating,
     startNavigation,
     stopNavigation,
     recenterCamera,
-    currentStepIndex,
+    currentStepIndex: state.currentStepIndex,
     currentInstruction,
     nextInstruction,
-    distanceToNextTurn,
-    remainingDistance,
-    remainingTime,
-    isOffRoute,
-    isFollowingUser,
-    setIsFollowingUser,
-    userPosition,
-    heading,
+    distanceToNextTurn: state.distanceToNextTurn,
+    remainingDistance: state.remainingDistance,
+    remainingTime: state.remainingTime,
+    isOffRoute: state.isOffRoute,
+    isFollowingUser: state.isFollowingUser,
+    setIsFollowingUser: state.setIsFollowingUser,
+    userPosition: state.userPosition,
+    heading: state.heading,
   };
 }

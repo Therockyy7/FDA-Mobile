@@ -15,7 +15,6 @@ import {
     View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAppDispatch, useAppSelector } from "~/app/hooks";
 import { TabLoadingScreen } from "~/components/ui/TabLoadingScreen";
 import { Text } from "~/components/ui/text";
 import type { NotificationChannels } from "~/features/alerts/types/alert-settings.types";
@@ -24,8 +23,9 @@ import { ConfirmDeleteModal } from "~/features/areas/components/ConfirmDeleteMod
 import { EditAreaSheet } from "~/features/areas/components/EditAreaSheet";
 import { ErrorModal } from "~/features/areas/components/ErrorModal";
 import { WaterLevelAreaCard } from "~/features/areas/components/WaterLevelAreaCard";
+import { useQueryClient } from "@tanstack/react-query";
 import { AreaService } from "~/features/areas/services/area.service";
-import { fetchAdminAreas } from "~/features/map/stores/map.slice";
+import { ADMIN_AREAS_QUERY_KEY, useAdminAreasQuery } from "~/features/map/hooks/queries/useAdminAreasQuery";
 import type {
     Area,
     AreaStatusResponse,
@@ -61,9 +61,10 @@ export default function AreasScreen() {
     "my-areas",
   );
 
-  const dispatch = useAppDispatch();
-  const adminAreas = useAppSelector((state) => state.map.adminAreas);
-  const loadingAdminAreas = useAppSelector((state) => state.map.adminAreasLoading);
+  const queryClient = useQueryClient();
+  const adminAreasQuery = useAdminAreasQuery();
+  const adminAreas = adminAreasQuery.data ?? [];
+  const loadingAdminAreas = adminAreasQuery.isLoading;
 
   // Delete modal state
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -151,18 +152,18 @@ export default function AreasScreen() {
     if (activeTab === "my-areas") {
       fetchAreas();
     } else {
-      dispatch(fetchAdminAreas({ pageNumber: 1, pageSize: 100 })).finally(() =>
+      queryClient.invalidateQueries({ queryKey: [ADMIN_AREAS_QUERY_KEY] }).finally(() =>
         setRefreshing(false),
       );
     }
-  }, [fetchAreas, activeTab, dispatch]);
+  }, [fetchAreas, activeTab, queryClient]);
 
-  // Load Admin Areas when tab changes
+  // Load Admin Areas when tab changes to admin-areas
   React.useEffect(() => {
-    if (activeTab === "admin-areas" && adminAreas.length === 0) {
-      dispatch(fetchAdminAreas({ pageNumber: 1, pageSize: 100 }));
+    if (activeTab === "admin-areas") {
+      queryClient.invalidateQueries({ queryKey: [ADMIN_AREAS_QUERY_KEY] });
     }
-  }, [activeTab, dispatch, adminAreas.length]);
+  }, [activeTab, queryClient]);
 
   // Open delete confirmation modal
   const handleDelete = useCallback((areaId: string, areaName: string) => {

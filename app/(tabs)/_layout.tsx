@@ -86,7 +86,7 @@ const TabsLayout = () => {
         />
 
         <Tabs.Screen
-          name="index"
+          name="map"
           options={{
             title: "Bản đồ",
             tabBarIcon: ({ focused }) => (

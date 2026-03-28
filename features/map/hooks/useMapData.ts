@@ -1,73 +1,64 @@
 // features/map/hooks/useMapData.ts
-// Wrapper hook gom tất cả map data sources về 1 chỗ:
-// - useMapLayerSettings (settings, flood, areas, community reports)
-// - useFloodSignalR (real-time connection)
-// - adminAreas (từ map.slice)
-import { useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "~/app/hooks";
-import { fetchAdminAreas } from "../stores/map.slice";
-import { useFloodSignalR } from "./useFloodSignalR";
-import { useMapLayerSettings } from "./useMapLayerSettings";
+// Convenience wrapper that aggregates all map data sources.
+// Delegates to flood/ hooks for flood data, plus area queries.
+
+import type { NearbyFloodReport } from "~/features/community/services/community.service";
+import type { FloodSeverityGeoJSON } from "../types/map-layers.types";
+import { useFloodLayerSettings, useFloodSignalR } from "./flood";
+import { useAdminAreasQuery } from "./queries/useAdminAreasQuery";
+import { useAreasQuery } from "./queries/useAreasQuery";
 
 export function useMapData() {
-  const dispatch = useAppDispatch();
-
   const {
     settings,
-    floodSeverity,
-    areas,
-    communityReports,
-    loading,
-    floodLoading,
-    areasLoading,
-    error,
+    settingsLoaded,
     isAuthenticated,
+    loading,
+    error,
     toggleOverlay,
     setBaseMap,
     setOpacity,
     refreshFloodSeverity,
     refreshAreas,
     refreshNearbyFloodReports,
-  } = useMapLayerSettings();
+  } = useFloodLayerSettings();
 
   // Real-time flood updates via SignalR
   useFloodSignalR(settings.overlays.flood);
 
-  // Admin areas
-  const adminAreas = useAppSelector((state) => state.map.adminAreas);
-  const adminAreasLoading = useAppSelector(
-    (state) => state.map.adminAreasLoading,
-  );
+  // User areas
+  const areasQuery = useAreasQuery();
+  const areas = areasQuery.data ?? [];
+  const areasLoading = areasQuery.isLoading;
 
-  useEffect(() => {
-    if (adminAreas.length === 0) {
-      dispatch(fetchAdminAreas({ pageNumber: 1, pageSize: 100 }));
-    }
-  }, [dispatch, adminAreas.length]);
+  // Admin areas
+  const adminAreasQuery = useAdminAreasQuery();
+  const adminAreas = adminAreasQuery.data ?? [];
+  const adminAreasLoading = adminAreasQuery.isLoading;
 
   return {
     // Settings
     settings,
+    settingsLoaded,
     isAuthenticated,
+    loading,
+    error,
     toggleOverlay,
     setBaseMap,
     setOpacity,
-    // Flood data
-    floodSeverity,
-    floodLoading,
+    // Flood — consumed via useFloodData in MapScreen; placeholder here
+    floodSeverity: undefined as FloodSeverityGeoJSON | undefined,
+    floodLoading: false,
     refreshFloodSeverity,
     // User areas
     areas,
     areasLoading,
     refreshAreas,
-    // Community reports
-    communityReports,
+    // Community reports (loaded on demand by MapScreen with viewport params)
+    communityReports: [] as NearbyFloodReport[],
     refreshNearbyFloodReports,
     // Admin areas
     adminAreas,
     adminAreasLoading,
-    // General
-    loading,
-    error,
   };
 }

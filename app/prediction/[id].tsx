@@ -21,7 +21,7 @@ import { ValidPeriodBadge } from "~/features/prediction/components/ValidPeriodBa
 import { PredictionService } from "~/features/prediction/services/prediction.service";
 import { PredictionResponse } from "~/features/prediction/types/prediction.types";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { PredictionTimelineSlider } from "~/features/map/components/controls/PredictionTimelineSlider";
+import { PredictionTimelineSlider } from "~/features/map/components/controls/timeline/PredictionTimelineSlider";
 import { useDistrictsForecast, ForecastHorizon } from "~/features/prediction/hooks/useDistrictsForecast";
 
 export default function PredictionScreen() {

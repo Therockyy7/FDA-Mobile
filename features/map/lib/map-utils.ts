@@ -25,26 +25,6 @@ export function getStatusColor(status: "safe" | "warning" | "danger") {
   }
 }
 
-// Calculate distance between two coordinates (Haversine formula)
-export function calculateDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
-  const R = 6371; // Earth's radius in km
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
 // Debounce function for performance optimization
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
@@ -154,25 +134,4 @@ export function getZoomMode(latitudeDelta: number): MapZoomMode {
   if (zoom < 10) return "cluster";
   if (zoom <= 13) return "individual";
   return "detailed";
-}
-
-// Legacy function kept for backwards compatibility
-export function shouldFetchNewMarkers(
-  newRegion: MapRegion,
-  lastRegion: MapRegion | null
-): boolean {
-  if (!lastRegion) return true;
-
-  const latChange = Math.abs(newRegion.latitude - lastRegion.latitude);
-  const lngChange = Math.abs(newRegion.longitude - lastRegion.longitude);
-  const zoomChange = Math.abs(
-    newRegion.latitudeDelta - lastRegion.latitudeDelta
-  );
-
-  const MINIMUM_REGION_DELTA = 0.005;
-  return (
-    latChange > MINIMUM_REGION_DELTA ||
-    lngChange > MINIMUM_REGION_DELTA ||
-    zoomChange > MINIMUM_REGION_DELTA * 2
-  );
 }

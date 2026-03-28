@@ -12,7 +12,6 @@ import {
 } from "redux-persist";
 
 import authReducer, { AuthState } from "../features/auth/stores/auth.slice";
-import mapReducer, { MapState } from "../features/map/stores/map.slice";
 
 // Reactotron - chỉ dùng trong dev
 let reactotronEnhancer: any;
@@ -27,15 +26,8 @@ const authPersistConfig = {
   whitelist: ["user", "session"],
 };
 
-const mapPersistConfig = {
-  key: "map",
-  storage: AsyncStorage,
-  whitelist: ["settings"], // Only persist settings, not flood data
-};
-
 const rootReducer = combineReducers({
   auth: persistReducer<AuthState>(authPersistConfig, authReducer),
-  map: persistReducer<MapState>(mapPersistConfig, mapReducer),
 });
 
 export const store = configureStore({

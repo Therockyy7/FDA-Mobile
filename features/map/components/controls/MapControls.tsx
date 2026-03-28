@@ -1,8 +1,11 @@
-// features/map/components/MapControls.tsx
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+// features/map/components/controls/MapControls.tsx
+import { Ionicons } from "@expo/vector-icons";
 import { AnimatePresence, MotiView } from "moti";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
+import { ZoomControls } from "./ZoomControls";
+import { RotationControls } from "./RotationControls";
+import { StreetViewClearButton } from "./StreetViewClearButton";
 
 interface MapControlsProps {
   onZoomIn: () => void;
@@ -17,7 +20,7 @@ interface MapControlsProps {
   streetViewLocation?: { latitude: number; longitude: number } | null;
   onClearStreetView?: () => void;
   onShowIsRouting?: () => void;
-  onShowLayers?: () => void; // NEW: Open layer toggle sheet
+  onShowLayers?: () => void;
 }
 
 export function MapControls({
@@ -44,7 +47,7 @@ export function MapControls({
         <AnimatePresence>
           {expanded && (
             <View style={{ gap: 10, alignItems: "center" }}>
-              {/* Clear Street View Marker */}
+              {/* Clear Street View */}
               {streetViewLocation && onClearStreetView && (
                 <MotiView
                   from={{ opacity: 0, scale: 0.5, translateY: 20 }}
@@ -52,29 +55,9 @@ export function MapControls({
                   exit={{ opacity: 0, scale: 0.5, translateY: 10 }}
                   transition={{ type: "timing", duration: 200 }}
                 >
-                  <TouchableOpacity
-                    onPress={onClearStreetView}
-                    style={{
-                      width: 50,
-                      height: 50,
-                      borderRadius: 25,
-                      backgroundColor: "#F59E0B",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      shadowColor: "#F59E0B",
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.4,
-                      shadowRadius: 8,
-                      elevation: 6,
-                    }}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="eye-off" size={22} color="white" />
-                  </TouchableOpacity>
+                  <StreetViewClearButton onPress={onClearStreetView} />
                 </MotiView>
               )}
-
-              {/* Navigation Button - moved to standalone FAB */}
 
               {/* Control Group */}
               <MotiView
@@ -82,18 +65,6 @@ export function MapControls({
                 animate={{ opacity: 1, scale: 1, translateY: 0 }}
                 exit={{ opacity: 0, scale: 0.8, translateY: 10 }}
                 transition={{ type: "timing", duration: 300, delay: 100 }}
-                style={{
-                  backgroundColor: "white",
-                  borderRadius: 20,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.12,
-                  shadowRadius: 12,
-                  elevation: 6,
-                  overflow: "hidden",
-                  borderWidth: 1,
-                  borderColor: "#F1F5F9",
-                }}
               >
                 {/* 3D Toggle */}
                 {onToggle3D && (
@@ -106,11 +77,13 @@ export function MapControls({
                         alignItems: "center",
                         justifyContent: "center",
                         backgroundColor: is3DEnabled ? "#3B82F6" : "white",
+                        borderTopLeftRadius: 20,
+                        borderTopRightRadius: 20,
                       }}
                       activeOpacity={0.7}
                     >
-                      <MaterialCommunityIcons
-                        name="rotate-3d-variant"
+                      <Ionicons
+                        name="cube"
                         size={22}
                         color={is3DEnabled ? "white" : "#1F2937"}
                       />
@@ -140,86 +113,22 @@ export function MapControls({
 
                 <View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
 
-                {/* Zoom In */}
-                <TouchableOpacity
-                  onPress={onZoomIn}
-                  style={{
-                    width: 50,
-                    height: 50,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="add" size={24} color="#1F2937" />
-                </TouchableOpacity>
-
-                <View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
-
-                {/* Zoom Out */}
-                <TouchableOpacity
-                  onPress={onZoomOut}
-                  style={{
-                    width: 50,
-                    height: 50,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="remove" size={24} color="#1F2937" />
-                </TouchableOpacity>
+                {/* Zoom Controls */}
+                <ZoomControls onZoomIn={onZoomIn} onZoomOut={onZoomOut} />
               </MotiView>
 
-              {/* Rotation Controls (3D mode only) */}
+              {/* Rotation Controls */}
               {is3DEnabled && onRotateLeft && onRotateRight && (
                 <MotiView
                   from={{ opacity: 0, scale: 0.8, translateY: 20 }}
                   animate={{ opacity: 1, scale: 1, translateY: 0 }}
                   exit={{ opacity: 0, scale: 0.8, translateY: 10 }}
                   transition={{ type: "timing", duration: 300, delay: 150 }}
-                  style={{
-                    backgroundColor: "white",
-                    borderRadius: 20,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.12,
-                    shadowRadius: 12,
-                    elevation: 6,
-                    overflow: "hidden",
-                    borderWidth: 1,
-                    borderColor: "#F1F5F9",
-                  }}
                 >
-                  <TouchableOpacity
-                    onPress={onRotateLeft}
-                    style={{
-                      width: 50,
-                      height: 44,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="return-up-back" size={20} color="#3B82F6" />
-                  </TouchableOpacity>
-                  <View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
-                  <TouchableOpacity
-                    onPress={onRotateRight}
-                    style={{
-                      width: 50,
-                      height: 44,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons
-                      name="return-up-forward"
-                      size={20}
-                      color="#3B82F6"
-                    />
-                  </TouchableOpacity>
+                  <RotationControls
+                    onRotateLeft={onRotateLeft}
+                    onRotateRight={onRotateRight}
+                  />
                 </MotiView>
               )}
 

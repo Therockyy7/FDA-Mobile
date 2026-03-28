@@ -4,11 +4,16 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Platform,
+  RefreshControl,
   ScrollView,
+  StatusBar,
+  StyleSheet,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import { useQueryClient } from "@tanstack/react-query";
 import { Text } from "~/components/ui/text";
 import { useCurrentSubscription } from "~/features/plans/hooks/useCurrentSubscription";
@@ -129,10 +134,7 @@ export default function CurrentPlanScreen() {
       >
         <Stack.Screen
           options={{
-            headerTitle: "Chi tiết gói dịch vụ",
-            headerStyle: { backgroundColor: colors.cardBg },
-            headerTintColor: colors.text,
-            headerShadowVisible: false,
+            headerShown: false,
           }}
         />
         <ActivityIndicator size="large" color="#007AFF" />
@@ -153,10 +155,7 @@ export default function CurrentPlanScreen() {
       >
         <Stack.Screen
           options={{
-            headerTitle: "Chi tiết gói dịch vụ",
-            headerStyle: { backgroundColor: colors.cardBg },
-            headerTintColor: colors.text,
-            headerShadowVisible: false,
+            headerShown: false,
           }}
         />
         <Ionicons
@@ -237,19 +236,35 @@ export default function CurrentPlanScreen() {
   );
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      edges={["bottom"]}
-    >
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Stack.Screen
         options={{
-          headerTitle: "Chi tiết gói dịch vụ",
-          headerShown: true,
-          headerStyle: { backgroundColor: colors.cardBg },
-          headerTintColor: colors.text,
-          headerShadowVisible: false,
+          headerShown: false,
         }}
       />
+
+      <StatusBar
+        barStyle={isDarkColorScheme ? "light-content" : "dark-content"}
+        backgroundColor={colors.cardBg}
+        translucent
+      />
+
+      {/* Premium Header - Traditional White Style */}
+      <View style={[styles.header, { backgroundColor: colors.cardBg, borderBottomWidth: 1, borderBottomColor: colors.divider }]}>
+        <SafeAreaView edges={["top"]}>
+          <View style={styles.headerContent}>
+            <TouchableOpacity
+              style={[styles.backButton, { backgroundColor: isDarkColorScheme ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)" }]}
+              onPress={() => router.back()}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chevron-back" size={20} color="#007AFF" />
+            </TouchableOpacity>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>Chi tiết gói dịch vụ</Text>
+            <View style={{ width: 40 }} />
+          </View>
+        </SafeAreaView>
+      </View>
 
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
@@ -425,6 +440,30 @@ export default function CurrentPlanScreen() {
         loading={isCancelling}
         subscription={data?.subscription || null}
       />
-    </SafeAreaView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  header: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: Platform.OS === "ios" ? 0 : 10,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+  },
+});

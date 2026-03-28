@@ -11,13 +11,8 @@ export const SignOutButton = () => {
 
   const handleSignOut = async () => {
     try {
-      const { error } = await signOut();
-      if (error) {
-        console.error("Sign out error:", error);
-      } else {
-        // Redirect to sign-in page
-        // router.replace('/(auth)/sign-in');
-      }
+      await signOut();
+      // router.replace('/(auth)/sign-in');
     } catch (err) {
       console.error("Sign out error:", err);
     }

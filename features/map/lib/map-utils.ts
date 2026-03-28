@@ -1,4 +1,6 @@
 // features/map/lib/map-utils.ts
+import type { MapRegion, MapZoomMode, ViewportBounds } from "../types/map-viewport.types";
+export type { MapRegion, MapZoomMode, ViewportBounds };
 
 export function getStatusColor(status: "safe" | "warning" | "danger") {
   switch (status) {
@@ -81,21 +83,6 @@ export function throttle<T extends (...args: any[]) => any>(
   };
 }
 
-// Region type for map
-export interface MapRegion {
-  latitude: number;
-  longitude: number;
-  latitudeDelta: number;
-  longitudeDelta: number;
-}
-
-// Bounding box with buffer for viewport-based loading
-export interface ViewportBounds {
-  minLat: number;
-  maxLat: number;
-  minLng: number;
-  maxLng: number;
-}
 
 // ==================== BUFFER ZONE STRATEGY ====================
 // Load data with a 20% buffer around the visible viewport.
@@ -155,7 +142,6 @@ export function getZoomLevel(latitudeDelta: number): number {
   return Math.round(Math.log2(360 / latitudeDelta));
 }
 
-export type MapZoomMode = "cluster" | "individual" | "detailed";
 
 /**
  * Determine the display mode based on zoom level:

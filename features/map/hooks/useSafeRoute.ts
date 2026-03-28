@@ -1,7 +1,7 @@
 // features/map/hooks/useSafeRoute.ts
-
 import { useCallback, useState } from "react";
-import type { TransportMode } from "../components/routes/RouteDirectionPanel";
+import type { TransportMode } from "../types/routing.types";
+import { FloodRoute, FloodZone } from "../constants/map-data";
 import { parseRouteResponse } from "../lib/polyline-utils";
 import { SafeRouteService } from "../services/safe-route.service";
 import type {
@@ -14,17 +14,20 @@ import type {
 import { TRANSPORT_MODE_TO_PROFILE } from "../types/safe-route.types";
 
 export function useSafeRoute() {
+  // Safe route data
   const [primaryRoute, setPrimaryRoute] = useState<DecodedRoute | null>(null);
-  const [alternativeRoutes, setAlternativeRoutes] = useState<DecodedRoute[]>(
-    []
-  );
+  const [alternativeRoutes, setAlternativeRoutes] = useState<DecodedRoute[]>([]);
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
-  const [overallSafetyStatus, setOverallSafetyStatus] =
-    useState<RouteSafetyStatus | null>(null);
+  const [overallSafetyStatus, setOverallSafetyStatus] = useState<RouteSafetyStatus | null>(null);
   const [floodWarnings, setFloodWarnings] = useState<FloodWarningDto[]>([]);
   const [metadata, setMetadata] = useState<RouteMetadata | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Flood map selection (merged from useFloodSelection)
+  const [selectedZone, setSelectedZone] = useState<FloodZone | null>(null);
+  const [selectedRoute, setSelectedRoute] = useState<FloodRoute | null>(null);
+  const [showDetailPanels] = useState(true);
 
   const hasResults = primaryRoute !== null;
 
@@ -33,7 +36,7 @@ export function useSafeRoute() {
       start: LatLng,
       end: LatLng,
       transportMode: TransportMode,
-      maxAlternatives: number = 2
+      maxAlternatives: number = 2,
     ) => {
       setIsLoading(true);
       setError(null);
@@ -62,9 +65,7 @@ export function useSafeRoute() {
         }
 
         if (parsed.metadata.safetyStatus === "Blocked") {
-          setError(
-            "Tất cả các tuyến đường đều bị ngập. Vui lòng thử lại sau."
-          );
+          setError("Tất cả các tuyến đường đều bị ngập. Vui lòng thử lại sau.");
           setOverallSafetyStatus("Blocked");
           return;
         }
@@ -82,7 +83,7 @@ export function useSafeRoute() {
         setIsLoading(false);
       }
     },
-    []
+    [],
   );
 
   const selectRoute = useCallback((index: number) => {
@@ -109,7 +110,13 @@ export function useSafeRoute() {
     setError(null);
   }, []);
 
+  const clearSelection = useCallback(() => {
+    setSelectedZone(null);
+    setSelectedRoute(null);
+  }, []);
+
   return {
+    // Safe route
     primaryRoute,
     alternativeRoutes,
     selectedRouteIndex,
@@ -124,5 +131,12 @@ export function useSafeRoute() {
     getSelectedRoute,
     getAllRoutes,
     clearRoutes,
+    // Flood map selection
+    selectedZone,
+    setSelectedZone,
+    selectedRoute,
+    setSelectedRoute,
+    showDetailPanels,
+    clearSelection,
   };
 }

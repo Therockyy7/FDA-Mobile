@@ -25,7 +25,7 @@ import { EditAreaSheet } from "~/features/areas/components/EditAreaSheet";
 import { ErrorModal } from "~/features/areas/components/ErrorModal";
 import { WaterLevelAreaCard } from "~/features/areas/components/WaterLevelAreaCard";
 import { AreaService } from "~/features/areas/services/area.service";
-import { fetchAdminAreas } from "~/features/areas/stores/admin-area.slice";
+import { fetchAdminAreas } from "~/features/map/stores/map.slice";
 import type {
     Area,
     AreaStatusResponse,
@@ -62,9 +62,8 @@ export default function AreasScreen() {
   );
 
   const dispatch = useAppDispatch();
-  const { items: adminAreas, loading: loadingAdminAreas } = useAppSelector(
-    (state) => state.adminAreas,
-  );
+  const adminAreas = useAppSelector((state) => state.map.adminAreas);
+  const loadingAdminAreas = useAppSelector((state) => state.map.adminAreasLoading);
 
   // Delete modal state
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);

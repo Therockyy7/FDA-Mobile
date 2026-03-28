@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -11,14 +11,18 @@ import {
 import Animated, { useAnimatedRef } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
-import { ConclusionCard } from "~/features/prediction/components/ConclusionCard";
+import { ActionPlanCard } from "~/features/prediction/components/ActionPlanCard";
+import { AiConsultantCard } from "~/features/prediction/components/AiConsultantCard";
+import { EnsembleDetailsCard } from "~/features/prediction/components/EnsembleDetailsCard";
 import { FactorsCard } from "~/features/prediction/components/FactorsCard";
-import { RecommendationsCard } from "~/features/prediction/components/RecommendationsCard";
+import { ImpactAssessmentCard } from "~/features/prediction/components/ImpactAssessmentCard";
 import { RiskOverviewCard } from "~/features/prediction/components/RiskOverviewCard";
+import { ValidPeriodBadge } from "~/features/prediction/components/ValidPeriodBadge";
 import { PredictionService } from "~/features/prediction/services/prediction.service";
 import { PredictionResponse } from "~/features/prediction/types/prediction.types";
-import { parseAdvice } from "~/features/prediction/utils/adviceParser";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { PredictionTimelineSlider } from "~/features/map/components/controls/PredictionTimelineSlider";
+import { useDistrictsForecast, ForecastHorizon } from "~/features/prediction/hooks/useDistrictsForecast";
 
 export default function PredictionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -29,39 +33,19 @@ export default function PredictionScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const scrollLogLastRef = useRef(0);
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
-  // #region agent log
-  useFocusEffect(
-    useCallback(() => {
-      fetch("http://127.0.0.1:7242/ingest/1d6f14c8-c23f-4143-adbd-6650871f1c1c", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          location: "app/prediction/[id].tsx:focus",
-          message: "PredictionScreen focused",
-          data: { id },
-          timestamp: Date.now(),
-          hypothesisId: "H2",
-        }),
-      }).catch(() => {});
-      return () => {
-        fetch("http://127.0.0.1:7242/ingest/1d6f14c8-c23f-4143-adbd-6650871f1c1c", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            location: "app/prediction/[id].tsx:blur",
-            message: "PredictionScreen blurred",
-            data: {},
-            timestamp: Date.now(),
-            hypothesisId: "H2",
-          }),
-        }).catch(() => {});
-      };
-    }, [id])
-  );
-  // #endregion
+  const [selectedHorizon, setSelectedHorizon] = useState<ForecastHorizon>("now");
+  const { data: forecastData, loading: forecastLoading, refresh: refreshTimeline } = useDistrictsForecast(true);
+
+  // Re-fetch timeline specific data when refreshing
+  const onRefresh = React.useCallback(() => {
+    if (id) {
+      setRefreshing(true);
+      loadPrediction(id);
+      refreshTimeline?.();
+    }
+  }, [id, refreshTimeline]);
 
   useEffect(() => {
     if (id) {
@@ -84,17 +68,7 @@ export default function PredictionScreen() {
     }
   };
 
-  const onRefresh = React.useCallback(() => {
-    if (id) {
-      setRefreshing(true);
-      loadPrediction(id);
-    }
-  }, [id]);
 
-  // Parse AI advice (needed for content; keep ScrollView mounted so ref is always set)
-  const parsedAdvice = prediction
-    ? parseAdvice(prediction.ai_consultant_advice)
-    : null;
 
   return (
     <>
@@ -111,40 +85,6 @@ export default function PredictionScreen() {
           minHeight: "100%",
           justifyContent: loading && !refreshing ? "center" : undefined,
           alignItems: loading && !refreshing ? "center" : undefined,
-        }}
-        onLayout={() => {
-          // #region agent log
-          fetch("http://127.0.0.1:7242/ingest/1d6f14c8-c23f-4143-adbd-6650871f1c1c", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              location: "app/prediction/[id].tsx:ScrollView.onLayout",
-              message: "Prediction ScrollView mounted",
-              data: {},
-              timestamp: Date.now(),
-              hypothesisId: "H2",
-            }),
-          }).catch(() => {});
-          // #endregion
-        }}
-        onScroll={() => {
-          // #region agent log
-          const now = Date.now();
-          if (now - scrollLogLastRef.current > 600) {
-            scrollLogLastRef.current = now;
-            fetch("http://127.0.0.1:7242/ingest/1d6f14c8-c23f-4143-adbd-6650871f1c1c", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                location: "app/prediction/[id].tsx:ScrollView.onScroll",
-                message: "Prediction user scroll",
-                data: {},
-                timestamp: now,
-                hypothesisId: "H1",
-              }),
-            }).catch(() => {});
-          }
-          // #endregion
         }}
         scrollEventThrottle={64}
         refreshControl={
@@ -163,6 +103,7 @@ export default function PredictionScreen() {
               style={{
                 marginTop: 16,
                 color: isDarkColorScheme ? "#94A3B8" : "#64748B",
+                textAlign: "center",
               }}
             >
               Đang phân tích rủi ro từ AI...
@@ -193,9 +134,25 @@ export default function PredictionScreen() {
             >
               Đã có lỗi xảy ra
             </Text>
-            <Text style={{ color: "#EF4444", textAlign: "center" }}>{error}</Text>
+            <Text style={{ color: "#EF4444", textAlign: "center" }}>
+              {error}
+            </Text>
+            <TouchableOpacity
+              onPress={onRefresh}
+              style={{
+                marginTop: 20,
+                backgroundColor: "#007AFF",
+                paddingHorizontal: 24,
+                paddingVertical: 12,
+                borderRadius: 12,
+              }}
+            >
+              <Text style={{ color: "#FFFFFF", fontWeight: "700" }}>
+                Thử lại
+              </Text>
+            </TouchableOpacity>
           </View>
-        ) : prediction && parsedAdvice ? (
+        ) : prediction ? (
           <>
             {/* Hero Header with Gradient */}
             <LinearGradient
@@ -254,7 +211,9 @@ export default function PredictionScreen() {
                       marginBottom: 2,
                     }}
                   >
-                    Phân tích AI
+                    {prediction.model_info?.ai_model?.includes("v2")
+                      ? "FloodMLP v2"
+                      : "Phân tích AI"}
                   </Text>
                   <Text
                     style={{
@@ -268,62 +227,301 @@ export default function PredictionScreen() {
                   </Text>
                 </View>
               </View>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: "rgba(255,255,255,0.15)",
-                  alignSelf: "flex-start",
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 20,
-                }}
-              >
-                <Ionicons
-                  name="time-outline"
-                  size={12}
-                  color="rgba(255,255,255,0.9)"
-                  style={{ marginRight: 6 }}
-                />
-                <Text
+
+              {/* Timestamp + Admin Level badges */}
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <View
                   style={{
-                    fontSize: 12,
-                    color: "rgba(255,255,255,0.9)",
-                    fontWeight: "600",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: "rgba(255,255,255,0.15)",
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 20,
                   }}
                 >
-                  {new Date(prediction.timestamp).toLocaleString("vi-VN")}
-                </Text>
+                  <Ionicons
+                    name="time-outline"
+                    size={12}
+                    color="rgba(255,255,255,0.9)"
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: "rgba(255,255,255,0.9)",
+                      fontWeight: "600",
+                    }}
+                  >
+                    {prediction.timestamp}
+                  </Text>
+                </View>
+                {prediction.model_info?.confidence_level && (
+                  <View
+                    style={{
+                      backgroundColor: "rgba(16,185,129,0.25)",
+                      paddingHorizontal: 10,
+                      paddingVertical: 6,
+                      borderRadius: 20,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        color: "#A7F3D0",
+                        fontWeight: "700",
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      {prediction.model_info.confidence_level}
+                    </Text>
+                  </View>
+                )}
               </View>
             </LinearGradient>
 
             <View style={{ paddingHorizontal: 20, gap: 20 }}>
-              {/* Risk Overview Card */}
+              {/* Valid Period Badge */}
+              {prediction.valid_period && (
+                <ValidPeriodBadge validPeriod={prediction.valid_period} />
+              )}
+
+              {/* Dynamic Forecast Timeline Area */}
+              <View style={{ marginHorizontal: -20 }}>
+                <PredictionTimelineSlider
+                  visible={true}
+                  inline={true}
+                  selectedHorizon={selectedHorizon}
+                  onHorizonChange={setSelectedHorizon}
+                  isLoading={forecastLoading}
+                  evaluatedAt={forecastData?.evaluated_at}
+                />
+              </View>
+
+              {(() => {
+                const targetDistrict = forecastData?.districts.find(d => d.area_id === id);
+                if (!targetDistrict && selectedHorizon !== "now") return null;
+
+                const evolution = selectedHorizon === "now" 
+                  ? null 
+                  : targetDistrict?.temporal_evolution?.find(e => e.horizon === selectedHorizon);
+                  
+                const colorData = selectedHorizon === "now"
+                  ? targetDistrict?.color_timeline?.["now"]
+                  : targetDistrict?.color_timeline?.[selectedHorizon];
+
+                const precip = selectedHorizon === "now" 
+                  ? forecastData?.weather_summary?.precip_now_mm 
+                  : evolution?.precip_mm;
+
+                if (selectedHorizon !== "now" && !evolution) return null;
+
+                return (
+                  <View
+                    style={{
+                      backgroundColor: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
+                      borderRadius: 24,
+                      padding: 20,
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 8 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 16,
+                      elevation: 8,
+                      borderTopWidth: 4,
+                      borderTopColor: colorData?.hex || "#94A3B8"
+                    }}
+                  >
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                      <Text style={{ fontSize: 13, fontWeight: "700", color: isDarkColorScheme ? "#94A3B8" : "#64748B", textTransform: "uppercase" }}>
+                        Chi tiết rủi ro ({selectedHorizon === "now" ? "Hiện tại" : `+${selectedHorizon}`})
+                      </Text>
+                      {evolution && (
+                        <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: isDarkColorScheme ? "#334155" : "#F1F5F9", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}>
+                          <Ionicons name={evolution.trend === "tang" ? "trending-up" : evolution.trend === "giam" ? "trending-down" : "remove"} size={14} color={evolution.trend === "tang" ? "#EF4444" : evolution.trend === "giam" ? "#10B981" : "#F59E0B"} style={{ marginRight: 4 }} />
+                          <Text style={{ fontSize: 12, fontWeight: "600", color: isDarkColorScheme ? "#F1F5F9" : "#334155" }}>
+                            {evolution.trend === "tang" ? "Tăng" : evolution.trend === "giam" ? "Giảm" : "Ổn định"}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 20 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 12, color: isDarkColorScheme ? "#94A3B8" : "#64748B", marginBottom: 4 }}>Mức độ ngập</Text>
+                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                          <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colorData?.hex || "#3B82F6", marginRight: 8 }} />
+                          <Text style={{ fontSize: 16, fontWeight: "800", color: colorData?.hex || (isDarkColorScheme ? "#F1F5F9" : "#1F2937") }}>
+                            {selectedHorizon === "now" ? prediction.ensemble_prediction.risk_level : evolution?.risk_level}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={{ flex: 1, borderLeftWidth: 1, borderLeftColor: isDarkColorScheme ? "#334155" : "#E2E8F0", paddingLeft: 16 }}>
+                         <Text style={{ fontSize: 12, color: isDarkColorScheme ? "#94A3B8" : "#64748B", marginBottom: 4 }}>Khả năng xảy ra</Text>
+                         <Text style={{ fontSize: 16, fontWeight: "800", color: isDarkColorScheme ? "#F1F5F9" : "#334155" }}>
+                           {((selectedHorizon === "now" ? prediction.ensemble_prediction.probability : evolution?.probability) || 0) * 100}%
+                         </Text>
+                      </View>
+                    </View>
+
+                    {precip !== undefined && precip !== null && (
+                      <View style={{ backgroundColor: isDarkColorScheme ? "#0F172A" : "#F8FAFC", borderRadius: 12, padding: 12, flexDirection: "row", alignItems: "center" }}>
+                        <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(59, 130, 246, 0.15)", alignItems: "center", justifyContent: "center", marginRight: 12 }}>
+                          <Ionicons name="rainy" size={18} color="#3B82F6" />
+                        </View>
+                        <View>
+                          <Text style={{ fontSize: 12, color: isDarkColorScheme ? "#94A3B8" : "#64748B" }}>Lượng mưa dị kiến</Text>
+                          <Text style={{ fontSize: 14, fontWeight: "700", color: isDarkColorScheme ? "#F1F5F9" : "#0F172A", marginTop: 2 }}>{precip} mm</Text>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+                );
+              })()}
+
+              {/* Risk Overview Card — uses structured ensemble data */}
               <RiskOverviewCard
-                riskLevel={parsedAdvice.riskLevel}
-                riskPercentage={parsedAdvice.riskPercentage}
-                riskLabel={parsedAdvice.riskLabel}
+                probability={prediction.ensemble_prediction.probability}
+                riskLevel={prediction.ensemble_prediction.risk_level}
+                recommendation={prediction.ensemble_prediction.recommendation}
+                confidence={prediction.ensemble_prediction.confidence}
+                confidenceScore={prediction.ensemble_prediction.confidence_score}
+                modelAgreementScore={prediction.ensemble_prediction.model_agreement_score}
+                uncertaintyLevel={prediction.ensemble_prediction.uncertainty_level}
               />
 
-              {/* Key Factors Card */}
-              <FactorsCard
-                slope={parsedAdvice.factors.slope}
-                saturation={parsedAdvice.factors.saturation}
-                historySimilarity={parsedAdvice.factors.historySimilarity}
-              />
-
-              {/* Recommendations Card */}
-              {parsedAdvice.recommendations.length > 0 && (
-                <RecommendationsCard
-                  recommendations={parsedAdvice.recommendations}
+              {/* Contributing Factors — from AI engine output */}
+              {prediction.ai_engine_output?.contribution_scores && (
+                <FactorsCard
+                  contributionScores={{
+                    intensity: prediction.ai_engine_output.contribution_scores.intensity ?? 0,
+                    saturation: prediction.ai_engine_output.contribution_scores.saturation ?? 0,
+                    accumulation: prediction.ai_engine_output.contribution_scores.accumulation ?? 0,
+                    topography: prediction.ai_engine_output.contribution_scores.topography ?? 0,
+                    hydrology: prediction.ai_engine_output.contribution_scores.hydrology ?? 0,
+                  }}
                 />
               )}
 
-              {/* Conclusion Card */}
-              <ConclusionCard
-                icon={parsedAdvice.conclusion.icon}
-                text={parsedAdvice.conclusion.text}
-              />
+              {/* Impact Assessment */}
+              {prediction.impact_assessment && (
+                <ImpactAssessmentCard impact={prediction.impact_assessment} />
+              )}
+
+              {/* AI Consultant Advice */}
+              {prediction.ai_consultant_advice && (
+                <AiConsultantCard advice={prediction.ai_consultant_advice} />
+              )}
+
+              {/* Action Plan */}
+              {prediction.action_plan && (
+                <ActionPlanCard actionPlan={prediction.action_plan} />
+              )}
+
+              {/* Ensemble Details (Model info, confidence breakdown, data quality) */}
+              {prediction.model_info && prediction.confidence_breakdown && prediction.data_quality && (
+                <EnsembleDetailsCard
+                  modelInfo={prediction.model_info}
+                  confidenceBreakdown={prediction.confidence_breakdown}
+                  dataQuality={prediction.data_quality}
+                  weightingStrategy={prediction.weighting_strategy}
+                  aiProbability={prediction.ai_engine_output?.probability ?? 0}
+                  physicsProbability={prediction.physics_engine_output?.probability ?? 0}
+                />
+              )}
+
+              {/* Interpretability explanation */}
+              {prediction.interpretability?.explanation && (
+                <View
+                  style={{
+                    backgroundColor: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
+                    borderRadius: 20,
+                    padding: 16,
+                    borderLeftWidth: 4,
+                    borderLeftColor: "#007AFF",
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 12,
+                    elevation: 4,
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginBottom: 10,
+                    }}
+                  >
+                    <Ionicons
+                      name="bulb"
+                      size={18}
+                      color="#007AFF"
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "800",
+                        color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
+                      }}
+                    >
+                      Giải Thích AI
+                    </Text>
+                  </View>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "500",
+                      color: isDarkColorScheme ? "#CBD5E1" : "#475569",
+                      lineHeight: 22,
+                    }}
+                  >
+                    {prediction.interpretability.explanation}
+                  </Text>
+                  {prediction.interpretability.historical_similarity && (
+                    <View
+                      style={{
+                        marginTop: 12,
+                        backgroundColor: isDarkColorScheme ? "#334155" : "#F8FAFC",
+                        borderRadius: 12,
+                        padding: 12,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          fontWeight: "700",
+                          color: isDarkColorScheme ? "#94A3B8" : "#64748B",
+                          textTransform: "uppercase",
+                          letterSpacing: 0.5,
+                          marginBottom: 6,
+                        }}
+                      >
+                        Sự kiện lịch sử tương tự
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          fontWeight: "600",
+                          color: isDarkColorScheme ? "#E2E8F0" : "#334155",
+                        }}
+                      >
+                        {prediction.interpretability.historical_similarity.event_name}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: "500",
+                          color: isDarkColorScheme ? "#94A3B8" : "#64748B",
+                          marginTop: 4,
+                        }}
+                      >
+                        Tương đồng: {(prediction.interpretability.historical_similarity.similarity_score * 100).toFixed(0)}%
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
             </View>
           </>
         ) : null}

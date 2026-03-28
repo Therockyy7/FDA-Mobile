@@ -3,6 +3,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AreaService } from "~/features/areas/services/area.service";
 import {
+  AdminArea,
+  AdminAreaParams,
+} from "~/features/areas/types/admin-area.types";
+import {
   CommunityService,
   NearbyFloodReport,
   NearbyFloodReportsParams,
@@ -43,6 +47,8 @@ export interface MapState {
   floodSeverity: FloodSeverityGeoJSON | null;
   areas: AreaWithStatus[];
   communityReports: NearbyFloodReport[];
+  adminAreas: AdminArea[];
+  adminAreasLoading: boolean;
   loading: boolean;
   floodLoading: boolean;
   areasLoading: boolean;
@@ -55,6 +61,8 @@ const initialState: MapState = {
   floodSeverity: null,
   areas: [],
   communityReports: [],
+  adminAreas: [],
+  adminAreasLoading: false,
   loading: false,
   floodLoading: false,
   areasLoading: false,
@@ -202,11 +210,30 @@ export const fetchAreas = createAsyncThunk<
       }),
     );
 
-    // console.log(`✅ Loaded ${areasWithStatus.length} areas with status`);
     return areasWithStatus;
   } catch (error: any) {
     console.error("Failed to fetch areas:", error);
     return rejectWithValue(error?.message || "Không thể tải dữ liệu vùng");
+  }
+});
+
+/**
+ * Fetch administrative areas (districts/wards) for map overlay
+ */
+export const fetchAdminAreas = createAsyncThunk<
+  { administrativeAreas: AdminArea[]; totalCount: number },
+  AdminAreaParams | undefined,
+  { rejectValue: string }
+>("map/fetchAdminAreas", async (params, { rejectWithValue }) => {
+  try {
+    const response = await AreaService.getAdminAreas(params ?? { pageNumber: 1, pageSize: 100 });
+    return {
+      administrativeAreas: response.administrativeAreas,
+      totalCount: response.totalCount,
+    };
+  } catch (error: any) {
+    console.error("Failed to fetch admin areas:", error);
+    return rejectWithValue(error?.message || "Failed to fetch admin areas");
   }
 });
 
@@ -414,8 +441,6 @@ const mapSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchFloodSeverity.fulfilled, (state, action) => {
-        // console.log("✅ Flood severity loaded:", action.payload);
-
         // Merge: keep existing stations, update/add from new response
         if (!state.floodSeverity) {
           state.floodSeverity = action.payload;
@@ -480,6 +505,19 @@ const mapSlice = createSlice({
       .addCase(fetchAreas.rejected, (state, action) => {
         state.areasLoading = false;
         state.error = action.payload || "Lỗi tải dữ liệu vùng";
+      });
+
+    // Fetch admin areas
+    builder
+      .addCase(fetchAdminAreas.pending, (state) => {
+        state.adminAreasLoading = true;
+      })
+      .addCase(fetchAdminAreas.fulfilled, (state, action) => {
+        state.adminAreas = action.payload.administrativeAreas;
+        state.adminAreasLoading = false;
+      })
+      .addCase(fetchAdminAreas.rejected, (state) => {
+        state.adminAreasLoading = false;
       });
 
     // Fetch nearby flood reports

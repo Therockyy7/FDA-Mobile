@@ -12,44 +12,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import type { LatLng } from "../../types/safe-route.types";
+import type { TransportMode, RouteDirectionPanelProps } from "../../types/routing.types";
 import { PlaceSearchSheet } from "./PlaceSearchSheet";
 
-export type TransportMode = "car" | "motorbike" | "bicycle" | "walk";
-
-interface RouteDirectionPanelProps {
-  visible: boolean;
-  onClose: () => void;
-
-  // Origin
-  originText: string;
-  onOriginChange: (value: string) => void;
-  isUsingGPSOrigin: boolean;
-  onUseGPSAsOrigin: () => void;
-  onPickOriginOnMap: () => void;
-  hasOriginCoord: boolean;
-  onOriginPlaceSelected?: (coord: LatLng, label: string) => void;
-
-  // Destination
-  destinationText: string;
-  onDestinationChange: (value: string) => void;
-  isUsingGPSDest: boolean;
-  onUseGPSAsDest: () => void;
-  onPickDestinationOnMap: () => void;
-  hasDestinationCoord: boolean;
-  onDestinationPlaceSelected?: (coord: LatLng, label: string) => void;
-
-  // Swap
-  onSwap: () => void;
-
-  // Transport
-  transportMode: TransportMode;
-  onModeChange: (mode: TransportMode) => void;
-
-  // Action
-  onFindRoute: () => void;
-  isLoading?: boolean;
-  error?: string | null;
-}
+export type { TransportMode };
 
 export function RouteDirectionPanel({
   visible,

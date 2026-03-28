@@ -16,6 +16,7 @@ import { HomeHeader } from "~/features/home/components/HomeHeader";
 import { WeatherInsightsSection } from "~/features/home/components/WeatherInsightsSection";
 import { MOCK_ALERT } from "~/features/home/constants/home-data";
 import { useHomeWeatherData } from "~/features/home/hooks/useHomeWeatherData";
+import { DistrictsForecastCard } from "~/features/prediction/components/DistrictsForecastCard";
 
 export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
@@ -82,6 +83,9 @@ export default function HomeScreen() {
             aiRisk={aiRisk}
           />
         ) : null}
+
+        {/* ═══ DISTRICTS FORECAST SECTION ═══ */}
+        <DistrictsForecastCard />
 
         {/* ═══ COMMUNITY SECTION ═══ */}
         <CommunityBanner />

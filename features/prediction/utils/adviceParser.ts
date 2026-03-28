@@ -152,7 +152,7 @@ export function getRiskConfig(level: ParsedAdvice["riskLevel"]) {
         color: "#EF4444",
         bgColor: "rgba(239, 68, 68, 0.1)",
         borderColor: "#EF4444",
-        gradientColors: ["#DC2626", "#EF4444"],
+        gradientColors: ["#DC2626", "#EF4444"] as const,
         icon: "alert-circle",
         label: "NGUY CẤP",
       };
@@ -161,7 +161,7 @@ export function getRiskConfig(level: ParsedAdvice["riskLevel"]) {
         color: "#F97316",
         bgColor: "rgba(249, 115, 22, 0.1)",
         borderColor: "#F97316",
-        gradientColors: ["#EA580C", "#F97316"],
+        gradientColors: ["#EA580C", "#F97316"] as const,
         icon: "alert-triangle",
         label: "CAO",
       };
@@ -170,7 +170,7 @@ export function getRiskConfig(level: ParsedAdvice["riskLevel"]) {
         color: "#F59E0B",
         bgColor: "rgba(245, 158, 11, 0.1)",
         borderColor: "#F59E0B",
-        gradientColors: ["#D97706", "#F59E0B"],
+        gradientColors: ["#D97706", "#F59E0B"] as const,
         icon: "alert-circle",
         label: "TRUNG BÌNH",
       };
@@ -179,7 +179,7 @@ export function getRiskConfig(level: ParsedAdvice["riskLevel"]) {
         color: "#10B981",
         bgColor: "rgba(16, 185, 129, 0.1)",
         borderColor: "#10B981",
-        gradientColors: ["#059669", "#10B981"],
+        gradientColors: ["#059669", "#10B981"] as const,
         icon: "shield-checkmark",
         label: "THẤP",
       };

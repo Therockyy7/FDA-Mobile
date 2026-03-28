@@ -11,7 +11,6 @@ import {
     REHYDRATE,
 } from "redux-persist";
 
-import adminAreaReducer from "../features/areas/stores/admin-area.slice";
 import authReducer, { AuthState } from "../features/auth/stores/auth.slice";
 import mapReducer, { MapState } from "../features/map/stores/map.slice";
 
@@ -37,7 +36,6 @@ const mapPersistConfig = {
 const rootReducer = combineReducers({
   auth: persistReducer<AuthState>(authPersistConfig, authReducer),
   map: persistReducer<MapState>(mapPersistConfig, mapReducer),
-  adminAreas: adminAreaReducer,
 });
 
 export const store = configureStore({

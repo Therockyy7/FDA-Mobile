@@ -369,7 +369,7 @@ export function useMapScreen(ctx: MapScreenCtx) {
   const fetchMarkersInViewPort = useMemo(
     () =>
       debounce((newRegion: Region) => {
-        if (!settings.overlays.flood && !settings.overlays.communityReports) return;
+        if (!settings?.overlays?.flood && !settings?.overlays?.communityReports) return;
 
         const currentZoomMode = getZoomMode(newRegion.latitudeDelta);
         const zoomModeChanged = currentZoomMode !== lastZoomModeRef.current;
@@ -380,10 +380,10 @@ export function useMapScreen(ctx: MapScreenCtx) {
         loadedBoundsRef.current = bufferedBounds;
         lastZoomModeRef.current = currentZoomMode;
 
-        if (settings.overlays.flood) {
+        if (settings?.overlays?.flood) {
           refreshFloodSeverity(bufferedBounds);
         }
-        if (settings.overlays.communityReports) {
+        if (settings?.overlays?.communityReports) {
           const radiusMeters = (newRegion.latitudeDelta / 2) * 111320;
           refreshNearbyFloodReports({
             latitude: newRegion.latitude,
@@ -393,7 +393,7 @@ export function useMapScreen(ctx: MapScreenCtx) {
           });
         }
       }, 400),
-    [refreshFloodSeverity, refreshNearbyFloodReports, settings.overlays.flood, settings.overlays.communityReports],
+    [refreshFloodSeverity, refreshNearbyFloodReports, settings?.overlays?.flood, settings?.overlays?.communityReports],
   );
 
   const handleRegionChange = useCallback(

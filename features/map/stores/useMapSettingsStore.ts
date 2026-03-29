@@ -34,7 +34,7 @@ export const useMapSettingsStore = create<MapSettingsStore>()(
   persist(
     (set) => ({
       settings: DEFAULT_MAP_SETTINGS,
-      settingsLoaded: false,
+      settingsLoaded: true,
 
       setSettings: (settings) => set({ settings, settingsLoaded: true }),
 

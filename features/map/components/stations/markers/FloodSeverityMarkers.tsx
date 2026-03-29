@@ -54,7 +54,7 @@ export function FloodSeverityMarkers({
         return true;
       },
     );
-  }, [settings.overlays.flood, floodSeverity?.features]);
+  }, [settings?.overlays?.flood, floodSeverity?.features]);
 
   // Don't render if no markers (keep stale markers visible during re-fetch)
   if (markers.length === 0) {

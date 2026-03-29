@@ -10,20 +10,7 @@ interface ZoomControlsProps {
 
 export function ZoomControls({ onZoomIn, onZoomOut }: ZoomControlsProps) {
   return (
-    <View
-      style={{
-        backgroundColor: "white",
-        borderRadius: 20,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.12,
-        shadowRadius: 12,
-        elevation: 6,
-        overflow: "hidden",
-        borderWidth: 1,
-        borderColor: "#F1F5F9",
-      }}
-    >
+    <>
       {/* Zoom In */}
       <TouchableOpacity
         onPress={onZoomIn}
@@ -53,6 +40,6 @@ export function ZoomControls({ onZoomIn, onZoomOut }: ZoomControlsProps) {
       >
         <Ionicons name="remove" size={24} color="#1F2937" />
       </TouchableOpacity>
-    </View>
+    </>
   );
 }

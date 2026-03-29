@@ -1,5 +1,5 @@
 // features/map/components/controls/MapControls.tsx
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { AnimatePresence, MotiView } from "moti";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
@@ -65,6 +65,18 @@ export function MapControls({
                 animate={{ opacity: 1, scale: 1, translateY: 0 }}
                 exit={{ opacity: 0, scale: 0.8, translateY: 10 }}
                 transition={{ type: "timing", duration: 300, delay: 100 }}
+                style={{
+                  backgroundColor: "white",
+                  borderRadius: 20,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.12,
+                  shadowRadius: 12,
+                  elevation: 6,
+                  overflow: "hidden",
+                  borderWidth: 1,
+                  borderColor: "#F1F5F9",
+                }}
               >
                 {/* 3D Toggle */}
                 {onToggle3D && (
@@ -82,8 +94,8 @@ export function MapControls({
                       }}
                       activeOpacity={0.7}
                     >
-                      <Ionicons
-                        name="cube"
+                      <MaterialCommunityIcons
+                        name="rotate-3d-variant"
                         size={22}
                         color={is3DEnabled ? "white" : "#1F2937"}
                       />

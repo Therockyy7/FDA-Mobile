@@ -2,6 +2,7 @@
 // Convenience wrapper that aggregates all map data sources.
 // Delegates to flood/ hooks for flood data, plus area queries.
 
+import { useEffect, useRef } from "react";
 import type { NearbyFloodReportsParams } from "~/features/community/services/community.service";
 import { useFloodLayerSettings, useFloodSignalR } from "./flood";
 import { useFloodData } from "./flood/useFloodData";
@@ -37,10 +38,23 @@ export function useMapData() {
   useFloodSignalR(settings?.overlays?.flood ?? false);
 
   // Flood severity data (REST + SignalR real-time merge)
-  const { floodSeverity, isLoading: floodLoading } = useFloodData(
-    null,
-    settings?.overlays?.flood ?? false,
+  // When settings is undefined (before Zustand hydrate), fallback to true so API is called.
+  // FloodSeverityMarkers renders only when settings?.overlays?.flood === true.
+  const { floodSeverity, isLoading: floodLoading, refetch: refetchFloodSeverity } = useFloodData(
+    undefined,
+    settings?.overlays?.flood ?? true,
   );
+
+  // Force refetch when flood overlay becomes enabled (settings loads from undefined → true)
+  // React Query doesn't auto-retry when `enabled` goes false→true, so we need this.
+  const hasFetchedRef = useRef(false);
+  useEffect(() => {
+    const isFloodEnabled = settings?.overlays?.flood ?? true;
+    if (isFloodEnabled && !hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      refetchFloodSeverity();
+    }
+  }, [settings?.overlays?.flood, refetchFloodSeverity]);
 
   // Community reports (initial load at Da Nang center)
   const communityReportsQuery = useCommunityReportsQuery(

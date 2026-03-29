@@ -96,10 +96,10 @@ function mergeRealtimeIntoGeoJSON(
 }
 
 export function useFloodData(
-  params: FloodStatusParams | null,
+  params: FloodStatusParams | null | undefined,
   enabled: boolean,
 ) {
-  const { data: restData, isLoading, isFetching } = useFloodSeverityQuery(params, enabled);
+  const { data: restData, isLoading, isFetching, refetch } = useFloodSeverityQuery(params ?? null, enabled);
   const realtimeUpdates = useFloodRealtimeStore((s) => s.updates);
 
   const floodSeverity = useMemo(
@@ -107,5 +107,5 @@ export function useFloodData(
     [restData, realtimeUpdates],
   );
 
-  return { floodSeverity, isLoading, isFetching };
+  return { floodSeverity, isLoading, isFetching, refetch };
 }

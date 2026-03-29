@@ -1,8 +1,7 @@
 // features/map/hooks/flood/useFloodLayerSettings.ts
-// Map layer settings — reads from Zustand, saves via React Query mutation.
-// Replaces Redux useSelector(state.map.*) usage.
+// Map layer settings — reads from Zustand (persisted), syncs to backend when authenticated.
+// Guest: Zustand → AsyncStorage (via persist). Authenticated: also sync to backend API.
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef } from "react";
 import { store } from "~/app/store";
@@ -17,12 +16,12 @@ import { AREAS_QUERY_KEY } from "../queries/useAreasQuery";
 import { COMMUNITY_REPORTS_QUERY_KEY } from "../queries/useCommunityReportsQuery";
 import { FLOOD_SEVERITY_QUERY_KEY } from "../queries/useFloodSeverityQuery";
 
-const GUEST_MAP_SETTINGS_KEY = "fda_map_settings";
 const SAVE_DEBOUNCE_MS = 500;
 
 export function useFloodLayerSettings() {
   const queryClient = useQueryClient();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initializedRef = useRef(false);
 
   const isAuthenticated = store.getState().auth?.status === "authenticated";
 
@@ -33,52 +32,37 @@ export function useFloodLayerSettings() {
   const updateOverlay = useMapSettingsStore((s) => s.updateOverlay);
   const updateBaseMap = useMapSettingsStore((s) => s.updateBaseMap);
   const updateOpacity = useMapSettingsStore((s) => s.updateOpacity);
-  const markLoaded = useMapSettingsStore((s) => s.markLoaded);
 
-  // Load settings on first mount (once)
+  // Load remote preferences on first mount when authenticated
   useEffect(() => {
-    if (settingsLoaded) return;
+    if (!isAuthenticated) return;
+    if (settings != null) return; // already have local settings (from persist or defaults)
+    if (initializedRef.current) return;
+    initializedRef.current = true;
 
-    const loadSettings = async () => {
+    const loadRemotePreferences = async () => {
       try {
-        if (isAuthenticated) {
-          const remoteSettings = await MapService.getMapLayerPreferences();
-          setSettings(remoteSettings);
-        } else {
-          const stored = await AsyncStorage.getItem(GUEST_MAP_SETTINGS_KEY);
-          if (stored) {
-            const parsed = JSON.parse(stored) as MapLayerSettings;
-            setSettings({
-              ...DEFAULT_MAP_SETTINGS,
-              ...parsed,
-              overlays: { ...DEFAULT_MAP_SETTINGS.overlays, ...(parsed.overlays ?? {}) },
-              opacity: { ...DEFAULT_MAP_SETTINGS.opacity, ...(parsed.opacity ?? {}) },
-            });
-          } else {
-            markLoaded();
-          }
-        }
+        const remoteSettings = await MapService.getMapLayerPreferences();
+        setSettings(remoteSettings);
       } catch {
-        markLoaded();
+        // Remote load failed — keep local persisted settings
       }
     };
 
-    loadSettings();
-  }, [isAuthenticated, settingsLoaded]);
+    loadRemotePreferences();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]); // setSettings/settings intentionally omitted — initializedRef prevents double-run
 
-  // Debounced save to backend or AsyncStorage
-  const debouncedSave = useCallback(
+  // Debounced save to backend when authenticated
+  const debouncedSaveToBackend = useCallback(
     (newSettings: MapLayerSettings) => {
+      if (!isAuthenticated) return;
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(async () => {
         try {
-          if (isAuthenticated) {
-            await MapService.updateMapLayerPreferences(newSettings);
-          } else {
-            await AsyncStorage.setItem(GUEST_MAP_SETTINGS_KEY, JSON.stringify(newSettings));
-          }
+          await MapService.updateMapLayerPreferences(newSettings);
         } catch {
-          // Save failure is non-critical — settings are already in Zustand
+          // Save failure is non-critical — settings are already persisted locally
         }
       }, SAVE_DEBOUNCE_MS);
     },
@@ -87,35 +71,46 @@ export function useFloodLayerSettings() {
 
   const toggleOverlay = useCallback(
     (layer: keyof MapLayerSettings["overlays"]) => {
-      const newValue = !settings.overlays[layer];
+      const currentValue =
+        settings?.overlays?.[layer] ?? DEFAULT_MAP_SETTINGS.overlays[layer];
+      const newValue = !currentValue;
       updateOverlay(layer, newValue);
       const newSettings = {
-        ...settings,
-        overlays: { ...settings.overlays, [layer]: newValue },
+        ...(settings ?? DEFAULT_MAP_SETTINGS),
+        overlays: {
+          ...(settings?.overlays ?? DEFAULT_MAP_SETTINGS.overlays),
+          [layer]: newValue,
+        },
       };
-      debouncedSave(newSettings);
+      debouncedSaveToBackend(newSettings);
     },
-    [settings, updateOverlay, debouncedSave],
+    [settings, updateOverlay, debouncedSaveToBackend],
   );
 
   const setBaseMap = useCallback(
     (baseMap: MapLayerSettings["baseMap"]) => {
       updateBaseMap(baseMap);
-      debouncedSave({ ...settings, baseMap });
+      debouncedSaveToBackend({
+        ...(settings ?? DEFAULT_MAP_SETTINGS),
+        baseMap,
+      });
     },
-    [settings, updateBaseMap, debouncedSave],
+    [settings, updateBaseMap, debouncedSaveToBackend],
   );
 
   const setOpacity = useCallback(
     (layer: keyof MapLayerSettings["opacity"], value: number) => {
       const clamped = Math.max(0, Math.min(100, value));
       updateOpacity(layer, clamped);
-      debouncedSave({
-        ...settings,
-        opacity: { ...settings.opacity, [layer]: clamped },
+      debouncedSaveToBackend({
+        ...(settings ?? DEFAULT_MAP_SETTINGS),
+        opacity: {
+          ...(settings?.opacity ?? DEFAULT_MAP_SETTINGS.opacity),
+          [layer]: clamped,
+        },
       });
     },
-    [settings, updateOpacity, debouncedSave],
+    [settings, updateOpacity, debouncedSaveToBackend],
   );
 
   const refreshFloodSeverity = useCallback(
@@ -144,7 +139,7 @@ export function useFloodLayerSettings() {
     settings,
     settingsLoaded,
     isAuthenticated,
-    loading: !settingsLoaded,
+    loading: false, // settings always has a value (DEFAULT or persisted) — no loading state needed
     error: null,
     toggleOverlay,
     setBaseMap,

@@ -20,7 +20,7 @@ export function FloodZonePolygons({ floodSeverity }: FloodZonePolygonsProps) {
     return floodSeverity.features.filter(
       (f): f is FloodZoneFeature => isPolygonFeature(f)
     );
-  }, [settings.overlays.flood, floodSeverity?.features]);
+  }, [settings?.overlays?.flood, floodSeverity?.features]);
 
   if (zones.length === 0) return null;
 

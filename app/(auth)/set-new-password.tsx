@@ -97,7 +97,7 @@ export default function SetNewPasswordScreen() {
   };
 
   const colors = {
-    background: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
+    background: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
     cardBg: isDarkColorScheme
       ? "rgba(30, 58, 95, 0.5)"
       : "rgba(255, 255, 255, 0.9)",
@@ -116,7 +116,7 @@ export default function SetNewPasswordScreen() {
       {/* Background Gradient */}
       <LinearGradient
         colors={
-          isDarkColorScheme ? ["#1E3A5F", "#0F172A"] : ["#10B981", "#059669"]
+          isDarkColorScheme ? ["#1E3A5F", "#0B1A33"] : ["#10B981", "#059669"]
         }
         style={{ position: "absolute", top: 0, left: 0, right: 0, height: 280 }}
       />

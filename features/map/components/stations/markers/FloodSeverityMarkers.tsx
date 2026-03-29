@@ -23,7 +23,7 @@ export function FloodSeverityMarkers({
 
   // Memoize and filter valid markers to prevent unnecessary re-renders
   const markers = useMemo(() => {
-    if (!settings.overlays.flood || !floodSeverity?.features?.length) {
+    if (!settings?.overlays?.flood || !floodSeverity?.features?.length) {
       return [];
     }
 

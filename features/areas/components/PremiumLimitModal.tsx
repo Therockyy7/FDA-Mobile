@@ -95,7 +95,7 @@ export function PremiumLimitModal({
           <View
             style={[
               styles.progressContainer,
-              { backgroundColor: isDarkColorScheme ? "#0F172A" : "#F3F4F6" },
+              { backgroundColor: isDarkColorScheme ? "#0B1A33" : "#F3F4F6" },
             ]}
           >
             <LinearGradient

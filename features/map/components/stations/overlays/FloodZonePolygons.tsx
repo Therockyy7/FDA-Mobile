@@ -16,7 +16,7 @@ export function FloodZonePolygons({ floodSeverity }: FloodZonePolygonsProps) {
   const settings = useMapSettings();
 
   const zones = useMemo(() => {
-    if (!settings.overlays.flood || !floodSeverity?.features?.length) return [];
+    if (!settings?.overlays?.flood || !floodSeverity?.features?.length) return [];
     return floodSeverity.features.filter(
       (f): f is FloodZoneFeature => isPolygonFeature(f)
     );

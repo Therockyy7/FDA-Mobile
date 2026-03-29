@@ -178,7 +178,7 @@ export default function ProfileScreen() {
                   className="px-5 py-2.5 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-100 dark:border-slate-700 flex-row items-center gap-2"
                   onPress={() => {}}
                 >
-                  <Ionicons name="pencil" size={16} color="#0F172A" className="dark:color-white" style={{ color: '#64748B' }} />
+                  <Ionicons name="pencil" size={16} color="#0B1A33" className="dark:color-white" style={{ color: '#64748B' }} />
                   <Text className="text-sm font-bold text-slate-800 dark:text-white">Sửa hồ sơ</Text>
                 </TouchableOpacity>
              ): (
@@ -331,9 +331,9 @@ export default function ProfileScreen() {
           <Ionicons
             name="chevron-back"
             size={22}
-            color="#0F172A"
+            color="#0B1A33"
             className="dark:color-white"
-            style={/* @ts-ignore */ { color: "#0F172A" }}
+            style={/* @ts-ignore */ { color: "#0B1A33" }}
           />
         </TouchableOpacity>
         <Text className="text-lg font-bold text-slate-900 dark:text-white">
@@ -346,9 +346,9 @@ export default function ProfileScreen() {
           <Ionicons
             name="ellipsis-horizontal"
             size={22}
-            color="#0F172A"
+            color="#0B1A33"
             className="dark:color-white"
-            style={/* @ts-ignore */ { color: "#0F172A" }}
+            style={/* @ts-ignore */ { color: "#0B1A33" }}
           />
         </TouchableOpacity>
       </View>

@@ -1,0 +1,43 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Force LF for specific file types
+*.{js,json,ts,tsx,jsx,css,html,xml} text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.mp4 binary
+*.mp3 binary
+*.wav binary
+*.ttf binary
+*.otf binary
+*.eot binary
+*.woff binary
+*.woff2 binary
+*.zip binary
+*.apk binary
+*.aab binary
+
+# Keep gradle files as-is
+*.gradle text eol=lf
+gradlew text eol=lf
+*.sh text eol=lf
+
+# Android native files
+*.xml text eol=lf
+*.java text eol=lf
+*.kt text eol=lf
+*.swift text eol=lf
+*.m text eol=lf
+*.h text eol=lf
+*.cpp text eol=lf
+*.c text eol=lf
+*.hpp text eol=lf
+*.cmake text eol=lf
+CMakeLists.txt text eol=lf
+Makefile text eol=lf

@@ -60,7 +60,7 @@ export default function PhonePasswordScreen() {
   };
 
   const colors = {
-    background: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
+    background: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
     inputBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
     text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
     subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
@@ -73,7 +73,7 @@ export default function PhonePasswordScreen() {
       
       {/* Background Gradient */}
       <LinearGradient
-        colors={isDarkColorScheme ? ["#1E3A5F", "#0F172A"] : ["#8B5CF6", "#6366F1"]}
+        colors={isDarkColorScheme ? ["#1E3A5F", "#0B1A33"] : ["#8B5CF6", "#6366F1"]}
         style={{ position: "absolute", top: 0, left: 0, right: 0, height: 280 }}
       />
 

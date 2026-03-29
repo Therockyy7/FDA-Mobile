@@ -5,7 +5,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef } from "react";
-import { useShallow } from "zustand/react/shallow";
 import { store } from "~/app/store";
 import type { NearbyFloodReportsParams } from "~/features/community/services/community.service";
 import { MapService } from "../../services/map.service";
@@ -27,18 +26,14 @@ export function useFloodLayerSettings() {
 
   const isAuthenticated = store.getState().auth?.status === "authenticated";
 
-  // Read from Zustand store — useShallow ensures stable object reference
-  const settings = useMapSettingsStore(useShallow((s) => s.settings));
+  // Individual selectors — stable references, no useShallow needed
+  const settings = useMapSettingsStore((s) => s.settings);
   const settingsLoaded = useMapSettingsStore((s) => s.settingsLoaded);
-  const storeActions = useMapSettingsStore(
-    useShallow((s) => ({
-      setSettings: s.setSettings,
-      updateOverlay: s.updateOverlay,
-      updateBaseMap: s.updateBaseMap,
-      updateOpacity: s.updateOpacity,
-      markLoaded: s.markLoaded,
-    })),
-  );
+  const setSettings = useMapSettingsStore((s) => s.setSettings);
+  const updateOverlay = useMapSettingsStore((s) => s.updateOverlay);
+  const updateBaseMap = useMapSettingsStore((s) => s.updateBaseMap);
+  const updateOpacity = useMapSettingsStore((s) => s.updateOpacity);
+  const markLoaded = useMapSettingsStore((s) => s.markLoaded);
 
   // Load settings on first mount (once)
   useEffect(() => {
@@ -48,23 +43,23 @@ export function useFloodLayerSettings() {
       try {
         if (isAuthenticated) {
           const remoteSettings = await MapService.getMapLayerPreferences();
-          storeActions.setSettings(remoteSettings);
+          setSettings(remoteSettings);
         } else {
           const stored = await AsyncStorage.getItem(GUEST_MAP_SETTINGS_KEY);
           if (stored) {
             const parsed = JSON.parse(stored) as MapLayerSettings;
-            storeActions.setSettings({
+            setSettings({
               ...DEFAULT_MAP_SETTINGS,
               ...parsed,
               overlays: { ...DEFAULT_MAP_SETTINGS.overlays, ...(parsed.overlays ?? {}) },
               opacity: { ...DEFAULT_MAP_SETTINGS.opacity, ...(parsed.opacity ?? {}) },
             });
           } else {
-            storeActions.markLoaded();
+            markLoaded();
           }
         }
       } catch {
-        storeActions.markLoaded();
+        markLoaded();
       }
     };
 
@@ -93,34 +88,34 @@ export function useFloodLayerSettings() {
   const toggleOverlay = useCallback(
     (layer: keyof MapLayerSettings["overlays"]) => {
       const newValue = !settings.overlays[layer];
-      storeActions.updateOverlay(layer, newValue);
+      updateOverlay(layer, newValue);
       const newSettings = {
         ...settings,
         overlays: { ...settings.overlays, [layer]: newValue },
       };
       debouncedSave(newSettings);
     },
-    [settings, storeActions, debouncedSave],
+    [settings, updateOverlay, debouncedSave],
   );
 
   const setBaseMap = useCallback(
     (baseMap: MapLayerSettings["baseMap"]) => {
-      storeActions.updateBaseMap(baseMap);
+      updateBaseMap(baseMap);
       debouncedSave({ ...settings, baseMap });
     },
-    [settings, storeActions, debouncedSave],
+    [settings, updateBaseMap, debouncedSave],
   );
 
   const setOpacity = useCallback(
     (layer: keyof MapLayerSettings["opacity"], value: number) => {
       const clamped = Math.max(0, Math.min(100, value));
-      storeActions.updateOpacity(layer, clamped);
+      updateOpacity(layer, clamped);
       debouncedSave({
         ...settings,
         opacity: { ...settings.opacity, [layer]: clamped },
       });
     },
-    [settings, storeActions, debouncedSave],
+    [settings, updateOpacity, debouncedSave],
   );
 
   const refreshFloodSeverity = useCallback(

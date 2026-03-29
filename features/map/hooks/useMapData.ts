@@ -5,6 +5,7 @@
 import type { NearbyFloodReportsParams } from "~/features/community/services/community.service";
 import { useFloodLayerSettings, useFloodSignalR } from "./flood";
 import { useFloodData } from "./flood/useFloodData";
+import { DEFAULT_MAP_SETTINGS } from "../stores/useMapSettingsStore";
 import { useAdminAreasQuery } from "./queries/useAdminAreasQuery";
 import { useAreasQuery } from "./queries/useAreasQuery";
 import { useCommunityReportsQuery } from "./queries/useCommunityReportsQuery";
@@ -33,18 +34,18 @@ export function useMapData() {
   } = useFloodLayerSettings();
 
   // Real-time flood updates via SignalR
-  useFloodSignalR(settings.overlays.flood);
+  useFloodSignalR(settings?.overlays?.flood ?? false);
 
   // Flood severity data (REST + SignalR real-time merge)
   const { floodSeverity, isLoading: floodLoading } = useFloodData(
     null,
-    settings.overlays.flood,
+    settings?.overlays?.flood ?? false,
   );
 
   // Community reports (initial load at Da Nang center)
   const communityReportsQuery = useCommunityReportsQuery(
     DEFAULT_COMMUNITY_PARAMS,
-    settings.overlays.communityReports,
+    settings?.overlays?.communityReports ?? true,
   );
   const communityReports = communityReportsQuery.data ?? [];
 
@@ -60,7 +61,7 @@ export function useMapData() {
 
   return {
     // Settings
-    settings,
+    settings: settings ?? DEFAULT_MAP_SETTINGS,
     settingsLoaded,
     isAuthenticated,
     loading,

@@ -42,7 +42,7 @@ export function AreaCard({
     cardBorder: isDarkColorScheme ? "#334155" : "#E5E7EB",
     text: isDarkColorScheme ? "#F1F5F9" : "#111827",
     subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-    mutedBg: isDarkColorScheme ? "#0F172A" : "#F9FAFB",
+    mutedBg: isDarkColorScheme ? "#0B1A33" : "#F9FAFB",
     divider: isDarkColorScheme ? "#334155" : "#F3F4F6",
   };
 

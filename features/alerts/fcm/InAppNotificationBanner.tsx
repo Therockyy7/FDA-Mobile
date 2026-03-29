@@ -105,9 +105,9 @@ export const InAppNotificationBanner: React.FC<
   const cfg = SEVERITY_CONFIG[notification.severity] ?? SEVERITY_CONFIG.INFO;
 
   const colors = {
-    cardBg: isDarkColorScheme ? "#0F172A" : "#FFFFFF",
+    cardBg: isDarkColorScheme ? "#0B1A33" : "#FFFFFF",
     border: isDarkColorScheme ? "#1E293B" : "#E2E8F0",
-    title: isDarkColorScheme ? "#F8FAFC" : "#0F172A",
+    title: isDarkColorScheme ? "#F8FAFC" : "#0B1A33",
     body: isDarkColorScheme ? "#CBD5E1" : "#475569",
     meta: isDarkColorScheme ? "#94A3B8" : "#64748B",
     close: isDarkColorScheme ? "#CBD5E1" : "#475569",

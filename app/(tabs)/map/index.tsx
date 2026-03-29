@@ -81,7 +81,7 @@ export default function MapScreen() {
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#0F172A" }}>
+    <View style={{ flex: 1, backgroundColor: "#0B1A33" }}>
       <StatusBar
         barStyle="dark-content"
         backgroundColor="transparent"

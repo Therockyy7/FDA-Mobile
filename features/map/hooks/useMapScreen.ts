@@ -162,10 +162,10 @@ export function useMapScreen(ctx: MapScreenCtx) {
     loadedBoundsRef.current = initialBounds;
     lastZoomModeRef.current = getZoomMode(DANANG_CENTER.latitudeDelta);
 
-    if (settings.overlays.flood) {
+    if (settings?.overlays?.flood) {
       refreshFloodSeverity(initialBounds);
     }
-    if (settings.overlays.communityReports) {
+    if (settings?.overlays?.communityReports) {
       const radiusMeters = (DANANG_CENTER.latitudeDelta / 2) * 111320;
       refreshNearbyFloodReports({
         latitude: DANANG_CENTER.latitude,
@@ -176,8 +176,8 @@ export function useMapScreen(ctx: MapScreenCtx) {
     }
     refreshAreas();
   }, [
-    settings.overlays.flood,
-    settings.overlays.communityReports,
+    settings?.overlays?.flood,
+    settings?.overlays?.communityReports,
     refreshFloodSeverity,
     refreshAreas,
     refreshNearbyFloodReports,

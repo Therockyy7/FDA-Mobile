@@ -102,7 +102,7 @@ function LayerToggleSheetContent({
         >
           {/* Base Map */}
           <BaseMapSelector
-            selectedMap={settings.baseMap}
+            selectedMap={settings?.baseMap ?? "standard"}
             onChange={handleBaseMapChange}
             accentColor={colors.accent}
             textColor={colors.text}
@@ -138,7 +138,7 @@ function LayerToggleSheetContent({
                 <OverlayLayerItem
                   label="Mức ngập"
                   description="Hiển thị vùng ngập lụt"
-                  value={settings.overlays.flood}
+                  value={settings?.overlays?.flood ?? true}
                   color="#007AFF"
                   iconName="water"
                   onToggle={() => toggleOverlay("flood")}
@@ -148,11 +148,11 @@ function LayerToggleSheetContent({
                   cardBg={colors.cardBg}
                   borderColor={colors.border}
                 />
-                {settings.overlays.flood && (
+                {settings?.overlays?.flood && (
                   <View style={{ padding: 16, backgroundColor: colors.cardBg, borderBottomLeftRadius: 16, borderBottomRightRadius: 16, marginTop: -4 }}>
                     <OpacitySlider
                       label="Độ trong suốt"
-                      value={settings.opacity.flood}
+                      value={settings?.opacity?.flood ?? 80}
                       color={colors.accent}
                       subtextColor={colors.subtext}
                       textColor={colors.text}
@@ -167,7 +167,7 @@ function LayerToggleSheetContent({
               <OverlayLayerItem
                 label="Giao thông"
                 description="Tình trạng đường"
-                value={settings.overlays.traffic}
+                value={settings?.overlays?.traffic ?? false}
                 color="#F97316"
                 iconName="car"
                 onToggle={() => toggleOverlay("traffic")}
@@ -183,7 +183,7 @@ function LayerToggleSheetContent({
                 <OverlayLayerItem
                   label="Thời tiết"
                   description="Radar mưa"
-                  value={settings.overlays.weather}
+                  value={settings?.overlays?.weather ?? false}
                   color="#8B5CF6"
                   iconName="rainy"
                   onToggle={() => toggleOverlay("weather")}
@@ -193,11 +193,11 @@ function LayerToggleSheetContent({
                   cardBg={colors.cardBg}
                   borderColor={colors.border}
                 />
-                {settings.overlays.weather && (
+                {settings?.overlays?.weather && (
                   <View style={{ padding: 16, backgroundColor: colors.cardBg, borderBottomLeftRadius: 16, borderBottomRightRadius: 16, marginTop: -4 }}>
                     <OpacitySlider
                       label="Độ trong suốt"
-                      value={settings.opacity.weather}
+                      value={settings?.opacity?.weather ?? 70}
                       color="#8B5CF6"
                       subtextColor={colors.subtext}
                       textColor={colors.text}
@@ -212,7 +212,7 @@ function LayerToggleSheetContent({
               <OverlayLayerItem
                 label="Báo cáo cộng đồng"
                 description="Phản ánh từ người dân"
-                value={settings.overlays.communityReports}
+                value={settings?.overlays?.communityReports ?? true}
                 color="#10B981"
                 iconName="people"
                 onToggle={() => toggleOverlay("communityReports")}

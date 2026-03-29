@@ -323,7 +323,7 @@ export default function ProfileScreen() {
     <SafeAreaView
       style={{
         flex: 1,
-        backgroundColor: isDarkColorScheme ? "#0F172A" : "#F9FAFB",
+        backgroundColor: isDarkColorScheme ? "#0B1A33" : "#F9FAFB",
       }}
     >
       <StatusBar

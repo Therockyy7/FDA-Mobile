@@ -100,12 +100,12 @@ export default function SignInScreen() {
   const isBusy = loading || isSubmitting;
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#0F172A" }}>
+    <View style={{ flex: 1, backgroundColor: "#0B1A33" }}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       
       {/* Dark Storm Background Gradient */}
       <LinearGradient
-        colors={["#0F172A", "#1E3A5F", "#0F172A"]}
+        colors={["#0B1A33", "#1E3A5F", "#0B1A33"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}

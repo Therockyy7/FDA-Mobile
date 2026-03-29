@@ -78,7 +78,7 @@ export default function StationDetailScreen() {
   }, [realtimeUpdates, stationId]);
 
   const colors = {
-    background: isDarkColorScheme ? "#0F172A" : "#F1F5F9",
+    background: isDarkColorScheme ? "#0B1A33" : "#F1F5F9",
     cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
     text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
     subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",

@@ -139,12 +139,12 @@ export default function AreaDetailScreen() {
 
   // Theme colors
   const colors = {
-    background: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
+    background: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
     cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
     text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
     subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
     border: isDarkColorScheme ? "#334155" : "#E2E8F0",
-    mutedBg: isDarkColorScheme ? "#0F172A" : "#F1F5F9",
+    mutedBg: isDarkColorScheme ? "#0B1A33" : "#F1F5F9",
   };
 
   const statusConfig = getStatusConfig(status?.status);

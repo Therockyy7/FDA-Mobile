@@ -50,7 +50,7 @@ export default function EmailPasswordScreen() {
   const isNew = isNewUser === "true";
 
   const colors = {
-    background: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
+    background: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
     cardBg: isDarkColorScheme ? "rgba(30, 58, 95, 0.5)" : "rgba(255, 255, 255, 0.9)",
     inputBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
     text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
@@ -64,7 +64,7 @@ export default function EmailPasswordScreen() {
       
       {/* Background Gradient */}
       <LinearGradient
-        colors={isDarkColorScheme ? ["#1E3A5F", "#0F172A"] : ["#007AFF", "#1D4ED8"]}
+        colors={isDarkColorScheme ? ["#1E3A5F", "#0B1A33"] : ["#007AFF", "#1D4ED8"]}
         style={{ position: "absolute", top: 0, left: 0, right: 0, height: 280 }}
       />
 

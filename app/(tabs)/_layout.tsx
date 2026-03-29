@@ -27,7 +27,7 @@ const TabsLayout = () => {
   // Show loading while auth is initializing — must still render Tabs to avoid "Unmatched route"
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#0F172A", alignItems: "center", justifyContent: "center" }}>
+      <View style={{ flex: 1, backgroundColor: "#0B1A33", alignItems: "center", justifyContent: "center" }}>
         <ActivityIndicator color="#007AFF" />
       </View>
     );
@@ -42,7 +42,7 @@ const TabsLayout = () => {
 
   // Theme colors for tab bar
   const tabBarColors = {
-    background: isDarkColorScheme ? "#0F172A" : "#FFFFFF",
+    background: isDarkColorScheme ? "#0B1A33" : "#FFFFFF",
     borderColor: isDarkColorScheme ? "#1E293B" : "#E2E8F0",
     activeColor: isDarkColorScheme ? "#38BDF8" : "#007AFF",
     inactiveColor: isDarkColorScheme ? "#64748B" : "#94A3B8",

@@ -27,7 +27,7 @@ export default function NotificationsScreen() {
 
   // Theme colors
   const colors = {
-    background: isDarkColorScheme ? "#0F172A" : "#F9FAFB",
+    background: isDarkColorScheme ? "#0B1A33" : "#F9FAFB",
     statusBarStyle: isDarkColorScheme ? "light-content" : "dark-content",
   };
 

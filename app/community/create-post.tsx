@@ -194,7 +194,7 @@ export default function CreatePostScreen() {
           {/* Header */}
           <View className="flex-row items-center justify-between mb-4">
             <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-              <Ionicons name="close" size={22} color="#0F172A" />
+              <Ionicons name="close" size={22} color="#0B1A33" />
             </TouchableOpacity>
             <Text className="text-slate-900 dark:text-white font-semibold text-base">
               Tạo báo cáo

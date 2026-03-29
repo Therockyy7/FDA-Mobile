@@ -11,6 +11,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Text } from "~/components/ui/text";
+import { useColorScheme } from "~/lib/useColorScheme";
 import { LoadingDot } from "./LoadingDot";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -24,6 +25,7 @@ export function MapLoadingOverlay({
   visible,
   message = "Đang tải bản đồ...",
 }: MapLoadingOverlayProps) {
+  const { isDarkColorScheme } = useColorScheme();
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.8);
   const textOpacity = useSharedValue(0.6);
@@ -64,10 +66,18 @@ export function MapLoadingOverlay({
     opacity: textOpacity.value,
   }));
 
+  const colors = {
+    background: isDarkColorScheme ? "rgba(15, 23, 42, 0.97)" : "rgba(255, 255, 255, 0.97)",
+    cardBg: isDarkColorScheme ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.9)",
+    cardBorder: isDarkColorScheme ? "#334155" : "#E2E8F0",
+    textPrimary: isDarkColorScheme ? "#E2E8F0" : "#1F2937",
+    textSecondary: isDarkColorScheme ? "#94A3B8" : "#64748B",
+  };
+
   if (!visible) return null;
 
   return (
-    <Animated.View style={[styles.overlay, containerStyle]}>
+    <Animated.View style={[styles.overlay, { backgroundColor: colors.background }, containerStyle]}>
       {/* Background pattern */}
       <View style={styles.backgroundPattern}>
         <LottieView
@@ -80,7 +90,7 @@ export function MapLoadingOverlay({
       </View>
 
       {/* Main content card */}
-      <Animated.View style={[styles.contentCard, contentStyle]}>
+      <Animated.View style={[styles.contentCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, contentStyle]}>
         <View style={styles.lottieContainer}>
           <LottieView
             source={require("../../../../../assets/animations/water-rise.json")}
@@ -98,11 +108,11 @@ export function MapLoadingOverlay({
           ))}
         </View>
 
-        <Animated.Text style={[styles.message, textStyle]}>
+        <Animated.Text style={[styles.message, { color: colors.textPrimary }, textStyle]}>
           {message}
         </Animated.Text>
 
-        <Text style={styles.hint}>Hệ thống cảnh báo ngập lụt</Text>
+        <Text style={[styles.hint, { color: colors.textSecondary }]}>Hệ thống cảnh báo ngập lụt</Text>
       </Animated.View>
     </Animated.View>
   );
@@ -115,7 +125,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(15, 23, 42, 0.97)",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 100,
@@ -139,8 +148,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 50,
     borderRadius: 28,
     borderWidth: 1,
-    borderColor: "#334155",
-    backgroundColor: "rgba(30, 41, 59, 0.9)",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
@@ -166,12 +173,10 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 6,
     textAlign: "center",
-    color: "#E2E8F0",
   },
   hint: {
     fontSize: 13,
     fontWeight: "500",
     textAlign: "center",
-    color: "#94A3B8",
   },
 });

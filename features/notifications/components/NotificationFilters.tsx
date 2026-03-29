@@ -36,7 +36,7 @@ export function NotificationFilters({
 
   // Theme colors
   const colors = {
-    background: isDarkColorScheme ? "#0F172A" : "#FFFFFF",
+    background: isDarkColorScheme ? "#0B1A33" : "#FFFFFF",
     border: isDarkColorScheme ? "#1E293B" : "#E5E7EB",
     inactiveBg: isDarkColorScheme ? "#1E293B" : "#F3F4F6",
     inactiveText: isDarkColorScheme ? "#94A3B8" : "#6B7280",

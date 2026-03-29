@@ -77,7 +77,7 @@ export default function PredictionScreen() {
         ref={scrollRef}
         style={{
           flex: 1,
-          backgroundColor: isDarkColorScheme ? "#0F172A" : "#F1F5F9",
+          backgroundColor: isDarkColorScheme ? "#0B1A33" : "#F1F5F9",
         }}
         contentContainerStyle={{
           paddingBottom: 40,
@@ -364,13 +364,13 @@ export default function PredictionScreen() {
                     </View>
 
                     {precip !== undefined && precip !== null && (
-                      <View style={{ backgroundColor: isDarkColorScheme ? "#0F172A" : "#F8FAFC", borderRadius: 12, padding: 12, flexDirection: "row", alignItems: "center" }}>
+                      <View style={{ backgroundColor: isDarkColorScheme ? "#0B1A33" : "#F8FAFC", borderRadius: 12, padding: 12, flexDirection: "row", alignItems: "center" }}>
                         <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(59, 130, 246, 0.15)", alignItems: "center", justifyContent: "center", marginRight: 12 }}>
                           <Ionicons name="rainy" size={18} color="#3B82F6" />
                         </View>
                         <View>
                           <Text style={{ fontSize: 12, color: isDarkColorScheme ? "#94A3B8" : "#64748B" }}>Lượng mưa dị kiến</Text>
-                          <Text style={{ fontSize: 14, fontWeight: "700", color: isDarkColorScheme ? "#F1F5F9" : "#0F172A", marginTop: 2 }}>{precip} mm</Text>
+                          <Text style={{ fontSize: 14, fontWeight: "700", color: isDarkColorScheme ? "#F1F5F9" : "#0B1A33", marginTop: 2 }}>{precip} mm</Text>
                         </View>
                       </View>
                     )}

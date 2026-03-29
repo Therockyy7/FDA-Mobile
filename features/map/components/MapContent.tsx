@@ -86,12 +86,12 @@ export function MapContent({
       showsUserLocation={locationPermission}
       showsMyLocationButton={false}
       showsCompass={false}
-      showsTraffic={settings.overlays.traffic}
+      showsTraffic={settings?.overlays?.traffic}
       showsBuildings={true}
       pitchEnabled={true}
       rotateEnabled={true}
-      mapType={settings.baseMap === "satellite" ? "satellite" : mapType}
-      customMapStyle={mapType === "standard" && !settings.overlays.traffic ? STANDARD_MAP_STYLE : undefined}
+      mapType={settings?.baseMap === "satellite" ? "satellite" : mapType}
+      customMapStyle={mapType === "standard" && !settings?.overlays?.traffic ? STANDARD_MAP_STYLE : undefined}
     >
       {/* User Areas */}
       {viewMode === "zones" && areaDisplayMode === "user" && areas.map((area) => (
@@ -148,7 +148,7 @@ export function MapContent({
       <FloodZonePolygons floodSeverity={floodSeverity} />
 
       {/* Community Reports */}
-      {settings.overlays.communityReports && communityReports.map((report) => (
+      {settings?.overlays?.communityReports && communityReports.map((report) => (
         <CommunityReportMarker key={`community-report-${report.id}`} report={report} mapRef={mapRef} onPress={onCommunityReportPress} />
       ))}
 

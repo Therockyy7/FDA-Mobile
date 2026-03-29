@@ -23,7 +23,7 @@ export default function NotificationDetailScreen() {
 
   // Theme colors
   const colors = {
-    background: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
+    background: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
     cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
     text: isDarkColorScheme ? "#F1F5F9" : "#111827",
     subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
@@ -214,7 +214,7 @@ export default function NotificationDetailScreen() {
           {/* Water Visualization */}
           <View style={{ 
             height: 140, 
-            backgroundColor: isDarkColorScheme ? "#0F172A" : "#F1F5F9", 
+            backgroundColor: isDarkColorScheme ? "#0B1A33" : "#F1F5F9", 
             borderRadius: 16, 
             overflow: "hidden",
             marginBottom: 16,
@@ -270,7 +270,7 @@ export default function NotificationDetailScreen() {
           <View style={{ flexDirection: "row", gap: 12 }}>
             <View style={{
               flex: 1,
-              backgroundColor: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
+              backgroundColor: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
               padding: 14,
               borderRadius: 14,
               alignItems: "center",
@@ -282,7 +282,7 @@ export default function NotificationDetailScreen() {
             </View>
             <View style={{
               flex: 1,
-              backgroundColor: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
+              backgroundColor: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
               padding: 14,
               borderRadius: 14,
               alignItems: "center",

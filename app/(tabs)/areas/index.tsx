@@ -80,7 +80,7 @@ export default function AreasScreen() {
 
   // Theme colors
   const colors = {
-    background: isDarkColorScheme ? "#0F172A" : "#F9FAFB",
+    background: isDarkColorScheme ? "#0B1A33" : "#F9FAFB",
     cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
     text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
     subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
@@ -288,7 +288,7 @@ export default function AreasScreen() {
       {/* Header */}
       <LinearGradient
         colors={
-          isDarkColorScheme ? ["#1E293B", "#0F172A"] : ["#FFFFFF", "#F9FAFB"]
+          isDarkColorScheme ? ["#1E293B", "#0B1A33"] : ["#FFFFFF", "#F9FAFB"]
         }
         style={{
           paddingTop:

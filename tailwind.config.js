@@ -31,7 +31,7 @@ module.exports = {
 
         // ===== Background Colors =====
         "bg-light": "#F8FAFC",        // Light mode background
-        "bg-dark": "#0F172A",         // Dark mode background
+        "bg-dark": "#0B1A33",         // Dark mode background
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
 

@@ -15,7 +15,7 @@ export function AreaAddressInput({ value, onChangeText, disabled }: AreaAddressI
   const { isDarkColorScheme } = useColorScheme();
 
   const colors = {
-    inputBg: isDarkColorScheme ? "#0F172A" : "#F1F5F9",
+    inputBg: isDarkColorScheme ? "#0B1A33" : "#F1F5F9",
     text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
     subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
     border: isDarkColorScheme ? "#475569" : "#E2E8F0",

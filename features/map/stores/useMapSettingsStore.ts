@@ -71,7 +71,8 @@ export const useMapSettingsStore = create<MapSettingsStore>()(
 );
 
 // Granular selectors — use these to prevent unnecessary re-renders
-export const useMapSettings = () => useMapSettingsStore((s) => s.settings);
+export const useMapSettings = () =>
+  useMapSettingsStore((s) => s.settings ?? DEFAULT_MAP_SETTINGS);
 export const useIsSettingsLoaded = () => useMapSettingsStore((s) => s.settingsLoaded);
 export const useOverlaySetting = (key: keyof MapLayerSettings["overlays"]) =>
-  useMapSettingsStore((s) => s.settings.overlays[key]);
+  useMapSettingsStore((s) => s.settings?.overlays?.[key] ?? DEFAULT_MAP_SETTINGS.overlays[key]);

@@ -33,7 +33,7 @@ export default function AlertHistoryScreen() {
       primary: "#137fec",
       background: isDarkColorScheme ? "#101922" : "#f6f7f8",
       card: isDarkColorScheme ? "rgba(30,41,59,0.4)" : "#FFFFFF",
-      text: isDarkColorScheme ? "#FFFFFF" : "#0F172A",
+      text: isDarkColorScheme ? "#FFFFFF" : "#0B1A33",
       subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
       border: isDarkColorScheme ? "#334155" : "#E2E8F0",
       chipBg: isDarkColorScheme ? "rgba(30,41,59,0.9)" : "#FFFFFF",

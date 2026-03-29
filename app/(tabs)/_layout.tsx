@@ -1,11 +1,21 @@
 import { Feather } from "@expo/vector-icons";
 import { Tabs, useRouter } from "expo-router";
+import * as Font from "expo-font";
 import { useState } from "react";
-import { Platform, View } from "react-native";
+import { ActivityIndicator, Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LoginRequiredOverlay } from "~/features/auth/components/LoginRequiredOverlay";
 import { useAuthLoading, useUser } from "~/features/auth/stores/hooks";
 import { useColorScheme } from "~/lib/useColorScheme";
+
+// Set initial route to map tab — previously this was the default tab (index.tsx)
+export const unstable_settings = {
+  initialRouteName: "map/index",
+};
+
+// Preload Feather font at module level — runs before any component renders
+const FEATHER_FONT = require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ttf");
+Font.loadAsync({ Feather: FEATHER_FONT });
 
 const TabsLayout = () => {
   const insets = useSafeAreaInsets();
@@ -14,8 +24,14 @@ const TabsLayout = () => {
   const router = useRouter();
   const [loginPromptVisible, setLoginPromptVisible] = useState(false);
   const { isDarkColorScheme } = useColorScheme();
-
-  if (loading) return null;
+  // Show loading while auth is initializing — must still render Tabs to avoid "Unmatched route"
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#0F172A", alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator color="#007AFF" />
+      </View>
+    );
+  }
 
   const isAuthenticated = !!user;
   const handleProtectedTabPress = () => {
@@ -56,7 +72,7 @@ const TabsLayout = () => {
         }}
       >
         <Tabs.Screen
-          name="home"
+          name="home/index"
           options={{
             title: "Trang chủ",
             tabBarIcon: ({ color, size }) => (
@@ -86,7 +102,7 @@ const TabsLayout = () => {
         />
 
         <Tabs.Screen
-          name="map"
+          name="map/index"
           options={{
             title: "Bản đồ",
             tabBarIcon: ({ focused }) => (

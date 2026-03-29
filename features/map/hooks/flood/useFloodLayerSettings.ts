@@ -5,6 +5,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { store } from "~/app/store";
 import type { NearbyFloodReportsParams } from "~/features/community/services/community.service";
 import { MapService } from "../../services/map.service";
@@ -26,16 +27,18 @@ export function useFloodLayerSettings() {
 
   const isAuthenticated = store.getState().auth?.status === "authenticated";
 
-  // Read from Zustand store
-  const settings = useMapSettingsStore((s) => s.settings);
+  // Read from Zustand store — useShallow ensures stable object reference
+  const settings = useMapSettingsStore(useShallow((s) => s.settings));
   const settingsLoaded = useMapSettingsStore((s) => s.settingsLoaded);
-  const storeActions = useMapSettingsStore((s) => ({
-    setSettings: s.setSettings,
-    updateOverlay: s.updateOverlay,
-    updateBaseMap: s.updateBaseMap,
-    updateOpacity: s.updateOpacity,
-    markLoaded: s.markLoaded,
-  }));
+  const storeActions = useMapSettingsStore(
+    useShallow((s) => ({
+      setSettings: s.setSettings,
+      updateOverlay: s.updateOverlay,
+      updateBaseMap: s.updateBaseMap,
+      updateOpacity: s.updateOpacity,
+      markLoaded: s.markLoaded,
+    })),
+  );
 
   // Load settings on first mount (once)
   useEffect(() => {

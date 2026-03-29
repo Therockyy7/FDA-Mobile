@@ -246,12 +246,21 @@ export function useMapScreen(ctx: MapScreenCtx) {
 
   const handleStopNavigation = useCallback(() => {
     nav.stopNavigation();
+    // Clear all selected items when stopping navigation
+    // to prevent stale sheets from appearing
+    setSelectedArea(null);
+    setSelectedStationId(null);
+    setSelectedCommunityReport(null);
+    setSelectedRoute(null);
+    setSelectedZone(null);
+    setShowDetailPanels(false);
+    setShowResultCard(false);
     const currentRoute = safeRoute.getSelectedRoute();
     if (currentRoute) {
       const bounds = getRouteBounds(currentRoute.coordinates);
       mapRef.current?.animateToRegion(bounds, 600);
     }
-  }, [nav, safeRoute, mapRef]);
+  }, [nav, safeRoute, mapRef, setSelectedArea, setSelectedStationId, setSelectedCommunityReport, setSelectedRoute, setSelectedZone, setShowDetailPanels, setShowResultCard]);
 
   // ── Safe route handlers ──────────────────────────────────────
   const handleFindRoute = useCallback(async () => {

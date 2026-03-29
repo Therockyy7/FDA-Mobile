@@ -56,7 +56,7 @@ export default function SignInScreen() {
       const { accessToken, refreshToken, expiresAt, user } = res.data;
 
       await dispatch(signInByGoogle({ accessToken, refreshToken, expiresAt, user })).unwrap();
-      router.replace("/(tabs)");
+      router.replace("/(tabs)/map");
     } catch (error: any) {
       console.error("Google Login Error:", error);
       Alert.alert("Lỗi", "Đăng nhập Google thất bại.");

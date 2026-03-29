@@ -46,7 +46,7 @@ export default function PhonePasswordScreen() {
         return;
       }
 
-      router.replace("/(tabs)");
+      router.replace("/(tabs)/map");
     } catch (err: any) {
       setError("password", { message: err?.message || "Đăng nhập thất bại." });
     }

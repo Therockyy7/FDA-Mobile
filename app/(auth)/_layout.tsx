@@ -1,10 +1,11 @@
-import { Redirect, Stack, useSegments } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import { useAuthLoading, useUser } from "~/features/auth/stores/hooks";
 
 export default function AuthRoutesLayout() {
   const user = useUser();
   const loading = useAuthLoading();
+  const router = useRouter();
   const segments = useSegments(); // ví dụ: ["(auth)", "phone-otp"]
 
   if (loading) {
@@ -21,7 +22,8 @@ export default function AuthRoutesLayout() {
   // Chỉ redirect nếu đã login và đang ở các màn auth gốc
   const authEntryScreens = ["sign-in", "sign-up", "identifier"]; // chỉnh theo project
   if (user && authEntryScreens.includes(current ?? "")) {
-    return <Redirect href="/(tabs)" />;
+    router.replace("/(tabs)/map");
+    return null;
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;

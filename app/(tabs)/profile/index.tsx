@@ -190,7 +190,7 @@ export default function ProfileScreen() {
       await signOut();
       setIsLoggingOut(false);
       setShowLogoutModal(false);
-      router.replace("/(tabs)");
+      router.replace("/(tabs)/map");
     } catch (err) {
       console.error("Logout error:", err);
       Alert.alert("Lỗi", "Có lỗi xảy ra khi đăng xuất.");

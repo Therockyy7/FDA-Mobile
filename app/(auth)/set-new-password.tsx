@@ -73,7 +73,7 @@ export default function SetNewPasswordScreen() {
       Alert.alert("Thành công", "Mật khẩu đã được thiết lập thành công!", [
         {
           text: "Tiếp tục",
-          onPress: () => router.replace("/(tabs)"),
+          onPress: () => router.replace("/(tabs)/map"),
         },
       ]);
     } catch (err: any) {
@@ -91,7 +91,7 @@ export default function SetNewPasswordScreen() {
       "Bạn có thể thiết lập mật khẩu sau trong phần Cài đặt.",
       [
         { text: "Hủy", style: "cancel" },
-        { text: "Bỏ qua", onPress: () => router.replace("/(tabs)") },
+        { text: "Bỏ qua", onPress: () => router.replace("/(tabs)/map") },
       ],
     );
   };

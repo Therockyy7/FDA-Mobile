@@ -41,7 +41,7 @@ export default function EmailPasswordScreen() {
         setError("password", { message: payload?.message || "Sai mật khẩu." });
         return;
       }
-      router.replace("/(tabs)");
+      router.replace("/(tabs)/map");
     } catch (err: any) {
       setError("password", { message: err?.message || "Lỗi đăng nhập." });
     }

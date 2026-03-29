@@ -53,4 +53,4 @@ GoogleService-Info.plist
 # Claude
 claude-*.json
 .claude/
-CLAUDE.md
+# CLAUDE.md

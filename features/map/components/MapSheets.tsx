@@ -67,6 +67,7 @@ interface Props {
   };
   nav: { isNavigating: boolean };
   router: { push: (path: any) => void };
+  isUsingGPSOrigin: boolean;
   onCloseAreaCard: () => void;
   onStartEditArea: () => void;
   onDeleteArea: () => void;
@@ -128,6 +129,7 @@ export function MapSheets({
   safeRoute,
   nav,
   router,
+  isUsingGPSOrigin,
   onCloseAreaCard,
   onStartEditArea,
   onDeleteArea,
@@ -236,6 +238,7 @@ export function MapSheets({
               onClose={onCloseRouteResults}
               onShowWarnings={onShowWarnings}
               onStartNavigation={onStartNavigation}
+              isUsingGPSOrigin={isUsingGPSOrigin}
             />
           )}
         </View>

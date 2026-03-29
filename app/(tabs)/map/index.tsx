@@ -306,6 +306,7 @@ export default function MapScreen() {
             safeRoute={s.safeRoute}
             nav={s.nav}
             router={s.router}
+            isUsingGPSOrigin={s.isUsingGPSOrigin}
             onCloseAreaCard={() => s.setSelectedArea(null)}
             onStartEditArea={s.handleStartEditArea}
             onDeleteArea={s.handleDeleteArea}

@@ -25,6 +25,7 @@ interface SafeRouteResultCardProps {
   onClose: () => void;
   onShowWarnings: () => void;
   onStartNavigation?: () => void;
+  isUsingGPSOrigin?: boolean; // Only show navigation button when using GPS as origin
 }
 
 export function SafeRouteResultCard({
@@ -34,6 +35,7 @@ export function SafeRouteResultCard({
   onClose,
   onShowWarnings,
   onStartNavigation,
+  isUsingGPSOrigin = false,
 }: SafeRouteResultCardProps) {
   const statusColor = SAFETY_STATUS_COLORS[route.safetyStatus];
   const statusLabel = SAFETY_STATUS_LABELS[route.safetyStatus];
@@ -144,8 +146,8 @@ export function SafeRouteResultCard({
           )}
         </View>
 
-        {/* Start Navigation Button */}
-        {onStartNavigation && (
+        {/* Start Navigation Button - only show when using GPS as origin */}
+        {onStartNavigation && isUsingGPSOrigin && (
           <TouchableOpacity
             onPress={onStartNavigation}
             activeOpacity={0.85}

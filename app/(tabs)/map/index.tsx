@@ -242,6 +242,8 @@ export default function MapScreen() {
           safeRouteHasResults={s.safeRoute.hasResults}
           isAdjustingRadius={s.isAdjustingRadius}
           showCreateAreaSheet={s.showCreateAreaSheet}
+          showCreateAreaButton={s.viewMode === "zones" && !s.isRoutingUIVisible && !s.selectedArea && !s.isAdjustingRadius && !s.showCreateAreaSheet}
+          onCreateArea={s.handleStartCreateArea}
           onZoomIn={s.zoomIn}
           onZoomOut={s.zoomOut}
           onMyLocation={() => s.goToMyLocation(s.userLocation)}

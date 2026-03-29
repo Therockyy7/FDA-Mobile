@@ -1,18 +1,16 @@
-// app/(tabs)/MapHeaderSwitch.tsx
-// Conditionally renders RouteDirectionPanel or MapHeader based on navigation state.
+// features/map/components/MapHeaderSwitch.tsx
+// Thin wrapper — reads user from auth store and renders RouteDirectionPanel.
 
 import React from "react";
-import { MapHeader } from "~/features/map/components/controls";
+import { useRouter } from "expo-router";
 import { RouteDirectionPanel } from "~/features/map/components/routes";
-import type { MapType } from "~/features/map/types/map-display.types";
+import { useUser } from "~/features/auth/stores/hooks";
 import type { TransportMode } from "~/features/map/types/routing.types";
 import type { LatLng } from "~/features/map/types/safe-route.types";
 
 interface Props {
   navIsNavigating: boolean;
-  isRoutingUIVisible: boolean;
   safeRouteHasResults: boolean;
-  isPickingOnMap: boolean;
   // RouteDirectionPanel
   originText: string;
   onOriginChange: (t: string) => void;
@@ -35,25 +33,13 @@ interface Props {
   safeRouteIsLoading: boolean;
   safeRouteError: string | null;
   onCloseRouting: () => void;
-  setStartCoord: (c: LatLng) => void;
-  setEndCoord: (c: LatLng) => void;
   userLocation: LatLng | null;
   selectGPSAsDestination: (loc: LatLng) => void;
-  mapRef: { current: { animateToRegion: (r: any, d: number) => void } | null };
-  // MapHeader
-  stats: { safe: number; caution: number; warning: number; critical: number };
-  mapType: MapType;
-  onMapTypeChange: () => void;
-  onShowLayers: () => void;
-  onCreateArea: () => void;
-  showCreateAreaButton: boolean;
 }
 
 export function MapHeaderSwitch({
   navIsNavigating,
-  isRoutingUIVisible,
   safeRouteHasResults,
-  isPickingOnMap,
   originText,
   onOriginChange,
   isUsingGPSOrigin,
@@ -75,81 +61,42 @@ export function MapHeaderSwitch({
   safeRouteIsLoading,
   safeRouteError,
   onCloseRouting,
-  setStartCoord,
-  setEndCoord,
   userLocation,
   selectGPSAsDestination,
-  mapRef,
-  stats,
-  mapType,
-  onMapTypeChange,
-  onShowLayers,
-  onCreateArea,
-  showCreateAreaButton,
 }: Props) {
-  if (navIsNavigating) return null;
+  const user = useUser();
+  const router = useRouter();
 
-  if (isRoutingUIVisible && !safeRouteHasResults && !isPickingOnMap) {
-    return (
-      <RouteDirectionPanel
-        visible={true}
-        onClose={onCloseRouting}
-        originText={isUsingGPSOrigin ? "" : originText}
-        onOriginChange={onOriginChange}
-        isUsingGPSOrigin={isUsingGPSOrigin}
-        onUseGPSAsOrigin={onUseGPSAsOrigin}
-        onPickOriginOnMap={onPickOriginOnMap}
-        hasOriginCoord={hasOriginCoord}
-        onOriginPlaceSelected={(coord) => {
-          setStartCoord(coord);
-          mapRef.current?.animateToRegion(
-            {
-              latitude: coord.latitude,
-              longitude: coord.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            },
-            500,
-          );
-        }}
-        destinationText={destinationText}
-        onDestinationChange={onDestinationChange}
-        isUsingGPSDest={isUsingGPSDest}
-        onUseGPSAsDest={() => {
-          if (userLocation) selectGPSAsDestination(userLocation);
-        }}
-        onPickDestinationOnMap={onPickDestinationOnMap}
-        hasDestinationCoord={hasDestinationCoord}
-        onDestinationPlaceSelected={(coord) => {
-          setEndCoord(coord);
-          mapRef.current?.animateToRegion(
-            {
-              latitude: coord.latitude,
-              longitude: coord.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            },
-            500,
-          );
-        }}
-        onSwap={onSwap}
-        transportMode={transportMode}
-        onModeChange={onModeChange}
-        onFindRoute={onFindRoute}
-        isLoading={safeRouteIsLoading}
-        error={safeRouteError}
-      />
-    );
-  }
+  if (navIsNavigating || safeRouteHasResults) return null;
 
   return (
-    <MapHeader
-      stats={stats}
-      mapType={mapType}
-      onMapTypeChange={onMapTypeChange}
-      onShowLayers={onShowLayers}
-      onCreateArea={onCreateArea}
-      showCreateAreaButton={showCreateAreaButton}
+    <RouteDirectionPanel
+      visible={true}
+      onClose={onCloseRouting}
+      originText={isUsingGPSOrigin ? "" : originText}
+      onOriginChange={onOriginChange}
+      isUsingGPSOrigin={isUsingGPSOrigin}
+      onUseGPSAsOrigin={onUseGPSAsOrigin}
+      onPickOriginOnMap={onPickOriginOnMap}
+      hasOriginCoord={hasOriginCoord}
+      onOriginPlaceSelected={onOriginPlaceSelected}
+      destinationText={destinationText}
+      onDestinationChange={onDestinationChange}
+      isUsingGPSDest={isUsingGPSDest}
+      onUseGPSAsDest={() => {
+        if (userLocation) selectGPSAsDestination(userLocation);
+      }}
+      onPickDestinationOnMap={onPickDestinationOnMap}
+      hasDestinationCoord={hasDestinationCoord}
+      onDestinationPlaceSelected={onDestinationPlaceSelected}
+      onSwap={onSwap}
+      transportMode={transportMode}
+      onModeChange={onModeChange}
+      onFindRoute={onFindRoute}
+      isLoading={safeRouteIsLoading}
+      error={safeRouteError}
+      user={user ?? null}
+      onProfilePress={() => router.push("/(tabs)/profile")}
     />
   );
 }

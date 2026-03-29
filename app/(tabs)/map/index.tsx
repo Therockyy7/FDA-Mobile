@@ -10,7 +10,6 @@ import {
   PickOnMapOverlay,
   StreetViewHint,
 } from "~/features/map/components/overlays";
-import type { MapType } from "~/features/map/types/map-display.types";
 import type { LatLng } from "~/features/map/types/safe-route.types";
 
 import { MapContent } from "~/features/map/components/MapContent";
@@ -30,7 +29,6 @@ export default function MapScreen() {
     handleSelectRoute,
     handleCloseRouteResults,
     handleCloseRouting,
-    handleNavDestinationSelected,
     handleConfirmPickOnMap,
     handleMapPress,
     handleRoutePress,
@@ -92,9 +90,7 @@ export default function MapScreen() {
       {/* Header */}
       <MapHeaderSwitch
         navIsNavigating={s.nav.isNavigating}
-        isRoutingUIVisible={s.isRoutingUIVisible}
         safeRouteHasResults={s.safeRoute.hasResults}
-        isPickingOnMap={s.isPickingOnMap}
         originText={s.originText}
         onOriginChange={s.setOriginText}
         isUsingGPSOrigin={s.isUsingGPSOrigin}
@@ -140,23 +136,8 @@ export default function MapScreen() {
         safeRouteIsLoading={s.safeRoute.isLoading}
         safeRouteError={s.safeRoute.error}
         onCloseRouting={handleCloseRouting}
-        setStartCoord={s.setStartCoord}
-        setEndCoord={s.setEndCoord}
         userLocation={s.userLocation}
         selectGPSAsDestination={s.selectGPSAsDestination}
-        mapRef={s.mapRef}
-        stats={s.stats}
-        mapType={s.mapType as MapType}
-        onMapTypeChange={s.handleMapTypeChange}
-        onShowLayers={() => s.setShowLayerSheet(true)}
-        onCreateArea={s.handleStartCreateArea}
-        showCreateAreaButton={
-          s.viewMode === "zones" &&
-          !s.isRoutingUIVisible &&
-          !s.selectedArea &&
-          !s.isAdjustingRadius &&
-          !s.showCreateAreaSheet
-        }
       />
 
       <View style={{ flex: 1, position: "relative" }}>
@@ -255,19 +236,7 @@ export default function MapScreen() {
           onRotateRight={() => s.rotateCamera("right")}
           streetViewLocation={s.streetViewLocation}
           onClearStreetView={() => s.setStreetViewLocation(null)}
-          onShowRouting={s.openRouting}
           onShowLayers={() => s.setShowLayerSheet(true)}
-          onNavFabPress={() => s.setShowNavSearch(true)}
-          isPickingOnMap={s.isPickingOnMap}
-          showNavSearch={s.showNavSearch}
-          onCloseNavSearch={() => s.setShowNavSearch(false)}
-          onSelectPlace={handleNavDestinationSelected}
-          onPickOnMap={s.startPickingDestination}
-          onUseGPS={() => {}}
-          userLocation={s.userLocation}
-          openRouting={s.openRouting}
-          selectGPSAsOrigin={s.selectGPSAsOrigin}
-          startPickingDestination={s.startPickingDestination}
         />
 
         {/* Street View Hint */}

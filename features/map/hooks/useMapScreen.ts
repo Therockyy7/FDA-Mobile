@@ -87,6 +87,7 @@ interface MapScreenCtx {
   setSelectedStationId: (id: string | null) => void;
   setSelectedArea: (a: AreaWithStatus | null) => void;
   setSelectedCommunityReport: (r: NearbyFloodReport | null) => void;
+  setShowDetailPanels: (v: boolean) => void;
   handleStartEditAreaFromParams: (area: EditAreaParams) => void;
 
   // UI state setters
@@ -141,6 +142,7 @@ export function useMapScreen(ctx: MapScreenCtx) {
     setSelectedStationId,
     setSelectedArea,
     setSelectedCommunityReport,
+    setShowDetailPanels,
     handleStartEditAreaFromParams,
     setShowResultCard,
     setShowNavSearch,
@@ -230,8 +232,17 @@ export function useMapScreen(ctx: MapScreenCtx) {
 
   // ── Navigation handlers ──────────────────────────────────────
   const handleStartNavigation = useCallback(() => {
+    // Clear all selected items before starting navigation
+    // to prevent empty sheets from re-appearing behind NavigationHUD
+    setSelectedArea(null);
+    setSelectedStationId(null);
+    setSelectedCommunityReport(null);
+    setSelectedRoute(null);
+    setSelectedZone(null);
+    setShowDetailPanels(false);
+    setShowResultCard(false);
     nav.startNavigation();
-  }, [nav]);
+  }, [nav, setSelectedArea, setSelectedStationId, setSelectedCommunityReport, setSelectedRoute, setSelectedZone, setShowDetailPanels, setShowResultCard]);
 
   const handleStopNavigation = useCallback(() => {
     nav.stopNavigation();

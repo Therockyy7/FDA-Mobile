@@ -160,17 +160,17 @@ export function MapSheets({
   return (
     <>
       {/* Layer Sheet */}
-      <LayerToggleSheet visible={showLayerSheet} onClose={onCloseLayerSheet} areaDisplayMode={areaDisplayMode} onAreaDisplayModeChange={onAreaDisplayModeChange} />
+      <LayerToggleSheet visible={showLayerSheet && !nav.isNavigating} onClose={onCloseLayerSheet} areaDisplayMode={areaDisplayMode} onAreaDisplayModeChange={onAreaDisplayModeChange} />
 
       {/* Admin Area Confirm */}
-      <AdminAreaConfirmModal visible={showAdminAreaConfirmModal} adminArea={selectedAdminArea} onClose={onCloseAdminConfirm} />
+      <AdminAreaConfirmModal visible={showAdminAreaConfirmModal && !nav.isNavigating} adminArea={selectedAdminArea} onClose={onCloseAdminConfirm} />
 
       {/* Radius Adjust */}
-      <RadiusAdjustBar visible={isAdjustingRadius} radius={draftAreaRadius} onRadiusChange={setDraftAreaRadius} onConfirm={onConfirmRadius} onCancel={onCancelCreation} />
+      <RadiusAdjustBar visible={isAdjustingRadius && !nav.isNavigating} radius={draftAreaRadius} onRadiusChange={setDraftAreaRadius} onConfirm={onConfirmRadius} onCancel={onCancelCreation} />
 
       {/* Create Area */}
       <CreateAreaSheet
-        visible={showCreateAreaSheet}
+        visible={showCreateAreaSheet && !nav.isNavigating}
         onClose={onCloseCreateArea}
         onSubmit={onCreateAreaSubmit}
         radiusMeters={draftAreaRadius}
@@ -179,22 +179,22 @@ export function MapSheets({
       />
 
       {/* Creation Options */}
-      <AreaCreationOptionSheet visible={showCreationOptions} onClose={onCloseCreationOptions} onSelectOption={onOptionSelect} isLoadingGps={isLoadingLocation} isLoadingSearch={isLoadingSearch} />
+      <AreaCreationOptionSheet visible={showCreationOptions && !nav.isNavigating} onClose={onCloseCreationOptions} onSelectOption={onOptionSelect} isLoadingGps={isLoadingLocation} isLoadingSearch={isLoadingSearch} />
 
       {/* Address Search */}
-      <AddressSearchSheet visible={showAddressSearch} onClose={onCloseAddressSearch} onSelectLocation={onAddressSelected} />
+      <AddressSearchSheet visible={showAddressSearch && !nav.isNavigating} onClose={onCloseAddressSearch} onSelectLocation={onAddressSelected} />
 
       {/* Premium Limit */}
-      <PremiumLimitModal visible={showPremiumLimitModal} onClose={onClosePremiumLimit} onUpgrade={onUpgradePremium} currentCount={currentAreaCount} maxCount={freeAreaLimit} />
+      <PremiumLimitModal visible={showPremiumLimitModal && !nav.isNavigating} onClose={onClosePremiumLimit} onUpgrade={onUpgradePremium} currentCount={currentAreaCount} maxCount={freeAreaLimit} />
 
       {/* Creation Loading */}
-      <AreaCreationLoadingOverlay visible={isCheckingLimit} message="Đang kiểm tra..." subMessage="Đang xác minh giới hạn vùng của bạn" />
+      <AreaCreationLoadingOverlay visible={isCheckingLimit && !nav.isNavigating} message="Đang kiểm tra..." subMessage="Đang xác minh giới hạn vùng của bạn" />
 
       {/* Error Modal */}
-      <AreaCreationErrorModal visible={!!areaError} error={areaError} onClose={onCloseError} onChangeLocation={onChangeLocation} />
+      <AreaCreationErrorModal visible={!!areaError && !nav.isNavigating} error={areaError} onClose={onCloseError} onChangeLocation={onChangeLocation} />
 
       {/* Area Sheet */}
-      <MapBottomSheet isOpen={!!selectedArea} onClose={onCloseAreaCard} snapPoints={["50%", "75%"]}>
+      <MapBottomSheet isOpen={!!selectedArea && !nav.isNavigating} onClose={onCloseAreaCard} snapPoints={["50%", "75%"]}>
         {selectedArea && (
           <AreaCard
             area={selectedArea}
@@ -210,12 +210,12 @@ export function MapSheets({
       </MapBottomSheet>
 
       {/* Route */}
-      <MapBottomSheet isOpen={!!selectedRoute && showDetailPanels} onClose={onCloseRoute} snapPoints={["45%", "75%"]}>
+      <MapBottomSheet isOpen={!!selectedRoute && showDetailPanels && !nav.isNavigating} onClose={onCloseRoute} snapPoints={["45%", "75%"]}>
         {selectedRoute && <RouteDetailCard route={selectedRoute} onClose={onCloseRoute} />}
       </MapBottomSheet>
 
       {/* Community Report */}
-      <MapBottomSheet isOpen={!!selectedCommunityReport} onClose={onCloseCommunityReport} snapPoints={["60%", "90%"]}>
+      <MapBottomSheet isOpen={!!selectedCommunityReport && !nav.isNavigating} onClose={onCloseCommunityReport} snapPoints={["60%", "90%"]}>
         {selectedCommunityReport && <CommunityReportSheet report={selectedCommunityReport} onClose={onCloseCommunityReport} />}
       </MapBottomSheet>
 
@@ -242,7 +242,7 @@ export function MapSheets({
       )}
 
       {/* Station */}
-      <MapBottomSheet isOpen={!!selectedStationId} onClose={onCloseStation} snapPoints={["40%", "55%"]}>
+      <MapBottomSheet isOpen={!!selectedStationId && !nav.isNavigating} onClose={onCloseStation} snapPoints={["40%", "55%"]}>
         {selectedStationId && selectedStation && (
           <FloodStationCard
             station={selectedStation}
@@ -256,7 +256,7 @@ export function MapSheets({
       </MapBottomSheet>
 
       {/* Warnings */}
-      <SafeRouteWarnings warnings={safeRoute.floodWarnings} visible={showWarningsSheet} onClose={onCloseWarnings} />
+      <SafeRouteWarnings warnings={safeRoute.floodWarnings} visible={showWarningsSheet && !nav.isNavigating} onClose={onCloseWarnings} />
     </>
   );
 }

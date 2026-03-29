@@ -17,8 +17,8 @@ import { MapContent } from "~/features/map/components/MapContent";
 import { MapFloatingUI } from "~/features/map/components/MapFloatingUI";
 import { MapHeaderSwitch } from "~/features/map/components/MapHeaderSwitch";
 import { MapSheets } from "~/features/map/components/MapSheets";
-import { useMapScreenState } from "~/features/map/hooks/useMapScreenState";
 import { useMapScreen } from "~/features/map/hooks/useMapScreen";
+import { useMapScreenState } from "~/features/map/hooks/useMapScreenState";
 
 export default function MapScreen() {
   const s = useMapScreenState();
@@ -72,6 +72,7 @@ export default function MapScreen() {
     setSelectedStationId: s.setSelectedStationId,
     setSelectedArea: s.setSelectedArea,
     setSelectedCommunityReport: s.setSelectedCommunityReport,
+    setShowDetailPanels: s.setShowDetailPanels,
     handleStartEditAreaFromParams: s.handleStartEditAreaFromParams,
     setShowResultCard: s.setShowResultCard,
     setShowNavSearch: s.setShowNavSearch,
@@ -103,7 +104,12 @@ export default function MapScreen() {
         onOriginPlaceSelected={(coord: LatLng) => {
           s.setStartCoord(coord);
           s.mapRef.current?.animateToRegion(
-            { latitude: coord.latitude, longitude: coord.longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 },
+            {
+              latitude: coord.latitude,
+              longitude: coord.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            },
             500,
           );
         }}
@@ -118,7 +124,12 @@ export default function MapScreen() {
         onDestinationPlaceSelected={(coord: LatLng) => {
           s.setEndCoord(coord);
           s.mapRef.current?.animateToRegion(
-            { latitude: coord.latitude, longitude: coord.longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 },
+            {
+              latitude: coord.latitude,
+              longitude: coord.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            },
             500,
           );
         }}
@@ -258,68 +269,73 @@ export default function MapScreen() {
         />
 
         {/* Street View Hint */}
-        <StreetViewHint visible={!!s.streetViewLocation && !s.isRoutingUIVisible} />
-
-        <MapSheets
-          selectedArea={s.selectedArea}
-          selectedRoute={s.selectedRoute}
-          showDetailPanels={s.showDetailPanels}
-          selectedStation={s.selectedStation}
-          selectedStationId={s.selectedStationId}
-          selectedCommunityReport={s.selectedCommunityReport}
-          areaError={s.areaError}
-          showWarningsSheet={s.showWarningsSheet}
-          showResultCard={s.showResultCard}
-          showLayerSheet={s.showLayerSheet}
-          isAdjustingRadius={s.isAdjustingRadius}
-          draftAreaRadius={s.draftAreaRadius}
-          editingArea={s.editingArea}
-          draftAddress={s.draftAddress}
-          showCreateAreaSheet={s.showCreateAreaSheet}
-          isCreatingArea={s.isCreatingArea}
-          showCreationOptions={s.showCreationOptions}
-          isLoadingLocation={s.isLoadingLocation}
-          isLoadingSearch={s.isLoadingSearch}
-          showAddressSearch={s.showAddressSearch}
-          showPremiumLimitModal={s.showPremiumLimitModal}
-          currentAreaCount={s.currentAreaCount}
-          freeAreaLimit={s.freeAreaLimit}
-          isCheckingLimit={s.isCheckingLimit}
-          showAdminAreaConfirmModal={s.showAdminAreaConfirmModal}
-          selectedAdminArea={s.selectedAdminArea}
-          areaDisplayMode={s.areaDisplayMode}
-          safeRoute={s.safeRoute}
-          nav={s.nav}
-          router={s.router}
-          onCloseAreaCard={() => s.setSelectedArea(null)}
-          onStartEditArea={s.handleStartEditArea}
-          onDeleteArea={s.handleDeleteArea}
-          onCloseStation={() => s.setSelectedStationId(null)}
-          onCloseRoute={() => s.setSelectedRoute(null)}
-          onCloseCommunityReport={() => s.setSelectedCommunityReport(null)}
-          onCloseWarnings={() => s.setShowWarningsSheet(false)}
-          onSelectRoute={handleSelectRoute}
-          onExitRouting={handleCloseRouting}
-          onCloseRouteResults={handleCloseRouteResults}
-          onShowWarnings={() => s.setShowWarningsSheet(true)}
-          onStartNavigation={handleStartNavigation}
-          onCloseLayerSheet={() => s.setShowLayerSheet(false)}
-          onAreaDisplayModeChange={s.setAreaDisplayMode}
-          onConfirmRadius={s.handleConfirmLocation}
-          onCancelCreation={s.handleCancelCreateArea}
-          onCloseCreateArea={s.handleCloseCreateArea}
-          onCreateAreaSubmit={s.handleCreateAreaSubmit}
-          onOptionSelect={s.handleOptionSelect}
-          onAddressSelected={s.handleAddressSelected}
-          onCloseCreationOptions={s.handleCloseCreationOptions}
-          onCloseAddressSearch={s.handleCloseAddressSearch}
-          onClosePremiumLimit={s.handleClosePremiumLimitModal}
-          onUpgradePremium={s.handleUpgradePremium}
-          onCloseError={s.handleCloseErrorModal}
-          onChangeLocation={s.handleCancelCreateArea}
-          onCloseAdminConfirm={s.handleCloseAdminConfirm}
-          setDraftAreaRadius={s.setDraftAreaRadius}
+        <StreetViewHint
+          visible={!!s.streetViewLocation && !s.isRoutingUIVisible}
         />
+
+        {/* Hide all sheets during navigation */}
+        {!s.nav.isNavigating && (
+          <MapSheets
+            selectedArea={s.selectedArea}
+            selectedRoute={s.selectedRoute}
+            showDetailPanels={s.showDetailPanels}
+            selectedStation={s.selectedStation}
+            selectedStationId={s.selectedStationId}
+            selectedCommunityReport={s.selectedCommunityReport}
+            areaError={s.areaError}
+            showWarningsSheet={s.showWarningsSheet}
+            showResultCard={s.showResultCard}
+            showLayerSheet={s.showLayerSheet}
+            isAdjustingRadius={s.isAdjustingRadius}
+            draftAreaRadius={s.draftAreaRadius}
+            editingArea={s.editingArea}
+            draftAddress={s.draftAddress}
+            showCreateAreaSheet={s.showCreateAreaSheet}
+            isCreatingArea={s.isCreatingArea}
+            showCreationOptions={s.showCreationOptions}
+            isLoadingLocation={s.isLoadingLocation}
+            isLoadingSearch={s.isLoadingSearch}
+            showAddressSearch={s.showAddressSearch}
+            showPremiumLimitModal={s.showPremiumLimitModal}
+            currentAreaCount={s.currentAreaCount}
+            freeAreaLimit={s.freeAreaLimit}
+            isCheckingLimit={s.isCheckingLimit}
+            showAdminAreaConfirmModal={s.showAdminAreaConfirmModal}
+            selectedAdminArea={s.selectedAdminArea}
+            areaDisplayMode={s.areaDisplayMode}
+            safeRoute={s.safeRoute}
+            nav={s.nav}
+            router={s.router}
+            onCloseAreaCard={() => s.setSelectedArea(null)}
+            onStartEditArea={s.handleStartEditArea}
+            onDeleteArea={s.handleDeleteArea}
+            onCloseStation={() => s.setSelectedStationId(null)}
+            onCloseRoute={() => s.setSelectedRoute(null)}
+            onCloseCommunityReport={() => s.setSelectedCommunityReport(null)}
+            onCloseWarnings={() => s.setShowWarningsSheet(false)}
+            onSelectRoute={handleSelectRoute}
+            onExitRouting={handleCloseRouting}
+            onCloseRouteResults={handleCloseRouteResults}
+            onShowWarnings={() => s.setShowWarningsSheet(true)}
+            onStartNavigation={handleStartNavigation}
+            onCloseLayerSheet={() => s.setShowLayerSheet(false)}
+            onAreaDisplayModeChange={s.setAreaDisplayMode}
+            onConfirmRadius={s.handleConfirmLocation}
+            onCancelCreation={s.handleCancelCreateArea}
+            onCloseCreateArea={s.handleCloseCreateArea}
+            onCreateAreaSubmit={s.handleCreateAreaSubmit}
+            onOptionSelect={s.handleOptionSelect}
+            onAddressSelected={s.handleAddressSelected}
+            onCloseCreationOptions={s.handleCloseCreationOptions}
+            onCloseAddressSearch={s.handleCloseAddressSearch}
+            onClosePremiumLimit={s.handleClosePremiumLimitModal}
+            onUpgradePremium={s.handleUpgradePremium}
+            onCloseError={s.handleCloseErrorModal}
+            onChangeLocation={s.handleCancelCreateArea}
+            onCloseAdminConfirm={s.handleCloseAdminConfirm}
+            setDraftAreaRadius={s.setDraftAreaRadius}
+          />
+        )}
       </View>
     </View>
   );

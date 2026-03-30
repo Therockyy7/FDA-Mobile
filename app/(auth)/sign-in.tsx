@@ -1,30 +1,26 @@
-import { AntDesign, Ionicons } from "@expo/vector-icons";
+import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import LottieView from "lottie-react-native";
-import React, { useRef } from "react";
+import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
+  ActivityIndicator,
   Alert,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StatusBar,
-  TouchableOpacity,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
 import { Text } from "~/components/ui/text";
 import { AuthService } from "~/features/auth/services/auth.service";
 import { signInByGoogle } from "~/features/auth/stores/auth.slice";
 import { useAuthLoading } from "~/features/auth/stores/hooks";
 import { useAppDispatch } from "../hooks";
-
-const { width, height } = Dimensions.get("window");
 
 type FormData = {
   identifier: string;
@@ -32,9 +28,9 @@ type FormData = {
 
 export default function SignInScreen() {
   const router = useRouter();
-  const loading = useAuthLoading();
   const dispatch = useAppDispatch();
-  const lottieRef = useRef<LottieView>(null);
+  const loading = useAuthLoading();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const {
     control,
@@ -47,6 +43,7 @@ export default function SignInScreen() {
 
   const handleGoogleLogin = async () => {
     try {
+      setIsGoogleLoading(true);
       await GoogleSignin.hasPlayServices();
       // signOut() trước signIn() để force hiện picker chọn tài khoản
       await GoogleSignin.signOut();
@@ -65,9 +62,9 @@ export default function SignInScreen() {
       router.replace("/(tabs)/map");
     } catch (error: any) {
       console.error("Google Login Error:", error);
-      // KHÔNG gọi GoogleSignin.signOut() ở đây
-      // vì nó sẽ xóa Google session và user sẽ không chọn được tài khoản ở lần đăng nhập sau
       Alert.alert("Lỗi", "Đăng nhập Google thất bại.");
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -141,91 +138,44 @@ export default function SignInScreen() {
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
       />
 
-      {/* Rain Animation Background */}
-      <LottieView
-        ref={lottieRef}
-        source={require("../../assets/animations/rain-storm.json")}
-        autoPlay
-        loop
-        speed={0.8}
-        style={{
-          position: "absolute",
-          width: width * 2,
-          height: height,
-          left: -width * 0.5,
-          top: 0,
-          opacity: 0.6,
-        }}
-      />
-
-      {/* Dark Overlay for readability */}
-      <View
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: 0,
-          bottom: 0,
-          backgroundColor: "rgba(15, 23, 42, 0.3)",
-        }}
-      />
-
       <SafeAreaView style={{ flex: 1 }}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
         >
           <ScrollView
-            contentContainerStyle={{ flexGrow: 1 }}
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
             showsVerticalScrollIndicator={false}
           >
             {/* Header Section */}
             <View
               style={{
-                flex: 0.35,
                 alignItems: "center",
-                justifyContent: "center",
-                paddingTop: 20,
-                paddingBottom: 16,
+                paddingTop: 40,
+                paddingBottom: 32,
               }}
             >
-              {/* App Icon with Glow Effect */}
+              {/* App Icon */}
               <View
                 style={{
-                  shadowColor: "#007AFF",
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.8,
-                  shadowRadius: 30,
-                  elevation: 20,
+                  width: 80,
+                  height: 80,
+                  borderRadius: 24,
+                  backgroundColor: "rgba(59, 130, 246, 0.2)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 20,
                 }}
               >
-                <View
-                  style={{
-                    width: 100,
-                    height: 100,
-                    borderRadius: 32,
-                    backgroundColor: "rgba(59, 130, 246, 0.2)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderWidth: 2,
-                    borderColor: "rgba(59, 130, 246, 0.4)",
-                    marginBottom: 16,
-                  }}
-                >
-                  <Ionicons name="water" size={52} color="#38BDF8" />
-                </View>
+                <Ionicons name="water" size={40} color="#38BDF8" />
               </View>
 
               <Text
                 style={{
-                  fontSize: 36,
-                  fontWeight: "900",
+                  fontSize: 32,
+                  fontWeight: "800",
                   color: "#FFFFFF",
                   textAlign: "center",
-                  letterSpacing: -1,
-                  textShadowColor: "rgba(0, 0, 0, 0.5)",
-                  textShadowOffset: { width: 0, height: 2 },
-                  textShadowRadius: 10,
                 }}
               >
                 Lũ An Toàn
@@ -235,255 +185,237 @@ export default function SignInScreen() {
                   color: "#94A3B8",
                   marginTop: 8,
                   textAlign: "center",
-                  fontSize: 16,
-                  fontWeight: "500",
+                  fontSize: 15,
                 }}
               >
                 Kết nối • Cứu trợ • An toàn
               </Text>
             </View>
 
-            {/* Form Container - Glassmorphism Card */}
+            {/* Form Container */}
             <View
               style={{
                 flex: 1,
                 paddingHorizontal: 24,
+                backgroundColor: "rgba(30, 41, 59, 0.9)",
+                borderTopLeftRadius: 32,
+                borderTopRightRadius: 32,
                 paddingTop: 32,
-                paddingBottom: 24,
-                backgroundColor: "rgba(30, 41, 59, 0.85)",
-                borderTopLeftRadius: 40,
-                borderTopRightRadius: 40,
-                borderWidth: 1,
-                borderColor: "rgba(71, 85, 105, 0.5)",
-                borderBottomWidth: 0,
+                paddingBottom: 32,
               }}
             >
-              <View style={{ gap: 24 }}>
-                {/* Account Input */}
-                <View>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "700",
-                      color: "#94A3B8",
-                      marginLeft: 8,
-                      marginBottom: 10,
-                      textTransform: "uppercase",
-                      letterSpacing: 1.5,
-                    }}
-                  >
-                    Tài khoản
-                  </Text>
+              {/* Title */}
+              <Text
+                style={{
+                  fontSize: 24,
+                  fontWeight: "700",
+                  color: "#FFFFFF",
+                  marginBottom: 24,
+                }}
+              >
+                Đăng nhập
+              </Text>
 
-                  <Controller
-                    control={control}
-                    name="identifier"
-                    render={({
-                      field: { onChange, onBlur, value },
-                      fieldState: { error },
-                    }) => (
-                      <View>
-                        <View
+              {/* Account Input - Pill Style */}
+              <View style={{ marginBottom: 20 }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: "#94A3B8",
+                    marginBottom: 10,
+                    marginLeft: 4,
+                  }}
+                >
+                  Email hoặc Số điện thoại
+                </Text>
+
+                <Controller
+                  control={control}
+                  name="identifier"
+                  render={({
+                    field: { onChange, value },
+                    fieldState: { error },
+                  }) => (
+                    <View>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          backgroundColor: "#1E293B",
+                          borderRadius: 28,
+                          borderWidth: 1.5,
+                          borderColor: error ? "#EF4444" : "#334155",
+                          paddingHorizontal: 20,
+                        }}
+                      >
+                        <MaterialIcons
+                          name="person-outline"
+                          size={22}
+                          color={error ? "#EF4444" : "#64748B"}
+                        />
+                        <TextInput
+                          value={value}
+                          onChangeText={onChange}
+                          placeholder="Nhập email hoặc số điện thoại"
+                          placeholderTextColor="#64748B"
+                          keyboardType="email-address"
+                          autoCapitalize="none"
                           style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            height: 60,
-                            borderRadius: 16,
-                            backgroundColor: error
-                              ? "rgba(239, 68, 68, 0.1)"
-                              : "rgba(51, 65, 85, 0.5)",
-                            borderWidth: 1.5,
-                            borderColor: error
-                              ? "#EF4444"
-                              : "rgba(71, 85, 105, 0.5)",
-                            paddingHorizontal: 16,
+                            flex: 1,
+                            height: 56,
+                            marginLeft: 12,
+                            fontSize: 16,
+                            color: "#F1F5F9",
+                          }}
+                        />
+                      </View>
+                      {error && (
+                        <Text
+                          style={{
+                            color: "#EF4444",
+                            fontSize: 12,
+                            marginTop: 8,
+                            marginLeft: 8,
                           }}
                         >
-                          <Ionicons
-                            name="person"
-                            size={20}
-                            color={error ? "#EF4444" : "#38BDF8"}
-                          />
-                          <Input
-                            value={value}
-                            onChangeText={onChange}
-                            onBlur={onBlur}
-                            placeholder="SĐT hoặc Email của bạn"
-                            placeholderTextColor="#64748B"
-                            style={{
-                              flex: 1,
-                              height: "100%",
-                              marginLeft: 12,
-                              fontSize: 16,
-                              color: "#F1F5F9",
-                              fontWeight: "500",
-                              backgroundColor: "transparent",
-                              borderWidth: 0,
-                            }}
-                          />
-                        </View>
-                        {error && (
-                          <Text
-                            style={{
-                              color: "#EF4444",
-                              fontSize: 13,
-                              marginTop: 8,
-                              marginLeft: 8,
-                              fontWeight: "600",
-                            }}
-                          >
-                            {error.message}
-                          </Text>
-                        )}
-                      </View>
-                    )}
-                  />
-                </View>
+                          {error.message}
+                        </Text>
+                      )}
+                    </View>
+                  )}
+                />
+              </View>
 
-                {errors?.root && (
-                  <View
-                    style={{
-                      backgroundColor: "rgba(239, 68, 68, 0.1)",
-                      padding: 16,
-                      borderRadius: 16,
-                      borderWidth: 1,
-                      borderColor: "rgba(239, 68, 68, 0.3)",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: "#FCA5A5",
-                        textAlign: "center",
-                        fontWeight: "500",
-                      }}
-                    >
-                      {errors.root.message}
-                    </Text>
-                  </View>
-                )}
-
-                {/* Continue Button */}
-                <Button
-                  onPress={handleSubmit(onSubmitIdentifier)}
-                  disabled={isBusy}
+              {/* Root Error */}
+              {errors?.root && (
+                <View
                   style={{
-                    width: "100%",
-                    height: 60,
-                    borderRadius: 16,
-                    backgroundColor: "#007AFF",
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    shadowColor: "#007AFF",
-                    shadowOffset: { width: 0, height: 8 },
-                    shadowOpacity: 0.4,
-                    shadowRadius: 16,
-                    elevation: 8,
+                    backgroundColor: "rgba(239, 68, 68, 0.1)",
+                    padding: 14,
+                    borderRadius: 12,
+                    marginBottom: 16,
                   }}
                 >
                   <Text
-                    style={{ color: "white", fontSize: 18, fontWeight: "700" }}
+                    style={{
+                      color: "#FCA5A5",
+                      textAlign: "center",
+                      fontSize: 14,
+                    }}
                   >
-                    {isBusy ? "Đang xử lý..." : "Tiếp tục"}
+                    {errors.root.message}
                   </Text>
-                  {!isBusy && (
+                </View>
+              )}
+
+              {/* Continue Button - Full Width Pill */}
+              <Pressable
+                onPress={handleSubmit(onSubmitIdentifier)}
+                disabled={isBusy}
+                style={{
+                  backgroundColor: isBusy ? "#1E40AF" : "#3B82F6",
+                  borderRadius: 28,
+                  paddingVertical: 18,
+                  alignItems: "center",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  shadowColor: "#3B82F6",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
+              >
+                {isBusy ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Text
+                      style={{ color: "white", fontSize: 17, fontWeight: "600" }}
+                    >
+                      Tiếp tục
+                    </Text>
                     <Ionicons
-                      name="arrow-forward-circle"
-                      size={24}
+                      name="arrow-forward"
+                      size={20}
                       color="white"
                       style={{ marginLeft: 8 }}
                     />
-                  )}
-                </Button>
-              </View>
+                  </>
+                )}
+              </Pressable>
 
               {/* Divider */}
               <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  marginVertical: 28,
+                  marginVertical: 24,
                 }}
               >
-                <View
-                  style={{
-                    flex: 1,
-                    height: 1,
-                    backgroundColor: "rgba(71, 85, 105, 0.5)",
-                  }}
-                />
+                <View style={{ flex: 1, height: 1, backgroundColor: "#334155" }} />
                 <Text
                   style={{
                     marginHorizontal: 16,
                     color: "#64748B",
-                    fontSize: 12,
-                    fontWeight: "600",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Hoặc
-                </Text>
-                <View
-                  style={{
-                    flex: 1,
-                    height: 1,
-                    backgroundColor: "rgba(71, 85, 105, 0.5)",
-                  }}
-                />
-              </View>
-
-              {/* Social Login - Icon Only */}
-              <View style={{ alignItems: "center" }}>
-                <TouchableOpacity
-                  onPress={handleGoogleLogin}
-                  disabled={loading}
-                  activeOpacity={0.8}
-                  style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: 32,
-                    backgroundColor: "#FFFFFF",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 12,
-                    elevation: 6,
-                    borderWidth: 1,
-                    borderColor: "rgba(0,0,0,0.05)",
-                  }}
-                >
-                  <AntDesign name="google" size={30} color="#EA4335" />
-                </TouchableOpacity>
-                <Text
-                  style={{
-                    color: "#64748B",
-                    fontSize: 12,
-                    marginTop: 12,
+                    fontSize: 13,
                     fontWeight: "500",
                   }}
                 >
-                  Đăng nhập với Google
+                  Hoặc đăng nhập với
                 </Text>
+                <View style={{ flex: 1, height: 1, backgroundColor: "#334155" }} />
               </View>
+
+              {/* Google Login - Full Width Pill Button */}
+              <Pressable
+                onPress={handleGoogleLogin}
+                disabled={isGoogleLoading}
+                style={{
+                  backgroundColor: "#FFFFFF",
+                  borderRadius: 28,
+                  paddingVertical: 16,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderWidth: 1,
+                  borderColor: "#E2E8F0",
+                  opacity: isGoogleLoading ? 0.6 : 1,
+                }}
+              >
+                {isGoogleLoading ? (
+                  <ActivityIndicator color="#4285F4" />
+                ) : (
+                  <>
+                    <AntDesign name="google" size={22} color="#4285F4" />
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "600",
+                        color: "#1F2937",
+                        marginLeft: 12,
+                      }}
+                    >
+                      Tiếp tục với Google
+                    </Text>
+                  </>
+                )}
+              </Pressable>
 
               {/* Terms */}
               <View style={{ marginTop: 32, alignItems: "center" }}>
                 <Text
                   style={{
-                    color: "#475569",
-                    fontSize: 11,
+                    color: "#64748B",
+                    fontSize: 12,
                     textAlign: "center",
-                    paddingHorizontal: 32,
-                    lineHeight: 18,
+                    lineHeight: 20,
                   }}
                 >
                   Bằng việc tiếp tục, bạn đồng ý với{" "}
-                  <Text style={{ color: "#38BDF8" }}>Điều khoản dịch vụ</Text>{" "}
-                  và{" "}
-                  <Text style={{ color: "#38BDF8" }}>Chính sách bảo mật</Text>{" "}
-                  của chúng tôi.
+                  <Text style={{ color: "#38BDF8" }}>Điều khoản dịch vụ</Text> và{" "}
+                  <Text style={{ color: "#38BDF8" }}>Chính sách bảo mật</Text>.
                 </Text>
               </View>
             </View>

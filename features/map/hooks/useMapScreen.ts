@@ -86,6 +86,7 @@ interface MapScreenCtx {
   setSelectedZone: (z: FloodZone | null) => void;
   setSelectedStationId: (id: string | null) => void;
   setSelectedArea: (a: AreaWithStatus | null) => void;
+  setSelectedAdminArea: (area: any) => void;
   setSelectedCommunityReport: (r: NearbyFloodReport | null) => void;
   setShowDetailPanels: (v: boolean) => void;
   handleStartEditAreaFromParams: (area: EditAreaParams) => void;
@@ -141,6 +142,7 @@ export function useMapScreen(ctx: MapScreenCtx) {
     setSelectedZone,
     setSelectedStationId,
     setSelectedArea,
+    setSelectedAdminArea,
     setSelectedCommunityReport,
     setShowDetailPanels,
     handleStartEditAreaFromParams,
@@ -344,8 +346,9 @@ export function useMapScreen(ctx: MapScreenCtx) {
     (event: MapPressEvent) => {
       if (isPickingOnMap) return;
       handleAreaMapPress(event);
+      setSelectedAdminArea(null);
     },
-    [isPickingOnMap, handleAreaMapPress],
+    [isPickingOnMap, handleAreaMapPress, setSelectedAdminArea],
   );
 
   // ── Route + station handlers ─────────────────────────────────

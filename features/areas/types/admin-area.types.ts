@@ -12,7 +12,7 @@ export interface AdminAreaResponse {
   message: string;
   statusCode: number;
   administrativeAreas: AdminArea[];
-  totalCount: number;
+  totalCount?: number;
 }
 
 export interface AdminAreaParams {

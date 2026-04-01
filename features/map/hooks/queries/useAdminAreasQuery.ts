@@ -8,7 +8,7 @@ export function useAdminAreasQuery() {
   return useQuery({
     queryKey: [ADMIN_AREAS_QUERY_KEY],
     queryFn: () =>
-      AreaService.getAdminAreas({ pageNumber: 1, pageSize: 100 }).then(
+      AreaService.getAdminAreas({ level: "ward", pageNumber: 1, pageSize: 100 }).then(
         (res) => res.administrativeAreas,
       ),
     staleTime: 300_000, // admin areas rarely change

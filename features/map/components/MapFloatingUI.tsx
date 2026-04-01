@@ -4,6 +4,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Text } from "~/components/ui/text";
 import { Legend, MapControls } from "~/features/map/components/controls";
 
 interface Props {
@@ -31,6 +32,10 @@ interface Props {
   streetViewLocation: any;
   onClearStreetView: () => void;
   onShowLayers: () => void;
+  showAiSelectButton?: boolean;
+  onShowWardSelection?: () => void;
+  selectedAdminAreaName?: string | null;
+  onClearAdminArea?: () => void;
 }
 
 export function MapFloatingUI({
@@ -56,6 +61,10 @@ export function MapFloatingUI({
   streetViewLocation,
   onClearStreetView,
   onShowLayers,
+  showAiSelectButton,
+  onShowWardSelection,
+  selectedAdminAreaName,
+  onClearAdminArea,
 }: Props) {
   const showControls =
     !selectedRoute &&
@@ -91,6 +100,17 @@ export function MapFloatingUI({
             </TouchableOpacity>
           )}
 
+          {/* AI Ward Selection Button */}
+          {showAiSelectButton && onShowWardSelection && (
+            <TouchableOpacity
+              onPress={onShowWardSelection}
+              style={[styles.createAreaButton, { backgroundColor: "#8B5CF6", borderColor: "#8B5CF6" }]}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="sparkles" size={24} color="white" />
+            </TouchableOpacity>
+          )}
+
           {/* My Location Button */}
           <TouchableOpacity
             onPress={onMyLocation}
@@ -113,6 +133,19 @@ export function MapFloatingUI({
             onClearStreetView={onClearStreetView}
             onShowLayers={onShowLayers}
           />
+        </View>
+      )}
+
+      {/* Selected Admin Area Banner */}
+      {selectedAdminAreaName && onClearAdminArea && !isRoutingUIVisible && (
+        <View style={styles.selectedAdminAreaBanner}>
+          <Ionicons name="analytics" size={16} color="#8B5CF6" style={{ marginRight: 6 }} />
+          <Text style={styles.selectedAdminAreaText} numberOfLines={1}>
+            {selectedAdminAreaName}
+          </Text>
+          <TouchableOpacity onPress={onClearAdminArea} style={styles.clearAdminAreaButton} activeOpacity={0.7}>
+            <Ionicons name="close" size={18} color="#64748B" />
+          </TouchableOpacity>
         </View>
       )}
 
@@ -160,5 +193,34 @@ const styles = StyleSheet.create({
     elevation: 6,
     borderWidth: 2,
     borderColor: "#3B82F6",
+  },
+  selectedAdminAreaBanner: {
+    position: "absolute",
+    top: 100, // Below header
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "white",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    zIndex: 20,
+    maxWidth: "80%",
+  },
+  selectedAdminAreaText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1E293B",
+    marginRight: 8,
+  },
+  clearAdminAreaButton: {
+    padding: 2,
   },
 });

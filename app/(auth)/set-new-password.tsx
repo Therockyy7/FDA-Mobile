@@ -73,7 +73,7 @@ export default function SetNewPasswordScreen() {
       Alert.alert("Thành công", "Mật khẩu đã được thiết lập thành công!", [
         {
           text: "Tiếp tục",
-          onPress: () => router.replace("/(tabs)"),
+          onPress: () => router.replace("/(tabs)/map"),
         },
       ]);
     } catch (err: any) {
@@ -91,13 +91,13 @@ export default function SetNewPasswordScreen() {
       "Bạn có thể thiết lập mật khẩu sau trong phần Cài đặt.",
       [
         { text: "Hủy", style: "cancel" },
-        { text: "Bỏ qua", onPress: () => router.replace("/(tabs)") },
+        { text: "Bỏ qua", onPress: () => router.replace("/(tabs)/map") },
       ],
     );
   };
 
   const colors = {
-    background: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
+    background: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
     cardBg: isDarkColorScheme
       ? "rgba(30, 58, 95, 0.5)"
       : "rgba(255, 255, 255, 0.9)",
@@ -116,7 +116,7 @@ export default function SetNewPasswordScreen() {
       {/* Background Gradient */}
       <LinearGradient
         colors={
-          isDarkColorScheme ? ["#1E3A5F", "#0F172A"] : ["#10B981", "#059669"]
+          isDarkColorScheme ? ["#1E3A5F", "#0B1A33"] : ["#10B981", "#059669"]
         }
         style={{ position: "absolute", top: 0, left: 0, right: 0, height: 280 }}
       />

@@ -59,7 +59,7 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-[#0F172A]">
+    <SafeAreaView className="flex-1 bg-white dark:bg-[#0B1A33]">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"

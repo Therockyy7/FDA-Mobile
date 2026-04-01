@@ -9,6 +9,22 @@ export type TransportMode = "car" | "motorbike" | "bicycle" | "walk";
 /** Trạng thái đang chọn điểm trên bản đồ */
 export type PickingTarget = "origin" | "destination" | null;
 
+/** VietMap Autocomplete place prediction */
+export interface PlacePrediction {
+  placeId: string;
+  mainText: string;
+  secondaryText: string;
+  fullText: string;
+}
+
+/** VietMap place detail */
+export interface PlaceDetail {
+  placeId: string;
+  name: string;
+  address: string;
+  coordinate: LatLng;
+}
+
 /** Props cho RouteDirectionPanel */
 export interface RouteDirectionPanelProps {
   visible: boolean;

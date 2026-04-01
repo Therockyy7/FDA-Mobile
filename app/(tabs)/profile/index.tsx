@@ -194,7 +194,7 @@ export default function ProfileScreen() {
       await signOut();
       setIsLoggingOut(false);
       setShowLogoutModal(false);
-      router.replace("/(tabs)");
+      router.replace("/(tabs)/map");
     } catch (err) {
       console.error("Logout error:", err);
       Alert.alert("Lỗi", "Có lỗi xảy ra khi đăng xuất.");
@@ -335,7 +335,7 @@ export default function ProfileScreen() {
     <SafeAreaView
       style={{
         flex: 1,
-        backgroundColor: isDarkColorScheme ? "#0F172A" : "#F9FAFB",
+        backgroundColor: isDarkColorScheme ? "#0B1A33" : "#F9FAFB",
       }}
     >
       <StatusBar

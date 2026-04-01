@@ -38,7 +38,7 @@ export function HomeHeader({
     : null;
 
   const colors = {
-    background: isDarkColorScheme ? "#0F172A" : "#FFFFFF",
+    background: isDarkColorScheme ? "#0B1A33" : "#FFFFFF",
     cardBg: isDarkColorScheme ? "#1E293B" : "#F8FAFC",
     text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
     subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",

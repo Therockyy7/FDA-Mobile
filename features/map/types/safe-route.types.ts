@@ -1,10 +1,10 @@
 // features/map/types/safe-route.types.ts
 
-import type { TransportMode } from "../components/routes/RouteDirectionPanel";
+import type { TransportMode } from "./routing.types";
 
 // ==================== ENUMS & CONSTANTS ====================
 
-export type RouteProfile = "car" | "motorcycle" | "bike" | "foot";
+type RouteProfile = "car" | "motorcycle" | "bike" | "foot";
 
 export type RouteSafetyStatus = "Safe" | "Caution" | "Dangerous" | "Blocked";
 
@@ -81,8 +81,8 @@ export interface RouteFeatureProperties {
   instructions: GeoJsonInstruction[];
 }
 
-// Flood zone feature properties
-export interface FloodZoneProperties {
+// Flood zone feature properties (for safe route adjacent zones)
+export interface RouteFloodZoneProperties {
   name: "floodZone";
   stationId: string;
   stationCode: string;
@@ -102,7 +102,7 @@ export interface GeoJsonFeature {
     type: "LineString" | "Polygon";
     coordinates: number[][] | number[][][];
   };
-  properties: RouteFeatureProperties | FloodZoneProperties;
+  properties: RouteFeatureProperties | RouteFloodZoneProperties;
 }
 
 export interface SafeRouteApiResponse {

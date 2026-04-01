@@ -19,7 +19,7 @@ export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
   // Theme colors
   const colors = {
     gradientStart: isDarkColorScheme ? "#1E3A5F" : "#007AFF",
-    gradientEnd: isDarkColorScheme ? "#0F172A" : "#1D4ED8",
+    gradientEnd: isDarkColorScheme ? "#0B1A33" : "#1D4ED8",
     cardBg: isDarkColorScheme ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.2)",
     text: "#FFFFFF",
     subtext: "rgba(255,255,255,0.8)",

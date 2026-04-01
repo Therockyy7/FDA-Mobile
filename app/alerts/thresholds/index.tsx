@@ -30,7 +30,7 @@ export default function AlertThresholdsScreen() {
       primary: "#137fec",
       bg: isDarkColorScheme ? "#101922" : "#f6f7f8",
       surface: isDarkColorScheme ? "#111827" : "#ffffff",
-      surfaceSoft: isDarkColorScheme ? "#0F172A" : "#F9FAFB",
+      surfaceSoft: isDarkColorScheme ? "#0B1A33" : "#F9FAFB",
       text: isDarkColorScheme ? "#ffffff" : "#111418",
       subtext: isDarkColorScheme ? "#9CA3AF" : "#617589",
       border: isDarkColorScheme ? "#1F2937" : "#E5E7EB",

@@ -3,7 +3,7 @@
 import type {
   DecodedRoute,
   FloodWarningDto,
-  FloodZoneProperties,
+  RouteFloodZoneProperties,
   LatLng,
   RouteFeatureProperties,
   RouteMetadata,
@@ -86,7 +86,7 @@ export function parseRouteResponse(response: SafeRouteApiResponse): {
       props.name === "floodZone" &&
       feature.geometry.type === "Polygon"
     ) {
-      const zoneProps = props as FloodZoneProperties;
+      const zoneProps = props as RouteFloodZoneProperties;
       const polygonRing = (feature.geometry.coordinates as number[][][])[0];
       floodWarnings.push({
         stationId: zoneProps.stationId,

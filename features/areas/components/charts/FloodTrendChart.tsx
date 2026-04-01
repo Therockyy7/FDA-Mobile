@@ -289,7 +289,7 @@ export function FloodTrendChart({
             return (
               <View
                 style={{
-                  backgroundColor: isDark ? "#0F172A" : "#FFFFFF",
+                  backgroundColor: isDark ? "#0B1A33" : "#FFFFFF",
                   padding: 8,
                   borderRadius: 8,
                   borderWidth: 1,

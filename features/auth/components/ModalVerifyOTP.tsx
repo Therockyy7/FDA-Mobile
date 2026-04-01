@@ -114,7 +114,7 @@ const ModalVerifyOTP: React.FC<ModalVerifyOTPProps> = ({
                       pinCodeTextStyle: {
                         fontSize: 20,
                         fontWeight: "700",
-                        color: "#0F172A",
+                        color: "#0B1A33",
                       },
                       focusedPinCodeContainerStyle: {
                         borderColor: "#3B82F6",

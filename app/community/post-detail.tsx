@@ -43,7 +43,7 @@ export default function PostDetailScreen() {
           <Ionicons
             name="chevron-back"
             size={22}
-            color="#0F172A"
+            color="#0B1A33"
           />
         </TouchableOpacity>
         <Text className="flex-1 text-center text-slate-900 dark:text-white font-semibold text-sm">

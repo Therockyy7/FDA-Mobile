@@ -127,7 +127,7 @@ export function FloodHistorySection({
     text: isDark ? "#F1F5F9" : "#1F2937",
     subtext: isDark ? "#94A3B8" : "#6B7280",
     border: isDark ? "#334155" : "#E2E8F0",
-    tabBg: isDark ? "#0F172A" : "#F1F5F9",
+    tabBg: isDark ? "#0B1A33" : "#F1F5F9",
     tabActive: isDark ? "#007AFF" : "#007AFF",
   };
 

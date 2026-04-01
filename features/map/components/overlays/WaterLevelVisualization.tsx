@@ -126,7 +126,7 @@ export function WaterLevelVisualization({
     text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
     subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
     border: isDarkColorScheme ? "#475569" : "#E2E8F0",
-    columnBg: isDarkColorScheme ? "#0F172A" : "#E2E8F0",
+    columnBg: isDarkColorScheme ? "#0B1A33" : "#E2E8F0",
   };
 
   // Generate scale markers based on effective max level

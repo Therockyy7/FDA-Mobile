@@ -40,7 +40,7 @@ export default function EmailOtpScreen() {
     setOtpError(null);
     try {
       await dispatch(verifyOtpLogin({ identifier, otpCode: otp, type: "email" })).unwrap();
-      router.replace("/(tabs)");
+      router.replace("/(tabs)/map");
     } catch (err: any) {
       setOtpError(err?.message || "Xác thực thất bại.");
     } finally {

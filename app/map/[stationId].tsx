@@ -16,12 +16,11 @@ import Animated, {
   FadeInUp,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useSelector } from "react-redux";
-import type { RootState } from "~/app/store";
 import { Text } from "~/components/ui/text";
 import { FloodHistorySection } from "~/features/areas/components/charts";
-import { WaterLevelVisualization } from "~/features/map/components/overlays/WaterLevelVisualization";
-import { useFloodSignalR } from "~/features/map/hooks/useFloodSignalR";
+import { WaterLevelVisualization } from "~/features/map/components/overlays";
+import { useFloodSignalR } from "~/features/map/hooks/flood";
+import { useFloodRealtimeStore } from "~/features/map/stores/useFloodRealtimeStore";
 import {
   SEVERITY_COLORS,
   SEVERITY_LABELS,
@@ -47,24 +46,39 @@ export default function StationDetailScreen() {
     }
   }, [stationId, subscribeToStation, unsubscribeFromStation]);
 
-  // Get station data from Redux store
-  const floodSeverity = useSelector(
-    (state: RootState) => state.map?.floodSeverity,
-  );
+  // Get station data from realtime Zustand store (updated by SignalR)
+  const realtimeUpdates = useFloodRealtimeStore((s) => s.updates);
 
-  // Memoize station lookup to ensure we get real-time updates
-  const station = useMemo(() => {
-    if (!floodSeverity?.features) return null;
-    return (
-      floodSeverity.features.find(
-        (f): f is FloodSeverityFeature =>
-          f.geometry.type === "Point" && f.properties.stationId === stationId,
-      ) ?? null
-    );
-  }, [floodSeverity, stationId]);
+  const station = useMemo((): FloodSeverityFeature | null => {
+    if (!stationId) return null;
+    const update = realtimeUpdates[stationId];
+    if (!update) return null;
+    return {
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [update.longitude, update.latitude] },
+      properties: {
+        stationId: update.stationId,
+        stationCode: update.stationCode,
+        stationName: update.stationName,
+        locationDesc: null,
+        roadName: null,
+        waterLevel: update.waterLevel,
+        distance: update.distance,
+        sensorHeight: update.sensorHeight,
+        unit: update.unit,
+        measuredAt: update.measuredAt,
+        severity: update.severity,
+        severityLevel: update.severityLevel,
+        stationStatus: "active",
+        lastSeenAt: null,
+        markerColor: update.markerColor,
+        alertLevel: update.alertLevel,
+      },
+    };
+  }, [realtimeUpdates, stationId]);
 
   const colors = {
-    background: isDarkColorScheme ? "#0F172A" : "#F1F5F9",
+    background: isDarkColorScheme ? "#0B1A33" : "#F1F5F9",
     cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
     text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
     subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",

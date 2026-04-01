@@ -27,7 +27,7 @@
       },
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0B1A33"
       },
       "edgeToEdgeEnabled": true
     },
@@ -44,7 +44,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#0B1A33"
         }
       ],
       "expo-secure-store",
@@ -53,10 +53,7 @@
         "@react-native-google-signin/google-signin",
         {
           "iosUrlScheme": "com.googleusercontent.apps.176554472012-2ks2ui6bnf59s3e4d179422jctoohgcj",
-          "scopes": [
-            "profile",
-            "email"
-          ]
+          "scopes": ["profile", "email"]
         }
       ],
       [

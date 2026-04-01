@@ -149,7 +149,7 @@ export function getWeatherTheme(code: number): WeatherTheme {
       icon: "weather-cloudy",
       severity: "safe",
       color: "#64748B",
-      bgGradient: ["#0F172A", "#334155", "#64748B"],
+      bgGradient: ["#0B1A33", "#334155", "#64748B"],
       cardGradient: ["#1E293B", "#475569"],
     };
   }

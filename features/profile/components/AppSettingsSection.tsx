@@ -24,7 +24,7 @@ const AppSettingsSection: React.FC<Props> = ({
   // Dynamic colors based on dark mode state
   const colors = {
     background: darkMode ? "#1E293B" : "white",
-    containerBg: darkMode ? "#0F172A" : "#F9FAFB",
+    containerBg: darkMode ? "#0B1A33" : "#F9FAFB",
     border: darkMode ? "#334155" : "#E5E7EB",
     divider: darkMode ? "#334155" : "#F3F4F6",
     title: darkMode ? "#F1F5F9" : "#1F2937",

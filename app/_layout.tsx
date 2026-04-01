@@ -13,7 +13,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
-import { ActivityIndicator, Platform, View } from "react-native";
+import { Image, Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
@@ -112,13 +112,28 @@ function RootStack() {
     return (
       <View
         style={{
-          flex: 1,
-          backgroundColor: "#0F172A",
+          position: "absolute",
+          inset: 0,
+          backgroundColor: "#0B1A33",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <ActivityIndicator color="#007AFF" />
+        <View
+          style={{
+            width: 120,
+            height: 120,
+            borderRadius: 40,
+            overflow: "hidden",
+            backgroundColor: "#F5F0E8",
+          }}
+        >
+          <Image
+            source={require("../assets/images/fda_loading.gif")}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="contain"
+          />
+        </View>
       </View>
     );
   }

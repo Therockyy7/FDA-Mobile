@@ -33,7 +33,7 @@ export function ChartPeriodSelector({
     selectedBg: isDark ? "#007AFF" : "#FFFFFF",
     selectedText: isDark ? "#FFFFFF" : "#007AFF",
     normalText: isDark ? "#94A3B8" : "#64748B",
-    customBg: isDark ? "#0F172A" : "#E2E8F0",
+    customBg: isDark ? "#0B1A33" : "#E2E8F0",
   };
 
   const handleCustomPress = () => {

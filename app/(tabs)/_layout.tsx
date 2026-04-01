@@ -1,11 +1,21 @@
 import { Feather } from "@expo/vector-icons";
 import { Tabs, useRouter } from "expo-router";
+import * as Font from "expo-font";
 import { useState } from "react";
-import { Platform, View } from "react-native";
+import { ActivityIndicator, Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LoginRequiredOverlay } from "~/features/auth/components/LoginRequiredOverlay";
 import { useAuthLoading, useUser } from "~/features/auth/stores/hooks";
 import { useColorScheme } from "~/lib/useColorScheme";
+
+// Set initial route to map tab — previously this was the default tab (index.tsx)
+export const unstable_settings = {
+  initialRouteName: "map/index",
+};
+
+// Preload Feather font at module level — runs before any component renders
+const FEATHER_FONT = require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ttf");
+Font.loadAsync({ Feather: FEATHER_FONT });
 
 const TabsLayout = () => {
   const insets = useSafeAreaInsets();
@@ -14,8 +24,14 @@ const TabsLayout = () => {
   const router = useRouter();
   const [loginPromptVisible, setLoginPromptVisible] = useState(false);
   const { isDarkColorScheme } = useColorScheme();
-
-  if (loading) return null;
+  // Show loading while auth is initializing — must still render Tabs to avoid "Unmatched route"
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#0B1A33", alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator color="#007AFF" />
+      </View>
+    );
+  }
 
   const isAuthenticated = !!user;
   const handleProtectedTabPress = () => {
@@ -26,7 +42,7 @@ const TabsLayout = () => {
 
   // Theme colors for tab bar
   const tabBarColors = {
-    background: isDarkColorScheme ? "#0F172A" : "#FFFFFF",
+    background: isDarkColorScheme ? "#0B1A33" : "#FFFFFF",
     borderColor: isDarkColorScheme ? "#1E293B" : "#E2E8F0",
     activeColor: isDarkColorScheme ? "#38BDF8" : "#007AFF",
     inactiveColor: isDarkColorScheme ? "#64748B" : "#94A3B8",
@@ -56,7 +72,7 @@ const TabsLayout = () => {
         }}
       >
         <Tabs.Screen
-          name="home"
+          name="home/index"
           options={{
             title: "Trang chủ",
             tabBarIcon: ({ color, size }) => (
@@ -86,7 +102,7 @@ const TabsLayout = () => {
         />
 
         <Tabs.Screen
-          name="index"
+          name="map/index"
           options={{
             title: "Bản đồ",
             tabBarIcon: ({ focused }) => (

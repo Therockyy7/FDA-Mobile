@@ -66,7 +66,7 @@ export function RiskOverviewCard({
       >
         <View
           style={{
-            backgroundColor: isDarkColorScheme ? "#0F172A" : "#FFFFFF",
+            backgroundColor: isDarkColorScheme ? "#0B1A33" : "#FFFFFF",
             borderRadius: 30,
             padding: 24,
           }}

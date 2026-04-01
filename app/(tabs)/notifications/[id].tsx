@@ -40,7 +40,7 @@ export default function NotificationDetailScreen() {
 
   // Theme colors
   const colors = {
-    background: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
+    background: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
     cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
     text: isDarkColorScheme ? "#F1F5F9" : "#111827",
     subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
@@ -221,6 +221,7 @@ export default function NotificationDetailScreen() {
             elevation: 6,
             borderWidth: isDarkColorScheme ? 1 : 0,
             borderColor: colors.border,
+
           }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 16 }}>
               <View

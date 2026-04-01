@@ -227,7 +227,7 @@ export function NotificationCard({
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 8,
-                backgroundColor: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
+                backgroundColor: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
                 padding: 10,
                 borderRadius: 12,
               }}
@@ -273,7 +273,7 @@ export function NotificationCard({
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 8,
-                backgroundColor: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
+                backgroundColor: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
                 padding: 10,
                 borderRadius: 12,
               }}

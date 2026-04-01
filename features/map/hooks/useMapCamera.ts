@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback } from "react";
 import MapView, { Camera, Region } from "react-native-maps";
 import { DANANG_CENTER, FloodRoute, FloodZone } from "../constants/map-data";
-import { getRouteMidPoint, getZoneCenter } from "../services/geometry";
+import { getRouteMidPoint, getZoneCenter } from "../lib/geometry";
 
 export function useMapCamera() {
   const mapRef = useRef<MapView>(null);
@@ -200,7 +200,6 @@ export function useMapCamera() {
     zoomIn,
     zoomOut,
     goToMyLocation,
-    setRegion, 
     focusOnZone,
     focusOnRoute,
   };

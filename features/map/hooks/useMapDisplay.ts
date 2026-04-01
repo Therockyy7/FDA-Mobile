@@ -21,7 +21,7 @@ export function useMapDisplay() {
     // Count by severity levels based on water level thresholds
     // safe: < 10 cm, caution: 10-20 cm, warning: 20-40 cm, critical: >= 40 cm
     const safe = items.filter((item) => item.status === "safe").length;
-    const caution = 0; // TODO: Update when data model supports caution status
+    const caution = 0; // data model does not expose caution status yet
     const warning = items.filter((item) => item.status === "warning").length;
     const critical = items.filter((item) => item.status === "danger").length;
 

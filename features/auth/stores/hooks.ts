@@ -1,37 +1,38 @@
-import { unwrapResult } from "@reduxjs/toolkit";
-import { useAppDispatch, useAppSelector } from "~/app/hooks"; // ✅ Dùng hook typed của dự án
-import {
-  signIn,
-  signOut,
-  signInByGoogle,
-  verifyOtpLogin, // ✅ Import thunk gộp mới
-  verifyLogin,
-  User,
-  AuthStatus,
-  finishOnboarding,
-  resendOtp, // ✅ Import action tắt TourGuide
-} from "./auth.slice";
+// features/auth/stores/hooks.ts
+// Redux selectors and action wrappers (deprecated - use features/auth/hooks/ instead)
+
+import { useAppDispatch, useAppSelector } from "~/app/hooks";
+
+// --- THUNK IMPORTS (from new thunks directory) ---
+import { signIn, signInByGoogle } from "./thunks/login.thunk";
+import { verifyOtpLogin, resendOtp } from "./thunks/otp.thunk";
+import { verifyLogin } from "./thunks/register.thunk";
+import { signOut } from "./thunks/logout.thunk";
+import { finishOnboarding } from "./auth.slice";
+
+// --- TYPES ---
+import type { AuthStatus, User } from "../types";
 
 // --- 1. SELECTORS (Lấy dữ liệu) ---
 
-export const useUser = () => 
+export const useUser = () =>
   useAppSelector((state) => state.auth.user);
 
-export const useSession = () => 
+export const useSession = () =>
   useAppSelector((state) => state.auth.session);
 
-export const useAuthStatus = (): AuthStatus => 
+export const useAuthStatus = (): AuthStatus =>
   useAppSelector((state) => state.auth.status);
 
-export const useAuthLoading = () => 
+export const useAuthLoading = () =>
   useAppSelector((state) => state.auth.loading);
 
-// ✅ Selector mới: Lấy lỗi Global (nếu cần hiển thị Toast lỗi chung)
-export const useAuthError = () => 
+// Selector mới: Lấy lỗi Global (nếu cần hiển thị Toast lỗi chung)
+export const useAuthError = () =>
   useAppSelector((state) => state.auth.error);
 
-// ✅ Selector mới: Kiểm tra User mới cho tính năng TourGuide
-export const useIsNewUser = () => 
+// Selector mới: Kiểm tra User mới cho tính năng TourGuide
+export const useIsNewUser = () =>
   useAppSelector((state) => state.auth.isNewUser);
 
 
@@ -48,11 +49,10 @@ export const useSignIn = () => {
 export const useVerifyPhoneLogin = () => {
   const dispatch = useAppDispatch();
   return (phoneNumber: string, otpCode: string) =>
-    // ✅ Gọi thunk gộp và truyền type="phone"
-    dispatch(verifyOtpLogin({ 
-      identifier: phoneNumber, 
-      otpCode, 
-      type: 'phone' 
+    dispatch(verifyOtpLogin({
+      identifier: phoneNumber,
+      otpCode,
+      type: "phone",
     })).unwrap();
 };
 
@@ -60,11 +60,10 @@ export const useVerifyPhoneLogin = () => {
 export const useVerifyEmailLogin = () => {
   const dispatch = useAppDispatch();
   return (email: string, otpCode: string) =>
-    // ✅ Gọi thunk gộp và truyền type="email"
-    dispatch(verifyOtpLogin({ 
-      identifier: email, 
-      otpCode, 
-      type: 'email' 
+    dispatch(verifyOtpLogin({
+      identifier: email,
+      otpCode,
+      type: "email",
     })).unwrap();
 };
 
@@ -83,7 +82,7 @@ export const useSignInByGoogle = () => {
     refreshToken: string;
     expiresAt: string;
     user: User;
-    isNewUser?: boolean; // ✅ Cho phép truyền cờ user mới vào
+    isNewUser?: boolean;
   }) => dispatch(signInByGoogle(params)).unwrap();
 };
 
@@ -108,11 +107,11 @@ export const useSignUp = () => {
 
 export const useResendOtp = () => {
   const dispatch = useAppDispatch();
-  return (identifier: string) => 
+  return (identifier: string) =>
     dispatch(resendOtp({ identifier })).unwrap();
 };
 
-// ✅ Hook mới: Tắt trạng thái User mới (Gọi khi xem xong TourGuide)
+// Hook mới: Tắt trạng thái User mới (Gọi khi xem xong TourGuide)
 export const useFinishOnboarding = () => {
   const dispatch = useAppDispatch();
   return () => dispatch(finishOnboarding());

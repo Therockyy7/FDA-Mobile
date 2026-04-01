@@ -133,7 +133,7 @@ export function ApiAreaCard({
     cardBorder: isDarkColorScheme ? "#334155" : "#E5E7EB",
     text: isDarkColorScheme ? "#F1F5F9" : "#111827",
     subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-    mutedBg: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
+    mutedBg: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
     divider: isDarkColorScheme ? "#334155" : "#F3F4F6",
     waterBg: isDarkColorScheme ? "rgba(6, 182, 212, 0.15)" : "rgba(6, 182, 212, 0.1)",
   };
@@ -188,7 +188,7 @@ export function ApiAreaCard({
       >
         <LinearGradient
           colors={isDarkColorScheme 
-            ? ["#0F172A", "#1E293B"] 
+            ? ["#0B1A33", "#1E293B"] 
             : ["#F0F9FF", "#E0F2FE"]}
           style={{
             paddingTop: 20,

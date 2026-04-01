@@ -39,7 +39,7 @@ export function DateRangePicker({
     subtext: isDark ? "#94A3B8" : "#6B7280",
     border: isDark ? "#334155" : "#E2E8F0",
     primary: "#007AFF",
-    inputBg: isDark ? "#0F172A" : "#F8FAFC",
+    inputBg: isDark ? "#0B1A33" : "#F8FAFC",
   };
 
   const formatDate = (date: Date): string => {

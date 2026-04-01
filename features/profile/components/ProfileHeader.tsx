@@ -111,7 +111,7 @@ const ProfileHeader: React.FC<Props> = ({
 
   const colors = {
     gradientStart: isDarkColorScheme ? "#1E3A5F" : "#007AFF",
-    gradientEnd: isDarkColorScheme ? "#0F172A" : "#1D4ED8",
+    gradientEnd: isDarkColorScheme ? "#0B1A33" : "#1D4ED8",
   };
 
   const statusBarHeight =

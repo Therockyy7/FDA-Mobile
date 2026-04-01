@@ -104,7 +104,7 @@ export function AlertSettings({
     subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
     border: isDarkColorScheme ? "#334155" : "#E2E8F0",
     primary: "#137fec",
-    mutedBg: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
+    mutedBg: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
     divider: isDarkColorScheme ? "#334155" : "#F3F4F6",
     statusBarStyle: "light-content",
   };

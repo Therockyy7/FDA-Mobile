@@ -1,15 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { MotiView } from "moti";
 import React, { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  TouchableOpacity,
-  View,
-  Text,
-} from "react-native";
+import { ActivityIndicator, TouchableOpacity, View } from "react-native";
+import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
+
 import { PredictionService } from "../services/prediction.service";
 import type { DistrictsForecastResponse } from "../types/districts-forecast.types";
 import { getRiskConfigByLevel } from "../types/prediction.types";
@@ -28,7 +24,7 @@ export function DistrictsForecastCard() {
       const result = await PredictionService.getDistrictsForecast("3,5,7");
       setData(result);
     } catch (err: any) {
-      setError(err.message || "Không thể tải dự báo quận/huyện");
+      setError(err.message || "Không thể tải dự báo.");
     } finally {
       setLoading(false);
     }
@@ -38,52 +34,47 @@ export function DistrictsForecastCard() {
     fetchData();
   }, []);
 
+  const themeConfig = {
+    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
+    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
+    text: isDarkColorScheme ? "#F8FAFC" : "#0F172A",
+    subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
+    primary: "#6366F1",
+    primaryLight: isDarkColorScheme ? "rgba(99,102,241,0.15)" : "#EEF2FF",
+    rowHover: isDarkColorScheme ? "rgba(51,65,85,0.5)" : "#F8FAFC",
+  };
+
   if (loading) {
     return (
       <View
         style={{
-          padding: 20,
+          padding: 24,
           alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <ActivityIndicator size="small" color="#007AFF" />
-        <Text
-          style={{
-            marginTop: 8,
-            fontSize: 12,
-            color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-          }}
-        >
-          Đang tải dự báo quận/huyện...
-        </Text>
+        <ActivityIndicator size="small" color={themeConfig.primary} />
       </View>
     );
   }
 
   if (error || !data) {
     return (
-      <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+      <View style={{ paddingHorizontal: 12, paddingVertical: 8 }}>
         <TouchableOpacity
           onPress={fetchData}
           style={{
-            backgroundColor: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-            borderRadius: 16,
+            backgroundColor: themeConfig.cardBg,
+            borderRadius: 12,
             padding: 16,
             alignItems: "center",
             borderWidth: 1,
-            borderColor: isDarkColorScheme ? "#334155" : "#E2E8F0",
+            borderColor: themeConfig.border,
+            borderStyle: "dashed",
           }}
         >
-          <Ionicons name="refresh" size={24} color="#94A3B8" />
-          <Text
-            style={{
-              fontSize: 12,
-              fontWeight: "600",
-              color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-              marginTop: 8,
-            }}
-          >
-            Thử tải lại dự báo quận/huyện
+          <Text style={{ fontSize: 13, color: themeConfig.subtext }}>
+            Không thể tải dự báo. Chạm để thử lại
           </Text>
         </TouchableOpacity>
       </View>
@@ -91,395 +82,250 @@ export function DistrictsForecastCard() {
   }
 
   return (
-    <MotiView
-      from={{ opacity: 0, translateY: 15 }}
-      animate={{ opacity: 1, translateY: 0 }}
-      transition={{ type: "timing", duration: 500 }}
-    >
-      <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
-        {/* Section Header */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 12,
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <View
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 16,
-                backgroundColor: isDarkColorScheme
-                  ? "rgba(59, 130, 246, 0.2)"
-                  : "#EFF6FF",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Ionicons name="map" size={18} color="#3B82F6" />
-            </View>
-            <Text
-              style={{
-                fontSize: 18,
-                fontWeight: "800",
-                color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-              }}
-            >
-              Dự Báo Quận/Huyện
-            </Text>
-          </View>
-          <TouchableOpacity onPress={fetchData} activeOpacity={0.7}>
-            <Ionicons
-              name="refresh"
-              size={20}
-              color={isDarkColorScheme ? "#94A3B8" : "#64748B"}
-            />
-          </TouchableOpacity>
+    <View style={{ paddingHorizontal: 16, paddingVertical: 4, paddingBottom: 24 }}>
+      {/* ═══ Ultra Compact Header + Weather Bar ═══ */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 10,
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <View
+            style={{
+              width: 4,
+              height: 14,
+              borderRadius: 2,
+              backgroundColor: themeConfig.primary,
+            }}
+          />
+          <Text
+            style={{
+              fontSize: 15,
+              fontWeight: "800",
+              color: themeConfig.text,
+              letterSpacing: -0.2,
+            }}
+          >
+            Dự báo
+          </Text>
         </View>
 
-        {/* Weather Summary Bar */}
-        <View
-          style={{
-            flexDirection: "row",
-            backgroundColor: isDarkColorScheme ? "#1E293B" : "#F8FAFC",
-            borderRadius: 14,
-            padding: 12,
-            marginBottom: 12,
-            gap: 12,
-            borderWidth: 1,
-            borderColor: isDarkColorScheme ? "#334155" : "#E2E8F0",
-          }}
-        >
-          <View style={{ flex: 1, alignItems: "center" }}>
-            <Ionicons name="rainy" size={16} color="#3B82F6" />
+        {/* Unified weather pills */}
+        <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 4,
+              backgroundColor: themeConfig.cardBg,
+              paddingHorizontal: 8,
+              paddingVertical: 4,
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: themeConfig.border,
+            }}
+          >
+            <Ionicons name="rainy" size={10} color="#0EA5E9" />
             <Text
               style={{
-                fontSize: 14,
-                fontWeight: "900",
-                color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-                marginTop: 2,
+                fontSize: 10,
+                fontWeight: "700",
+                color: themeConfig.text,
               }}
             >
               {data.weather_summary.precip_now_mm}mm
             </Text>
-            <Text
-              style={{
-                fontSize: 9,
-                fontWeight: "600",
-                color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-              }}
-            >
-              Mưa hiện tại
-            </Text>
           </View>
           <View
             style={{
-              width: 1,
-              backgroundColor: isDarkColorScheme ? "#475569" : "#E2E8F0",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 4,
+              backgroundColor: themeConfig.cardBg,
+              paddingHorizontal: 8,
+              paddingVertical: 4,
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: themeConfig.border,
             }}
-          />
-          <View style={{ flex: 1, alignItems: "center" }}>
-            <Ionicons name="water" size={16} color="#06B6D4" />
+          >
+            <Ionicons name="water" size={10} color="#6366F1" />
             <Text
               style={{
-                fontSize: 14,
-                fontWeight: "900",
-                color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-                marginTop: 2,
+                fontSize: 10,
+                fontWeight: "700",
+                color: themeConfig.text,
               }}
             >
               {data.weather_summary.tide_height_m}m
             </Text>
-            <Text
-              style={{
-                fontSize: 9,
-                fontWeight: "600",
-                color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-              }}
-            >
-              Mực thủy triều
-            </Text>
           </View>
-          <View
-            style={{
-              width: 1,
-              backgroundColor: isDarkColorScheme ? "#475569" : "#E2E8F0",
-            }}
-          />
-          <View style={{ flex: 1, alignItems: "center" }}>
-            <Ionicons name="calendar" size={16} color="#8B5CF6" />
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "900",
-                color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-                marginTop: 2,
-              }}
-            >
-              {data.weather_summary.yesterday_precip_mm}mm
-            </Text>
-            <Text
-              style={{
-                fontSize: 9,
-                fontWeight: "600",
-                color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-              }}
-            >
-              Mưa hôm qua
-            </Text>
-          </View>
+          <TouchableOpacity onPress={fetchData} activeOpacity={0.6} style={{ paddingLeft: 4 }}>
+            <Ionicons name="sync" size={14} color={themeConfig.subtext} />
+          </TouchableOpacity>
         </View>
+      </View>
 
-        {/* Risk distribution chips */}
-        <View
-          style={{
-            flexDirection: "row",
-            flexWrap: "wrap",
-            gap: 6,
-            marginBottom: 12,
-          }}
-        >
-          {data.summary.risk_distribution.map((item) => {
-            if (item.count === 0) return null;
-            return (
-              <View
-                key={item.level}
+      {/* ═══ Elegant Consolidated List ═══ */}
+      <View
+        style={{
+          backgroundColor: themeConfig.cardBg,
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: themeConfig.border,
+          overflow: "hidden",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: isDarkColorScheme ? 0.3 : 0.03,
+          shadowRadius: 8,
+          elevation: 2,
+        }}
+      >
+        {data.districts.map((district, idx) => {
+          const nowConfig = getRiskConfigByLevel(district.now.risk_level);
+          const isLast = idx === data.districts.length - 1;
+
+          return (
+            <MotiView
+              key={district.area_id}
+              from={{ opacity: 0, translateY: 10 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{
+                type: "timing",
+                delay: idx * 50,
+                duration: 300,
+              }}
+            >
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => router.push(`/prediction/${district.area_id}` as any)}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  backgroundColor: item.color.bg,
-                  borderWidth: 1.5,
-                  borderColor: item.color.hex,
-                  borderRadius: 20,
-                  paddingHorizontal: 10,
-                  paddingVertical: 4,
-                  gap: 4,
+                  paddingVertical: 12,
+                  paddingHorizontal: 14,
+                  borderBottomWidth: isLast ? 0 : 1,
+                  borderBottomColor: themeConfig.border,
                 }}
               >
-                <View
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: 3,
-                    backgroundColor: item.color.hex,
-                  }}
-                />
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: "800",
-                    color: item.color.hex,
-                  }}
-                >
-                  {item.level}: {item.count}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
-
-        {/* District Cards */}
-        <View style={{ gap: 10 }}>
-          {data.districts.map((district, idx) => {
-            const nowConfig = getRiskConfigByLevel(district.now.risk_level);
-            return (
-              <MotiView
-                key={district.area_id}
-                from={{ opacity: 0, translateX: -10 }}
-                animate={{ opacity: 1, translateX: 0 }}
-                transition={{ type: "timing", delay: idx * 80, duration: 400 }}
-              >
-                <TouchableOpacity
-                  activeOpacity={0.75}
-                  onPress={() =>
-                    router.push(`/prediction/${district.area_id}` as any)
-                  }
-                >
-                  <View
+                {/* 1. Name & Alert Indicator */}
+                <View style={{ flex: 1.2, paddingRight: 8 }}>
+                  <Text
                     style={{
-                      backgroundColor: isDarkColorScheme
-                        ? "#1E293B"
-                        : "#FFFFFF",
-                      borderRadius: 18,
-                      padding: 14,
-                      borderLeftWidth: 5,
-                      borderLeftColor: nowConfig.color,
-                      shadowColor: nowConfig.color,
-                      shadowOffset: { width: 0, height: 3 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 8,
-                      elevation: 3,
+                      fontSize: 14,
+                      fontWeight: "700",
+                      color: themeConfig.text,
+                      marginBottom: 2,
                     }}
+                    numberOfLines={1}
                   >
-                    {/* District header */}
-                    <View
+                    {district.area_name}
+                  </Text>
+                  {district.status && district.status !== "Normal" ? (
+                    <Text
                       style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: 10,
+                        fontSize: 9,
+                        fontWeight: "700",
+                        color: "#F59E0B",
                       }}
+                      numberOfLines={1}
                     >
-                      <View style={{ flex: 1 }}>
-                        <Text
-                          style={{
-                            fontSize: 15,
-                            fontWeight: "800",
-                            color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-                          }}
-                          numberOfLines={1}
-                        >
-                          {district.area_name}
-                        </Text>
-                        {district.status !== "Normal" && (
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              marginTop: 3,
-                              gap: 4,
-                            }}
-                          >
-                            <View
-                              style={{
-                                width: 6,
-                                height: 6,
-                                borderRadius: 3,
-                                backgroundColor: "#F59E0B",
-                              }}
-                            />
-                            <Text
-                              style={{
-                                fontSize: 10,
-                                fontWeight: "700",
-                                color: "#F59E0B",
-                              }}
-                            >
-                              FDA: {district.status}
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-                      <View style={{ alignItems: "flex-end" }}>
-                        <Text
-                          style={{
-                            fontSize: 22,
-                            fontWeight: "900",
-                            color: nowConfig.color,
-                          }}
-                        >
-                          {(district.now.probability * 100).toFixed(0)}%
-                        </Text>
-                        <LinearGradient
-                          colors={nowConfig.gradient as unknown as [string, string]}
-                          style={{
-                            paddingHorizontal: 8,
-                            paddingVertical: 2,
-                            borderRadius: 6,
-                          }}
-                        >
-                          <Text
-                            style={{
-                              fontSize: 10,
-                              fontWeight: "800",
-                              color: "#FFFFFF",
-                            }}
-                          >
-                            {nowConfig.label}
-                          </Text>
-                        </LinearGradient>
-                      </View>
-                    </View>
+                      ⚠️ {district.status}
+                    </Text>
+                  ) : (
+                    <Text
+                      style={{
+                        fontSize: 9,
+                        fontWeight: "500",
+                        color: themeConfig.subtext,
+                      }}
+                      numberOfLines={1}
+                    >
+                      Bình thường
+                    </Text>
+                  )}
+                </View>
 
-                    {/* Timeline: now → 3h → 5h → 7h */}
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 3,
-                      }}
-                    >
-                      {/* Now */}
+                {/* 2. Mini Horizontal Timeline */}
+                <View style={{ flex: 1.5, flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  {district.temporal_evolution.map((h, i) => {
+                    if (i > 1) return null; // Show max 2 future points (3h and 5h) to save space
+                    const hConfig = getRiskConfigByLevel(h.risk_level);
+                    return (
                       <View
+                        key={h.horizon}
                         style={{
-                          paddingHorizontal: 8,
-                          paddingVertical: 4,
-                          backgroundColor: nowConfig.color,
+                          flexDirection: "row",
+                          alignItems: "center",
+                          backgroundColor: isDarkColorScheme
+                            ? `${hConfig.color}15`
+                            : `${hConfig.color}10`,
+                          paddingHorizontal: 4,
+                          paddingVertical: 3,
                           borderRadius: 6,
+                          gap: 3,
                         }}
                       >
                         <Text
                           style={{
-                            fontSize: 10,
-                            fontWeight: "800",
-                            color: "#FFFFFF",
+                            fontSize: 9,
+                            fontWeight: "700",
+                            color: themeConfig.subtext,
                           }}
                         >
-                          Hiện tại
+                          {h.horizon}
+                        </Text>
+                        <Text
+                          style={{
+                            fontSize: 9,
+                            fontWeight: "800",
+                            color: hConfig.color,
+                          }}
+                        >
+                          {(h.probability * 100).toFixed(0)}%
                         </Text>
                       </View>
+                    );
+                  })}
+                </View>
 
-                      {district.temporal_evolution.map((h) => {
-                        const hConfig = getRiskConfigByLevel(h.risk_level);
-                        const trendIcon =
-                          h.trend === "tang"
-                            ? "↑"
-                            : h.trend === "giam"
-                              ? "↓"
-                              : "→";
-                        return (
-                          <React.Fragment key={h.horizon}>
-                            <Text
-                              style={{
-                                color: isDarkColorScheme ? "#475569" : "#CBD5E1",
-                                fontSize: 12,
-                              }}
-                            >
-                              →
-                            </Text>
-                            <View
-                              style={{
-                                paddingHorizontal: 6,
-                                paddingVertical: 4,
-                                backgroundColor: hConfig.color,
-                                borderRadius: 6,
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 2,
-                              }}
-                            >
-                              <Text
-                                style={{
-                                  fontSize: 10,
-                                  fontWeight: "800",
-                                  color: "#FFFFFF",
-                                }}
-                              >
-                                {h.horizon}
-                              </Text>
-                              <Text
-                                style={{
-                                  fontSize: 10,
-                                  color: "rgba(255,255,255,0.8)",
-                                }}
-                              >
-                                {trendIcon}
-                              </Text>
-                            </View>
-                          </React.Fragment>
-                        );
-                      })}
-                    </View>
+                {/* 3. Current Probability */}
+                <View
+                  style={{
+                    flex: 0.8,
+                    alignItems: "flex-end",
+                    justifyContent: "center",
+                  }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                    <View
+                      style={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: 3,
+                        backgroundColor: nowConfig.color,
+                      }}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "900",
+                        color: nowConfig.color,
+                        letterSpacing: -0.5,
+                      }}
+                    >
+                      {(district.now.probability * 100).toFixed(0)}%
+                    </Text>
                   </View>
-                </TouchableOpacity>
-              </MotiView>
-            );
-          })}
-        </View>
+                </View>
+              </TouchableOpacity>
+            </MotiView>
+          );
+        })}
       </View>
-    </MotiView>
+    </View>
   );
 }

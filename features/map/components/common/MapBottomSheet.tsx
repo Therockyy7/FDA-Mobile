@@ -5,7 +5,7 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 interface MapBottomSheetProps {
@@ -91,7 +91,7 @@ export function MapBottomSheet({
       }}
       style={styles.sheet}
     >
-      {enableScroll && isOpen ? (
+      {enableScroll ? (
         <BottomSheetScrollView
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
@@ -99,7 +99,9 @@ export function MapBottomSheet({
           {children}
         </BottomSheetScrollView>
       ) : (
-        children
+        <View style={styles.contentContainer}>
+          {children}
+        </View>
       )}
     </BottomSheet>
   );

@@ -13,6 +13,7 @@ import {
 import { ewkbToLatLngArray, getBoundsFromCoords } from "~/features/map/lib/ewkb-parser";
 import type { LatLng } from "~/features/map/types/safe-route.types";
 
+import { CommunityFloatingHint } from "~/features/map/components/CommunityFloatingHint";
 import { MapContent } from "~/features/map/components/MapContent";
 import { MapFloatingUI } from "~/features/map/components/MapFloatingUI";
 import { MapHeaderSwitch } from "~/features/map/components/MapHeaderSwitch";
@@ -104,7 +105,8 @@ export default function MapScreen() {
       />
 
       {/* Header */}
-      <MapHeaderSwitch
+      {!s.selectedCommunityReport && (
+        <MapHeaderSwitch
         navIsNavigating={s.nav.isNavigating}
         safeRouteHasResults={s.safeRoute.hasResults}
         originText={s.originText}
@@ -155,6 +157,7 @@ export default function MapScreen() {
         userLocation={s.userLocation}
         selectGPSAsDestination={s.selectGPSAsDestination}
       />
+      )}
 
       <View style={{ flex: 1, position: "relative" }}>
         {/* Loading Overlay */}
@@ -231,7 +234,7 @@ export default function MapScreen() {
         />
 
         {/* Floating UI */}
-        {!s.showWardSelectionSheet && (
+        {(!s.showWardSelectionSheet && !s.selectedCommunityReport) && (
           <MapFloatingUI
             selectedRoute={s.selectedRoute}
             selectedZone={s.selectedZone}
@@ -268,6 +271,19 @@ export default function MapScreen() {
         {/* Street View Hint */}
         <StreetViewHint
           visible={!!s.streetViewLocation && !s.isRoutingUIVisible}
+        />
+
+        {/* Community Floating Hint */}
+        <CommunityFloatingHint
+          visible={
+            !s.isRoutingUIVisible &&
+            !s.nav.isNavigating &&
+            !s.selectedArea &&
+            !s.selectedRoute &&
+            !s.showCreateAreaSheet &&
+            !s.showWardSelectionSheet &&
+            !s.selectedCommunityReport
+          }
         />
 
         {/* Hide all sheets during navigation */}

@@ -1,19 +1,27 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import React, { useEffect, useState } from "react";
-import { Alert, Dimensions, Image, Modal, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Dimensions,
+  Image,
+  Modal,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Carousel from "react-native-reanimated-carousel";
 import ImageViewing from "react-native-image-viewing";
 import { Text } from "~/components/ui/text";
+import { useColorScheme } from "~/lib/useColorScheme";
 import { Media, Post } from "../types/post-types";
 import { CommunityService } from "../services/community.service";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-// Trừ đi padding 2 bên (px-4 = 16px * 2)
-const MEDIA_WIDTH = SCREEN_WIDTH - 32;
-// Chiều cao bằng chiều rộng (tỉ lệ 1:1 hình vuông)
-const MEDIA_HEIGHT = MEDIA_WIDTH;
+const MEDIA_WIDTH = SCREEN_WIDTH - 24; // Account for marginHorizontal: 12
+const MEDIA_HEIGHT = MEDIA_WIDTH * 1; // 1:1 square ratio works best for contain
+
 
 interface PostCardProps {
   post: Post;
@@ -70,6 +78,7 @@ function VideoWithControls({
         player={player}
         style={{ width: "100%", height: "100%" }}
         nativeControls
+        contentFit="contain"
       />
 
       {showThumbnail && (
@@ -81,21 +90,58 @@ function VideoWithControls({
           {thumbnailUrl ? (
             <Image
               source={{ uri: thumbnailUrl }}
-              className="absolute inset-0 w-full h-full"
-              resizeMode="cover"
+              style={{ width: "100%", height: "100%" }}
+              resizeMode="contain"
             />
           ) : (
             <View className="absolute inset-0 bg-slate-800" />
           )}
-          <View className="w-16 h-16 rounded-full bg-white/90 items-center justify-center z-10 shadow-lg">
-            <Ionicons name="play" size={32} color="#0EA5E9" />
+          <View
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              backgroundColor: "rgba(255,255,255,0.95)",
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 5,
+              zIndex: 10,
+            }}
+          >
+            <Ionicons
+              name="play"
+              size={26}
+              color="#6366F1"
+              style={{ marginLeft: 3 }}
+            />
           </View>
         </TouchableOpacity>
       )}
 
-      <View className="absolute top-3 right-3 bg-black/60 px-2 py-1 rounded-full flex-row items-center gap-1 z-10">
-        <Ionicons name="videocam" size={12} color="white" />
-        <Text className="text-white text-[10px] font-medium">Video</Text>
+      <View
+        style={{
+          position: "absolute",
+          top: 12,
+          right: 12,
+          backgroundColor: "rgba(0,0,0,0.55)",
+          paddingHorizontal: 8,
+          paddingVertical: 4,
+          borderRadius: 8,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 4,
+          zIndex: 10,
+          backdropFilter: "blur(10px)",
+        }}
+      >
+        <Ionicons name="videocam" size={11} color="white" />
+        <Text style={{ color: "white", fontSize: 10, fontWeight: "600" }}>
+          Video
+        </Text>
       </View>
     </View>
   );
@@ -110,27 +156,27 @@ export function PostCard({
   onDeletePost,
 }: PostCardProps) {
   const router = useRouter();
+  const { isDarkColorScheme } = useColorScheme();
   const media = getMediaFromPost(post);
-  
-  // Format media images for ImageViewing
+
   const imageUris = media
     .filter((m) => m.mediaType === "photo")
     .map((m) => ({ uri: m.mediaUrl }));
-    
-  // Since videos are not supported by image-viewer directly without custom renderers, 
-  // we either map images only or figure out indices
-  
+
   const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
-  const [userAvatar, setUserAvatar] = useState<string | null>(post.authorAvatarUrl || null);
+  const [userAvatar, setUserAvatar] = useState<string | null>(
+    post.authorAvatarUrl || null,
+  );
   const [userName, setUserName] = useState<string>(post.authorName);
   const [showMenu, setShowMenu] = useState(false);
-  const [displayScore, setDisplayScore] = useState(post.trustScore || post.score || 0);
+  const [displayScore, setDisplayScore] = useState(
+    post.trustScore || post.score || 0,
+  );
   const [userVote, setUserVote] = useState<number>(post.isLikedByMe ? 1 : 0);
   const [voting, setVoting] = useState(false);
   const [isImageViewVisible, setIsImageViewVisible] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Sync when post changes (e.g., refresh from parent)
   useEffect(() => {
     setDisplayScore(post.trustScore || post.score || 0);
     setUserVote(post.isLikedByMe ? 1 : 0);
@@ -138,40 +184,39 @@ export function PostCard({
 
   const handleUpvote = async () => {
     if (voting) return;
-
     if (isOwner) {
-      Alert.alert("Thông báo", "Bạn không thể vote cho bài đăng của chính mình.");
+      Alert.alert(
+        "Thông báo",
+        "Bạn không thể vote cho bài đăng của chính mình.",
+      );
       return;
     }
-
     const isUnvoting = userVote === 1;
     const newVote = isUnvoting ? 0 : 1;
-    
     const prevScore = Number(displayScore) || 0;
     const prevVote = userVote;
     let newScore = prevScore;
-    
     if (isUnvoting) {
       newScore = prevScore - 1;
     } else {
       newScore = prevScore + (prevVote === -1 ? 2 : 1);
     }
-    
     setDisplayScore(newScore);
     setUserVote(newVote);
     setVoting(true);
-    
     try {
-      const response = await CommunityService.voteFloodReport(post.id, newVote as any);
-      if (response && typeof response.newScore === 'number') {
+      const response = await CommunityService.voteFloodReport(
+        post.id,
+        newVote as any,
+      );
+      if (response && typeof response.newScore === "number") {
         setDisplayScore(response.newScore);
         setUserVote(response.userVote);
         onUpvote?.(post.id, response.newScore, response.userVote);
       }
-    } catch (error: any) {
+    } catch {
       setDisplayScore(prevScore);
       setUserVote(prevVote);
-      console.error("Lỗi upvote optimistics:", error.response?.data || error);
     } finally {
       setVoting(false);
     }
@@ -179,65 +224,57 @@ export function PostCard({
 
   const handleDownvote = async () => {
     if (voting) return;
-    
     if (isOwner) {
-      Alert.alert("Thông báo", "Bạn không thể vote cho bài đăng của chính mình.");
+      Alert.alert(
+        "Thông báo",
+        "Bạn không thể vote cho bài đăng của chính mình.",
+      );
       return;
     }
-
     const isUnvoting = userVote === -1;
     const newVote = isUnvoting ? 0 : -1;
-    
     const prevScore = Number(displayScore) || 0;
     const prevVote = userVote;
     let newScore = prevScore;
-    
     if (isUnvoting) {
       newScore = prevScore + 1;
     } else {
       newScore = prevScore - (prevVote === 1 ? 2 : 1);
     }
-    
     setDisplayScore(newScore);
     setUserVote(newVote);
     setVoting(true);
-    
     try {
-      const response = await CommunityService.voteFloodReport(post.id, newVote as any);
-      if (response && typeof response.newScore === 'number') {
+      const response = await CommunityService.voteFloodReport(
+        post.id,
+        newVote as any,
+      );
+      if (response && typeof response.newScore === "number") {
         setDisplayScore(response.newScore);
         setUserVote(response.userVote);
         onDownvote?.(post.id, response.newScore, response.userVote);
       }
-    } catch (error: any) {
+    } catch {
       setDisplayScore(prevScore);
       setUserVote(prevVote);
-      console.error("Lỗi downvote optimistics:", error.response?.data || error);
     } finally {
       setVoting(false);
     }
   };
 
-  // Fetch user info từ API
   useEffect(() => {
     if (!post.authorId) return;
-
     async function fetchUserInfo() {
       try {
         const response = await CommunityService.getUserInfo(post.authorId);
         if (response.success && response.user) {
-          if (response.user.avatarUrl) {
-            setUserAvatar(response.user.avatarUrl);
-          }
-          if (response.user.displayName) {
-            setUserName(response.user.displayName);
-          }
+          if (response.user.avatarUrl) setUserAvatar(response.user.avatarUrl);
+          if (response.user.displayName) setUserName(response.user.displayName);
         }
-      } catch (error) {
-        console.error("Lỗi khi lấy thông tin user:", error);
+      } catch {
+        // silently fail
       }
     }
-
     fetchUserInfo();
   }, [post.authorId]);
 
@@ -265,45 +302,74 @@ export function PostCard({
 
   const handleDelete = () => {
     setShowMenu(false);
-    Alert.alert(
-      "Xóa bài đăng",
-      "Bạn có chắc muốn xóa bài đăng này không?",
-      [
-        { text: "Hủy", style: "cancel" },
-        {
-          text: "Xóa",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await CommunityService.deleteFloodReport(post.id);
-              onDeletePost?.(post.id);
-            } catch (error) {
-              console.error("Lỗi khi xóa bài:", error);
-              Alert.alert("Lỗi", "Không thể xóa bài đăng");
-            }
-          },
+    Alert.alert("Xóa bài đăng", "Bạn có chắc muốn xóa bài đăng này không?", [
+      { text: "Hủy", style: "cancel" },
+      {
+        text: "Xóa",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await CommunityService.deleteFloodReport(post.id);
+            onDeletePost?.(post.id);
+          } catch {
+            Alert.alert("Lỗi", "Không thể xóa bài đăng");
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
-  const statusLabel =
-    post.waterLevelStatus === "safe"
-      ? "An toàn"
-      : post.waterLevelStatus === "warning"
-        ? "Cảnh báo"
-        : post.waterLevelStatus === "danger"
-          ? "Nguy hiểm"
-          : undefined;
+  // Status config
+  const getStatusConfig = () => {
+    switch (post.waterLevelStatus) {
+      case "safe":
+        return {
+          label: "An toàn",
+          color: "#10B981",
+          bg: isDarkColorScheme ? "rgba(16,185,129,0.12)" : "#ECFDF5",
+          border: isDarkColorScheme ? "rgba(16,185,129,0.25)" : "#A7F3D0",
+          icon: "shield-checkmark" as const,
+        };
+      case "warning":
+        return {
+          label: "Cảnh báo",
+          color: "#F59E0B",
+          bg: isDarkColorScheme ? "rgba(245,158,11,0.12)" : "#FFFBEB",
+          border: isDarkColorScheme ? "rgba(245,158,11,0.25)" : "#FCD34D",
+          icon: "warning" as const,
+        };
+      case "danger":
+        return {
+          label: "Nguy hiểm",
+          color: "#EF4444",
+          bg: isDarkColorScheme ? "rgba(239,68,68,0.12)" : "#FEF2F2",
+          border: isDarkColorScheme ? "rgba(239,68,68,0.25)" : "#FCA5A5",
+          icon: "flame" as const,
+        };
+      default:
+        return null;
+    }
+  };
 
-  const statusColor =
-    post.waterLevelStatus === "safe"
-      ? "bg-emerald-100 text-emerald-700"
-      : post.waterLevelStatus === "warning"
-        ? "bg-amber-100 text-amber-700"
-        : post.waterLevelStatus === "danger"
-          ? "bg-rose-100 text-rose-700"
-          : undefined;
+  const statusConfig = getStatusConfig();
+
+  const confidenceConfig = {
+    high: { label: "Cao", color: "#10B981" },
+    medium: { label: "TB", color: "#F59E0B" },
+    low: { label: "Thấp", color: "#94A3B8" },
+  };
+
+  const confidence = post.confidenceLevel
+    ? confidenceConfig[post.confidenceLevel]
+    : null;
+
+  const colors = {
+    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
+    border: isDarkColorScheme ? "#334155" : "#F1F5F9",
+    text: isDarkColorScheme ? "#F1F5F9" : "#0F172A",
+    subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
+    divider: isDarkColorScheme ? "#334155" : "#F1F5F9",
+  };
 
   const renderMedia = () => {
     if (!media || media.length === 0) return null;
@@ -312,7 +378,7 @@ export function PostCard({
       const firstMedia = media[0];
       if (firstMedia.mediaType === "video") {
         return (
-          <View className="rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 items-center justify-center">
+          <View style={{ overflow: "hidden" }}>
             <VideoWithControls
               mediaUrl={firstMedia.mediaUrl}
               thumbnailUrl={firstMedia.thumbnailUrl}
@@ -324,9 +390,11 @@ export function PostCard({
       }
       return (
         <TouchableOpacity
-          activeOpacity={0.9}
+          activeOpacity={0.95}
           onPress={() => {
-            const photoIndex = imageUris.findIndex(i => i.uri === firstMedia.mediaUrl);
+            const photoIndex = imageUris.findIndex(
+              (i) => i.uri === firstMedia.mediaUrl,
+            );
             if (photoIndex >= 0) {
               setCurrentImageIndex(photoIndex);
               setIsImageViewVisible(true);
@@ -334,13 +402,17 @@ export function PostCard({
           }}
         >
           <View
-            className="rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 items-center justify-center"
-            style={{ width: MEDIA_WIDTH, height: MEDIA_HEIGHT }}
+            style={{
+              width: MEDIA_WIDTH,
+              height: MEDIA_HEIGHT,
+              overflow: "hidden",
+              backgroundColor: isDarkColorScheme ? "#0B1120" : "#F1F5F9",
+            }}
           >
             <Image
               source={{ uri: firstMedia.mediaUrl }}
               style={{ width: "100%", height: "100%" }}
-              resizeMode="cover"
+              resizeMode="contain"
             />
           </View>
         </TouchableOpacity>
@@ -349,8 +421,13 @@ export function PostCard({
 
     return (
       <View
-        className="relative rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800"
-        style={{ width: MEDIA_WIDTH, height: MEDIA_HEIGHT }}
+        style={{
+          position: "relative",
+          width: MEDIA_WIDTH,
+          height: MEDIA_HEIGHT,
+          overflow: "hidden",
+          backgroundColor: isDarkColorScheme ? "#0B1120" : "#F1F5F9",
+        }}
       >
         <Carousel
           loop={false}
@@ -362,7 +439,14 @@ export function PostCard({
           renderItem={({ item }) => {
             if (item.mediaType === "video") {
               return (
-                <View className="items-center justify-center" style={{ width: MEDIA_WIDTH, height: MEDIA_HEIGHT }}>
+                <View
+                  style={{
+                    width: MEDIA_WIDTH,
+                    height: MEDIA_HEIGHT,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
                   <VideoWithControls
                     mediaUrl={item.mediaUrl}
                     thumbnailUrl={item.thumbnailUrl}
@@ -374,40 +458,57 @@ export function PostCard({
             }
             return (
               <TouchableOpacity
-                activeOpacity={0.9}
+                activeOpacity={0.95}
                 onPress={() => {
-                  const photoIndex = imageUris.findIndex(i => i.uri === item.mediaUrl);
+                  const photoIndex = imageUris.findIndex(
+                    (i) => i.uri === item.mediaUrl,
+                  );
                   if (photoIndex >= 0) {
                     setCurrentImageIndex(photoIndex);
                     setIsImageViewVisible(true);
                   }
                 }}
-                className="items-center justify-center" 
-                style={{ width: MEDIA_WIDTH, height: MEDIA_HEIGHT }}
+                style={{
+                  width: MEDIA_WIDTH,
+                  height: MEDIA_HEIGHT,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
                 <Image
                   source={{ uri: item.mediaUrl }}
                   style={{ width: "100%", height: "100%" }}
-                  resizeMode="cover"
+                  resizeMode="contain"
                 />
               </TouchableOpacity>
             );
           }}
         />
 
+        {/* Carousel dots */}
         {media.length > 1 && (
-          <View className="absolute bottom-3 left-0 right-0 flex-row justify-center gap-1.5">
+          <View
+            style={{
+              position: "absolute",
+              bottom: 14,
+              left: 0,
+              right: 0,
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: 5,
+            }}
+          >
             {media.map((_, index) => (
               <View
                 key={index}
                 style={{
-                  width: index === activeCarouselIndex ? 16 : 6,
+                  width: index === activeCarouselIndex ? 20 : 6,
                   height: 6,
                   borderRadius: 3,
                   backgroundColor:
                     index === activeCarouselIndex
-                      ? "#0EA5E9"
-                      : "rgba(255,255,255,0.6)",
+                      ? "#6366F1"
+                      : "rgba(255,255,255,0.5)",
                 }}
               />
             ))}
@@ -419,13 +520,24 @@ export function PostCard({
 
   const renderMediaCount = () => {
     if (media.length <= 1) return null;
-    const photoCount = media.filter((m) => m.mediaType === "photo").length;
-    const videoCount = media.filter((m) => m.mediaType === "video").length;
-
     return (
-      <View className="absolute top-3 right-3 bg-black/60 px-2.5 py-1 rounded-full flex-row items-center gap-1">
-        <Ionicons name="images" size={12} color="white" />
-        <Text className="text-white text-[10px] font-medium">
+      <View
+        style={{
+          position: "absolute",
+          top: 12,
+          right: 12,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          paddingHorizontal: 10,
+          paddingVertical: 5,
+          borderRadius: 10,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 4,
+          zIndex: 10,
+        }}
+      >
+        <Ionicons name="images" size={11} color="white" />
+        <Text style={{ color: "white", fontSize: 10, fontWeight: "700" }}>
           {activeCarouselIndex + 1}/{media.length}
         </Text>
       </View>
@@ -433,45 +545,186 @@ export function PostCard({
   };
 
   return (
-    // Bỏ padding hai bên (px-4) và bo góc (rounded-2xl) ở container tổng
-    <View className="mb-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 pb-3">
-      {/* 1. Header (Có px-4) */}
-      <View className="flex-row items-center justify-between px-4 py-3">
+    <View
+      style={{
+        marginHorizontal: 12,
+        marginBottom: 10,
+        backgroundColor: colors.cardBg,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: colors.divider,
+        overflow: "hidden",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: isDarkColorScheme ? 0.15 : 0.04,
+        shadowRadius: 6,
+        elevation: 2,
+      }}
+    >
+      {/* ═══ 1. Header ═══ */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "flex-start",
+          paddingHorizontal: 14,
+          paddingTop: 12,
+          paddingBottom: 10,
+        }}
+      >
+        {/* Avatar */}
         <TouchableOpacity
           onPress={handleOpenProfile}
-          className="flex-row items-center gap-2 flex-1"
           activeOpacity={0.7}
+          style={{ marginRight: 10 }}
         >
-          <View className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden border border-slate-100 dark:border-slate-800">
+          <View
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 12,
+              overflow: "hidden",
+              backgroundColor: isDarkColorScheme ? "#334155" : "#E2E8F0",
+            }}
+          >
             {userAvatar ? (
               <Image
                 source={{ uri: userAvatar }}
-                className="w-full h-full"
+                style={{ width: "100%", height: "100%" }}
               />
             ) : (
-              <View className="flex-1 items-center justify-center">
-                <Ionicons name="person" size={20} color="#94A3B8" />
-              </View>
-            )}
-          </View>
-          <View className="flex-1 justify-center">
-            <Text className="text-slate-900 dark:text-white text-sm font-bold">
-              {userName}
-            </Text>
-            {post.locationName && (
-              <Text className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">
-                {post.locationName}
-              </Text>
+              <LinearGradient
+                colors={["#6366F1", "#8B5CF6"]}
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Ionicons name="person" size={16} color="white" />
+              </LinearGradient>
             )}
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => setShowMenu(true)} hitSlop={8}>
-          <Ionicons name="ellipsis-horizontal" size={20} color="#64748B" />
+        {/* Name + Location + Status (middle, takes remaining space) */}
+        <TouchableOpacity
+          onPress={handleOpenProfile}
+          activeOpacity={0.7}
+          style={{ flex: 1, marginRight: 8 }}
+        >
+          {/* Row 1: Name + Time */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              flexWrap: "nowrap",
+            }}
+          >
+            <Text
+              style={{
+                color: colors.text,
+                fontSize: 13,
+                fontWeight: "700",
+                letterSpacing: -0.2,
+                flexShrink: 1,
+              }}
+              numberOfLines={1}
+            >
+              {userName}
+            </Text>
+            <Text
+              style={{
+                color: colors.subtext,
+                fontSize: 11,
+                fontWeight: "400",
+                marginLeft: 5,
+                flexShrink: 0,
+              }}
+            >
+              · {post.createdAt}
+            </Text>
+          </View>
+
+          {/* Row 2: Location */}
+          {post.locationName && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 3,
+                marginTop: 2,
+              }}
+            >
+              <Ionicons name="location-outline" size={10} color={colors.subtext} />
+              <Text
+                style={{
+                  color: colors.subtext,
+                  fontSize: 10.5,
+                  fontWeight: "400",
+                }}
+                numberOfLines={1}
+              >
+                {post.locationName}
+              </Text>
+            </View>
+          )}
+
+          {/* Row 3: Status badge (inline, below name) */}
+          {statusConfig && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+                backgroundColor: statusConfig.bg,
+                paddingHorizontal: 7,
+                paddingVertical: 3,
+                borderRadius: 6,
+                borderWidth: 1,
+                borderColor: statusConfig.border,
+                alignSelf: "flex-start",
+                marginTop: 5,
+              }}
+            >
+              <Ionicons name={statusConfig.icon} size={10} color={statusConfig.color} />
+              <Text
+                style={{
+                  color: statusConfig.color,
+                  fontSize: 10,
+                  fontWeight: "700",
+                }}
+              >
+                {statusConfig.label}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {/* Menu button (fixed right, never overlaps) */}
+        <TouchableOpacity
+          onPress={() => setShowMenu(true)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 10,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: isDarkColorScheme
+              ? "rgba(148,163,184,0.08)"
+              : "#F8FAFC",
+            flexShrink: 0,
+          }}
+        >
+          <Ionicons
+            name="ellipsis-horizontal"
+            size={16}
+            color={colors.subtext}
+          />
         </TouchableOpacity>
       </View>
 
-      {/* Action Menu Modal */}
+      {/* ═══ Action Menu Modal ═══ */}
       <Modal
         visible={showMenu}
         transparent
@@ -479,79 +732,302 @@ export function PostCard({
         onRequestClose={() => setShowMenu(false)}
       >
         <TouchableOpacity
-          className="flex-1 bg-black/40"
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            justifyContent: "flex-end",
+          }}
           activeOpacity={1}
           onPress={() => setShowMenu(false)}
         >
-          <View className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-2xl pb-8">
+          <View
+            style={{
+              backgroundColor: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              paddingBottom: 36,
+              paddingTop: 8,
+            }}
+          >
+            {/* Handle bar */}
+            <View
+              style={{
+                width: 36,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: isDarkColorScheme ? "#475569" : "#CBD5E1",
+                alignSelf: "center",
+                marginBottom: 16,
+              }}
+            />
             {isOwner ? (
               <>
                 <TouchableOpacity
-                  className="flex-row items-center gap-3 px-4 py-4"
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 14,
+                    paddingHorizontal: 20,
+                    paddingVertical: 14,
+                  }}
                   onPress={handleEdit}
                 >
-                  <Ionicons name="create-outline" size={22} color="#0EA5E9" />
-                  <Text className="text-slate-900 dark:text-white text-base">Chỉnh sửa bài đăng</Text>
+                  <View
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 12,
+                      backgroundColor: isDarkColorScheme
+                        ? "rgba(14,165,233,0.12)"
+                        : "#F0F9FF",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Ionicons name="create-outline" size={18} color="#0EA5E9" />
+                  </View>
+                  <Text
+                    style={{
+                      color: colors.text,
+                      fontSize: 15,
+                      fontWeight: "600",
+                    }}
+                  >
+                    Chỉnh sửa bài đăng
+                  </Text>
                 </TouchableOpacity>
-                <View className="h-px bg-slate-200 dark:bg-slate-700 mx-4" />
+                <View
+                  style={{
+                    height: 1,
+                    backgroundColor: colors.divider,
+                    marginHorizontal: 20,
+                  }}
+                />
                 <TouchableOpacity
-                  className="flex-row items-center gap-3 px-4 py-4"
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 14,
+                    paddingHorizontal: 20,
+                    paddingVertical: 14,
+                  }}
                   onPress={handleDelete}
                 >
-                  <Ionicons name="trash-outline" size={22} color="#EF4444" />
-                  <Text className="text-red-500 text-base">Xóa bài đăng</Text>
+                  <View
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 12,
+                      backgroundColor: isDarkColorScheme
+                        ? "rgba(239,68,68,0.12)"
+                        : "#FEF2F2",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                  </View>
+                  <Text
+                    style={{
+                      color: "#EF4444",
+                      fontSize: 15,
+                      fontWeight: "600",
+                    }}
+                  >
+                    Xóa bài đăng
+                  </Text>
                 </TouchableOpacity>
               </>
             ) : (
               <TouchableOpacity
-                className="flex-row items-center gap-3 px-4 py-4"
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 14,
+                  paddingHorizontal: 20,
+                  paddingVertical: 14,
+                }}
                 onPress={() => {
                   setShowMenu(false);
                   onPressReport?.(post.id);
                 }}
               >
-                <Ionicons name="flag-outline" size={22} color="#F97316" />
-                <Text className="text-slate-900 dark:text-white text-base">Báo cáo bài đăng</Text>
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 12,
+                    backgroundColor: isDarkColorScheme
+                      ? "rgba(249,115,22,0.12)"
+                      : "#FFF7ED",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Ionicons name="flag-outline" size={18} color="#F97316" />
+                </View>
+                <Text
+                  style={{
+                    color: colors.text,
+                    fontSize: 15,
+                    fontWeight: "600",
+                  }}
+                >
+                  Báo cáo bài đăng
+                </Text>
               </TouchableOpacity>
             )}
-            <View className="h-px bg-slate-200 dark:bg-slate-700 mx-4" />
+            <View
+              style={{
+                height: 1,
+                backgroundColor: colors.divider,
+                marginHorizontal: 20,
+              }}
+            />
             <TouchableOpacity
-              className="items-center py-4"
+              style={{ alignItems: "center", paddingVertical: 16 }}
               onPress={() => setShowMenu(false)}
             >
-              <Text className="text-slate-500 text-base">Hủy</Text>
+              <Text
+                style={{
+                  color: colors.subtext,
+                  fontSize: 15,
+                  fontWeight: "600",
+                }}
+              >
+                Đóng
+              </Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
 
-      {/* 2. Media (Tràn viền, không padding) */}
+      {/* ═══ 2. Media ═══ */}
       {media.length > 0 && (
-        <View className="relative bg-slate-100 dark:bg-slate-900 items-center justify-center">
+        <View style={{ position: "relative", borderRadius: 0, overflow: "hidden" }}>
           {renderMedia()}
           {renderMediaCount()}
         </View>
       )}
 
-      {/* 3. Actions - Upvote/Downvote (Có px-4) */}
-      <View className="flex-row items-center justify-between px-4 py-3">
-        <View className="flex-row items-center gap-4">
+      {/* ═══ 3. Content + Actions ═══ */}
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={handleOpenDetails}
+        style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6 }}
+      >
+        {/* Caption */}
+        {post.content?.length > 0 && (
+          <Text
+            style={{
+              color: colors.text,
+              fontSize: 14,
+              lineHeight: 21,
+              fontWeight: "400",
+              marginBottom: 8,
+            }}
+          >
+            <Text style={{ fontWeight: "700" }}>{userName} </Text>
+            {post.content}
+          </Text>
+        )}
+
+        {/* Meta indicators row */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 4,
+          }}
+        >
+          {/* Confidence */}
+          {confidence && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              <Ionicons
+                name="shield-checkmark"
+                size={12}
+                color={confidence.color}
+              />
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: "600",
+                  color: confidence.color,
+                }}
+              >
+                Tin cậy: {confidence.label}
+              </Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+
+      {/* ═══ 4. Engagement row ═══ */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 14,
+          paddingBottom: 10,
+          paddingTop: 2,
+          borderTopWidth: 1,
+          borderTopColor: colors.divider,
+          marginTop: 2,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 2,
+          }}
+        >
           {/* Upvote */}
           <TouchableOpacity
             onPress={handleUpvote}
-            className="flex-row items-center gap-1.5"
-            activeOpacity={0.7}
             disabled={voting}
+            activeOpacity={0.7}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 4,
+              paddingVertical: 6,
+              paddingHorizontal: 10,
+              borderRadius: 12,
+              backgroundColor:
+                userVote === 1
+                  ? isDarkColorScheme
+                    ? "rgba(16,185,129,0.12)"
+                    : "#ECFDF5"
+                  : "transparent",
+            }}
           >
             <Ionicons
               name={
-                userVote === 1 ? "arrow-up-circle" : "arrow-up-circle-outline"
+                userVote === 1
+                  ? "arrow-up-circle"
+                  : "arrow-up-circle-outline"
               }
-              size={28}
-              color={userVote === 1 ? "#10B981" : "#64748B"}
+              size={22}
+              color={userVote === 1 ? "#10B981" : colors.subtext}
             />
             <Text
-              className={`text-sm font-bold ${userVote === 1 ? "text-emerald-500" : "text-slate-900 dark:text-white"}`}
+              style={{
+                fontSize: 14,
+                fontWeight: "800",
+                color:
+                  userVote === 1
+                    ? "#10B981"
+                    : colors.text,
+              }}
             >
               {displayScore}
             </Text>
@@ -560,75 +1036,62 @@ export function PostCard({
           {/* Downvote */}
           <TouchableOpacity
             onPress={handleDownvote}
-            activeOpacity={0.7}
             disabled={voting}
+            activeOpacity={0.7}
+            style={{
+              paddingVertical: 6,
+              paddingHorizontal: 8,
+              borderRadius: 12,
+              backgroundColor:
+                userVote === -1
+                  ? isDarkColorScheme
+                    ? "rgba(239,68,68,0.12)"
+                    : "#FEF2F2"
+                  : "transparent",
+            }}
           >
             <Ionicons
               name={
-                userVote === -1 ? "arrow-down-circle" : "arrow-down-circle-outline"
+                userVote === -1
+                  ? "arrow-down-circle"
+                  : "arrow-down-circle-outline"
               }
-              size={28}
-              color={userVote === -1 ? "#EF4444" : "#64748B"}
+              size={22}
+              color={userVote === -1 ? "#EF4444" : colors.subtext}
             />
           </TouchableOpacity>
-
-          {/* <TouchableOpacity activeOpacity={0.7} onPress={handleOpenDetails}>
-            <Ionicons
-              name="chatbubble-outline"
-              size={24}
-              color="#64748B"
-            />
-          </TouchableOpacity> */}
         </View>
 
-        {/* Bookmark/Save (Tuỳ chọn thêm cho giống IG) */}
-        {/* <TouchableOpacity activeOpacity={0.7}>
-          <Ionicons name="bookmark-outline" size={24} color="#64748B" />
-        </TouchableOpacity> */}
+        {/* Share + Details */}
+        <TouchableOpacity
+          onPress={handleOpenDetails}
+          activeOpacity={0.7}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 5,
+            paddingVertical: 6,
+            paddingHorizontal: 10,
+            borderRadius: 12,
+            backgroundColor: isDarkColorScheme
+              ? "rgba(99,102,241,0.08)"
+              : "#EEF2FF",
+          }}
+        >
+          <Ionicons name="open-outline" size={14} color="#6366F1" />
+          <Text
+            style={{
+              color: "#6366F1",
+              fontSize: 12,
+              fontWeight: "600",
+            }}
+          >
+            Chi tiết
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      {/* 4. Trust Score & Content (Có px-4) */}
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={handleOpenDetails}
-        className="px-4"
-      >
-        {/* Indicators */}
-        <View className="flex-row items-center gap-3 mb-2">
-          {statusLabel && (
-            <View className={`rounded px-1.5 py-0.5 ${statusColor}`}>
-              <Text className="text-[10px] font-bold uppercase">
-                {statusLabel}
-              </Text>
-            </View>
-          )}
-          <View className="flex-row items-center gap-1">
-            <Ionicons name="shield-checkmark" size={12} color="#10B981" />
-            <Text className="text-[11px] font-semibold text-slate-500">
-              Độ tin cậy:{" "}
-              {post.confidenceLevel === "high"
-                ? "Cao"
-                : post.confidenceLevel === "medium"
-                  ? "Trung bình"
-                  : "Thấp"}
-            </Text>
-          </View>
-        </View>
-
-        {/* Caption */}
-        {post.content?.length > 0 && (
-          <Text className="text-sm text-slate-900 dark:text-white leading-5">
-            <Text className="font-bold">{userName} </Text>
-            {post.content}
-          </Text>
-        )}
-
-        <Text className="text-slate-400 dark:text-slate-500 text-[11px] mt-2">
-          {post.createdAt}
-        </Text>
-      </TouchableOpacity>
-      
-      {/* 5. Image Viewer Modal */}
+      {/* ═══ 5. Image Viewer Modal ═══ */}
       {imageUris.length > 0 && (
         <ImageViewing
           images={imageUris}

@@ -11,9 +11,8 @@ import {
   CreateAreaSheet,
   AreaCreationOptionSheet,
   AddressSearchSheet,
-} from "~/features/map/components/areas";
-import {
   AdminAreaConfirmModal,
+  WardSelectionSheet,
 } from "~/features/map/components/areas";
 import { LayerToggleSheet } from "~/features/map/components/controls";
 import { FloodStationCard } from "~/features/map/components/stations";
@@ -55,6 +54,8 @@ interface Props {
   isCheckingLimit: boolean;
   showAdminAreaConfirmModal: boolean;
   selectedAdminArea: any;
+  showWardSelectionSheet: boolean;
+  adminAreas: any[];
   areaDisplayMode: "user" | "admin";
   safeRoute: {
     hasResults: boolean;
@@ -95,6 +96,8 @@ interface Props {
   onCloseError: () => void;
   onChangeLocation: () => void;
   onCloseAdminConfirm: () => void;
+  onCloseWardSelectionSheet: () => void;
+  onSelectWard: (area: any) => void;
   setDraftAreaRadius: (r: number) => void;
 }
 
@@ -125,6 +128,8 @@ export function MapSheets({
   isCheckingLimit,
   showAdminAreaConfirmModal,
   selectedAdminArea,
+  showWardSelectionSheet,
+  adminAreas,
   areaDisplayMode,
   safeRoute,
   nav,
@@ -157,12 +162,17 @@ export function MapSheets({
   onCloseError,
   onChangeLocation,
   onCloseAdminConfirm,
+  onCloseWardSelectionSheet,
+  onSelectWard,
   setDraftAreaRadius,
 }: Props) {
   return (
     <>
       {/* Layer Sheet */}
       <LayerToggleSheet visible={showLayerSheet && !nav.isNavigating} onClose={onCloseLayerSheet} areaDisplayMode={areaDisplayMode} onAreaDisplayModeChange={onAreaDisplayModeChange} />
+
+      {/* Ward Selection Sheet */}
+      <WardSelectionSheet isOpen={showWardSelectionSheet && !nav.isNavigating} onClose={onCloseWardSelectionSheet} adminAreas={adminAreas} onSelectWard={onSelectWard} />
 
       {/* Admin Area Confirm */}
       <AdminAreaConfirmModal visible={showAdminAreaConfirmModal && !nav.isNavigating} adminArea={selectedAdminArea} onClose={onCloseAdminConfirm} />

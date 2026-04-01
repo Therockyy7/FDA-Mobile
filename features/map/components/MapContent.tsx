@@ -31,6 +31,7 @@ interface Props {
   areas: any[];
   adminAreas: any[];
   selectedArea: any;
+  selectedAdminArea?: any;
   draftAreaCenter: any;
   draftAreaRadius: number;
   isAdjustingRadius: boolean;
@@ -64,7 +65,7 @@ interface Props {
 export function MapContent({
   mapRef, is3DEnabled, camera, locationPermission,
   settings, mapType, viewMode, areaDisplayMode,
-  areas, adminAreas, selectedArea,
+  areas, adminAreas, selectedArea, selectedAdminArea,
   draftAreaCenter, draftAreaRadius, isAdjustingRadius, showCreateAreaSheet,
   selectedRoute, safeRoute, userLocation,
   isRoutingUIVisible, isUsingGPSOrigin, startCoord, originText, endCoord, destinationText,
@@ -98,10 +99,10 @@ export function MapContent({
         <AreaCircleOverlay key={area.id} area={area} isSelected={selectedArea?.id === area.id} onPress={() => onAreaPress(area)} />
       ))}
 
-      {/* Admin Areas */}
-      {viewMode === "zones" && areaDisplayMode === "admin" && adminAreas.map((area) => (
-        <AdminAreaPolygon key={area.id} area={area} onPress={onAdminAreaPress} />
-      ))}
+      {/* Admin Areas (Only Selected) */}
+      {viewMode === "zones" && areaDisplayMode === "admin" && selectedAdminArea && (
+        <AdminAreaPolygon key={selectedAdminArea.id} area={selectedAdminArea} onPress={onAdminAreaPress} />
+      )}
 
       {/* Draft Area */}
       {draftAreaCenter && (

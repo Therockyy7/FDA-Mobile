@@ -11,10 +11,8 @@ import {
 import { TabLoadingScreen } from "~/components/ui/TabLoadingScreen";
 import { Text } from "~/components/ui/text";
 import { CommunityBanner } from "~/features/home/components/CommunityBanner";
-import { EmergencyAlertBanner } from "~/features/home/components/EmergencyAlertBanner";
 import { HomeHeader } from "~/features/home/components/HomeHeader";
 import { WeatherInsightsSection } from "~/features/home/components/WeatherInsightsSection";
-import { MOCK_ALERT } from "~/features/home/constants/home-data";
 import { useHomeWeatherData } from "~/features/home/hooks/useHomeWeatherData";
 import { DistrictsForecastCard } from "~/features/prediction/components/DistrictsForecastCard";
 
@@ -65,8 +63,10 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Emergency Alert (only when active) */}
-        <EmergencyAlertBanner alert={MOCK_ALERT} />
+        {/* ═══ COMMUNITY SECTION (promoted to top) ═══ */}
+        <View style={{ marginTop: 8 }}>
+          <CommunityBanner />
+        </View>
 
         {/* ═══ WEATHER SECTION ═══ */}
         {weatherLoading && !meteo ? (
@@ -86,9 +86,6 @@ export default function HomeScreen() {
 
         {/* ═══ DISTRICTS FORECAST SECTION ═══ */}
         <DistrictsForecastCard />
-
-        {/* ═══ COMMUNITY SECTION ═══ */}
-        <CommunityBanner />
       </ScrollView>
     </View>
   );

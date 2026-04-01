@@ -76,17 +76,17 @@ export default function PostDetailScreen() {
   return (
     <SafeAreaView className="flex-1 bg-slate-100 dark:bg-slate-950 items-center justify-center">
       {/* Header */}
-      <View className="flex-row items-center px-4 pt-2 pb-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+      <View className="flex-row items-center px-4 pt-4 pb-3 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
         <Ionicons
           name="chevron-back"
-          size={22}
-          color="#0B1A33"
+          size={24}
+          color="#64748B"
           onPress={() => router.back()}
         />
-        <Text className="flex-1 text-center text-slate-900 dark:text-white font-semibold text-sm">
+        <Text className="flex-1 text-center text-slate-900 dark:text-white font-bold text-base">
           Bài đăng cộng đồng
         </Text>
-        <View className="w-6" />
+        <View className="w-8" />
       </View>
 
       <ScrollView className="flex-1 ">

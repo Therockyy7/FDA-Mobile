@@ -311,18 +311,13 @@ export const AreaService = {
     params: AdminAreaParams = {},
   ): Promise<AdminAreaResponse> => {
     try {
-      const {
-        searchTerm,
-        level,
-        parentId,
-        pageNumber = 1,
-        pageSize = 100,
-      } = params;
+      const { searchTerm, parentId, pageNumber = 1, pageSize = 100 } = params;
 
       const queryParts: string[] = [];
+      // Always set level to ward
+      queryParts.push(`level=ward`);
       if (searchTerm)
         queryParts.push(`searchTerm=${encodeURIComponent(searchTerm)}`);
-      if (level) queryParts.push(`level=${level}`);
       if (parentId) queryParts.push(`parentId=${parentId}`);
       queryParts.push(`pageNumber=${pageNumber}`);
       queryParts.push(`pageSize=${pageSize}`);

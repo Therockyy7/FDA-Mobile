@@ -10,8 +10,10 @@ import {
   PickOnMapOverlay,
   StreetViewHint,
 } from "~/features/map/components/overlays";
+import { ewkbToLatLngArray, getBoundsFromCoords } from "~/features/map/lib/ewkb-parser";
 import type { LatLng } from "~/features/map/types/safe-route.types";
 
+import { CommunityFloatingHint } from "~/features/map/components/CommunityFloatingHint";
 import { MapContent } from "~/features/map/components/MapContent";
 import { MapFloatingUI } from "~/features/map/components/MapFloatingUI";
 import { MapHeaderSwitch } from "~/features/map/components/MapHeaderSwitch";
@@ -69,6 +71,7 @@ export default function MapScreen() {
     setSelectedZone: s.setSelectedZone,
     setSelectedStationId: s.setSelectedStationId,
     setSelectedArea: s.setSelectedArea,
+    setSelectedAdminArea: s.setSelectedAdminArea,
     setSelectedCommunityReport: s.setSelectedCommunityReport,
     setShowDetailPanels: s.setShowDetailPanels,
     handleStartEditAreaFromParams: s.handleStartEditAreaFromParams,
@@ -79,6 +82,20 @@ export default function MapScreen() {
     params: s.params,
   });
 
+  const handleSelectWard = (area: any) => {
+    s.setShowWardSelectionSheet(false);
+    s.setSelectedAdminArea(area);
+    
+    // Parse coordinates and animate map
+    if (area.geometry) {
+      const coords = ewkbToLatLngArray(area.geometry);
+      const bounds = getBoundsFromCoords(coords);
+      if (bounds && s.mapRef.current) {
+        s.mapRef.current.animateToRegion(bounds, 1000);
+      }
+    }
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: "#0B1A33" }}>
       <StatusBar
@@ -88,7 +105,8 @@ export default function MapScreen() {
       />
 
       {/* Header */}
-      <MapHeaderSwitch
+      {!s.selectedCommunityReport && (
+        <MapHeaderSwitch
         navIsNavigating={s.nav.isNavigating}
         safeRouteHasResults={s.safeRoute.hasResults}
         originText={s.originText}
@@ -139,6 +157,7 @@ export default function MapScreen() {
         userLocation={s.userLocation}
         selectGPSAsDestination={s.selectGPSAsDestination}
       />
+      )}
 
       <View style={{ flex: 1, position: "relative" }}>
         {/* Loading Overlay */}
@@ -180,6 +199,7 @@ export default function MapScreen() {
           areas={s.areas}
           adminAreas={s.adminAreas}
           selectedArea={s.selectedArea}
+          selectedAdminArea={s.selectedAdminArea}
           draftAreaCenter={s.draftAreaCenter}
           draftAreaRadius={s.draftAreaRadius}
           isAdjustingRadius={s.isAdjustingRadius}
@@ -214,34 +234,56 @@ export default function MapScreen() {
         />
 
         {/* Floating UI */}
-        <MapFloatingUI
-          selectedRoute={s.selectedRoute}
-          selectedZone={s.selectedZone}
-          selectedArea={s.selectedArea}
-          selectedStationId={s.selectedStationId}
-          isRoutingUIVisible={s.isRoutingUIVisible}
-          safeRouteHasResults={s.safeRoute.hasResults}
-          isAdjustingRadius={s.isAdjustingRadius}
-          showCreateAreaSheet={s.showCreateAreaSheet}
-          showCreateAreaButton={s.viewMode === "zones" && !s.isRoutingUIVisible && !s.selectedArea && !s.isAdjustingRadius && !s.showCreateAreaSheet}
-          onCreateArea={s.handleStartCreateArea}
-          onZoomIn={s.zoomIn}
-          onZoomOut={s.zoomOut}
-          onMyLocation={() => s.goToMyLocation(s.userLocation)}
-          is3DEnabled={s.is3DEnabled}
-          onToggle3D={s.toggle3DView}
-          showLegendState={s.showLegend}
-          onShowLegend={s.toggleLegend}
-          onRotateLeft={() => s.rotateCamera("left")}
-          onRotateRight={() => s.rotateCamera("right")}
-          streetViewLocation={s.streetViewLocation}
-          onClearStreetView={() => s.setStreetViewLocation(null)}
-          onShowLayers={() => s.setShowLayerSheet(true)}
-        />
+        {(!s.showWardSelectionSheet && !s.selectedCommunityReport) && (
+          <MapFloatingUI
+            selectedRoute={s.selectedRoute}
+            selectedZone={s.selectedZone}
+            selectedArea={s.selectedArea}
+            selectedStationId={s.selectedStationId}
+            isRoutingUIVisible={s.isRoutingUIVisible}
+            safeRouteHasResults={s.safeRoute.hasResults}
+            isAdjustingRadius={s.isAdjustingRadius}
+            showCreateAreaSheet={s.showCreateAreaSheet}
+            showCreateAreaButton={s.viewMode === "zones" && !s.isRoutingUIVisible && !s.selectedArea && !s.isAdjustingRadius && !s.showCreateAreaSheet}
+            onCreateArea={s.handleStartCreateArea}
+            onZoomIn={s.zoomIn}
+            onZoomOut={s.zoomOut}
+            onMyLocation={() => s.goToMyLocation(s.userLocation)}
+            is3DEnabled={s.is3DEnabled}
+            onToggle3D={s.toggle3DView}
+            showLegendState={s.showLegend}
+            onShowLegend={s.toggleLegend}
+            onRotateLeft={() => s.rotateCamera("left")}
+            onRotateRight={() => s.rotateCamera("right")}
+            streetViewLocation={s.streetViewLocation}
+            onClearStreetView={() => s.setStreetViewLocation(null)}
+            onShowLayers={() => s.setShowLayerSheet(true)}
+            showAiSelectButton={s.areaDisplayMode === "admin" && !s.isRoutingUIVisible}
+            onShowWardSelection={() => s.setShowWardSelectionSheet(true)}
+            selectedAdminAreaName={s.selectedAdminArea ? (s.selectedAdminArea as any).name : null}
+            onClearAdminArea={() => {
+              s.setSelectedAdminArea(null);
+              s.setShowAdminAreaConfirmModal(false);
+            }}
+          />
+        )}
 
         {/* Street View Hint */}
         <StreetViewHint
           visible={!!s.streetViewLocation && !s.isRoutingUIVisible}
+        />
+
+        {/* Community Floating Hint */}
+        <CommunityFloatingHint
+          visible={
+            !s.isRoutingUIVisible &&
+            !s.nav.isNavigating &&
+            !s.selectedArea &&
+            !s.selectedRoute &&
+            !s.showCreateAreaSheet &&
+            !s.showWardSelectionSheet &&
+            !s.selectedCommunityReport
+          }
         />
 
         {/* Hide all sheets during navigation */}
@@ -273,6 +315,8 @@ export default function MapScreen() {
             isCheckingLimit={s.isCheckingLimit}
             showAdminAreaConfirmModal={s.showAdminAreaConfirmModal}
             selectedAdminArea={s.selectedAdminArea}
+            showWardSelectionSheet={s.showWardSelectionSheet}
+            adminAreas={s.adminAreas}
             areaDisplayMode={s.areaDisplayMode}
             safeRoute={s.safeRoute}
             nav={s.nav}
@@ -305,6 +349,8 @@ export default function MapScreen() {
             onCloseError={s.handleCloseErrorModal}
             onChangeLocation={s.handleCancelCreateArea}
             onCloseAdminConfirm={s.handleCloseAdminConfirm}
+            onCloseWardSelectionSheet={() => s.setShowWardSelectionSheet(false)}
+            onSelectWard={handleSelectWard}
             setDraftAreaRadius={s.setDraftAreaRadius}
           />
         )}

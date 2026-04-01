@@ -3,8 +3,7 @@
 // Reduces prop-drilling across MapScreen → child components.
 
 import { useMemo, useState } from "react";
-import { useRouter } from "expo-router";
-import { useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import type { NearbyFloodReport } from "~/features/community/services/community.service";
 
 import { useControlArea } from "~/features/areas/hooks/useControlArea";
@@ -45,6 +44,8 @@ export interface MapScreenState {
   setShowAdminAreaConfirmModal: (v: boolean) => void;
   selectedAdminArea: any;
   setSelectedAdminArea: (v: any) => void;
+  showWardSelectionSheet: boolean;
+  setShowWardSelectionSheet: (v: boolean) => void;
   showResultCard: boolean;
   setShowResultCard: (v: boolean) => void;
   showWarningsSheet: boolean;
@@ -192,6 +193,7 @@ export function useMapScreenState(): MapScreenState {
   const [showResultCard, setShowResultCard] = useState(false);
   const [showWarningsSheet, setShowWarningsSheet] = useState(false);
   const [selectedCommunityReport, setSelectedCommunityReport] = useState<NearbyFloodReport | null>(null);
+  const [showWardSelectionSheet, setShowWardSelectionSheet] = useState(false);
 
   // Data hooks
   const { settings, areas, floodSeverity, communityReports, adminAreas, refreshFloodSeverity, refreshAreas, refreshNearbyFloodReports } = useMapData();
@@ -229,7 +231,7 @@ export function useMapScreenState(): MapScreenState {
 
   const handleCloseAdminConfirm = () => {
     setShowAdminAreaConfirmModal(false);
-    setSelectedAdminArea(null);
+    // Keep selectedAdminArea to keep the polygon visible on map
   };
 
   return {
@@ -241,6 +243,7 @@ export function useMapScreenState(): MapScreenState {
     areaDisplayMode, setAreaDisplayMode,
     showAdminAreaConfirmModal, setShowAdminAreaConfirmModal,
     selectedAdminArea, setSelectedAdminArea,
+    showWardSelectionSheet, setShowWardSelectionSheet,
     showResultCard, setShowResultCard,
     showWarningsSheet, setShowWarningsSheet,
     selectedCommunityReport, setSelectedCommunityReport,

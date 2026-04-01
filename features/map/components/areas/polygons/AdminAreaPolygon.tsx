@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Polygon } from "react-native-maps";
 import { AdminArea } from "~/features/areas/types/admin-area.types";
+import { isEwkbHex, ewkbToLatLngArray } from "~/features/map/lib/ewkb-parser";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 interface AdminAreaPolygonProps {
@@ -18,7 +19,7 @@ interface AdminAreaPolygonProps {
  * 1. Already-parsed GeoJSON object
  * 2. JSON string of GeoJSON (standard)
  * 3. Double-escaped JSON string
- * 4. WKB hex string (starts with 01 or 00) - not supported, returns []
+ * 4. EWKB hex string (PostGIS binary format) — NOW SUPPORTED
  * 5. Numeric or non-JSON strings - returns []
  */
 function parseGeometry(
@@ -38,11 +39,14 @@ function parseGeometry(
   const trimmed = geometry.trim();
   if (!trimmed) return [];
 
-  // Case 4: WKB hex string (starts with 01/00, only hex chars and sometimes numbers)
-  // WKB typically starts with byte order marker: 01 (little-endian) or 00 (big-endian)
-  if (/^[0-9a-fA-F]+$/.test(trimmed) && !trimmed.startsWith("{")) {
-    // This is WKB hex-encoded binary — not parseable as JSON
-    // Silently skip since this is expected from some backends
+  // Case 4: EWKB hex string (PostGIS binary geometry)
+  if (isEwkbHex(trimmed)) {
+    const coords = ewkbToLatLngArray(trimmed);
+    if (coords.length > 0) {
+      return coords;
+    }
+    // If EWKB parsing returned empty, log for debugging
+    console.warn(`[AdminAreaPolygon] EWKB parsing returned empty for "${areaName}"`);
     return [];
   }
 
@@ -160,3 +164,4 @@ export const AdminAreaPolygon = React.memo(
 );
 
 AdminAreaPolygon.displayName = "AdminAreaPolygon";
+

@@ -1,190 +1,320 @@
 // features/home/components/CommunityBanner.tsx
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import LottieView from "lottie-react-native";
-import React from "react";
-import { TouchableOpacity, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import {
+  Animated,
+  Easing,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Text } from "~/components/ui/text";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 export function CommunityBanner() {
   const router = useRouter();
+  const { isDarkColorScheme } = useColorScheme();
+
+  // Subtle shimmer animation for the report button
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmerAnim, {
+          toValue: 1,
+          duration: 2500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(shimmerAnim, {
+          toValue: 0,
+          duration: 2500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [shimmerAnim]);
+
+  const shimmerOpacity = shimmerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.6, 1],
+  });
+
+  const colors = {
+    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
+    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
+    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
+    subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
+    softBg: isDarkColorScheme ? "#1E293B50" : "#F8FAFC",
+  };
 
   return (
-    <View className="px-4 py-2 mt-2">
-      {/* ── Section Header ── */}
-      <View className="flex-row items-center justify-between mb-3">
-        <View className="flex-row items-center gap-2">
-          <View className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900/40 items-center justify-center">
-            <Ionicons name="people" size={18} color="#8B5CF6" />
-          </View>
-          <Text className="text-slate-900 dark:text-white text-lg font-bold">
-            Cộng đồng
-          </Text>
-        </View>
+    <View className="px-4 py-1">
+      {/* ── Compact Card Container ── */}
+      <View
+        style={{
+          borderRadius: 20,
+          overflow: "hidden",
+          backgroundColor: colors.cardBg,
+          borderWidth: 1,
+          borderColor: colors.border,
+          shadowColor: "#8B5CF6",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          elevation: 3,
+        }}
+      >
+        {/* ── Top: Gradient Hero Strip ── */}
         <TouchableOpacity
           onPress={() => router.push("/community" as any)}
-          activeOpacity={0.7}
-          className="flex-row items-center justify-center px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800"
+          activeOpacity={0.9}
         >
-          <Text className="text-slate-700 dark:text-slate-300 text-xs font-bold mr-1">
-            Khám phá
-          </Text>
-          <Ionicons name="arrow-forward" size={12} color="#475569" />
-        </TouchableOpacity>
-      </View>
+          <LinearGradient
+            colors={["#7C3AED", "#6D28D9", "#5B21B6"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ paddingVertical: 14, paddingHorizontal: 16 }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              {/* Left: Icon + Title */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                  flex: 1,
+                }}
+              >
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 12,
+                    backgroundColor: "rgba(255,255,255,0.18)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Ionicons name="people" size={20} color="white" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      color: "white",
+                      fontSize: 15,
+                      fontWeight: "800",
+                      letterSpacing: -0.3,
+                    }}
+                  >
+                    Cộng đồng Đà Nẵng
+                  </Text>
+                  <Text
+                    style={{
+                      color: "rgba(255,255,255,0.7)",
+                      fontSize: 10,
+                      fontWeight: "500",
+                      marginTop: 1,
+                    }}
+                  >
+                    Báo cáo & theo dõi ngập lụt thời gian thực
+                  </Text>
+                </View>
+              </View>
 
-      {/* ═══════════ MAIN HERO CARD ═══════════ */}
-      <TouchableOpacity
-        onPress={() => router.push("/community" as any)}
-        activeOpacity={0.85}
-      >
-        <LinearGradient
-          colors={["#8B5CF6", "#6D28D9"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+              {/* Right: Mini Stats */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                {/* Active reports indicator */}
+                <View
+                  style={{
+                    alignItems: "center",
+                    backgroundColor: "rgba(255,255,255,0.15)",
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: 10,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#FCD34D",
+                      fontSize: 14,
+                      fontWeight: "900",
+                    }}
+                  >
+                    3
+                  </Text>
+                  <Text
+                    style={{
+                      color: "rgba(255,255,255,0.6)",
+                      fontSize: 8,
+                      fontWeight: "600",
+                    }}
+                  >
+                    Cảnh báo
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color="rgba(255,255,255,0.5)"
+                />
+              </View>
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {/* ── Bottom: Quick Actions Row ── */}
+        <View
           style={{
-            borderRadius: 24,
-            padding: 20,
-            overflow: "hidden",
-            marginBottom: 12,
-            shadowColor: "#8B5CF6",
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.25,
-            shadowRadius: 16,
-            elevation: 8,
+            flexDirection: "row",
+            paddingVertical: 10,
+            paddingHorizontal: 12,
+            gap: 8,
           }}
         >
-          {/* Subtle network animation background */}
-          <LottieView
-            source={require("../../../assets/animations/heartbeat-pulse.json")}
-            autoPlay
-            loop
-            speed={0.5}
+          {/* Report Flood Button */}
+          <Animated.View style={{ flex: 1, opacity: shimmerOpacity }}>
+            <TouchableOpacity
+              onPress={() => router.push("/community/create-post" as any)}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={["#0EA5E9", "#0284C7"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{
+                  borderRadius: 14,
+                  paddingVertical: 10,
+                  paddingHorizontal: 12,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                }}
+              >
+                <Ionicons name="camera" size={16} color="white" />
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 12,
+                    fontWeight: "700",
+                  }}
+                >
+                  Báo cáo ngập
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+
+          {/* View Map Button */}
+          <TouchableOpacity
+            onPress={() => router.push("/map" as any)}
+            activeOpacity={0.8}
+            style={{ flex: 1 }}
+          >
+            <View
+              style={{
+                borderRadius: 14,
+                paddingVertical: 10,
+                paddingHorizontal: 12,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                backgroundColor: isDarkColorScheme
+                  ? "rgba(16, 185, 129, 0.12)"
+                  : "#ECFDF5",
+                borderWidth: 1,
+                borderColor: isDarkColorScheme
+                  ? "rgba(16, 185, 129, 0.25)"
+                  : "#A7F3D0",
+              }}
+            >
+              <MaterialCommunityIcons
+                name="map-marker-radius"
+                size={16}
+                color="#10B981"
+              />
+              <Text
+                style={{
+                  color: "#10B981",
+                  fontSize: 12,
+                  fontWeight: "700",
+                }}
+              >
+                Bản đồ ngập
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* ── Smart Tip Strip ── */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingVertical: 8,
+            paddingHorizontal: 14,
+            backgroundColor: isDarkColorScheme
+              ? "rgba(139, 92, 246, 0.08)"
+              : "#FAF5FF",
+            borderTopWidth: 1,
+            borderTopColor: isDarkColorScheme
+              ? "rgba(139, 92, 246, 0.15)"
+              : "#EDE9FE",
+            gap: 8,
+          }}
+        >
+          <View
             style={{
-              position: "absolute",
-              width: "150%",
-              height: "150%",
-              top: "-25%",
-              left: "-25%",
-              opacity: 0.15,
+              width: 20,
+              height: 20,
+              borderRadius: 10,
+              backgroundColor: isDarkColorScheme
+                ? "rgba(139, 92, 246, 0.2)"
+                : "#EDE9FE",
+              alignItems: "center",
+              justifyContent: "center",
             }}
+          >
+            <Ionicons name="bulb" size={11} color="#8B5CF6" />
+          </View>
+          <Text
+            style={{
+              flex: 1,
+              color: isDarkColorScheme ? "#A78BFA" : "#7C3AED",
+              fontSize: 10,
+              fontWeight: "600",
+              lineHeight: 14,
+            }}
+            numberOfLines={2}
+          >
+            Thấy điểm ngập? Chụp ảnh & chia sẻ trên Cộng đồng để cảnh báo
+            mọi người!
+          </Text>
+          <Ionicons
+            name="arrow-forward-circle"
+            size={16}
+            color="#8B5CF6"
+            style={{ opacity: 0.6 }}
           />
-
-          <View className="flex-row items-center gap-4 mb-5">
-            <View className="w-14 h-14 rounded-2xl bg-white/20 items-center justify-center border border-white/10">
-              <Ionicons name="share-social" size={28} color="white" />
-            </View>
-            <View className="flex-1">
-              <Text
-                style={{
-                  color: "rgba(255,255,255,0.8)",
-                  fontSize: 11,
-                  fontWeight: "600",
-                  marginBottom: 2,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
-                Mạng lưới cộng đồng
-              </Text>
-              <Text className="text-white text-base font-extrabold leading-5">
-                Chung tay bảo vệ{"\n"}Đà Nẵng
-              </Text>
-            </View>
-          </View>
-
-          {/* Stats Bar Component */}
-          <View className="flex-row items-center bg-black/15 rounded-xl p-3 border border-white/10 gap-3">
-            <View className="flex-1 items-center border-r border-white/10">
-              <Text className="text-white text-lg font-black tracking-tighter">
-                42
-              </Text>
-              <Text
-                style={{
-                  color: "rgba(255,255,255,0.6)",
-                  fontSize: 10,
-                  fontWeight: "500",
-                }}
-              >
-                Bài đăng mới
-              </Text>
-            </View>
-            <View className="flex-1 items-center border-r border-white/10">
-              <Text className="text-amber-300 text-lg font-black tracking-tighter">
-                3
-              </Text>
-              <Text
-                style={{
-                  color: "rgba(255,255,255,0.6)",
-                  fontSize: 10,
-                  fontWeight: "500",
-                }}
-              >
-                Cảnh báo khẩn
-              </Text>
-            </View>
-            <View className="flex-1 items-center">
-              <Text className="text-emerald-300 text-lg font-black tracking-tighter">
-                12
-              </Text>
-              <Text
-                style={{
-                  color: "rgba(255,255,255,0.6)",
-                  fontSize: 10,
-                  fontWeight: "500",
-                }}
-              >
-                Đã an toàn
-              </Text>
-            </View>
-          </View>
-        </LinearGradient>
-      </TouchableOpacity>
-
-      {/* ═══════════ QUICK ACTIONS ROW ═══════════ */}
-      <View className="flex-row gap-3">
-        {/* Create Post */}
-        <TouchableOpacity
-          onPress={() => router.push("/community/create-post" as any)}
-          activeOpacity={0.8}
-          className="flex-1"
-        >
-          <View className="rounded-2xl bg-white dark:bg-slate-800 p-4 border border-slate-200 dark:border-slate-700 flex-row items-center gap-3 shadow-sm">
-            <View className="w-10 h-10 rounded-full bg-sky-100 dark:bg-sky-900/30 items-center justify-center">
-              <Ionicons name="camera" size={18} color="#0EA5E9" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-slate-900 dark:text-white text-sm font-bold">
-                Báo cáo ngập
-              </Text>
-              <Text className="text-slate-500 dark:text-slate-400 text-[10px] mt-0.5">
-                Chia sẻ hình ảnh
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-
-        {/* View Map Shortcut */}
-        <TouchableOpacity
-          onPress={() => router.push("/map" as any)}
-          activeOpacity={0.8}
-          className="flex-1"
-        >
-          <View className="rounded-2xl bg-white dark:bg-slate-800 p-4 border border-slate-200 dark:border-slate-700 flex-row items-center gap-3 shadow-sm">
-            <View className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 items-center justify-center">
-              <Ionicons name="map" size={18} color="#10B981" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-slate-900 dark:text-white text-sm font-bold">
-                Bản đồ lũ
-              </Text>
-              <Text className="text-slate-500 dark:text-slate-400 text-[10px] mt-0.5">
-                Xem trực tiếp
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
+        </View>
       </View>
     </View>
   );

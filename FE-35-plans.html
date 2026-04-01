@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FDA - Bảng giá Hệ thống Cảnh báo Lũ lụt</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-primary-fixed": "#0d1c32",
+              "surface-container-high": "#e4e9ed",
+              "error-container": "#ffdad6",
+              "on-secondary-fixed-variant": "#114783",
+              "secondary-fixed": "#d5e3ff",
+              "inverse-surface": "#2c3134",
+              "on-secondary-fixed": "#001b3c",
+              "primary": "#000000",
+              "on-secondary-container": "#154985",
+              "secondary": "#325f9c",
+              "tertiary-fixed-dim": "#90cdfd",
+              "tertiary-container": "#001e30",
+              "on-tertiary": "#ffffff",
+              "surface": "#f6fafe",
+              "tertiary": "#000000",
+              "outline-variant": "#c5c6cd",
+              "surface-variant": "#dfe3e7",
+              "on-tertiary-fixed-variant": "#004b70",
+              "surface-container-low": "#f0f4f8",
+              "on-primary-fixed-variant": "#39475f",
+              "on-tertiary-container": "#4b8ab6",
+              "primary-fixed": "#d6e3ff",
+              "on-primary-container": "#76849f",
+              "on-surface": "#171c1f",
+              "error": "#ba1a1a",
+              "on-background": "#171c1f",
+              "on-primary": "#ffffff",
+              "surface-bright": "#f6fafe",
+              "primary-container": "#0d1c32",
+              "on-surface-variant": "#44474d",
+              "secondary-fixed-dim": "#a7c8ff",
+              "inverse-primary": "#b9c7e4",
+              "surface-container-highest": "#dfe3e7",
+              "tertiary-fixed": "#cae6ff",
+              "on-secondary": "#ffffff",
+              "surface-tint": "#515f78",
+              "surface-dim": "#d6dade",
+              "surface-container-lowest": "#ffffff",
+              "on-error-container": "#93000a",
+              "inverse-on-surface": "#edf1f5",
+              "secondary-container": "#90bafd",
+              "background": "#f6fafe",
+              "surface-container": "#eaeef2",
+              "on-tertiary-fixed": "#001e30",
+              "outline": "#75777e",
+              "primary-fixed-dim": "#b9c7e4",
+              "on-error": "#ffffff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Be Vietnam Pro"],
+              "label": ["Be Vietnam Pro"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface">
+<!-- TopAppBar -->
+<header class="bg-[#F0F4F8] dark:bg-slate-900 sticky top-0 z-50 transition-colors duration-300">
+<div class="flex justify-between items-center w-full px-8 py-4 max-w-7xl mx-auto">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#1B4D89] dark:text-blue-400" data-icon="waves">waves</span>
+<span class="text-2xl font-black tracking-tighter text-[#0A192F] dark:text-white">FDA</span>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-[#1B4D89] dark:text-blue-300 font-bold border-b-2 border-[#1B4D89] transition-colors duration-300" href="#">Bảng giá</a>
+<a class="text-slate-500 dark:text-slate-400 font-medium hover:text-[#1B4D89] transition-colors duration-300" href="#">Bản đồ</a>
+<a class="text-slate-500 dark:text-slate-400 font-medium hover:text-[#1B4D89] transition-colors duration-300" href="#">Cảnh báo</a>
+</nav>
+<button class="bg-[#1B4D89] text-white px-6 py-2 rounded-full font-bold scale-95 active:opacity-80 transition-all">Đăng nhập</button>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-4 sm:px-8 py-12 space-y-24">
+<!-- 1) HERO PANEL -->
+<section class="relative">
+<div class="bg-secondary-fixed/30 rounded-xl p-8 md:p-16 flex flex-col items-center text-center overflow-hidden">
+<div class="max-w-2xl z-10">
+<h1 class="font-headline font-extrabold text-4xl md:text-5xl text-on-primary-fixed leading-tight mb-6">
+                        Chọn gói phù hợp để nhận cảnh báo nhanh hơn
+                    </h1>
+<p class="text-lg text-on-primary-fixed-variant font-medium mb-10">
+                        Theo dõi ngập lụt, nhận cảnh báo sớm và quản lý khu vực quan tâm hiệu quả hơn với công nghệ vệ tinh và IoT thời gian thực.
+                    </p>
+</div>
+<!-- UI Preview Mockup -->
+<div class="relative w-full max-w-4xl mt-4 rounded-lg overflow-hidden shadow-2xl bg-surface-container-lowest p-2 border border-outline-variant/10">
+<img alt="FDA Platform Dashboard Preview" class="w-full h-auto rounded-lg" data-alt="a high-tech clean dashboard interface showing flood risk maps with blue and red data visualizations on a white background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUFDFZFY9pDsi9gYJD-FlIdMpX5WHSwTbVUTxTcgEBG829CU-QCZZRPljSPIKbP4o6Kw9e50cgYRJ9UaTRRdDrLECFU-5MpTfL7r4jD6gXDPvAUYVRv12VD7k4TJ145sevEVi_BjyaRUMl9oClIi4gyV2kY303QJT3bge_H7YLRKNbdmGRS3jOtws6YUSf8f3RLOI83njlQ-2Q58KNONFXgVPTAhLEdm5eeuNoJENDd3GNrkJrGYkKOmheul5gRfXLURSYlfogwSN5"/>
+<div class="absolute inset-0 bg-gradient-to-t from-secondary-fixed/20 to-transparent pointer-events-none"></div>
+</div>
+</div>
+</section>
+<!-- 2) PRICING PANEL -->
+<section class="space-y-12" id="pricing">
+<!-- Toggle -->
+<div class="flex flex-col items-center gap-6">
+<div class="inline-flex items-center p-1 bg-surface-container rounded-full">
+<button class="px-8 py-2.5 rounded-full text-sm font-bold bg-secondary text-white shadow-sm">Theo tháng</button>
+<button class="px-8 py-2.5 rounded-full text-sm font-semibold text-on-surface-variant hover:text-secondary transition-colors">Theo năm</button>
+</div>
+<span class="px-4 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-xs font-bold rounded-full">Tiết kiệm 20% khi thanh toán năm</span>
+</div>
+<!-- Plan Cards (Bento style grid) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+<!-- Plan: Miễn phí -->
+<div class="bg-surface-container-lowest p-10 rounded-lg flex flex-col justify-between hover:bg-surface-container-low transition-colors duration-500 border border-transparent hover:border-outline-variant/30">
+<div>
+<div class="flex justify-between items-start mb-8">
+<span class="p-3 bg-surface-container rounded-2xl">
+<span class="material-symbols-outlined text-secondary" data-icon="cloud">cloud</span>
+</span>
+</div>
+<h3 class="font-headline font-bold text-2xl text-on-surface mb-2">Miễn phí</h3>
+<p class="text-on-surface-variant mb-8 text-sm leading-relaxed">Nhận cảnh báo cơ bản cho các khu vực quan tâm của bạn.</p>
+<div class="mb-8">
+<span class="text-4xl font-extrabold font-headline">0đ</span>
+<span class="text-on-surface-variant text-sm font-medium">/tháng</span>
+</div>
+<ul class="space-y-4 mb-10">
+<li class="flex items-center gap-3 text-sm font-medium text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                1 khu vực theo dõi
+                            </li>
+<li class="flex items-center gap-3 text-sm font-medium text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                Cảnh báo qua App FDA
+                            </li>
+</ul>
+</div>
+<button class="w-full py-4 rounded-full border border-outline-variant text-secondary font-bold hover:bg-secondary hover:text-white transition-all">Bắt đầu ngay</button>
+</div>
+<!-- Plan: Cao cấp -->
+<div class="relative bg-surface-container-lowest p-10 rounded-lg flex flex-col justify-between border-2 border-secondary shadow-xl shadow-secondary/5 transform md:-translate-y-4">
+<div class="absolute top-0 right-10 -translate-y-1/2 bg-secondary text-white px-4 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase">Phổ biến nhất</div>
+<div>
+<div class="flex justify-between items-start mb-8">
+<span class="p-3 bg-secondary-container rounded-2xl">
+<span class="material-symbols-outlined text-on-secondary-container" data-icon="bolt">bolt</span>
+</span>
+</div>
+<h3 class="font-headline font-bold text-2xl text-on-surface mb-2">Cao cấp</h3>
+<p class="text-on-surface-variant mb-8 text-sm leading-relaxed">Cảnh báo nhanh hơn, nhiều kênh thông báo hơn, phù hợp cho nhu cầu cập nhật thường xuyên.</p>
+<div class="mb-8">
+<span class="text-4xl font-extrabold font-headline">199.000đ</span>
+<span class="text-on-surface-variant text-sm font-medium">/tháng</span>
+</div>
+<ul class="space-y-4 mb-10">
+<li class="flex items-center gap-3 text-sm font-bold text-on-surface">
+<span class="material-symbols-outlined text-secondary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                5 khu vực theo dõi
+                            </li>
+<li class="flex items-center gap-3 text-sm font-bold text-on-surface">
+<span class="material-symbols-outlined text-secondary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                Cảnh báo SMS &amp; Email
+                            </li>
+<li class="flex items-center gap-3 text-sm font-bold text-on-surface">
+<span class="material-symbols-outlined text-secondary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                Ưu tiên gửi cảnh báo
+                            </li>
+</ul>
+</div>
+<button class="w-full py-4 rounded-full bg-secondary text-white font-bold hover:opacity-90 transition-all shadow-lg shadow-secondary/20">Nâng cấp</button>
+</div>
+<!-- Plan: Giám sát -->
+<div class="bg-surface-container-lowest p-10 rounded-lg flex flex-col justify-between hover:bg-surface-container-low transition-colors duration-500 border border-transparent hover:border-outline-variant/30">
+<div>
+<div class="flex justify-between items-start mb-8">
+<span class="p-3 bg-surface-container rounded-2xl">
+<span class="material-symbols-outlined text-secondary" data-icon="shield">shield</span>
+</span>
+</div>
+<h3 class="font-headline font-bold text-2xl text-on-surface mb-2">Giám sát</h3>
+<p class="text-on-surface-variant mb-8 text-sm leading-relaxed">Giám sát nâng cao, nhiều khu vực hơn và ưu tiên cảnh báo cho nhu cầu chuyên sâu.</p>
+<div class="mb-8">
+<span class="text-4xl font-extrabold font-headline">499.000đ</span>
+<span class="text-on-surface-variant text-sm font-medium">/tháng</span>
+</div>
+<ul class="space-y-4 mb-10">
+<li class="flex items-center gap-3 text-sm font-medium text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                Không giới hạn khu vực
+                            </li>
+<li class="flex items-center gap-3 text-sm font-medium text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                Gọi điện cảnh báo trực tiếp
+                            </li>
+<li class="flex items-center gap-3 text-sm font-medium text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                API truy xuất dữ liệu
+                            </li>
+</ul>
+</div>
+<button class="w-full py-4 rounded-full border border-outline-variant text-secondary font-bold hover:bg-secondary hover:text-white transition-all">Nâng cấp</button>
+</div>
+</div>
+</section>
+<!-- 3) COMPARISON PANEL -->
+<section class="space-y-12">
+<div class="text-center">
+<h2 class="font-headline font-bold text-3xl text-on-surface">So sánh các tính năng</h2>
+<p class="text-on-surface-variant mt-2">Chi tiết quyền lợi của từng gói thành viên</p>
+</div>
+<div class="overflow-x-auto no-scrollbar">
+<table class="w-full text-left border-separate border-spacing-0">
+<thead>
+<tr>
+<th class="py-6 px-4 bg-surface sticky left-0 z-20 font-bold text-on-surface border-b border-outline-variant/20">Tính năng</th>
+<th class="py-6 px-8 text-center border-b border-outline-variant/20 font-bold text-on-surface-variant">Miễn phí</th>
+<th class="py-6 px-8 text-center border-b border-outline-variant/20 font-bold text-secondary">Cao cấp</th>
+<th class="py-6 px-8 text-center border-b border-outline-variant/20 font-bold text-on-surface-variant">Giám sát</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<tr>
+<td class="py-6 px-4 sticky left-0 bg-surface z-10 font-medium text-on-surface">Số khu vực theo dõi</td>
+<td class="py-6 px-8 text-center text-on-surface-variant">1</td>
+<td class="py-6 px-8 text-center font-bold text-on-surface">5</td>
+<td class="py-6 px-8 text-center text-on-surface-variant">Không giới hạn</td>
+</tr>
+<tr>
+<td class="py-6 px-4 sticky left-0 bg-surface z-10 font-medium text-on-surface">Cảnh báo SMS</td>
+<td class="py-6 px-8 text-center text-on-surface-variant">—</td>
+<td class="py-6 px-8 text-center text-on-surface"><span class="material-symbols-outlined text-secondary" data-icon="check">check</span></td>
+<td class="py-6 px-8 text-center text-on-surface"><span class="material-symbols-outlined text-secondary" data-icon="check">check</span></td>
+</tr>
+<tr>
+<td class="py-6 px-4 sticky left-0 bg-surface z-10 font-medium text-on-surface">Cảnh báo Email</td>
+<td class="py-6 px-8 text-center text-on-surface"><span class="material-symbols-outlined text-secondary" data-icon="check">check</span></td>
+<td class="py-6 px-8 text-center text-on-surface"><span class="material-symbols-outlined text-secondary" data-icon="check">check</span></td>
+<td class="py-6 px-8 text-center text-on-surface"><span class="material-symbols-outlined text-secondary" data-icon="check">check</span></td>
+</tr>
+<tr>
+<td class="py-6 px-4 sticky left-0 bg-surface z-10 font-medium text-on-surface">Độ trễ gửi cảnh báo</td>
+<td class="py-6 px-8 text-center text-on-surface-variant">5-10 phút</td>
+<td class="py-6 px-8 text-center text-on-surface font-bold">&lt; 1 phút</td>
+<td class="py-6 px-8 text-center text-on-surface font-bold">Tức thì</td>
+</tr>
+<tr>
+<td class="py-6 px-4 sticky left-0 bg-surface z-10 font-medium text-on-surface">Số lần gửi lại tối đa</td>
+<td class="py-6 px-8 text-center text-on-surface-variant">1 lần</td>
+<td class="py-6 px-8 text-center text-on-surface-variant">3 lần</td>
+<td class="py-6 px-8 text-center text-on-surface-variant">Không giới hạn</td>
+</tr>
+<tr>
+<td class="py-6 px-4 sticky left-0 bg-surface z-10 font-medium text-on-surface">Ưu tiên cảnh báo</td>
+<td class="py-6 px-8 text-center text-on-surface-variant">Thấp</td>
+<td class="py-6 px-8 text-center text-on-surface font-bold">Cao</td>
+<td class="py-6 px-8 text-center text-on-surface font-bold">Cao nhất</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Loading State Placeholder (Instructional Mock) -->
+<section class="hidden">
+<div class="animate-pulse space-y-4">
+<div class="h-10 bg-surface-container rounded w-1/4"></div>
+<div class="grid grid-cols-3 gap-8">
+<div class="h-64 bg-surface-container rounded"></div>
+<div class="h-64 bg-surface-container rounded"></div>
+<div class="h-64 bg-surface-container rounded"></div>
+</div>
+<p class="text-center text-on-surface-variant italic">Đang tải dữ liệu bảng giá...</p>
+</div>
+</section>
+<!-- Retry/Empty State Example -->
+<section class="hidden py-20 flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-6xl text-error mb-4" data-icon="error_outline">error_outline</span>
+<h3 class="text-xl font-bold mb-2">Không thể tải thông tin gói cước</h3>
+<p class="text-on-surface-variant mb-6">Vui lòng kiểm tra kết nối internet và thử lại.</p>
+<button class="px-8 py-3 bg-secondary text-white rounded-full font-bold">Thử lại</button>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-[#0A192F] dark:bg-black mt-20">
+<div class="w-full py-12 px-8 flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto">
+<div class="mb-8 md:mb-0">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-white" data-icon="waves">waves</span>
+<span class="text-xl font-bold text-white">FDA</span>
+</div>
+<p class="font-['Be_Vietnam_Pro'] text-sm text-slate-400">© 2024 FDA - Hệ thống Cảnh báo Lũ lụt Thông minh</p>
+</div>
+<div class="flex flex-wrap justify-center gap-8">
+<a class="text-slate-400 font-['Be_Vietnam_Pro'] text-sm hover:text-[#7CB9E8] transition-colors" href="#">Điều khoản</a>
+<a class="text-slate-400 font-['Be_Vietnam_Pro'] text-sm hover:text-[#7CB9E8] transition-colors" href="#">Bảo mật</a>
+<a class="text-slate-400 font-['Be_Vietnam_Pro'] text-sm hover:text-[#7CB9E8] transition-colors" href="#">Liên hệ</a>
+<a class="text-slate-400 font-['Be_Vietnam_Pro'] text-sm hover:text-[#7CB9E8] transition-colors" href="#">Hướng dẫn</a>
+</div>
+</div>
+</footer>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-end px-6 pb-4 md:hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-[0_-4px_40px_rgba(10,25,47,0.05)] border-t border-slate-100 dark:border-slate-800 rounded-t-xl">
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all duration-300">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-semibold">Trang chủ</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all duration-300">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-semibold">Bản đồ</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-[#1B4D89] text-white rounded-full p-3 mb-2 transform -translate-y-2 transition-all duration-300">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-semibold">Cảnh báo</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all duration-300">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-['Be_Vietnam_Pro'] text-[10px] font-semibold">Tài khoản</span>
+</div>
+</nav>
+</body></html>

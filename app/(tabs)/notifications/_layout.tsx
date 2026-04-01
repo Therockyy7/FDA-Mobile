@@ -36,6 +36,14 @@ export default function NotificationsLayout() {
           headerShown: false, // Detail dùng custom header
         }}
       />
+      
+      {/* Detail News */}
+      <Stack.Screen
+        name="news/[id]"
+        options={{
+          headerShown: false, // Detail dùng custom header
+        }}
+      />
     </Stack>
   );
 }

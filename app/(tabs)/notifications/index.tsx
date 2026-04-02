@@ -93,8 +93,8 @@ export default function NotificationsScreen() {
 
   const handleAlertPress = useCallback((notificationId: string) => {
     router.push({
-        pathname: '/notifications/[id]',
-        params: { id: notificationId }
+      pathname: '/notifications/[id]',
+      params: { id: notificationId },
     });
   }, [router]);
 
@@ -214,14 +214,31 @@ export default function NotificationsScreen() {
               <EmptyNotificationsState onRefresh={refetchAlerts} />
             )
           }
-          onEndReached={loadMoreAlerts}
-          onEndReachedThreshold={0.5}
           ListFooterComponent={
-            isFetchingNextAlerts ? (
-              <View style={{ paddingVertical: 16, alignItems: "center" }}>
+            <View style={{ paddingVertical: 16, alignItems: "center", width: "100%" }}>
+              {isFetchingNextAlerts ? (
                 <ActivityIndicator size="small" color={colors.inactiveText} />
-              </View>
-            ) : null
+              ) : hasNextAlerts ? (
+                <TouchableOpacity
+                  onPress={loadMoreAlerts}
+                  style={{
+                    width: "100%",
+                    paddingVertical: 14,
+                    backgroundColor: isDarkColorScheme ? "#1E293B" : "#E2E8F0",
+                    borderRadius: 8,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ fontSize: 14, fontWeight: "600", color: colors.text }}>
+                    Xem thông báo trước đó
+                  </Text>
+                </TouchableOpacity>
+              ) : notifications.length > 0 ? (
+                <Text style={{ color: colors.inactiveText, fontSize: 13 }}>
+                  Không còn thông báo cũ hơn.
+                </Text>
+              ) : null}
+            </View>
           }
         />
       )}

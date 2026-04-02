@@ -104,7 +104,9 @@ interface MapScreenCtx {
     editRadius?: string;
     editName?: string;
     editAddress?: string;
+    stationId?: string;
   };
+  floodSeverity: any;
 }
 
 export function useMapScreen(ctx: MapScreenCtx) {
@@ -149,6 +151,7 @@ export function useMapScreen(ctx: MapScreenCtx) {
     setIsLoading,
     viewMode,
     params,
+    floodSeverity,
   } = ctx;
 
   const loadedBoundsRef = useRef<ViewportBounds | null>(null);
@@ -229,6 +232,19 @@ export function useMapScreen(ctx: MapScreenCtx) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.editAreaId]);
+
+  // Handle stationId param from notifications or other screens
+  useEffect(() => {
+    if (params.stationId && floodSeverity?.features?.length > 0) {
+      const feature = floodSeverity.features.find(
+        (f: any) => f.properties?.stationId === params.stationId,
+      );
+      if (feature) {
+        handleFloodMarkerPress(feature);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.stationId, floodSeverity]);
 
   // ── Navigation handlers ──────────────────────────────────────
   const handleStartNavigation = useCallback(() => {

@@ -5,12 +5,8 @@ import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo } from "react";
-import {
-  Alert,
-  ScrollView,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ScrollView, TouchableOpacity, View } from "react-native";
+import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import { Text } from "~/components/ui/text";
 import { getPriorityConfig } from "~/features/notifications/lib/notifications-utils";
 import { NotificationItem } from "~/features/notifications/types/notifications-types";
@@ -24,12 +20,16 @@ export default function NotificationDetailScreen() {
 
   const notification = useMemo(() => {
     // Search within React Query cache since we don't have a single GET /id endpoint
-    const queries = queryClient.getQueriesData({ queryKey: ["notifications", "history"] });
+    const queries = queryClient.getQueriesData({
+      queryKey: ["notifications", "history"],
+    });
     for (const [, queryData] of queries) {
       if (!queryData) continue;
       const pages = (queryData as any).pages;
       if (pages) {
-        const found = pages.flatMap((p: any) => p.notifications || []).find((n: NotificationItem) => n.notificationId === id);
+        const found = pages
+          .flatMap((p: any) => p.notifications || [])
+          .find((n: NotificationItem) => n.notificationId === id);
         if (found) return found as NotificationItem;
       }
     }
@@ -52,7 +52,15 @@ export default function NotificationDetailScreen() {
 
   if (!notification) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 40, backgroundColor: colors.background }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 40,
+          backgroundColor: colors.background,
+        }}
+      >
         <View
           style={{
             width: 100,
@@ -66,13 +74,28 @@ export default function NotificationDetailScreen() {
         >
           <Ionicons name="alert-circle-outline" size={50} color="#F59E0B" />
         </View>
-        <Text style={{ fontSize: 20, fontWeight: "800", color: colors.text, marginBottom: 8, textAlign: "center" }}>
+        <Text
+          style={{
+            fontSize: 20,
+            fontWeight: "800",
+            color: colors.text,
+            marginBottom: 8,
+            textAlign: "center",
+          }}
+        >
           Không tìm thấy
         </Text>
-        <Text style={{ fontSize: 14, color: colors.subtext, textAlign: "center", marginBottom: 24 }}>
+        <Text
+          style={{
+            fontSize: 14,
+            color: colors.subtext,
+            textAlign: "center",
+            marginBottom: 24,
+          }}
+        >
           Thông báo này không tồn tại hoặc đã bị xóa
         </Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => router.back()}
           style={{
             paddingHorizontal: 32,
@@ -81,7 +104,9 @@ export default function NotificationDetailScreen() {
             borderRadius: 12,
           }}
         >
-          <Text style={{ color: "white", fontSize: 15, fontWeight: "700" }}>Quay lại</Text>
+          <Text style={{ color: "white", fontSize: 15, fontWeight: "700" }}>
+            Quay lại
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -90,7 +115,7 @@ export default function NotificationDetailScreen() {
   const getRiskColor = (level: number) => {
     if (level >= 40) return "#DC2626";
     if (level >= 20 && level < 40) return "#F59E0B";
-    if (level >= 10 && level <20) return "#D97706";
+    if (level >= 10 && level < 20) return "#D97706";
     return "#10B981";
   };
 
@@ -107,65 +132,52 @@ export default function NotificationDetailScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView 
-        contentContainerStyle={{ paddingBottom: 100 }}
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 45 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
         <View
           style={{
             backgroundColor: colors.headerBg,
-            paddingTop: 60,
-            paddingBottom: 24,
+            paddingTop: 43,
+            paddingBottom: 20,
             paddingHorizontal: 20,
             borderBottomWidth: 1,
             borderBottomColor: colors.border,
           }}
         >
-          <TouchableOpacity 
-            onPress={() => router.back()} 
-            style={{ 
-              width: 44, 
-              height: 44, 
-              borderRadius: 14, 
-              backgroundColor: colors.buttonBg, 
-              justifyContent: "center", 
-              alignItems: "center", 
-              marginBottom: 20,
-            }}
+          <View
+            style={{ flexDirection: "row", alignItems: "flex-start", gap: 16 }}
           >
-            <Ionicons name="arrow-back" size={22} color={colors.text} />
-          </TouchableOpacity>
+            {/* Back Button */}
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{
+                width: 46,
+                height: 46,
+                borderRadius: 14,
+                backgroundColor: isDarkColorScheme
+                  ? "rgba(148,163,184,0.15)"
+                  : "rgba(15,23,42,0.06)",
+                justifyContent: "center",
+                alignItems: "center",
+                marginTop: -4,
+              }}
+            >
+              <Ionicons name="arrow-back" size={22} color={colors.text} />
+            </TouchableOpacity>
 
-          <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 16 }}>
-            {/* Icon */}
-            <View style={{
-              width: 64,
-              height: 64,
-              borderRadius: 20,
-              backgroundColor: config.bgColor,
-              alignItems: "center",
-              justifyContent: "center",
-              borderWidth: 2,
-              borderColor: config.color + "40",
-            }}>
-              <Ionicons 
-                name={config.icon as any} 
-                size={30} 
-                color={config.color} 
-              />
-            </View>
-            
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, marginTop: -2 }}>
               {/* Priority Badge */}
               <View
                 style={{
                   alignSelf: "flex-start",
-                  backgroundColor: config.color + "20",
-                  paddingHorizontal: 10,
+                  backgroundColor: config.color + "15",
+                  paddingHorizontal: 8,
                   paddingVertical: 4,
-                  borderRadius: 8,
-                  marginBottom: 8,
+                  borderRadius: 6,
+                  marginBottom: 6,
                 }}
               >
                 <Text
@@ -179,27 +191,50 @@ export default function NotificationDetailScreen() {
                   {config.label}
                 </Text>
               </View>
-              
-              <Text style={{ 
-                fontSize: 22, 
-                fontWeight: "800", 
-                color: colors.text, 
-                lineHeight: 28,
-                marginBottom: 6,
-              }}>
+
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "700",
+                  color: colors.text,
+                  lineHeight: 26,
+                  marginBottom: 8,
+                }}
+              >
                 {notification.title}
               </Text>
-              
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  marginBottom: 4,
+                }}
+              >
                 <Ionicons name="location" size={14} color={colors.subtext} />
-                <Text style={{ fontSize: 14, fontWeight: "600", color: colors.subtext }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: colors.subtext,
+                  }}
+                >
                   {notification.stationName}
                 </Text>
               </View>
-              
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
                 <Ionicons name="time-outline" size={14} color={colors.muted} />
-                <Text style={{ fontSize: 13, fontWeight: "500", color: colors.muted }}>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "500",
+                    color: colors.muted,
+                  }}
+                >
                   {timeAgo}
                 </Text>
               </View>
@@ -208,128 +243,182 @@ export default function NotificationDetailScreen() {
         </View>
 
         {/* Water Level Card */}
-        {(notification.waterLevel !== undefined && notification.waterLevel !== null) && (
-          <View style={{
-            margin: 20,
-            backgroundColor: colors.cardBg,
-            borderRadius: 24,
-            padding: 20,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: isDarkColorScheme ? 0.3 : 0.08,
-            shadowRadius: 16,
-            elevation: 6,
-            borderWidth: isDarkColorScheme ? 1 : 0,
-            borderColor: colors.border,
-
-          }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 16 }}>
+        {notification.waterLevel !== undefined &&
+          notification.waterLevel !== null && (
+            <View
+              style={{
+                marginHorizontal: 20,
+                marginTop: 20,
+                marginBottom: 20,
+                backgroundColor: colors.cardBg,
+                borderRadius: 20,
+                padding: 20,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: isDarkColorScheme ? 0 : 0.03,
+                shadowRadius: 12,
+                elevation: 2,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              {/* Header */}
               <View
                 style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 10,
-                  backgroundColor: "#007AFF20",
+                  flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: 8,
+                  marginBottom: 16,
                 }}
               >
-                <Ionicons name="water" size={18} color="#007AFF" />
+                <Ionicons name="water" size={16} color="#0EA5E9" />
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "600",
+                    color: colors.subtext,
+                    textTransform: "uppercase",
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  Mực nước hiện tại
+                </Text>
               </View>
-              <Text style={{ fontSize: 16, fontWeight: "700", color: colors.text }}>
-                Mực nước hiện tại
-              </Text>
-            </View>
-            
-            {/* Water Visualization */}
-            <View style={{ 
-              height: 140, 
-              backgroundColor: isDarkColorScheme ? "#0F172A" : "#F1F5F9", 
-              borderRadius: 16, 
-              overflow: "hidden",
-              marginBottom: 16,
-            }}>
-              {/* Water level fill */}
-              <View style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0, 
-                right: 0,
-                height: `${Math.min((notification.waterLevel || 0) / 1.2, 90)}%`,
-                backgroundColor: getRiskColor(notification.waterLevel || 0),
-                opacity: 0.3,
-                borderTopLeftRadius: 16,
-                borderTopRightRadius: 16,
-              }} />
-              
-              {/* Water level indicator */}
-              <View style={{
-                position: "absolute",
-                top: "40%",
-                left: 0,
-                right: 0,
-                alignItems: "center",
-              }}>
-                <View style={{
-                  backgroundColor: colors.cardBg,
-                  paddingHorizontal: 20,
-                  paddingVertical: 12,
-                  borderRadius: 16,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 8,
-                  elevation: 6,
+
+              {/* Main Reading Section */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "baseline",
+                  marginBottom: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 40,
+                    fontWeight: "800",
+                    color: colors.text,
+                    lineHeight: 48,
+                    letterSpacing: -1,
+                  }}
+                >
+                  {notification.waterLevel}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "600",
+                    color: colors.subtext,
+                    marginLeft: 6,
+                  }}
+                >
+                  cm
+                </Text>
+              </View>
+
+              {/* Subtle Level Indicator */}
+              <View
+                style={{
+                  height: 4,
+                  backgroundColor: isDarkColorScheme
+                    ? "rgba(255,255,255,0.05)"
+                    : "rgba(0,0,0,0.04)",
+                  borderRadius: 2,
+                  marginBottom: 16,
+                  overflow: "hidden",
+                }}
+              >
+                <View
+                  style={{
+                    width: `${Math.min((notification.waterLevel || 0) * 2, 100)}%`,
+                    height: "100%",
+                    backgroundColor: getRiskColor(notification.waterLevel || 0),
+                    borderRadius: 2,
+                  }}
+                />
+              </View>
+
+              {/* Supporting Stats Row */}
+              <View
+                style={{
+                  flexDirection: "row",
                   alignItems: "center",
-                }}>
-                  <Text style={{ 
-                    fontSize: 36, 
-                    fontWeight: "900", 
-                    color: getRiskColor(notification.waterLevel || 0),
-                  }}>
-                    {notification.waterLevel}
+                  borderTopWidth: 1,
+                  borderTopColor: isDarkColorScheme
+                    ? "rgba(255,255,255,0.05)"
+                    : "rgba(0,0,0,0.04)",
+                  paddingTop: 12,
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: "500",
+                      color: colors.subtext,
+                      marginBottom: 4,
+                    }}
+                  >
+                    Hiện tại
                   </Text>
-                  <Text style={{ fontSize: 14, fontWeight: "600", color: colors.subtext }}>
-                    cm
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "700",
+                      color: colors.text,
+                    }}
+                  >
+                    {notification.waterLevel} cm
+                  </Text>
+                </View>
+
+                {/* Divider */}
+                <View
+                  style={{
+                    width: 1,
+                    height: 24,
+                    backgroundColor: isDarkColorScheme
+                      ? "rgba(255,255,255,0.05)"
+                      : "rgba(0,0,0,0.04)",
+                    marginHorizontal: 16,
+                  }}
+                />
+
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: "500",
+                      color: colors.subtext,
+                      marginBottom: 4,
+                    }}
+                  >
+                    Mã trạm
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "700",
+                      color: colors.text,
+                    }}
+                  >
+                    {notification.stationCode}
                   </Text>
                 </View>
               </View>
             </View>
-
-            {/* Stats Row */}
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              <View style={{
-                flex: 1,
-                backgroundColor: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
-                padding: 14,
-                borderRadius: 14,
-                alignItems: "center",
-              }}>
-                <Text style={{ fontSize: 20, fontWeight: "800", color: getRiskColor(notification.waterLevel || 0) }}>
-                  {notification.waterLevel}cm
-                </Text>
-                <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>Hiện tại</Text>
-              </View>
-              <View style={{
-                flex: 1,
-                backgroundColor: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
-                padding: 14,
-                borderRadius: 14,
-                alignItems: "center",
-              }}>
-                <Text style={{ fontSize: 20, fontWeight: "800", color: "#10B981" }}>
-                  {notification.stationCode}
-                </Text>
-                <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>Mã trạm</Text>
-              </View>
-            </View>
-          </View>
-        )}
+          )}
 
         {/* Map Preview */}
         {notification.stationId && (
           <TouchableOpacity
-            onPress={() => router.push({ pathname: '/map', params: { stationId: notification.stationId } } as any)}
+            onPress={() =>
+              router.push({
+                pathname: "/map",
+                params: { stationId: notification.stationId },
+              } as any)
+            }
+            activeOpacity={0.8}
             style={{
               marginHorizontal: 20,
               height: 160,
@@ -339,31 +428,102 @@ export default function NotificationDetailScreen() {
               marginBottom: 20,
               borderWidth: isDarkColorScheme ? 1 : 0,
               borderColor: colors.border,
+              position: "relative",
             }}
           >
-            <View style={{ 
-              flex: 1, 
-              backgroundColor: isDarkColorScheme ? "#1E3A8A20" : "#EFF6FF",
-              justifyContent: "center", 
-              alignItems: "center",
-            }}>
+            {/* Map Background */}
+            <View
+              pointerEvents="none"
+              style={{ position: "absolute", width: "100%", height: "100%" }}
+            >
+              <MapView
+                provider={PROVIDER_GOOGLE}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  opacity: isDarkColorScheme ? 0.6 : 0.4,
+                }}
+                initialRegion={{
+                  latitude: 16.0544,
+                  longitude: 108.2022,
+                  latitudeDelta: 0.1,
+                  longitudeDelta: 0.1,
+                }}
+                cacheEnabled
+                scrollEnabled={false}
+                zoomEnabled={false}
+                pitchEnabled={false}
+                rotateEnabled={false}
+              />
+              <View
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: isDarkColorScheme
+                    ? "rgba(11,26,51,0.4)"
+                    : "rgba(241,245,249,0.3)",
+                }}
+              />
+            </View>
+
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                padding: 16,
+              }}
+            >
               <View
                 style={{
                   width: 60,
                   height: 60,
                   borderRadius: 20,
-                  backgroundColor: "#007AFF20",
+                  backgroundColor: isDarkColorScheme
+                    ? "rgba(30,41,59,0.9)"
+                    : "rgba(255,255,255,0.9)",
                   alignItems: "center",
                   justifyContent: "center",
                   marginBottom: 12,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 8,
+                  elevation: 5,
                 }}
               >
                 <Ionicons name="map" size={28} color="#007AFF" />
               </View>
-              <Text style={{ fontSize: 16, fontWeight: "700", color: colors.text }}>
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "800",
+                  color: colors.text,
+                  textShadowColor: isDarkColorScheme
+                    ? "rgba(0,0,0,0.5)"
+                    : "rgba(255,255,255,0.8)",
+                  textShadowOffset: { width: 0, height: 1 },
+                  textShadowRadius: 3,
+                }}
+              >
                 Xem trên bản đồ
               </Text>
-              <Text style={{ fontSize: 13, color: colors.subtext, marginTop: 4 }}>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: "600",
+                  color: colors.subtext,
+                  marginTop: 4,
+                  textShadowColor: isDarkColorScheme
+                    ? "rgba(0,0,0,0.5)"
+                    : "rgba(255,255,255,0.8)",
+                  textShadowOffset: { width: 0, height: 1 },
+                  textShadowRadius: 3,
+                }}
+              >
                 {notification.stationName}
               </Text>
             </View>
@@ -371,16 +531,25 @@ export default function NotificationDetailScreen() {
         )}
 
         {/* Timeline */}
-        <View style={{
-          marginHorizontal: 20,
-          backgroundColor: colors.cardBg,
-          borderRadius: 24,
-          padding: 20,
-          marginBottom: 20,
-          borderWidth: isDarkColorScheme ? 1 : 0,
-          borderColor: colors.border,
-        }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 20 }}>
+        <View
+          style={{
+            marginHorizontal: 20,
+            backgroundColor: colors.cardBg,
+            borderRadius: 24,
+            padding: 20,
+            marginBottom: 20,
+            borderWidth: isDarkColorScheme ? 1 : 0,
+            borderColor: colors.border,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 20,
+            }}
+          >
             <View
               style={{
                 width: 32,
@@ -393,33 +562,75 @@ export default function NotificationDetailScreen() {
             >
               <Ionicons name="git-branch-outline" size={18} color="#8B5CF6" />
             </View>
-            <Text style={{ fontSize: 16, fontWeight: "700", color: colors.text }}>
+            <Text
+              style={{ fontSize: 16, fontWeight: "700", color: colors.text }}
+            >
               Diễn biến
             </Text>
           </View>
-          
+
           <View style={{ gap: 16 }}>
             {[
-              { icon: "time-outline", color: config.color, title: "Phát hiện ban đầu", desc: `${timeAgo} ${notification.waterLevel ? `- ${notification.waterLevel}cm` : ''}` },
-              { icon: "shield-checkmark-outline", color: "#10B981", title: "Hệ thống cảnh báo", desc: `Cấp độ ${config.label}` },
-              { icon: "megaphone-outline", color: "#F59E0B", title: "Thông báo cộng đồng", desc: `Đã gửi cảnh báo` },
+              {
+                icon: "time-outline",
+                color: config.color,
+                title: "Phát hiện ban đầu",
+                desc: `${timeAgo} ${notification.waterLevel ? `- ${notification.waterLevel}cm` : ""}`,
+              },
+              {
+                icon: "shield-checkmark-outline",
+                color: "#10B981",
+                title: "Hệ thống cảnh báo",
+                desc: `Cấp độ ${config.label}`,
+              },
+              {
+                icon: "megaphone-outline",
+                color: "#F59E0B",
+                title: "Thông báo cộng đồng",
+                desc: `Đã gửi cảnh báo`,
+              },
             ].map((item, index) => (
-              <View key={index} style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
-                <View style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 12,
-                  backgroundColor: item.color + "20",
-                  alignItems: "center",
-                  justifyContent: "center"
-                }}>
-                  <Ionicons name={item.icon as any} size={18} color={item.color} />
+              <View
+                key={index}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  gap: 12,
+                }}
+              >
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 12,
+                    backgroundColor: item.color + "20",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Ionicons
+                    name={item.icon as any}
+                    size={18}
+                    color={item.color}
+                  />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 14, fontWeight: "700", color: colors.text }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "700",
+                      color: colors.text,
+                    }}
+                  >
                     {item.title}
                   </Text>
-                  <Text style={{ fontSize: 13, color: colors.subtext, marginTop: 2 }}>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: colors.subtext,
+                      marginTop: 2,
+                    }}
+                  >
                     {item.desc}
                   </Text>
                 </View>
@@ -430,16 +641,25 @@ export default function NotificationDetailScreen() {
 
         {/* Description */}
         {descContent && (
-          <View style={{
-            marginHorizontal: 20,
-            backgroundColor: colors.cardBg,
-            borderRadius: 24,
-            padding: 20,
-            marginBottom: 20,
-            borderWidth: isDarkColorScheme ? 1 : 0,
-            borderColor: colors.border,
-          }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          <View
+            style={{
+              marginHorizontal: 20,
+              backgroundColor: colors.cardBg,
+              borderRadius: 24,
+              padding: 20,
+              marginBottom: 20,
+              borderWidth: isDarkColorScheme ? 1 : 0,
+              borderColor: colors.border,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 12,
+              }}
+            >
               <View
                 style={{
                   width: 32,
@@ -450,13 +670,21 @@ export default function NotificationDetailScreen() {
                   justifyContent: "center",
                 }}
               >
-                <Ionicons name="document-text-outline" size={18} color="#06B6D4" />
+                <Ionicons
+                  name="document-text-outline"
+                  size={18}
+                  color="#06B6D4"
+                />
               </View>
-              <Text style={{ fontSize: 16, fontWeight: "700", color: colors.text }}>
+              <Text
+                style={{ fontSize: 16, fontWeight: "700", color: colors.text }}
+              >
                 Chi tiết
               </Text>
             </View>
-            <Text style={{ fontSize: 15, color: colors.subtext, lineHeight: 24 }}>
+            <Text
+              style={{ fontSize: 15, color: colors.subtext, lineHeight: 24 }}
+            >
               {descContent}
             </Text>
           </View>
@@ -466,7 +694,12 @@ export default function NotificationDetailScreen() {
         <View style={{ marginHorizontal: 20, gap: 12 }}>
           {notification.stationId && (
             <TouchableOpacity
-              onPress={() => router.push({ pathname: '/map', params: { stationId: notification.stationId } } as any)}
+              onPress={() =>
+                router.push({
+                  pathname: "/map",
+                  params: { stationId: notification.stationId },
+                } as any)
+              }
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -483,25 +716,6 @@ export default function NotificationDetailScreen() {
               </Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity
-            onPress={() => Alert.alert("Lộ trình", "Mở hướng dẫn chi tiết!")}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 10,
-              paddingVertical: 16,
-              borderRadius: 16,
-              backgroundColor: colors.buttonBg,
-              borderWidth: 1,
-              borderColor: colors.border,
-            }}
-          >
-            <Ionicons name="navigate" size={20} color="#007AFF" />
-            <Text style={{ fontSize: 16, fontWeight: "700", color: "#007AFF" }}>
-              Lộ trình di tản
-            </Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>

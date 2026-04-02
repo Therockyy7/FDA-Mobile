@@ -264,7 +264,7 @@ export default function AlertHistoryScreen() {
           />
         }
       >
-        <View style={{ paddingHorizontal: 16, paddingTop: 10, gap: 14 }}>
+        <View style={{ paddingHorizontal: 8, paddingTop: 10, gap: 2 }}>
           {isLoading ? (
             <View style={{ alignItems: "center" }}>
               <AlertHistorySectionTitle
@@ -281,15 +281,22 @@ export default function AlertHistoryScreen() {
             </View>
           ) : (
             sections.map((section) => (
-              <View key={section.title} style={{ gap: 14 }}>
-                <AlertHistorySectionTitle
-                  title={section.title}
-                  color={colors.subtext}
-                />
+              <View key={section.title} style={{ gap: 2 }}>
+                <View style={{ paddingHorizontal: 8, paddingTop: 6, paddingBottom: 4 }}>
+                  <AlertHistorySectionTitle
+                    title={section.title}
+                    color={colors.subtext}
+                  />
+                </View>
                 {section.items.map((item) => (
                   <AlertHistoryCard
                     key={item.alertId}
                     item={item}
+                    onPress={() =>
+                      router.push(
+                        `/alerts/history/${item.alertId}` as any,
+                      )
+                    }
                     colors={{
                       primary: colors.primary,
                       card: colors.card,
@@ -302,7 +309,6 @@ export default function AlertHistoryScreen() {
                     }}
                   />
                 ))}
-                <View style={{ height: 6 }} />
               </View>
             ))
           )}

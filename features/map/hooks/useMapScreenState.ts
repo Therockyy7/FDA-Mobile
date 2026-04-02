@@ -28,6 +28,11 @@ export interface MapScreenState {
     editRadius?: string;
     editName?: string;
     editAddress?: string;
+    reportId?: string;
+    reportLat?: string;
+    reportLng?: string;
+    reportSeverity?: string;
+    reportCreatedAt?: string;
   };
   // UI state
   isLoading: boolean;
@@ -180,6 +185,11 @@ export function useMapScreenState(): MapScreenState {
     editRadius?: string;
     editName?: string;
     editAddress?: string;
+    reportId?: string;
+    reportLat?: string;
+    reportLng?: string;
+    reportSeverity?: string;
+    reportCreatedAt?: string;
   }>();
 
   // UI state

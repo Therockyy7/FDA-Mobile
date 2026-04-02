@@ -149,9 +149,11 @@ export function MapContent({
       <FloodZonePolygons floodSeverity={floodSeverity} />
 
       {/* Community Reports */}
-      {settings?.overlays?.communityReports && communityReports.map((report) => (
-        <CommunityReportMarker key={`community-report-${report.id}`} report={report} mapRef={mapRef} onPress={onCommunityReportPress} />
-      ))}
+      {settings?.overlays?.communityReports && (() => {
+        return communityReports.map((report) => (
+          <CommunityReportMarker key={`community-report-${report.id}`} report={report} mapRef={mapRef} onPress={onCommunityReportPress} />
+        ));
+      })()}
 
       {/* Flood Severity */}
       <FloodSeverityMarkers floodSeverity={floodSeverity} onMarkerPress={onFloodMarkerPress} />

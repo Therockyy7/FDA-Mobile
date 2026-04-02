@@ -1,8 +1,10 @@
 // app/(tabs)/map/index.tsx
 // Thin orchestrator: wires hooks into a single state object, renders components.
 
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
-import { StatusBar, View } from "react-native";
+import { StatusBar, TouchableOpacity, View } from "react-native";
 
 import {
   MapLoadingOverlay,
@@ -13,7 +15,6 @@ import {
 import { ewkbToLatLngArray, getBoundsFromCoords } from "~/features/map/lib/ewkb-parser";
 import type { LatLng } from "~/features/map/types/safe-route.types";
 
-import { CommunityFloatingHint } from "~/features/map/components/CommunityFloatingHint";
 import { MapContent } from "~/features/map/components/MapContent";
 import { MapFloatingUI } from "~/features/map/components/MapFloatingUI";
 import { MapHeaderSwitch } from "~/features/map/components/MapHeaderSwitch";
@@ -23,6 +24,7 @@ import { useMapScreenState } from "~/features/map/hooks/useMapScreenState";
 
 export default function MapScreen() {
   const s = useMapScreenState();
+  const router = useRouter();
 
   const {
     handleStartNavigation,
@@ -273,18 +275,39 @@ export default function MapScreen() {
           visible={!!s.streetViewLocation && !s.isRoutingUIVisible}
         />
 
-        {/* Community Floating Hint */}
-        <CommunityFloatingHint
-          visible={
-            !s.isRoutingUIVisible &&
-            !s.nav.isNavigating &&
-            !s.selectedArea &&
-            !s.selectedRoute &&
-            !s.showCreateAreaSheet &&
-            !s.showWardSelectionSheet &&
-            !s.selectedCommunityReport
-          }
-        />
+        {/* Camera FAB — Báo cáo ngập nhanh */}
+        {!s.isRoutingUIVisible &&
+          !s.nav.isNavigating &&
+          !s.selectedArea &&
+          !s.selectedRoute &&
+          !s.showCreateAreaSheet &&
+          !s.showWardSelectionSheet &&
+          !s.selectedCommunityReport && (
+          <TouchableOpacity
+            onPress={() => router.push("/community/create-post?openCamera=true" as any)}
+            activeOpacity={0.85}
+            style={{
+              position: "absolute",
+              left: 16,
+              bottom: 24,
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              backgroundColor: "#6366F1",
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#6366F1",
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.4,
+              shadowRadius: 10,
+              elevation: 8,
+              borderWidth: 2.5,
+              borderColor: "white",
+            }}
+          >
+            <Ionicons name="camera" size={26} color="white" />
+          </TouchableOpacity>
+        )}
 
         {/* Hide all sheets during navigation */}
         {!s.nav.isNavigating && (

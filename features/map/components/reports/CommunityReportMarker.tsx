@@ -1,3 +1,4 @@
+// features/map/components/reports/CommunityReportMarker.tsx
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View } from "react-native";
@@ -27,12 +28,14 @@ export function CommunityReportMarker({
 
   return (
     <Marker
-      key={`community-report-${report.id}`}
       coordinate={{
         latitude: report.latitude,
         longitude: report.longitude,
       }}
-      onPress={() => {
+      zIndex={new Date(report.createdAt).getTime()}
+      onPress={(e) => {
+        // Prevent map's onPress from being called when clicking marker
+        e.stopPropagation();
         onPress(report);
         mapRef.current?.animateToRegion(
           {

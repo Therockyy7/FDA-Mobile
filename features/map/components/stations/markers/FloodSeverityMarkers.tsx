@@ -27,12 +27,19 @@ export function FloodSeverityMarkers({
       return [];
     }
 
-    // Filter to only Point features with valid coordinates
+    // Filter to only Point features with valid coordinates, active stations, and real data
     return floodSeverity.features.filter(
       (feature): feature is FloodSeverityFeature => {
         if (!isPointFeature(feature)) return false;
 
-        const { geometry } = feature;
+        const { geometry, properties } = feature;
+
+        // Ẩn station chưa có dữ liệu đo lường (waterLevel null)
+        if (
+          properties.waterLevel === null ||
+          properties.waterLevel === undefined
+        )
+          return false;
 
         // Validate coordinates exist
         if (!geometry?.coordinates || geometry.coordinates.length < 2) {

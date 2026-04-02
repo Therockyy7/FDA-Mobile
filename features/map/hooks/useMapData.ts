@@ -2,7 +2,7 @@
 // Convenience wrapper that aggregates all map data sources.
 // Delegates to flood/ hooks for flood data, plus area queries.
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { NearbyFloodReportsParams } from "~/features/community/services/community.service";
 import { useFloodLayerSettings, useFloodSignalR } from "./flood";
 import { useFloodData } from "./flood/useFloodData";

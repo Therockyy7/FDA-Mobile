@@ -105,6 +105,11 @@ interface MapScreenCtx {
     editRadius?: string;
     editName?: string;
     editAddress?: string;
+    reportId?: string;
+    reportLat?: string;
+    reportLng?: string;
+    reportSeverity?: string;
+    reportCreatedAt?: string;
   };
 }
 
@@ -231,6 +236,38 @@ export function useMapScreen(ctx: MapScreenCtx) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.editAreaId]);
+
+  // Handle report params from Community screen
+  useEffect(() => {
+    if (params.reportId && params.reportLat && params.reportLng) {
+      const lat = parseFloat(params.reportLat);
+      const lng = parseFloat(params.reportLng);
+
+      const report: NearbyFloodReport = {
+        id: params.reportId,
+        latitude: lat,
+        longitude: lng,
+        severity: (params.reportSeverity as any) || "medium",
+        createdAt: params.reportCreatedAt || new Date().toISOString(),
+        distanceMeters: 0,
+      };
+
+      setSelectedCommunityReport(report);
+
+      setTimeout(() => {
+        mapRef.current?.animateToRegion(
+          {
+            latitude: lat - 0.005, // Offset slightly to accommodate bottom sheet
+            longitude: lng,
+            latitudeDelta: 0.012,
+            longitudeDelta: 0.012,
+          },
+          1000,
+        );
+      }, 500); // Slight delay for map to breathe
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.reportId, params.reportLat, params.reportLng]);
 
   // ── Navigation handlers ──────────────────────────────────────
   const handleStartNavigation = useCallback(() => {

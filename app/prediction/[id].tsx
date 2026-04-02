@@ -5,10 +5,10 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
+  ScrollView,
   TouchableOpacity,
   View,
 } from "react-native";
-import Animated, { useAnimatedRef } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import { ActionPlanCard } from "~/features/prediction/components/ActionPlanCard";
@@ -33,7 +33,6 @@ export default function PredictionScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
   const [selectedHorizon, setSelectedHorizon] = useState<ForecastHorizon>("now");
   const { data: forecastData, loading: forecastLoading, refresh: refreshTimeline } = useDistrictsForecast(true);
@@ -73,8 +72,7 @@ export default function PredictionScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <Animated.ScrollView
-        ref={scrollRef}
+      <ScrollView
         style={{
           flex: 1,
           backgroundColor: isDarkColorScheme ? "#0B1A33" : "#F1F5F9",
@@ -525,7 +523,7 @@ export default function PredictionScreen() {
             </View>
           </>
         ) : null}
-      </Animated.ScrollView>
+      </ScrollView>
     </>
   );
 }

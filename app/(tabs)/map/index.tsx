@@ -111,12 +111,14 @@ export default function MapScreen() {
         safeRouteHasResults={s.safeRoute.hasResults}
         originText={s.originText}
         onOriginChange={s.setOriginText}
+        onOriginClear={() => { s.setOriginText(""); s.setStartCoord(null); }}
         isUsingGPSOrigin={s.isUsingGPSOrigin}
         onUseGPSAsOrigin={s.selectGPSAsOrigin}
         onPickOriginOnMap={s.startPickingOrigin}
         hasOriginCoord={s.startCoord !== null}
         onOriginPlaceSelected={(coord: LatLng) => {
           s.setStartCoord(coord);
+          s.openRouting();
           s.mapRef.current?.animateToRegion(
             {
               latitude: coord.latitude,
@@ -129,14 +131,19 @@ export default function MapScreen() {
         }}
         destinationText={s.destinationText}
         onDestinationChange={s.setDestinationText}
+        onDestinationClear={() => { s.setDestinationText(""); s.setEndCoord(null); }}
         isUsingGPSDest={s.isUsingGPSDest}
         onUseGPSAsDest={() => {
-          if (s.userLocation) s.selectGPSAsDestination(s.userLocation);
+          if (s.userLocation) {
+            s.selectGPSAsDestination(s.userLocation);
+            s.openRouting();
+          }
         }}
         onPickDestinationOnMap={s.startPickingDestination}
         hasDestinationCoord={s.endCoord !== null}
         onDestinationPlaceSelected={(coord: LatLng) => {
           s.setEndCoord(coord);
+          s.openRouting();
           s.mapRef.current?.animateToRegion(
             {
               latitude: coord.latitude,

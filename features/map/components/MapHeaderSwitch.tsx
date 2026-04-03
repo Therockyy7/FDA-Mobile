@@ -14,6 +14,7 @@ interface Props {
   // RouteDirectionPanel
   originText: string;
   onOriginChange: (t: string) => void;
+  onOriginClear: () => void;
   isUsingGPSOrigin: boolean;
   onUseGPSAsOrigin: () => void;
   onPickOriginOnMap: () => void;
@@ -21,6 +22,7 @@ interface Props {
   onOriginPlaceSelected: (coord: LatLng) => void;
   destinationText: string;
   onDestinationChange: (t: string) => void;
+  onDestinationClear: () => void;
   isUsingGPSDest: boolean;
   onUseGPSAsDest: () => void;
   onPickDestinationOnMap: () => void;
@@ -42,6 +44,7 @@ export function MapHeaderSwitch({
   safeRouteHasResults,
   originText,
   onOriginChange,
+  onOriginClear,
   isUsingGPSOrigin,
   onUseGPSAsOrigin,
   onPickOriginOnMap,
@@ -49,6 +52,7 @@ export function MapHeaderSwitch({
   onOriginPlaceSelected,
   destinationText,
   onDestinationChange,
+  onDestinationClear,
   isUsingGPSDest,
   onUseGPSAsDest,
   onPickDestinationOnMap,
@@ -75,6 +79,7 @@ export function MapHeaderSwitch({
       onClose={onCloseRouting}
       originText={isUsingGPSOrigin ? "" : originText}
       onOriginChange={onOriginChange}
+      onOriginClear={onOriginClear}
       isUsingGPSOrigin={isUsingGPSOrigin}
       onUseGPSAsOrigin={onUseGPSAsOrigin}
       onPickOriginOnMap={onPickOriginOnMap}
@@ -82,6 +87,7 @@ export function MapHeaderSwitch({
       onOriginPlaceSelected={onOriginPlaceSelected}
       destinationText={destinationText}
       onDestinationChange={onDestinationChange}
+      onDestinationClear={onDestinationClear}
       isUsingGPSDest={isUsingGPSDest}
       onUseGPSAsDest={() => {
         if (userLocation) selectGPSAsDestination(userLocation);

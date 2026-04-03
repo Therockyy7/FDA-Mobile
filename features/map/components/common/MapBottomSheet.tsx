@@ -91,18 +91,18 @@ export function MapBottomSheet({
       }}
       style={styles.sheet}
     >
-      {enableScroll ? (
+      {isOpen && enableScroll ? (
         <BottomSheetScrollView
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
         >
           {children}
         </BottomSheetScrollView>
-      ) : (
+      ) : isOpen ? (
         <View style={styles.contentContainer}>
           {children}
         </View>
-      )}
+      ) : null}
     </BottomSheet>
   );
 }

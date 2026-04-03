@@ -31,6 +31,7 @@ interface PlaceSearchSheetProps {
   placeholder?: string;
   accentColor?: string;
   initialQuery?: string;
+  onQueryClear?: () => void;
 }
 
 export function PlaceSearchSheet({
@@ -43,6 +44,7 @@ export function PlaceSearchSheet({
   placeholder = "Tìm kiếm địa điểm...",
   accentColor = "#007AFF",
   initialQuery = "",
+  onQueryClear,
 }: PlaceSearchSheetProps) {
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
@@ -165,7 +167,7 @@ export function PlaceSearchSheet({
               <ActivityIndicator size="small" color={accentColor} />
             )}
             {query.length > 0 && !isSearching && (
-              <TouchableOpacity onPress={() => setQuery("")} hitSlop={6}>
+              <TouchableOpacity onPress={() => { setQuery(""); onQueryClear?.(); }} hitSlop={6}>
                 <Ionicons name="close-circle" size={18} color="#9CA3AF" />
               </TouchableOpacity>
             )}

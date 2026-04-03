@@ -336,10 +336,11 @@ export function useMapScreen(ctx: MapScreenCtx) {
         // Keep coordinate label
       }
       setPointFromMap({ latitude, longitude }, label);
+      openRouting();
     } catch {
       // Camera read failed
     }
-  }, [mapRef, setPointFromMap]);
+  }, [mapRef, setPointFromMap, openRouting]);
 
   // ── Map press ────────────────────────────────────────────────
   const handleMapPress = useCallback(

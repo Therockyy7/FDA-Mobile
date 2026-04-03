@@ -20,7 +20,7 @@ const ComplaintsSection: React.FC = () => {
     subtext: isDark ? "#94A3B8" : "#64748B",
     border: isDark ? "#334155" : "#E2E8F0",
     divider: isDark ? "#334155" : "#F1F5F9",
-    sectionTitle: isDark ? "#F59E0B" : "#D97706", // distinct color for complaints
+    sectionTitle: isDark ? "#F59E0B" : "#D97706",
     iconHover: isDark ? "rgba(245, 158, 11, 0.15)" : "rgba(217, 119, 6, 0.1)",
     cardIconBg: isDark ? "rgba(245, 158, 11, 0.1)" : "rgba(217, 119, 6, 0.08)",
   };
@@ -60,15 +60,10 @@ const ComplaintsSection: React.FC = () => {
       <View
         style={{
           backgroundColor: colors.cardBg,
-          borderRadius: 20,
+          borderRadius: 16,
           borderWidth: 1,
           borderColor: colors.border,
           overflow: "hidden",
-          shadowColor: isDark ? "#000" : "#64748B",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: isDark ? 0.3 : 0.08,
-          shadowRadius: 12,
-          elevation: 4,
         }}
       >
         <TouchableOpacity
@@ -100,7 +95,7 @@ const ComplaintsSection: React.FC = () => {
             </Text>
             {openCount > 0 ? (
               <Text style={{ fontSize: 13, color: colors.sectionTitle, marginTop: 2, fontWeight: "600" }}>
-                Có {openCount} khiếu nại đang mờ chờ xử lý
+                Có {openCount} khiếu nại đang chờ xử lý
               </Text>
             ) : (
               <Text style={{ fontSize: 13, color: colors.subtext, marginTop: 2 }}>
@@ -110,31 +105,6 @@ const ComplaintsSection: React.FC = () => {
           </View>
 
           <Ionicons name="chevron-forward" size={20} color={colors.subtext} />
-        </TouchableOpacity>
-
-        {/* Bottom CTA */}
-        <TouchableOpacity
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            paddingVertical: 14,
-            borderTopWidth: 1,
-            borderTopColor: colors.divider,
-            backgroundColor: isDark ? "#0F172A" : "#F8FAFC",
-          }}
-          onPress={() => router.push("/complaints" as any)}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name="paper-plane-outline"
-            size={16}
-            color={colors.sectionTitle}
-            style={{ marginRight: 6 }}
-          />
-          <Text style={{ fontSize: 14, fontWeight: "700", color: colors.sectionTitle }}>
-            Xem khiếu nại của tôi
-          </Text>
         </TouchableOpacity>
       </View>
     </View>

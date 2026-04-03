@@ -31,8 +31,7 @@ export function NotificationCard({
     subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
     muted: isDarkColorScheme ? "#64748B" : "#9CA3AF",
     border: isDarkColorScheme ? "#334155" : "#F3F4F6",
-    buttonSecondary: isDarkColorScheme ? "#334155" : "#F3F4F6",
-    buttonSecondaryText: isDarkColorScheme ? "#E2E8F0" : "#1F2937",
+    primary: isDarkColorScheme ? "#3B82F6" : "#2563EB",
   };
 
   const timeAgo = React.useMemo(() => {
@@ -47,272 +46,112 @@ export function NotificationCard({
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={0.65}
       style={{
+        flexDirection: "row",
+        alignItems: "flex-start",
+        paddingVertical: 14,
+        paddingHorizontal: 16,
         backgroundColor: colors.cardBg,
-        borderRadius: 20,
-        overflow: "hidden",
-        shadowColor: isDarkColorScheme ? config.color : "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: isDarkColorScheme ? 0.2 : 0.08,
-        shadowRadius: 12,
-        elevation: 6,
-        marginBottom: 16,
-        borderWidth: isDarkColorScheme ? 1 : 0,
-        borderColor: colors.border,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        gap: 10,
+        marginBottom: 6,
       }}
     >
-      {/* Priority Gradient Bar */}
+      {/* ── Severity Avatar ── */}
       <View
         style={{
-          height: 4,
-          backgroundColor: config.color,
+          width: 56,
+          height: 56,
+          borderRadius: 28, // Circle avatar to match Facebook style somewhat, but let's use squircle to keep FDA spirit
+          backgroundColor: isDarkColorScheme
+            ? config.darkBgColor || config.bgColor
+            : config.bgColor,
+          alignItems: "center",
+          justifyContent: "center",
+          borderWidth: 1.5,
+          borderColor: config.color + "30",
         }}
-      />
+      >
+        <Ionicons name={config.icon as any} size={28} color={config.color} />
+      </View>
 
-      <View style={{ padding: 16 }}>
-        {/* Header */}
-        <View
+      {/* ── Content ── */}
+      <View style={{ flex: 1, gap: 2, marginTop: 2 }}>
+        {/* Title */}
+        <Text
+          numberOfLines={2}
           style={{
-            flexDirection: "row",
-            alignItems: "flex-start",
-            gap: 12,
-            marginBottom: 12,
+            fontSize: 15,
+            color: colors.text,
+            lineHeight: 22,
           }}
         >
-          {/* Icon Badge */}
-          <View
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 16,
-              backgroundColor: config.bgColor,
-              alignItems: "center",
-              justifyContent: "center",
-              borderWidth: 2,
-              borderColor: config.color + "40",
-            }}
-          >
-            <Ionicons
-              name={config.icon as any}
-              size={26}
-              color={config.color}
-            />
-          </View>
+          <Text style={{ fontWeight: "700" }}>{notification.stationName}</Text>
+          <Text style={{ fontWeight: "400" }}>{" đã cảnh báo "}</Text>
+          <Text style={{ fontWeight: "600" }}>
+            {notification.title.toLowerCase()}
+          </Text>
+        </Text>
 
-          {/* Content */}
-          <View style={{ flex: 1 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: 6,
-              }}
-            >
-              <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "800",
-                    color: colors.text,
-                    flex: 1,
-                  }}
-                  numberOfLines={2}
-                >
-                  {notification.title}
-                </Text>
-              </View>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
-                marginBottom: 4,
-              }}
-            >
-              <Ionicons name="location" size={14} color={colors.subtext} />
-              <Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: "600",
-                  color: colors.subtext,
-                }}
-              >
-                {notification.stationName}
-              </Text>
-            </View>
-
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
-                <Ionicons name="time-outline" size={12} color={colors.muted} />
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: "500",
-                    color: colors.muted,
-                  }}
-                >
-                  {timeAgo}
-                </Text>
-              </View>
-              
-              {/* Priority Badge */}
-              <View
-                style={{
-                  backgroundColor: config.color + "20",
-                  paddingHorizontal: 8,
-                  paddingVertical: 2,
-                  borderRadius: 6,
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 10,
-                    fontWeight: "700",
-                    color: config.color,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {config.label}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Description */}
+        {/* Content / Message */}
         <Text
+          numberOfLines={2}
           style={{
             fontSize: 14,
-            fontWeight: "500",
+            fontWeight: "400",
             color: colors.subtext,
             lineHeight: 20,
-            marginBottom: 12,
+            marginTop: 2,
           }}
-          numberOfLines={2}
         >
           {notification.content || notification.alertMessage}
         </Text>
 
-        {/* Stats Row */}
+        {/* Metadata Row: Time · Severity */}
         <View
           style={{
             flexDirection: "row",
-            gap: 12,
-            marginBottom: 12,
-            paddingTop: 12,
-            borderTopWidth: 1,
-            borderTopColor: colors.border,
+            alignItems: "center",
+            marginTop: 4,
+            gap: 6,
+            flexWrap: "wrap",
           }}
         >
-          {notification.waterLevel !== undefined && notification.waterLevel !== null && (
-            <View
-              style={{
-                flex: 1,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                backgroundColor: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
-                padding: 10,
-                borderRadius: 12,
-              }}
-            >
-              <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 8,
-                  backgroundColor: "#007AFF20",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Ionicons name="water" size={16} color="#007AFF" />
-              </View>
-              <View>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "800",
-                    color: colors.text,
-                  }}
-                >
-                  {notification.waterLevel}cm
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 10,
-                    color: colors.muted,
-                  }}
-                >
-                  Mực nước
-                </Text>
-              </View>
-            </View>
-          )}
-          
-          {notification.stationCode && (
-            <View
-              style={{
-                flex: 1,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                backgroundColor: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
-                padding: 10,
-                borderRadius: 12,
-              }}
-            >
-              <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 8,
-                  backgroundColor: "#10B98120",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Ionicons name="barcode-outline" size={16} color="#10B981" />
-              </View>
-              <View>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "800",
-                    color: colors.text,
-                  }}
-                >
-                  {notification.stationCode}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 10,
-                    color: colors.muted,
-                  }}
-                >
-                  Mã Trạm
-                </Text>
-              </View>
-            </View>
-          )}
-        </View>
+          {/* Relative Time */}
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: "600",
+              color: colors.primary, // Make time colored like Facebook
+            }}
+          >
+            {timeAgo}
+          </Text>
 
+          {/* Dot Separator */}
+          <Text
+            style={{
+              fontSize: 13,
+              color: colors.muted,
+              opacity: 0.6,
+            }}
+          >
+            ·
+          </Text>
+
+          {/* Severity Label */}
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: "600",
+              color: config.color,
+            }}
+          >
+            {config.label}
+          </Text>
+        </View>
       </View>
     </TouchableOpacity>
   );

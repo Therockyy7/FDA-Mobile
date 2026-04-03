@@ -1,6 +1,6 @@
 // features/payment/components/BillingHistorySection.tsx
-// A compact preview card for the Profile screen.
-// Tapping "Xem tất cả" navigates to the full billing screen.
+// Compact preview card for the Profile screen.
+// Tapping navigates to the full billing screen.
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -49,18 +49,12 @@ const BillingHistorySection: React.FC = () => {
       <View
         style={{
           backgroundColor: colors.cardBg,
-          borderRadius: 20,
+          borderRadius: 16,
           borderWidth: 1,
           borderColor: colors.border,
           overflow: "hidden",
-          shadowColor: isDark ? "#000" : "#64748B",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: isDark ? 0.3 : 0.08,
-          shadowRadius: 12,
-          elevation: 4,
         }}
       >
-        {/* Tap row */}
         <TouchableOpacity
           style={{
             flexDirection: "row",
@@ -95,31 +89,6 @@ const BillingHistorySection: React.FC = () => {
           </View>
 
           <Ionicons name="chevron-forward" size={20} color={colors.subtext} />
-        </TouchableOpacity>
-
-        {/* Bottom CTA */}
-        <TouchableOpacity
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            paddingVertical: 14,
-            borderTopWidth: 1,
-            borderTopColor: colors.divider,
-            backgroundColor: isDark ? "#0F172A" : "#F8FAFC",
-          }}
-          onPress={() => router.push("/billing" as any)}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name="list-outline"
-            size={16}
-            color={colors.sectionTitle}
-            style={{ marginRight: 6 }}
-          />
-          <Text style={{ fontSize: 14, fontWeight: "700", color: colors.sectionTitle }}>
-            Xem tất cả giao dịch
-          </Text>
         </TouchableOpacity>
       </View>
     </View>

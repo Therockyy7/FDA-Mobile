@@ -80,6 +80,7 @@ export default function MapScreen() {
     setIsLoading: s.setIsLoading,
     viewMode: s.viewMode,
     params: s.params,
+    floodSeverity: s.floodSeverity,
   });
 
   const handleSelectWard = (area: any) => {

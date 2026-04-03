@@ -262,7 +262,7 @@ export default function ComplaintsScreen() {
             </View>
             <Text style={[styles.stateTitle, { color: colors.text }]}>Không khớp bộ lọc</Text>
             <Text style={[styles.stateText, { color: colors.subtext }]}>
-              Không tìm thấy khiếu nại nào ở trạng thái "{filterOptions.find(o => o.value === statusFilter)?.label}".
+              {`Không tìm thấy khiếu nại nào ở trạng thái "${filterOptions.find(o => o.value === statusFilter)?.label}".`}
             </Text>
             <TouchableOpacity 
               style={[styles.retryBtn, { backgroundColor: isDark ? "#334155" : "#F1F5F9", marginTop: 16 }]} 

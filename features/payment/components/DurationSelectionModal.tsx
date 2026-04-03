@@ -1,20 +1,19 @@
-// features/payment/components/DurationSelectionModal.tsx
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-    ActivityIndicator,
-    Modal,
-    StyleSheet,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Modal,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { DurationMonths } from "../types/payment-types";
 import {
-    calculateTotalPrice,
-    DURATION_OPTIONS,
-    formatVND,
+  calculateTotalPrice,
+  DURATION_OPTIONS,
+  formatVND,
 } from "../utils/payment-utils";
 
 type Props = {
@@ -26,6 +25,8 @@ type Props = {
   pricePerMonth: number;
   loading?: boolean;
 };
+
+const BRAND = "#007AFF";
 
 const DurationSelectionModal: React.FC<Props> = ({
   visible,
@@ -39,29 +40,20 @@ const DurationSelectionModal: React.FC<Props> = ({
   const { isDarkColorScheme } = useColorScheme();
   const [selected, setSelected] = useState<DurationMonths>(1);
 
-  const totalPrice = calculateTotalPrice(pricePerMonth, selected);
-
-  const accentColor =
-    planCode === "MONITOR" ? "#8B5CF6" : "#0077BE";
-
   const colors = {
-    overlay: "rgba(0, 0, 0, 0.55)",
+    overlay: "rgba(0, 0, 0, 0.5)",
     bg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-    cardBg: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
+    text: isDarkColorScheme ? "#F1F5F9" : "#111827",
+    subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
     border: isDarkColorScheme ? "#334155" : "#E2E8F0",
-    selectedBorder: accentColor,
-    selectedBg: isDarkColorScheme
-      ? "rgba(0, 119, 190, 0.15)"
-      : "rgba(0, 119, 190, 0.06)",
+    divider: isDarkColorScheme ? "rgba(255,255,255,0.06)" : "#F1F5F6",
   };
 
   return (
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
+      animationType="slide"
       onRequestClose={onClose}
       statusBarTranslucent
     >
@@ -69,20 +61,20 @@ const DurationSelectionModal: React.FC<Props> = ({
         <View style={[styles.container, { backgroundColor: colors.bg }]}>
           {/* Header */}
           <View style={styles.header}>
-            <View style={{ flex: 1 }}>
+            <View>
               <Text style={[styles.title, { color: colors.text }]}>
                 Chọn thời hạn
               </Text>
               <Text style={[styles.subtitle, { color: colors.subtext }]}>
-                Gói {planName} — {formatVND(pricePerMonth)}/tháng
+                {planName} — {formatVND(pricePerMonth)}/tháng
               </Text>
             </View>
             <TouchableOpacity
               onPress={onClose}
-              style={[styles.closeButton, { backgroundColor: colors.cardBg }]}
+              style={styles.closeBtn}
               activeOpacity={0.7}
             >
-              <Ionicons name="close" size={20} color={colors.subtext} />
+              <Ionicons name="close" size={18} color={colors.subtext} />
             </TouchableOpacity>
           </View>
 
@@ -90,6 +82,7 @@ const DurationSelectionModal: React.FC<Props> = ({
           <View style={styles.optionsContainer}>
             {DURATION_OPTIONS.map((option) => {
               const isSelected = selected === option.months;
+              const isBest = option.months === 12;
               return (
                 <TouchableOpacity
                   key={option.months}
@@ -97,11 +90,9 @@ const DurationSelectionModal: React.FC<Props> = ({
                     styles.optionCard,
                     {
                       backgroundColor: isSelected
-                        ? colors.selectedBg
-                        : colors.cardBg,
-                      borderColor: isSelected
-                        ? colors.selectedBorder
-                        : colors.border,
+                        ? `${BRAND}08`
+                        : isDarkColorScheme ? "#0F172A" : "#F8FAFB",
+                      borderColor: isSelected ? BRAND : colors.border,
                       borderWidth: isSelected ? 2 : 1,
                     },
                   ]}
@@ -109,51 +100,61 @@ const DurationSelectionModal: React.FC<Props> = ({
                   activeOpacity={0.7}
                 >
                   <View style={styles.optionLeft}>
+                    {/* Radio */}
                     <View
                       style={[
                         styles.radio,
                         {
-                          borderColor: isSelected
-                            ? accentColor
-                            : colors.border,
+                          borderColor: isSelected ? BRAND : colors.border,
+                          backgroundColor: isSelected ? BRAND : "transparent",
                         },
                       ]}
                     >
                       {isSelected && (
-                        <View
-                          style={[
-                            styles.radioInner,
-                            { backgroundColor: accentColor },
-                          ]}
-                        />
+                        <Ionicons name="checkmark" size={10} color="#FFFFFF" />
                       )}
                     </View>
-                    <Text
-                      style={[
-                        styles.optionLabel,
-                        {
-                          color: colors.text,
-                          fontWeight: isSelected ? "700" : "500",
-                        },
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                    {option.badge && (
-                      <View
-                        style={[
-                          styles.badge,
-                          { backgroundColor: accentColor },
-                        ]}
-                      >
-                        <Text style={styles.badgeText}>{option.badge}</Text>
+
+                    <View>
+                      <View style={styles.labelRow}>
+                        <Text
+                          style={[
+                            styles.optionLabel,
+                            {
+                              color: isSelected ? BRAND : colors.text,
+                              fontWeight: isSelected ? "700" : "600",
+                            },
+                          ]}
+                        >
+                          {option.label}
+                        </Text>
+                        {isBest && (
+                          <View
+                            style={[
+                              styles.bestBadge,
+                              { backgroundColor: `${BRAND}15` },
+                            ]}
+                          >
+                            <Text style={[styles.bestBadgeText, { color: BRAND }]}>
+                              Tiết kiệm nhất
+                            </Text>
+                          </View>
+                        )}
                       </View>
-                    )}
+                      {option.badge && (
+                        <Text
+                          style={[styles.discountHint, { color: "#10B981" }]}
+                        >
+                          Giảm {option.badge.replace("−", "")}
+                        </Text>
+                      )}
+                    </View>
                   </View>
+
                   <Text
                     style={[
                       styles.optionPrice,
-                      { color: isSelected ? accentColor : colors.subtext },
+                      { color: isSelected ? BRAND : colors.subtext },
                     ]}
                   >
                     {formatVND(calculateTotalPrice(pricePerMonth, option.months))}
@@ -163,75 +164,43 @@ const DurationSelectionModal: React.FC<Props> = ({
             })}
           </View>
 
-          {/* Summary */}
-          <View
-            style={[
-              styles.summary,
-              { backgroundColor: colors.cardBg, borderColor: colors.border },
-            ]}
-          >
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: colors.subtext }]}>
-                Thời hạn
-              </Text>
-              <Text style={[styles.summaryValue, { color: colors.text }]}>
-                {DURATION_OPTIONS.find((o) => o.months === selected)?.label}
-              </Text>
-            </View>
-            <View
-              style={[styles.divider, { backgroundColor: colors.border }]}
-            />
-            <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { color: colors.subtext }]}>
-                Tổng thanh toán
-              </Text>
-              <Text
-                style={[
-                  styles.summaryTotal,
-                  { color: accentColor },
-                ]}
-              >
-                {formatVND(totalPrice)}
-              </Text>
-            </View>
+          {/* Divider */}
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+
+          {/* Total */}
+          <View style={styles.totalRow}>
+            <Text style={[styles.totalLabel, { color: colors.subtext }]}>
+              Tổng thanh toán
+            </Text>
+            <Text style={[styles.totalValue, { color: BRAND }]}>
+              {formatVND(calculateTotalPrice(pricePerMonth, selected))}
+            </Text>
           </View>
 
-          {/* Actions */}
-          <View style={styles.actions}>
-            <TouchableOpacity
-              style={[styles.cancelBtn, { borderColor: colors.border }]}
-              onPress={onClose}
-              activeOpacity={0.7}
-              disabled={loading}
-            >
-              <Text style={[styles.cancelBtnText, { color: colors.subtext }]}>
-                Hủy
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.confirmBtn,
-                { backgroundColor: accentColor, opacity: loading ? 0.7 : 1 },
-              ]}
-              onPress={() => onConfirm(selected)}
-              activeOpacity={0.8}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <>
-                  <Ionicons
-                    name="card-outline"
-                    size={18}
-                    color="#FFFFFF"
-                    style={{ marginRight: 6 }}
-                  />
-                  <Text style={styles.confirmBtnText}>Thanh toán</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
+          {/* CTA */}
+          <TouchableOpacity
+            style={[
+              styles.ctaBtn,
+              { backgroundColor: BRAND, opacity: loading ? 0.7 : 1 },
+            ]}
+            onPress={() => onConfirm(selected)}
+            activeOpacity={0.8}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <>
+                <Text style={styles.ctaBtnText}>Tiếp tục</Text>
+                <Ionicons
+                  name="arrow-forward"
+                  size={16}
+                  color="#FFFFFF"
+                  style={{ marginLeft: 6 }}
+                />
+              </>
+            )}
+          </TouchableOpacity>
         </View>
       </View>
     </Modal>
@@ -244,45 +213,46 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   container: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingTop: 20,
     paddingBottom: 36,
-    maxHeight: "85%",
   },
   header: {
     flexDirection: "row",
     alignItems: "flex-start",
+    justifyContent: "space-between",
     marginBottom: 20,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "800",
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "500",
   },
-  closeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: "rgba(0,0,0,0.06)",
     alignItems: "center",
     justifyContent: "center",
   },
   optionsContainer: {
-    gap: 10,
-    marginBottom: 20,
+    gap: 8,
+    marginBottom: 16,
   },
   optionCard: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: 12,
   },
   optionLeft: {
     flexDirection: "row",
@@ -290,89 +260,71 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   radio: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
   },
-  radioInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  labelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   optionLabel: {
-    fontSize: 15,
+    fontSize: 14,
+  },
+  bestBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  bestBadgeText: {
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.2,
+  },
+  discountHint: {
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 2,
   },
   optionPrice: {
     fontSize: 15,
-    fontWeight: "700",
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 20,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
-  summary: {
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    marginBottom: 20,
-  },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  summaryLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  summaryValue: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  summaryTotal: {
-    fontSize: 18,
     fontWeight: "800",
+    letterSpacing: -0.2,
   },
   divider: {
     height: 1,
-    marginVertical: 12,
+    marginBottom: 16,
   },
-  actions: {
+  totalRow: {
     flexDirection: "row",
-    gap: 12,
-  },
-  cancelBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingVertical: 14,
+    justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 20,
   },
-  cancelBtnText: {
-    fontSize: 15,
-    fontWeight: "600",
+  totalLabel: {
+    fontSize: 14,
+    fontWeight: "500",
   },
-  confirmBtn: {
-    flex: 2,
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: "center",
+  totalValue: {
+    fontSize: 20,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+  ctaBtn: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "center",
+    paddingVertical: 15,
+    borderRadius: 14,
   },
-  confirmBtnText: {
+  ctaBtnText: {
     color: "#FFFFFF",
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: "800",
   },
 });
 

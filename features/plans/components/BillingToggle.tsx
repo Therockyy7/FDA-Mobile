@@ -1,11 +1,9 @@
 import React, { useEffect } from "react";
 import { StyleSheet, TouchableOpacity, View, Dimensions } from "react-native";
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
   withSpring,
-  withTiming,
-  interpolateColor
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { Text } from "~/components/ui/text";
@@ -18,21 +16,26 @@ type Props = {
   onChange: (v: BillingCycle) => void;
 };
 
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const INDICATOR_WIDTH = 80;
+const CONTAINER_WIDTH = INDICATOR_WIDTH * 2 + 8;
+const BRAND = "#007AFF";
+
 const BillingToggle: React.FC<Props> = ({ value, onChange }) => {
   const { isDarkColorScheme } = useColorScheme();
   const isDark = isDarkColorScheme;
 
-  const translateX = useSharedValue(value === "monthly" ? 0 : 1);
+  const indicatorLeft = useSharedValue(value === "monthly" ? 0 : 1);
 
   useEffect(() => {
-    translateX.value = withSpring(value === "monthly" ? 0 : 1, {
+    indicatorLeft.value = withSpring(value === "monthly" ? 0 : 1, {
       damping: 20,
       stiffness: 150,
     });
   }, [value]);
 
   const indicatorStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value * 110 }], // Adjusted based on button width
+    transform: [{ translateX: indicatorLeft.value * INDICATOR_WIDTH }],
   }));
 
   const handleToggle = (v: BillingCycle) => {
@@ -42,29 +45,45 @@ const BillingToggle: React.FC<Props> = ({ value, onChange }) => {
     }
   };
 
-  const colors = {
-    bg: isDark ? "rgba(255,255,255,0.05)" : "#F1F5F9",
-    indicator: isDark ? "#3B82F6" : "#1E293B",
-    activeText: "#FFFFFF",
-    inactiveText: isDark ? "#64748B" : "#94A3B8",
-    badgeBg: "rgba(16, 185, 129, 0.1)",
-    badgeText: "#10B981",
-  };
-
   return (
-    <View style={styles.outerContainer}>
-      <View style={[styles.container, { backgroundColor: colors.bg }]}>
-        <Animated.View style={[styles.indicator, indicatorStyle, { backgroundColor: colors.indicator }]} />
-        
+    <View style={styles.wrapper}>
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: isDark
+              ? "rgba(255,255,255,0.05)"
+              : "#F1F5F9",
+            width: CONTAINER_WIDTH,
+          },
+        ]}
+      >
+        <Animated.View
+          style={[
+            styles.indicator,
+            indicatorStyle,
+            { backgroundColor: BRAND },
+          ]}
+        />
+
         <TouchableOpacity
           style={styles.tab}
           onPress={() => handleToggle("monthly")}
           activeOpacity={1}
         >
-          <Text style={[
-            styles.tabText, 
-            { color: value === "monthly" ? colors.activeText : colors.inactiveText }
-          ]}>
+          <Text
+            style={[
+              styles.tabText,
+              {
+                color:
+                  value === "monthly"
+                    ? "#FFFFFF"
+                    : isDark
+                      ? "#94A3B8"
+                      : "#64748B",
+              },
+            ]}
+          >
             Tháng
           </Text>
         </TouchableOpacity>
@@ -74,67 +93,59 @@ const BillingToggle: React.FC<Props> = ({ value, onChange }) => {
           onPress={() => handleToggle("yearly")}
           activeOpacity={1}
         >
-          <Text style={[
-            styles.tabText, 
-            { color: value === "yearly" ? colors.activeText : colors.inactiveText }
-          ]}>
+          <Text
+            style={[
+              styles.tabText,
+              {
+                color:
+                  value === "yearly"
+                    ? "#FFFFFF"
+                    : isDark
+                      ? "#94A3B8"
+                      : "#64748B",
+              },
+            ]}
+          >
             Năm
           </Text>
         </TouchableOpacity>
-      </View>
-
-      <View style={[styles.badge, { backgroundColor: colors.badgeBg }]}>
-        <Text style={[styles.badgeText, { color: colors.badgeText }]}>
-          🔥 Tiết kiệm 20% khi chọn Năm
-        </Text>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  outerContainer: {
+  wrapper: {
     alignItems: "center",
-    gap: 16,
   },
   container: {
     flexDirection: "row",
-    padding: 6,
-    borderRadius: 24,
-    width: 232, // Fixed width for consistent sliding
-    height: 56,
+    padding: 4,
+    borderRadius: 20,
+    height: 48,
     position: "relative",
   },
   indicator: {
     position: "absolute",
-    top: 6,
-    left: 6,
-    width: 110,
-    bottom: 6,
-    borderRadius: 18,
+    top: 4,
+    left: 4,
+    bottom: 4,
+    width: INDICATOR_WIDTH,
+    borderRadius: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
   },
   tab: {
-    flex: 1,
+    width: INDICATOR_WIDTH,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1,
   },
   tabText: {
-    fontSize: 15,
-    fontWeight: "800",
-  },
-  badge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 14,
-  },
-  badgeText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "800",
     letterSpacing: -0.2,
   },

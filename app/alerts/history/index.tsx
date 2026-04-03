@@ -1,8 +1,9 @@
 // app/alerts/history/index.tsx
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   Alert,
+  FlatList,
   RefreshControl,
   ScrollView,
   StatusBar,
@@ -14,11 +15,12 @@ import {
 } from "react-native-safe-area-context";
 import AlertHistoryCard from "~/features/alerts/components/alert-history/AlertHistoryCard";
 import AlertHistoryChips from "~/features/alerts/components/alert-history/AlertHistoryChips";
+import AlertHistoryFooter from "~/features/alerts/components/alert-history/AlertHistoryFooter";
 import AlertHistoryHeader from "~/features/alerts/components/alert-history/AlertHistoryHeader";
-import AlertHistoryPagination from "~/features/alerts/components/alert-history/AlertHistoryPagination";
-import AlertHistorySearchBar from "~/features/alerts/components/alert-history/AlertHistorySearchBar";
 import AlertHistorySectionTitle from "~/features/alerts/components/alert-history/AlertHistorySectionTitle";
+import AlertHistorySearchBar from "~/features/alerts/components/alert-history/AlertHistorySearchBar";
 import { useAlertHistoryData } from "~/features/alerts/hooks/useAlertHistoryData";
+import { useAlertHistoryInfiniteQuery } from "~/features/alerts/hooks/useAlertHistoryInfiniteQuery";
 import type { AlertHistoryItem } from "~/features/alerts/types/alert-history.types";
 import { useColorScheme } from "~/lib/useColorScheme";
 
@@ -26,7 +28,7 @@ export default function AlertHistoryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isDarkColorScheme } = useColorScheme();
-  const PAGE_SIZE = 5;
+  const PAGE_SIZE = 10;
 
   const colors = useMemo(
     () => ({
@@ -53,65 +55,64 @@ export default function AlertHistoryScreen() {
     "all" | "critical" | "warning" | "caution"
   >("all");
   const [severityDropdownOpen, setSeverityDropdownOpen] = useState(false);
-  const [pageNumber, setPageNumber] = useState(1);
-  const headerHeight = insets.top + 56;
-  const floatingTop = headerHeight;
-  const floatingHeight = 108;
-  const contentPaddingTop = floatingTop + floatingHeight + 8;
 
-  React.useEffect(() => {
-    if (query.trim().length > 0) {
-      setPageNumber(1);
-    }
-  }, [query]);
-
+  // ── Infinite scroll query (main data) ──────────────────────────────────
   const {
-    alerts,
-    allAlerts,
-    totalPages,
-    totalCountAll,
-    severityCounts,
+    data,
     isLoading,
-    refreshing,
-    refresh,
-  } = useAlertHistoryData({
-    pageNumber,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+    isRefetching,
+  } = useAlertHistoryInfiniteQuery({
     pageSize: PAGE_SIZE,
     severity: activeSeverity === "all" ? undefined : activeSeverity,
   });
 
-  const filteredAllAlerts = useMemo(() => {
+  // ── Page info from last loaded page ───────────────────────────────────
+  const pageInfo = useMemo(() => {
+    if (!data) return { currentPage: 1, totalPages: 1 };
+    const lastPage = data.pages[data.pages.length - 1];
+    return {
+      currentPage: lastPage?.pageNumber ?? 1,
+      totalPages: lastPage?.totalPages ?? 1,
+    };
+  }, [data]);
+
+  const allPages = useMemo(() => data?.pages ?? [], [data]);
+
+  // ── Severity counts (separate query, low pageSize, just for chips) ───────
+  const {
+    totalCountAll,
+    severityCounts,
+    refresh: refreshCounts,
+  } = useAlertHistoryData({
+    pageNumber: 1,
+    pageSize: 50,
+    severity: undefined,
+  });
+
+  // ── Flatten all pages into one array ─────────────────────────────────────
+  const flatAlerts = useMemo(
+    () => allPages.flatMap((page) => page.alerts ?? []),
+    [allPages],
+  );
+
+  // ── Search filter (client-side, across all loaded pages) ─────────────────
+  const filteredAlerts = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return allAlerts.filter((item) => {
-      if (activeSeverity !== "all" && item.severity !== activeSeverity) {
-        return false;
-      }
-      if (!q) return true;
+    if (!q) return flatAlerts;
+    return flatAlerts.filter((item) => {
       return [item.stationName, item.stationCode, item.message]
         .filter(Boolean)
         .some((field) => field.toLowerCase().includes(q));
     });
-  }, [allAlerts, activeSeverity, query]);
+  }, [flatAlerts, query]);
 
-  const useLocalSearch = query.trim().length > 0;
-  const totalPagesDisplay = useLocalSearch
-    ? Math.max(1, Math.ceil(filteredAllAlerts.length / PAGE_SIZE))
-    : Math.max(totalPages, 1);
-
-  React.useEffect(() => {
-    if (pageNumber > totalPagesDisplay) {
-      setPageNumber(totalPagesDisplay);
-    }
-  }, [pageNumber, totalPagesDisplay]);
-
-  const pagedAlerts = useMemo(() => {
-    if (!useLocalSearch) return alerts;
-    const start = (pageNumber - 1) * PAGE_SIZE;
-    return filteredAllAlerts.slice(start, start + PAGE_SIZE);
-  }, [alerts, filteredAllAlerts, pageNumber, useLocalSearch]);
-
+  // ── Group by date for section headers ────────────────────────────────────
   const sections = useMemo(() => {
-    const sorted = [...pagedAlerts].sort(
+    const sorted = [...filteredAlerts].sort(
       (a, b) =>
         new Date(b.triggeredAt).getTime() - new Date(a.triggeredAt).getTime(),
     );
@@ -144,26 +145,78 @@ export default function AlertHistoryScreen() {
     });
 
     return groups;
-  }, [pagedAlerts]);
+  }, [filteredAlerts]);
 
-  const paginationItems = useMemo(() => {
-    if (totalPagesDisplay <= 1) return [1];
-    const items: (number | "ellipsis")[] = [];
-    const add = (item: number | "ellipsis") => {
-      if (items[items.length - 1] !== item) items.push(item);
-    };
+  // Flat list needs a flat array with section headers
+  type ListRow =
+    | { kind: "section"; title: string }
+    | { kind: "item"; item: AlertHistoryItem };
 
-    const windowStart = Math.max(2, pageNumber - 1);
-    const windowEnd = Math.min(totalPagesDisplay - 1, pageNumber + 1);
+  const listData = useMemo<ListRow[]>(() => {
+    const rows: ListRow[] = [];
+    sections.forEach((section) => {
+      rows.push({ kind: "section", title: section.title });
+      section.items.forEach((item) => rows.push({ kind: "item", item }));
+    });
+    return rows;
+  }, [sections]);
 
-    add(1);
-    if (windowStart > 2) add("ellipsis");
-    for (let i = windowStart; i <= windowEnd; i += 1) add(i);
-    if (windowEnd < totalPagesDisplay - 1) add("ellipsis");
-    add(totalPagesDisplay);
+  const handleRefresh = useCallback(() => {
+    refetch();
+    refreshCounts();
+  }, [refetch, refreshCounts]);
 
-    return items;
-  }, [pageNumber, totalPagesDisplay]);
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const headerHeight = insets.top + 56;
+  const floatingTop = headerHeight;
+  const floatingHeight = 108;
+  const contentPaddingTop = floatingTop + floatingHeight + 8;
+
+  const renderItem = ({ item }: { item: ListRow }) => {
+    if (item.kind === "section") {
+      return (
+        <View style={{ paddingHorizontal: 8, paddingTop: 6, paddingBottom: 4 }}>
+          <AlertHistorySectionTitle title={item.title} color={colors.subtext} />
+        </View>
+      );
+    }
+    return (
+      <View style={{ paddingHorizontal: 8 }}>
+        <AlertHistoryCard
+          item={item.item}
+          onPress={() => router.push(`/alerts/history/${item.item.alertId}` as any)}
+          colors={{
+            primary: colors.primary,
+            card: colors.card,
+            text: colors.text,
+            subtext: colors.subtext,
+            mutedBg: colors.mutedBg,
+            divider: colors.divider,
+            border: colors.border,
+            isDark: isDarkColorScheme,
+          }}
+        />
+      </View>
+    );
+  };
+
+  const ListEmpty = () => {
+    if (isLoading) {
+      return (
+        <View style={{ paddingVertical: 24, alignItems: "center" }}>
+          <AlertHistorySectionTitle title="Đang tải..." color={colors.subtext} />
+        </View>
+      );
+    }
+    return (
+      <View style={{ paddingVertical: 24, alignItems: "center" }}>
+        <AlertHistorySectionTitle title="Không có cảnh báo nào" color={colors.subtext} />
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -215,28 +268,17 @@ export default function AlertHistoryScreen() {
             onToggleDropdown={() => setSeverityDropdownOpen((prev) => !prev)}
             onSelectSeverity={(severity) => {
               if (severity !== "all" && severityCounts[severity] === 0) {
-                Alert.alert(
-                  "Không có dữ liệu",
-                  "Không có cảnh báo cho mức này.",
-                );
+                Alert.alert("Không có dữ liệu", "Không có cảnh báo cho mức này.");
                 return;
               }
-              setPageNumber(1);
               setActiveSeverity(severity);
               setSeverityDropdownOpen(false);
             }}
             severityCounts={severityCounts}
             totalCount={totalCountAll}
-            onSelectAll={() => {
-              setPageNumber(1);
-              setActiveSeverity("all");
-              setSeverityDropdownOpen(false);
-            }}
+            onSelectAll={() => setActiveSeverity("all")}
             onSelectLast30Days={() =>
-              Alert.alert(
-                "Chưa ra mắt",
-                "Bộ lọc 30 ngày sẽ được cập nhật trong phiên bản tới.",
-              )
+              Alert.alert("Chưa ra mắt", "Bộ lọc 30 ngày sẽ được cập nhật trong phiên bản tới.")
             }
             colors={{
               primary: colors.primary,
@@ -248,86 +290,42 @@ export default function AlertHistoryScreen() {
         </ScrollView>
       </View>
 
-      <ScrollView
-        style={{ flex: 1 }}
+      <FlatList
+        data={listData}
+        keyExtractor={(item, index) =>
+          item.kind === "section" ? `section-${item.title}-${index}` : item.item.alertId
+        }
+        renderItem={renderItem}
         contentContainerStyle={{
           paddingTop: contentPaddingTop,
           paddingBottom: 24,
+          paddingHorizontal: 8,
         }}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={ListEmpty}
+        ListFooterComponent={
+          <AlertHistoryFooter
+            isFetchingNextPage={isFetchingNextPage}
+            hasNextPage={hasNextPage}
+            onLoadMore={loadMore}
+            currentPage={pageInfo.currentPage}
+            totalPages={pageInfo.totalPages}
+            textColor={colors.text}
+            inactiveBg={isDarkColorScheme ? "#1E293B" : "#E2E8F0"}
+            inactiveBorder={colors.border}
+          />
+        }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={refresh}
+            refreshing={isRefetching && !isFetchingNextPage}
+            onRefresh={handleRefresh}
             colors={[colors.primary]}
             tintColor={colors.primary}
           />
         }
-      >
-        <View style={{ paddingHorizontal: 8, paddingTop: 10, gap: 2 }}>
-          {isLoading ? (
-            <View style={{ alignItems: "center" }}>
-              <AlertHistorySectionTitle
-                title="Đang tải..."
-                color={colors.subtext}
-              />
-            </View>
-          ) : sections.length === 0 ? (
-            <View style={{ paddingVertical: 24, alignItems: "center" }}>
-              <AlertHistorySectionTitle
-                title="Không có cảnh báo nào"
-                color={colors.subtext}
-              />
-            </View>
-          ) : (
-            sections.map((section) => (
-              <View key={section.title} style={{ gap: 2 }}>
-                <View style={{ paddingHorizontal: 8, paddingTop: 6, paddingBottom: 4 }}>
-                  <AlertHistorySectionTitle
-                    title={section.title}
-                    color={colors.subtext}
-                  />
-                </View>
-                {section.items.map((item) => (
-                  <AlertHistoryCard
-                    key={item.alertId}
-                    item={item}
-                    onPress={() =>
-                      router.push(
-                        `/alerts/history/${item.alertId}` as any,
-                      )
-                    }
-                    colors={{
-                      primary: colors.primary,
-                      card: colors.card,
-                      text: colors.text,
-                      subtext: colors.subtext,
-                      mutedBg: colors.mutedBg,
-                      divider: colors.divider,
-                      border: colors.border,
-                      isDark: isDarkColorScheme,
-                    }}
-                  />
-                ))}
-              </View>
-            ))
-          )}
-        </View>
-
-        <AlertHistoryPagination
-          items={paginationItems}
-          pageNumber={pageNumber}
-          totalPages={totalPagesDisplay}
-          onChangePage={setPageNumber}
-          colors={{
-            primary: colors.primary,
-            text: colors.text,
-            subtext: colors.subtext,
-            border: colors.border,
-            background: colors.card,
-          }}
-        />
-      </ScrollView>
+      />
     </SafeAreaView>
   );
 }

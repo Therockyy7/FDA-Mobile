@@ -1,13 +1,13 @@
 import { useRouter } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    RefreshControl,
-    StatusBar,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  RefreshControl,
+  StatusBar,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Text } from "~/components/ui/text";
 import { NewsCard } from "~/features/news/components/NewsCard";
@@ -16,11 +16,12 @@ import { useNewsfeed } from "~/features/news/hooks/useNewsfeed";
 import { AnnouncementItem } from "~/features/news/types/news-types";
 import { EmptyNotificationsState } from "~/features/notifications/components/EmptyNotificationsState";
 import { NotificationCard } from "~/features/notifications/components/NotificationCard";
+import { NotificationPaginationInfo } from "~/features/notifications/components/NotificationPaginationInfo";
 import { NotificationsHeader } from "~/features/notifications/components/NotificationsHeader";
+import NotificationTabToggle from "~/features/notifications/components/NotificationTabToggle";
 import { useNotificationHistory } from "~/features/notifications/hooks/useNotificationHistory";
 import { NotificationItem } from "~/features/notifications/types/notifications-types";
 import { useColorScheme } from "~/lib/useColorScheme";
-import NotificationTabToggle from "~/features/notifications/components/NotificationTabToggle";
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -29,41 +30,49 @@ export default function NotificationsScreen() {
   // Tab state: "alerts" | "news"
   const [activeTab, setActiveTab] = useState<"alerts" | "news">("alerts");
 
+  const alertsListRef = useRef<FlatList>(null);
+  const newsListRef = useRef<FlatList>(null);
+
+  const [alertsPage, setAlertsPage] = useState(1);
+  const [newsPage, setNewsPage] = useState(1);
+
   // --- ALERTS/NOTIFICATIONS DATA ---
   const {
     data: alertsData,
     isLoading: isLoadingAlerts,
-    isFetchingNextPage: isFetchingNextAlerts,
-    hasNextPage: hasNextAlerts,
-    fetchNextPage: fetchNextAlerts,
     refetch: refetchAlerts,
     isRefetching: isRefetchingAlerts,
-  } = useNotificationHistory({ pageSize: 10 });
+  } = useNotificationHistory({ pageNumber: alertsPage, pageSize: 10 });
 
   const notifications = useMemo(() => {
-    if (!alertsData) return [];
-    return alertsData.pages.flatMap((page) => page.notifications);
+    return alertsData?.notifications || [];
   }, [alertsData]);
 
-  const loadMoreAlerts = () => {
-    if (hasNextAlerts && !isFetchingNextAlerts) fetchNextAlerts();
+  const alertsTotalPages = alertsData?.totalPages || 1;
+
+  const handleAlertsPageChange = (page: number) => {
+    setAlertsPage(page);
+    alertsListRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
   // --- NEWS DATA ---
   const {
     data: newsData,
     isLoading: isLoadingNews,
-    isFetchingNextPage: isFetchingNextNews,
-    hasNextPage: hasNextNews,
-    fetchNextPage: fetchNextNews,
     refetch: refetchNews,
     isRefetching: isRefetchingNews,
-  } = useNewsfeed();
+  } = useNewsfeed({ page: newsPage, pageSize: 10 });
 
   const news = useMemo(() => {
-    if (!newsData) return [];
-    return newsData.pages.flatMap((page) => page.data);
+    return newsData?.data || [];
   }, [newsData]);
+
+  const newsTotalPages = newsData?.totalPages || 1;
+
+  const handleNewsPageChange = (page: number) => {
+    setNewsPage(page);
+    newsListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  };
 
   const hasUnreadNews = useMemo(() => {
     return news.some((item) => item.isRead === false);
@@ -75,10 +84,6 @@ export default function NotificationsScreen() {
       onSuccess: () => Alert.alert("Thành công", "Đã đánh dấu tất cả là đã đọc."),
       onError: () => Alert.alert("Lỗi", "Không thể cập nhật trạng thái đã đọc."),
     });
-  };
-
-  const loadMoreNews = () => {
-    if (hasNextNews && !isFetchingNextNews) fetchNextNews();
   };
 
   // Theme colors
@@ -162,13 +167,14 @@ export default function NotificationsScreen() {
       {/* Main Content Area */}
       {activeTab === "news" ? (
         <FlatList
+          ref={newsListRef}
           data={news}
           keyExtractor={(item) => item.id}
           renderItem={renderNewsItem}
-          contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
           refreshControl={
             <RefreshControl
-              refreshing={isRefetchingNews && !isFetchingNextNews}
+              refreshing={isRefetchingNews}
               onRefresh={refetchNews}
               tintColor={isDarkColorScheme ? "#38BDF8" : "#007AFF"}
             />
@@ -182,25 +188,26 @@ export default function NotificationsScreen() {
               <EmptyNotificationsState onRefresh={refetchNews} />
             )
           }
-          onEndReached={loadMoreNews}
-          onEndReachedThreshold={0.5}
           ListFooterComponent={
-            isFetchingNextNews ? (
-              <View style={{ paddingVertical: 16, alignItems: "center" }}>
-                <ActivityIndicator size="small" color={colors.inactiveText} />
-              </View>
+            news.length > 0 ? (
+              <NotificationPaginationInfo
+                  currentPage={newsPage}
+                  totalPages={newsTotalPages}
+                  onChangePage={handleNewsPageChange}
+              />
             ) : null
           }
         />
       ) : (
         <FlatList
+          ref={alertsListRef}
           data={notifications}
           keyExtractor={(item) => item.notificationId}
           renderItem={renderAlertItem}
-          contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 30 }}
           refreshControl={
             <RefreshControl
-              refreshing={isRefetchingAlerts && !isFetchingNextAlerts}
+              refreshing={isRefetchingAlerts}
               onRefresh={refetchAlerts}
               tintColor={isDarkColorScheme ? "#38BDF8" : "#007AFF"}
             />
@@ -215,30 +222,13 @@ export default function NotificationsScreen() {
             )
           }
           ListFooterComponent={
-            <View style={{ paddingVertical: 16, alignItems: "center", width: "100%" }}>
-              {isFetchingNextAlerts ? (
-                <ActivityIndicator size="small" color={colors.inactiveText} />
-              ) : hasNextAlerts ? (
-                <TouchableOpacity
-                  onPress={loadMoreAlerts}
-                  style={{
-                    width: "100%",
-                    paddingVertical: 14,
-                    backgroundColor: isDarkColorScheme ? "#1E293B" : "#E2E8F0",
-                    borderRadius: 8,
-                    alignItems: "center",
-                  }}
-                >
-                  <Text style={{ fontSize: 14, fontWeight: "600", color: colors.text }}>
-                    Xem thông báo trước đó
-                  </Text>
-                </TouchableOpacity>
-              ) : notifications.length > 0 ? (
-                <Text style={{ color: colors.inactiveText, fontSize: 13 }}>
-                  Không còn thông báo cũ hơn.
-                </Text>
-              ) : null}
-            </View>
+            notifications.length > 0 ? (
+              <NotificationPaginationInfo
+                currentPage={alertsPage}
+                totalPages={alertsTotalPages}
+                onChangePage={handleAlertsPageChange}
+              />
+            ) : null
           }
         />
       )}

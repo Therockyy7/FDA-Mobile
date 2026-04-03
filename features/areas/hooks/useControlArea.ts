@@ -24,6 +24,8 @@ type UseControlAreaParams = {
   refreshAreas: () => void | Promise<void>;
   clearSelections: () => void;
   onMapCenterChange?: (coordinate: { latitude: number; longitude: number }) => void;
+  onAreaSubscribe?: (areaId: string) => void;
+  onAreaUnsubscribe?: (areaId: string) => void;
 };
 
 // Default radius for new areas (meters)
@@ -38,6 +40,8 @@ export function useControlArea({
   refreshAreas,
   clearSelections,
   onMapCenterChange,
+  onAreaSubscribe,
+  onAreaUnsubscribe,
 }: UseControlAreaParams) {
   // Selected area state
   const [selectedArea, setSelectedArea] = useState<AreaWithStatus | null>(null);
@@ -113,6 +117,7 @@ export function useControlArea({
             setSelectedArea(null);
 
             try {
+              onAreaUnsubscribe?.(areaId);
               await AreaService.deleteArea(areaId);
               await refreshAreas();
             } catch (error: any) {
@@ -389,13 +394,14 @@ export function useControlArea({
           });
         } else {
           // Create new area
-          await AreaService.createArea({
+          const newArea = await AreaService.createArea({
             name: data.name,
             latitude: draftAreaCenter.latitude,
             longitude: draftAreaCenter.longitude,
             radiusMeters: draftAreaRadius,
             addressText: data.addressText || undefined,
           });
+          onAreaSubscribe?.(newArea.id);
         }
 
         // Refresh areas list

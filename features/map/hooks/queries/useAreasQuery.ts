@@ -9,20 +9,7 @@ export const AREAS_QUERY_KEY = "userAreas";
 export function useAreasQuery() {
   return useQuery({
     queryKey: [AREAS_QUERY_KEY],
-    queryFn: async (): Promise<AreaWithStatus[]> => {
-      const areas = await AreaService.getAreas();
-      const statuses = await Promise.all(
-        areas.map((a) => AreaService.getAreaStatus(a.id)),
-      );
-      return areas.map((area, i) => ({
-        ...area,
-        status: statuses[i].status,
-        severityLevel: statuses[i].severityLevel,
-        summary: statuses[i].summary,
-        contributingStations: statuses[i].contributingStations,
-        evaluatedAt: statuses[i].evaluatedAt,
-      }));
-    },
+    queryFn: (): Promise<AreaWithStatus[]> => AreaService.getAreasWithStatus(),
     staleTime: 60_000,
   });
 }

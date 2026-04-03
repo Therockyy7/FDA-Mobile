@@ -17,6 +17,7 @@ import type {
 import type {
   Area,
   AreaStatusResponse,
+  AreaWithStatus,
 } from "~/features/map/types/map-layers.types";
 import { apiClient } from "~/lib/api-client";
 
@@ -61,6 +62,21 @@ export const AreaService = {
       };
     }
   },
+  // FE-10A: Single batch call replacing N+1 pattern
+  getAreasWithStatus: async (): Promise<AreaWithStatus[]> => {
+    try {
+      const res = await apiClient.get<{
+        success: boolean;
+        message: string;
+        data: AreaWithStatus[];
+      }>("/api/v1/areas/me/status");
+      return res.data.data;
+    } catch (error) {
+      console.error("❌ Failed to fetch areas with status:", error);
+      throw error;
+    }
+  },
+
   // FeatG35: Get area by ID
   getAreaById: async (id: string): Promise<Area> => {
     try {

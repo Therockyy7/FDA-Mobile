@@ -14,6 +14,7 @@ import { useNavigation } from "~/features/map/hooks/useNavigation";
 import { useRoutingUI, useSafeRoute } from "~/features/map/hooks/routing";
 import { useStreetView } from "~/features/map/hooks/useStreetView";
 import { useUserLocation } from "~/features/map/hooks/useUserLocation";
+import { isPointFeature } from "~/features/map/types/map-layers.types";
 import type { FloodSeverityFeature } from "~/features/map/types/map-layers.types";
 import type { MapType } from "~/features/map/types/map-display.types";
 import type { LatLng } from "~/features/map/types/safe-route.types";
@@ -196,7 +197,7 @@ export function useMapScreenState(): MapScreenState {
   const [showWardSelectionSheet, setShowWardSelectionSheet] = useState(false);
 
   // Data hooks
-  const { settings, areas, floodSeverity, communityReports, adminAreas, refreshFloodSeverity, refreshAreas, refreshNearbyFloodReports } = useMapData();
+  const { settings, areas, floodSeverity, communityReports, adminAreas, refreshFloodSeverity, refreshAreas, refreshNearbyFloodReports, subscribeToArea, unsubscribeFromArea } = useMapData();
 
   // Safe route
   const safeRoute = useSafeRoute();
@@ -221,12 +222,12 @@ export function useMapScreenState(): MapScreenState {
   const { mapType, viewMode, setViewMode, showLegend, toggleLegend, stats, handleMapTypeChange } = useMapDisplay();
 
   // Area control
-  const { selectedArea, isAdjustingRadius, showCreateAreaSheet, isCreatingArea, draftAreaCenter, draftAreaRadius, editingArea, showCreationOptions, showAddressSearch, draftAddress, setSelectedArea, setDraftAreaRadius, setDraftAreaCenter, handleAreaPress, handleCloseAreaCard, handleDeleteArea, handleStartCreateArea, handleStartEditArea, handleStartEditAreaFromParams, handleConfirmLocation, handleCancelCreateArea, handleCreateAreaSubmit, handleCloseCreateArea, handleMapPress: handleAreaMapPress, handleOptionSelect, handleAddressSelected, handleCloseCreationOptions, handleCloseAddressSearch, showPremiumLimitModal, currentAreaCount, freeAreaLimit, handleClosePremiumLimitModal, handleUpgradePremium, isCheckingLimit, isLoadingLocation, isLoadingSearch, areaError, handleCloseErrorModal, updateDraftAreaFromMapCenter } = useControlArea({ mapRef, region, refreshAreas, clearSelections: () => { setSelectedRoute(null); setSelectedZone(null); setSelectedStationId(null); setSelectedCommunityReport(null); } });
+  const { selectedArea, isAdjustingRadius, showCreateAreaSheet, isCreatingArea, draftAreaCenter, draftAreaRadius, editingArea, showCreationOptions, showAddressSearch, draftAddress, setSelectedArea, setDraftAreaRadius, setDraftAreaCenter, handleAreaPress, handleCloseAreaCard, handleDeleteArea, handleStartCreateArea, handleStartEditArea, handleStartEditAreaFromParams, handleConfirmLocation, handleCancelCreateArea, handleCreateAreaSubmit, handleCloseCreateArea, handleMapPress: handleAreaMapPress, handleOptionSelect, handleAddressSelected, handleCloseCreationOptions, handleCloseAddressSearch, showPremiumLimitModal, currentAreaCount, freeAreaLimit, handleClosePremiumLimitModal, handleUpgradePremium, isCheckingLimit, isLoadingLocation, isLoadingSearch, areaError, handleCloseErrorModal, updateDraftAreaFromMapCenter } = useControlArea({ mapRef, region, refreshAreas, clearSelections: () => { setSelectedRoute(null); setSelectedZone(null); setSelectedStationId(null); setSelectedCommunityReport(null); }, onAreaSubscribe: subscribeToArea, onAreaUnsubscribe: unsubscribeFromArea });
 
   // Selected station
   const selectedStation = useMemo(() => {
     if (!selectedStationId || !floodSeverity?.features) return null;
-    return floodSeverity.features.find((f: FloodSeverityFeature): f is FloodSeverityFeature => f.geometry.type === "Point" && f.properties.stationId === selectedStationId) ?? null;
+    return floodSeverity.features.find((f) => isPointFeature(f) && f.properties.stationId === selectedStationId) as FloodSeverityFeature | undefined ?? null;
   }, [selectedStationId, floodSeverity]);
 
   const handleCloseAdminConfirm = () => {

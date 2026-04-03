@@ -1,21 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { 
-  Alert, 
-  Dimensions, 
-  StyleSheet, 
-  View, 
-  Platform, 
-  StatusBar,
-} from "react-native";
-import Animated, { 
-  useSharedValue, 
-  useAnimatedScrollHandler,
-  withTiming,
-  withDelay,
-  withSequence,
-  runOnJS,
-  FadeInDown,
-} from "react-native-reanimated";
+import React, { useState } from "react";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useColorScheme } from "~/lib/useColorScheme";
@@ -24,7 +8,7 @@ import BillingToggle from "./BillingToggle";
 import FeatureComparisonTable from "./FeatureComparisonTable";
 import PricingCard from "./PricingCard";
 
-// Payment components
+// Payment
 import DurationSelectionModal from "~/features/payment/components/DurationSelectionModal";
 import DowngradeConfirmDialog from "~/features/payment/components/DowngradeConfirmDialog";
 import { paymentService } from "~/features/payment/services/payment.service";
@@ -33,12 +17,6 @@ import {
   PAYMENT_CANCEL_URL,
   PAYMENT_RETURN_URL,
 } from "~/features/payment/utils/payment-utils";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CARD_WIDTH = SCREEN_WIDTH * 0.82;
-const CARD_MARGIN = 12;
-const SNAP_INTERVAL = CARD_WIDTH + CARD_MARGIN * 2;
-const SIDE_SPACING = (SCREEN_WIDTH - CARD_WIDTH - CARD_MARGIN * 2) / 2;
 
 const getPlanRank = (code: string): number => {
   const map: Record<string, number> = { FREE: 0, PREMIUM: 1, MONITOR: 2 };
@@ -70,46 +48,18 @@ const PricingPlansList: React.FC<Props> = ({
 
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
 
-  // Upgrade flow state
+  // Upgrade flow
   const [durationModalVisible, setDurationModalVisible] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
 
-  // Downgrade flow state
+  // Downgrade flow
   const [downgradeDialogVisible, setDowngradeDialogVisible] = useState(false);
   const [downgradeLoading, setDowngradeLoading] = useState(false);
 
-  // ─── Animation Shared Values ───────────────────────────────────────────────
-  const scrollX = useSharedValue(0);
-  const scrollViewRef = React.useRef<Animated.ScrollView>(null);
-
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      scrollX.value = event.contentOffset.x;
-    },
-  });
-
-  // ─── Guided Tour Animation ──────────────────────────────────────────────────
-  useEffect(() => {
-    // Spotlight/Guided Tour: Move through plans (Free -> Premium -> Monitor)
-    // Then snap back to Premium (index 1) which is usually the best choice
-    const premiumIdx = 1;
-    
-    const runTour = () => {
-        if (!scrollViewRef.current) return;
-        
-        // Sequence: Start -> Plan 2 (Monitor) -> Snap back to Plan 1 (Premium)
-        setTimeout(() => {
-            scrollViewRef.current?.scrollTo({ x: SNAP_INTERVAL * 2, animated: true });
-            
-            setTimeout(() => {
-                scrollViewRef.current?.scrollTo({ x: SNAP_INTERVAL * 1, animated: true });
-            }, 1000);
-        }, 1200);
-    };
-
-    runTour();
-  }, []);
+  const sortedPlans = [...plans].sort(
+    (a, b) => getPlanRank(a.code) - getPlanRank(b.code),
+  );
 
   const handleActionPress = (plan: PricingPlan) => {
     if (!isAuthenticated) {
@@ -118,8 +68,11 @@ const PricingPlansList: React.FC<Props> = ({
         "Bạn cần đăng nhập để nâng cấp gói dịch vụ.",
         [
           { text: "Hủy", style: "cancel" },
-          { text: "Đăng nhập", onPress: () => router.push("/auth/login" as any) },
-        ]
+          {
+            text: "Đăng nhập",
+            onPress: () => router.push("/auth/login" as any),
+          },
+        ],
       );
       return;
     }
@@ -130,7 +83,9 @@ const PricingPlansList: React.FC<Props> = ({
     const planRank = getPlanRank(plan.code);
     const isCurrentPlan =
       currentSubscription &&
-      (currentSubscription.tierCode?.toUpperCase() === plan.code.toUpperCase());
+      (currentSubscription.tierCode?.toUpperCase() ===
+        plan.code.toUpperCase() ||
+        currentSubscription.tier?.toUpperCase() === plan.code.toUpperCase());
 
     if (isCurrentPlan) return;
 
@@ -167,8 +122,8 @@ const PricingPlansList: React.FC<Props> = ({
       } else {
         Alert.alert("Lỗi", response.message || "Không thể tạo thanh toán.");
       }
-    } catch (error: any) {
-        Alert.alert("Lỗi", "Đã có sự cố xảy ra. Vui lòng thử lại sau.");
+    } catch {
+      Alert.alert("Lỗi", "Đã có sự cố xảy ra. Vui lòng thử lại sau.");
     } finally {
       setPaymentLoading(false);
     }
@@ -180,82 +135,68 @@ const PricingPlansList: React.FC<Props> = ({
       const response = await paymentService.downgradeToFree();
       setDowngradeDialogVisible(false);
       if (response.success) {
-        await queryClient.invalidateQueries({ queryKey: ["plans", "subscription", "current"] });
+        await queryClient.invalidateQueries({
+          queryKey: ["plans", "subscription", "current"],
+        });
         Alert.alert("Hạ cấp thành công", "Gói dịch vụ đã về Miễn phí.");
       } else {
         Alert.alert("Lỗi", response.message || "Không thể hạ cấp.");
       }
-    } catch (error: any) {
+    } catch {
       Alert.alert("Lỗi", "Vui lòng thử lại sau.");
     } finally {
       setDowngradeLoading(false);
     }
   };
 
-  const sortedPlans = [...plans].sort((a, b) => getPlanRank(a.code) - getPlanRank(b.code));
-
   return (
-    <View style={[styles.mainWrapper, { backgroundColor: isDark ? "#0F172A" : "#F8FAFB" }]}>
-      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
-      
-      <Animated.ScrollView
+    <View
+      style={[
+        styles.mainWrapper,
+        { backgroundColor: isDark ? "#0F172A" : "#F8FAFB" },
+      ]}
+    >
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Billing Toggle (Fixed at top of content) */}
-        <Animated.View 
-            entering={FadeInDown.duration(600).delay(200)}
-            style={styles.toggleContainer}
-        >
-          <BillingToggle value={billingCycle} onChange={setBillingCycle} />
-        </Animated.View>
-
-        {/* Snapping Carousel */}
-        <Animated.ScrollView
-          ref={scrollViewRef}
-          horizontal
-          pagingEnabled={false}
-          showsHorizontalScrollIndicator={false}
-          onScroll={scrollHandler}
-          scrollEventThrottle={16}
-          snapToInterval={SNAP_INTERVAL}
-          decelerationRate="fast"
-          contentContainerStyle={styles.carouselContent}
-        >
-          {sortedPlans.map((plan, index) => (
-            <Animated.View 
-                key={plan.id}
-                entering={FadeInDown.duration(800).delay(400 + index * 150)}
-            >
-              <PricingCard
-                plan={plan}
-                index={index}
-                scrollX={scrollX}
-                billingCycle={billingCycle}
-                currentSubscription={currentSubscription}
-                isAuthenticated={isAuthenticated}
-                onActionPress={handleActionPress}
-                loading={isLoadingSubscription}
-                isMobile={true}
-              />
-            </Animated.View>
-          ))}
-        </Animated.ScrollView>
-
-        {/* Feature Comparison Section */}
-        <Animated.View 
-            entering={FadeInDown.duration(800).delay(1000)}
-            style={styles.comparisonWrapper}
-        >
+        {/* Comparison Table */}
+        <View style={styles.comparisonContainer}>
           <FeatureComparisonTable plans={sortedPlans} />
-        </Animated.View>
-      </Animated.ScrollView>
+        </View>
+
+        {/* Billing Toggle */}
+        <View style={styles.toggleContainer}>
+          <BillingToggle
+            value={billingCycle}
+            onChange={setBillingCycle}
+          />
+        </View>
+
+        {/* Plan Cards */}
+        <View style={styles.cardsContainer}>
+          {sortedPlans.map((plan) => (
+            <PricingCard
+              key={plan.id}
+              plan={plan}
+              billingCycle={billingCycle}
+              currentSubscription={currentSubscription}
+              isAuthenticated={isAuthenticated}
+              onActionPress={handleActionPress}
+              loading={isLoadingSubscription}
+            />
+          ))}
+        </View>
+      </ScrollView>
 
       {/* Modals */}
       {selectedPlan && (
         <DurationSelectionModal
           visible={durationModalVisible}
-          onClose={() => { setDurationModalVisible(false); setSelectedPlan(null); }}
+          onClose={() => {
+            setDurationModalVisible(false);
+            setSelectedPlan(null);
+          }}
           onConfirm={handleUpgradeConfirm}
           planName={selectedPlan.name}
           planCode={selectedPlan.code}
@@ -279,21 +220,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 20,
-    paddingBottom: 60,
+    paddingTop: 0,
+    paddingBottom: 40,
+    paddingHorizontal: 16,
   },
   toggleContainer: {
     alignItems: "center",
-    marginBottom: 32,
-    zIndex: 10,
+    marginTop: 12,
+    marginBottom: 16,
   },
-  carouselContent: {
-    paddingHorizontal: SIDE_SPACING - CARD_MARGIN,
-    paddingBottom: 40,
+  cardsContainer: {
+    gap: 0,
   },
-  comparisonWrapper: {
-      paddingHorizontal: 20,
-      marginTop: 20,
+  comparisonContainer: {
+    marginTop: 0,
   },
 });
 

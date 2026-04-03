@@ -156,7 +156,10 @@ const TabsLayout = () => {
               if (!isAuthenticated) {
                 e.preventDefault();
                 handleProtectedTabPress();
+                return;
               }
+              // Force route to the root of the notifications tab to clear any cached detail screens
+              router.replace("/notifications");
             },
           }}
         />

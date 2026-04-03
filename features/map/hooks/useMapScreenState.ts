@@ -180,6 +180,7 @@ export function useMapScreenState(): MapScreenState {
     editRadius?: string;
     editName?: string;
     editAddress?: string;
+    stationId?: string;
   }>();
 
   // UI state

@@ -48,6 +48,7 @@ interface Props {
   streetViewLocation: any;
   floodSeverity: any;
   communityReports: any[];
+  selectedCommunityReport?: any;
   onRegionChangeComplete: (region: any) => void;
   onLongPress: (event: any) => void;
   onPress: (event: any) => void;
@@ -69,7 +70,7 @@ export function MapContent({
   draftAreaCenter, draftAreaRadius, isAdjustingRadius, showCreateAreaSheet,
   selectedRoute, safeRoute, userLocation,
   isRoutingUIVisible, isUsingGPSOrigin, startCoord, originText, endCoord, destinationText,
-  streetViewLocation, floodSeverity, communityReports,
+  streetViewLocation, floodSeverity, communityReports, selectedCommunityReport,
   onRegionChangeComplete, onLongPress, onPress, onPanDrag,
   onAreaPress, onRoutePress, onSafeRoutePress, onCommunityReportPress, onFloodMarkerPress, openStreetView, onAdminAreaPress, onDraftAreaCenterChange,
 }: Props) {
@@ -149,11 +150,25 @@ export function MapContent({
       <FloodZonePolygons floodSeverity={floodSeverity} />
 
       {/* Community Reports */}
-      {settings?.overlays?.communityReports && (() => {
-        return communityReports.map((report) => (
-          <CommunityReportMarker key={`community-report-${report.id}`} report={report} mapRef={mapRef} onPress={onCommunityReportPress} />
-        ));
-      })()}
+      {settings?.overlays?.communityReports && communityReports.map((report) => (
+        <CommunityReportMarker
+          key={`community-report-${report.id}`}
+          report={report}
+          mapRef={mapRef}
+          onPress={onCommunityReportPress}
+          isSelected={selectedCommunityReport?.id === report.id}
+        />
+      ))}
+      {/* Render selected marker even if not in communityReports list (e.g. from navigation params) */}
+      {selectedCommunityReport && !communityReports.some((r) => r.id === selectedCommunityReport.id) && (
+        <CommunityReportMarker
+          key={`selected-community-report-${selectedCommunityReport.id}`}
+          report={selectedCommunityReport}
+          mapRef={mapRef}
+          onPress={onCommunityReportPress}
+          isSelected
+        />
+      )}
 
       {/* Flood Severity */}
       <FloodSeverityMarkers floodSeverity={floodSeverity} onMarkerPress={onFloodMarkerPress} />

@@ -4,7 +4,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import type { NearbyFloodReport } from "~/features/community/services/community.service";
+import type { NearbyFloodReport, NearbyFloodReportsParams } from "~/features/community/services/community.service";
 
 import { useControlArea } from "~/features/areas/hooks/useControlArea";
 import { useMapCamera } from "~/features/map/hooks/useMapCamera";
@@ -57,6 +57,10 @@ export interface MapScreenState {
   setShowWarningsSheet: (v: boolean) => void;
   selectedCommunityReport: NearbyFloodReport | null;
   setSelectedCommunityReport: (v: NearbyFloodReport | null) => void;
+  showCommunityReportSheet: boolean;
+  setShowCommunityReportSheet: (v: boolean) => void;
+  showAddressSearch: boolean;
+  showCreationOptions: boolean;
   // Data
   settings: any;
   areas: any[];
@@ -66,6 +70,7 @@ export interface MapScreenState {
   refreshFloodSeverity: any;
   refreshAreas: any;
   refreshNearbyFloodReports: any;
+  refreshCommunityReports: any;
   // Safe route
   safeRoute: ReturnType<typeof useSafeRoute>;
   selectedZone: any;
@@ -138,8 +143,6 @@ export interface MapScreenState {
   draftAreaCenter: any;
   draftAreaRadius: number;
   editingArea: any;
-  showCreationOptions: boolean;
-  showAddressSearch: boolean;
   draftAddress: string;
   setSelectedArea: any;
   setDraftAreaRadius: any;
@@ -202,11 +205,38 @@ export function useMapScreenState(): MapScreenState {
   const [selectedAdminArea, setSelectedAdminArea] = useState<any>(null);
   const [showResultCard, setShowResultCard] = useState(false);
   const [showWarningsSheet, setShowWarningsSheet] = useState(false);
+  // Community report state — DECOUPLED: selection vs sheet visibility
   const [selectedCommunityReport, setSelectedCommunityReport] = useState<NearbyFloodReport | null>(null);
+  const [showCommunityReportSheet, setShowCommunityReportSheet] = useState(false);
   const [showWardSelectionSheet, setShowWardSelectionSheet] = useState(false);
 
-  // Data hooks
-  const { settings, areas, floodSeverity, communityReports, adminAreas, refreshFloodSeverity, refreshAreas, refreshNearbyFloodReports } = useMapData();
+  // Map camera — needed for communityParams calculation
+  const { mapRef, region, is3DEnabled, camera, onRegionChangeComplete, toggle3DView, rotateCamera, zoomIn, zoomOut, goToMyLocation, focusOnRoute } = useMapCamera();
+
+  // Derive community params from current map region so markers load for current viewport
+  const communityParams = useMemo<NearbyFloodReportsParams | undefined>(() => {
+    if (!region) return undefined;
+    const radiusMeters = Math.round((region.latitudeDelta / 2) * 111320 * 1.5);
+    return {
+      latitude: region.latitude,
+      longitude: region.longitude,
+      radiusMeters: Math.min(radiusMeters, 50000), // cap at 50km
+      hours: 720,
+    };
+  }, [region]);
+
+  // Data hooks — pass dynamic params so community markers load for current viewport
+  const {
+    settings,
+    areas,
+    floodSeverity,
+    communityReports,
+    adminAreas,
+    refreshFloodSeverity,
+    refreshAreas,
+    refreshNearbyFloodReports,
+    refreshCommunityReports,
+  } = useMapData(communityParams);
 
   // Safe route
   const safeRoute = useSafeRoute();
@@ -214,9 +244,6 @@ export function useMapScreenState(): MapScreenState {
 
   // User location
   const { location: userLocation, permissionGranted: locationPermission } = useUserLocation();
-
-  // Map camera
-  const { mapRef, region, is3DEnabled, camera, onRegionChangeComplete, toggle3DView, rotateCamera, zoomIn, zoomOut, goToMyLocation, focusOnRoute } = useMapCamera();
 
   // Navigation
   const nav = useNavigation({ route: safeRoute.getSelectedRoute(), mapRef });
@@ -231,17 +258,40 @@ export function useMapScreenState(): MapScreenState {
   const { mapType, viewMode, setViewMode, showLegend, toggleLegend, stats, handleMapTypeChange } = useMapDisplay();
 
   // Area control
-  const { selectedArea, isAdjustingRadius, showCreateAreaSheet, isCreatingArea, draftAreaCenter, draftAreaRadius, editingArea, showCreationOptions, showAddressSearch, draftAddress, setSelectedArea, setDraftAreaRadius, setDraftAreaCenter, handleAreaPress, handleCloseAreaCard, handleDeleteArea, handleStartCreateArea, handleStartEditArea, handleStartEditAreaFromParams, handleConfirmLocation, handleCancelCreateArea, handleCreateAreaSubmit, handleCloseCreateArea, handleMapPress: handleAreaMapPress, handleOptionSelect, handleAddressSelected, handleCloseCreationOptions, handleCloseAddressSearch, showPremiumLimitModal, currentAreaCount, freeAreaLimit, handleClosePremiumLimitModal, handleUpgradePremium, isCheckingLimit, isLoadingLocation, isLoadingSearch, areaError, handleCloseErrorModal, updateDraftAreaFromMapCenter } = useControlArea({ mapRef, region, refreshAreas, clearSelections: () => { setSelectedRoute(null); setSelectedZone(null); setSelectedStationId(null); setSelectedCommunityReport(null); } });
+  const {
+    selectedArea, isAdjustingRadius, showCreateAreaSheet, isCreatingArea, draftAreaCenter, draftAreaRadius,
+    editingArea, showCreationOptions, showAddressSearch,
+    draftAddress, setSelectedArea, setDraftAreaRadius, setDraftAreaCenter, handleAreaPress, handleCloseAreaCard,
+    handleDeleteArea, handleStartCreateArea, handleStartEditArea, handleStartEditAreaFromParams,
+    handleConfirmLocation, handleCancelCreateArea, handleCreateAreaSubmit, handleCloseCreateArea,
+    handleMapPress: handleAreaMapPress, handleOptionSelect, handleAddressSelected,
+    handleCloseCreationOptions, handleCloseAddressSearch, showPremiumLimitModal, currentAreaCount,
+    freeAreaLimit, handleClosePremiumLimitModal, handleUpgradePremium, isCheckingLimit, isLoadingLocation,
+    isLoadingSearch, areaError, handleCloseErrorModal, updateDraftAreaFromMapCenter,
+  } = useControlArea({
+    mapRef,
+    region,
+    refreshAreas,
+    clearSelections: () => {
+      setSelectedRoute(null);
+      setSelectedZone(null);
+      setSelectedStationId(null);
+      setSelectedCommunityReport(null);
+      setShowCommunityReportSheet(false);
+    },
+  });
 
   // Selected station
   const selectedStation = useMemo(() => {
     if (!selectedStationId || !floodSeverity?.features) return null;
-    return floodSeverity.features.find((f: FloodSeverityFeature): f is FloodSeverityFeature => f.geometry.type === "Point" && f.properties.stationId === selectedStationId) ?? null;
+    return floodSeverity.features.find(
+      (f: FloodSeverityFeature): f is FloodSeverityFeature =>
+        f.geometry.type === "Point" && f.properties.stationId === selectedStationId
+    ) ?? null;
   }, [selectedStationId, floodSeverity]);
 
   const handleCloseAdminConfirm = () => {
     setShowAdminAreaConfirmModal(false);
-    // Keep selectedAdminArea to keep the polygon visible on map
   };
 
   return {
@@ -257,7 +307,9 @@ export function useMapScreenState(): MapScreenState {
     showResultCard, setShowResultCard,
     showWarningsSheet, setShowWarningsSheet,
     selectedCommunityReport, setSelectedCommunityReport,
-    settings, areas, floodSeverity, communityReports, adminAreas, refreshFloodSeverity, refreshAreas, refreshNearbyFloodReports,
+    showCommunityReportSheet, setShowCommunityReportSheet,
+    settings, areas, floodSeverity, communityReports, adminAreas,
+    refreshFloodSeverity, refreshAreas, refreshNearbyFloodReports, refreshCommunityReports,
     safeRoute,
     selectedZone, setSelectedZone, selectedRoute, setSelectedRoute, showDetailPanels, setShowDetailPanels,
     userLocation, locationPermission,
@@ -266,7 +318,15 @@ export function useMapScreenState(): MapScreenState {
     streetViewLocation, setStreetViewLocation, openStreetView, handleMapLongPress,
     isRoutingUIVisible, openRouting, closeRouting, transportMode, setTransportMode, originText, setOriginText, startCoord, setStartCoord, destinationText, setDestinationText, endCoord, setEndCoord, isUsingGPSOrigin, selectGPSAsOrigin, isUsingGPSDest, selectGPSAsDestination, pickingTarget, isPickingOnMap, startPickingOrigin, startPickingDestination, cancelPicking, setPointFromMap, swapOriginDestination, resetRouting,
     mapType, viewMode, setViewMode, showLegend, toggleLegend, stats, handleMapTypeChange,
-    selectedArea, isAdjustingRadius, showCreateAreaSheet, isCreatingArea, draftAreaCenter, draftAreaRadius, editingArea, showCreationOptions, showAddressSearch, draftAddress, setSelectedArea, setDraftAreaRadius, setDraftAreaCenter, handleAreaPress, handleCloseAreaCard, handleDeleteArea, handleStartCreateArea, handleStartEditArea, handleStartEditAreaFromParams, handleConfirmLocation, handleCancelCreateArea, handleCreateAreaSubmit, handleCloseCreateArea, handleAreaMapPress, handleOptionSelect, handleAddressSelected, handleCloseCreationOptions, handleCloseAddressSearch, showPremiumLimitModal, currentAreaCount, freeAreaLimit, handleClosePremiumLimitModal, handleUpgradePremium, isCheckingLimit, isLoadingLocation, isLoadingSearch, areaError, handleCloseErrorModal, updateDraftAreaFromMapCenter,
+    selectedArea, isAdjustingRadius, showCreateAreaSheet, isCreatingArea, draftAreaCenter, draftAreaRadius,
+    editingArea, showCreationOptions, showAddressSearch, draftAddress,
+    setSelectedArea, setDraftAreaRadius, setDraftAreaCenter, handleAreaPress, handleCloseAreaCard,
+    handleDeleteArea, handleStartCreateArea, handleStartEditArea, handleStartEditAreaFromParams,
+    handleConfirmLocation, handleCancelCreateArea, handleCreateAreaSubmit, handleCloseCreateArea,
+    handleAreaMapPress, handleOptionSelect, handleAddressSelected, handleCloseCreationOptions,
+    handleCloseAddressSearch, showPremiumLimitModal, currentAreaCount, freeAreaLimit,
+    handleClosePremiumLimitModal, handleUpgradePremium, isCheckingLimit, isLoadingLocation,
+    isLoadingSearch, areaError, handleCloseErrorModal, updateDraftAreaFromMapCenter,
     selectedStation,
     handleCloseAdminConfirm,
   };

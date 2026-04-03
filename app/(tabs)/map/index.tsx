@@ -23,9 +23,11 @@ import { useMapScreen } from "~/features/map/hooks/useMapScreen";
 import { useMapScreenState } from "~/features/map/hooks/useMapScreenState";
 
 export default function MapScreen() {
+  // Single aggregated state
   const s = useMapScreenState();
   const router = useRouter();
 
+  // All handlers — useMapScreen now accepts the full MapScreenState
   const {
     handleStartNavigation,
     handleStopNavigation,
@@ -38,57 +40,14 @@ export default function MapScreen() {
     handleRoutePress,
     handleFloodMarkerPress,
     handleCommunityReportPress,
+    handleCloseCommunityReport,
     handleRegionChange,
     handleMapTouchStart,
-  } = useMapScreen({
-    settings: s.settings,
-    refreshFloodSeverity: s.refreshFloodSeverity,
-    refreshAreas: s.refreshAreas,
-    refreshNearbyFloodReports: s.refreshNearbyFloodReports,
-    mapRef: s.mapRef,
-    focusOnRoute: s.focusOnRoute,
-    onRegionChangeComplete: s.onRegionChangeComplete,
-    nav: s.nav,
-    safeRoute: s.safeRoute,
-    isUsingGPSOrigin: s.isUsingGPSOrigin,
-    startCoord: s.startCoord,
-    endCoord: s.endCoord,
-    transportMode: s.transportMode,
-    userLocation: s.userLocation,
-    setEndCoord: s.setEndCoord,
-    setDestinationText: s.setDestinationText,
-    setStartCoord: s.setStartCoord,
-    selectGPSAsOrigin: s.selectGPSAsOrigin,
-    selectGPSAsDestination: s.selectGPSAsDestination,
-    openRouting: s.openRouting,
-    closeRouting: s.closeRouting,
-    resetRouting: s.resetRouting,
-    startPickingOrigin: s.startPickingOrigin,
-    startPickingDestination: s.startPickingDestination,
-    isPickingOnMap: s.isPickingOnMap,
-    setPointFromMap: s.setPointFromMap,
-    handleAreaMapPress: s.handleAreaMapPress,
-    updateDraftAreaFromMapCenter: s.updateDraftAreaFromMapCenter,
-    setSelectedRoute: s.setSelectedRoute,
-    setSelectedZone: s.setSelectedZone,
-    setSelectedStationId: s.setSelectedStationId,
-    setSelectedArea: s.setSelectedArea,
-    setSelectedAdminArea: s.setSelectedAdminArea,
-    setSelectedCommunityReport: s.setSelectedCommunityReport,
-    setShowDetailPanels: s.setShowDetailPanels,
-    handleStartEditAreaFromParams: s.handleStartEditAreaFromParams,
-    setShowResultCard: s.setShowResultCard,
-    setShowNavSearch: s.setShowNavSearch,
-    setIsLoading: s.setIsLoading,
-    viewMode: s.viewMode,
-    params: s.params,
-  });
+  } = useMapScreen(s);
 
   const handleSelectWard = (area: any) => {
     s.setShowWardSelectionSheet(false);
     s.setSelectedAdminArea(area);
-    
-    // Parse coordinates and animate map
     if (area.geometry) {
       const coords = ewkbToLatLngArray(area.geometry);
       const bounds = getBoundsFromCoords(coords);
@@ -100,72 +59,58 @@ export default function MapScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0B1A33" }}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="transparent"
-        translucent
-      />
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      {/* Header */}
-      {!s.selectedCommunityReport && (
+      {/* Header — hide when community report sheet is open */}
+      {!s.showCommunityReportSheet && (
         <MapHeaderSwitch
-        navIsNavigating={s.nav.isNavigating}
-        safeRouteHasResults={s.safeRoute.hasResults}
-        originText={s.originText}
-        onOriginChange={s.setOriginText}
-        isUsingGPSOrigin={s.isUsingGPSOrigin}
-        onUseGPSAsOrigin={s.selectGPSAsOrigin}
-        onPickOriginOnMap={s.startPickingOrigin}
-        hasOriginCoord={s.startCoord !== null}
-        onOriginPlaceSelected={(coord: LatLng) => {
-          s.setStartCoord(coord);
-          s.mapRef.current?.animateToRegion(
-            {
-              latitude: coord.latitude,
-              longitude: coord.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            },
-            500,
-          );
-        }}
-        destinationText={s.destinationText}
-        onDestinationChange={s.setDestinationText}
-        isUsingGPSDest={s.isUsingGPSDest}
-        onUseGPSAsDest={() => {
-          if (s.userLocation) s.selectGPSAsDestination(s.userLocation);
-        }}
-        onPickDestinationOnMap={s.startPickingDestination}
-        hasDestinationCoord={s.endCoord !== null}
-        onDestinationPlaceSelected={(coord: LatLng) => {
-          s.setEndCoord(coord);
-          s.mapRef.current?.animateToRegion(
-            {
-              latitude: coord.latitude,
-              longitude: coord.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            },
-            500,
-          );
-        }}
-        onSwap={s.swapOriginDestination}
-        transportMode={s.transportMode}
-        onModeChange={s.setTransportMode}
-        onFindRoute={handleFindRoute}
-        safeRouteIsLoading={s.safeRoute.isLoading}
-        safeRouteError={s.safeRoute.error}
-        onCloseRouting={handleCloseRouting}
-        userLocation={s.userLocation}
-        selectGPSAsDestination={s.selectGPSAsDestination}
-      />
+          navIsNavigating={s.nav.isNavigating}
+          safeRouteHasResults={s.safeRoute.hasResults}
+          originText={s.originText}
+          onOriginChange={s.setOriginText}
+          isUsingGPSOrigin={s.isUsingGPSOrigin}
+          onUseGPSAsOrigin={s.selectGPSAsOrigin}
+          onPickOriginOnMap={s.startPickingOrigin}
+          hasOriginCoord={s.startCoord !== null}
+          onOriginPlaceSelected={(coord: LatLng) => {
+            s.setStartCoord(coord);
+            s.mapRef.current?.animateToRegion(
+              { latitude: coord.latitude, longitude: coord.longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 },
+              500,
+            );
+          }}
+          destinationText={s.destinationText}
+          onDestinationChange={s.setDestinationText}
+          isUsingGPSDest={s.isUsingGPSDest}
+          onUseGPSAsDest={() => {
+            if (s.userLocation) s.selectGPSAsDestination(s.userLocation);
+          }}
+          onPickDestinationOnMap={s.startPickingDestination}
+          hasDestinationCoord={s.endCoord !== null}
+          onDestinationPlaceSelected={(coord: LatLng) => {
+            s.setEndCoord(coord);
+            s.mapRef.current?.animateToRegion(
+              { latitude: coord.latitude, longitude: coord.longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 },
+              500,
+            );
+          }}
+          onSwap={s.swapOriginDestination}
+          transportMode={s.transportMode}
+          onModeChange={s.setTransportMode}
+          onFindRoute={handleFindRoute}
+          safeRouteIsLoading={s.safeRoute.isLoading}
+          safeRouteError={s.safeRoute.error}
+          onCloseRouting={handleCloseRouting}
+          userLocation={s.userLocation}
+          selectGPSAsDestination={s.selectGPSAsDestination}
+        />
       )}
 
       <View style={{ flex: 1, position: "relative" }}>
         {/* Loading Overlay */}
         <MapLoadingOverlay visible={s.isLoading} />
 
-        {/* Navigation HUD (during active navigation) */}
+        {/* Navigation HUD */}
         {s.nav.isNavigating && (
           <NavigationHUD
             instruction={s.nav.currentInstruction}
@@ -218,6 +163,7 @@ export default function MapScreen() {
           streetViewLocation={s.streetViewLocation}
           floodSeverity={s.floodSeverity}
           communityReports={s.communityReports}
+          selectedCommunityReport={s.selectedCommunityReport}
           onRegionChangeComplete={handleRegionChange}
           onLongPress={s.handleMapLongPress}
           onPress={handleMapPress}
@@ -235,8 +181,8 @@ export default function MapScreen() {
           onDraftAreaCenterChange={s.setDraftAreaCenter}
         />
 
-        {/* Floating UI */}
-        {(!s.showWardSelectionSheet && !s.selectedCommunityReport) && (
+        {/* Floating UI — hide when sheet open or ward selection */}
+        {!s.showWardSelectionSheet && !s.showCommunityReportSheet && (
           <MapFloatingUI
             selectedRoute={s.selectedRoute}
             selectedZone={s.selectedZone}
@@ -271,18 +217,16 @@ export default function MapScreen() {
         )}
 
         {/* Street View Hint */}
-        <StreetViewHint
-          visible={!!s.streetViewLocation && !s.isRoutingUIVisible}
-        />
+        <StreetViewHint visible={!!s.streetViewLocation && !s.isRoutingUIVisible} />
 
-        {/* Camera FAB — Báo cáo ngập nhanh */}
+        {/* Camera FAB — quick flood report */}
         {!s.isRoutingUIVisible &&
           !s.nav.isNavigating &&
           !s.selectedArea &&
           !s.selectedRoute &&
           !s.showCreateAreaSheet &&
           !s.showWardSelectionSheet &&
-          !s.selectedCommunityReport && (
+          !s.showCommunityReportSheet && (
           <TouchableOpacity
             onPress={() => router.push("/community/create-post?openCamera=true" as any)}
             activeOpacity={0.85}
@@ -309,33 +253,34 @@ export default function MapScreen() {
           </TouchableOpacity>
         )}
 
-        {/* Hide all sheets during navigation */}
+        {/* Sheets */}
         {!s.nav.isNavigating && (
           <MapSheets
-            selectedArea={s.selectedArea}
-            selectedRoute={s.selectedRoute}
-            showDetailPanels={s.showDetailPanels}
-            selectedStation={s.selectedStation}
-            selectedStationId={s.selectedStationId}
-            selectedCommunityReport={s.selectedCommunityReport}
-            areaError={s.areaError}
-            showWarningsSheet={s.showWarningsSheet}
-            showResultCard={s.showResultCard}
             showLayerSheet={s.showLayerSheet}
+            selectedStationId={s.selectedStationId}
+            selectedArea={s.selectedArea}
             isAdjustingRadius={s.isAdjustingRadius}
-            draftAreaRadius={s.draftAreaRadius}
-            editingArea={s.editingArea}
-            draftAddress={s.draftAddress}
             showCreateAreaSheet={s.showCreateAreaSheet}
             isCreatingArea={s.isCreatingArea}
+            draftAreaRadius={s.draftAreaRadius}
+            editingArea={s.editingArea}
             showCreationOptions={s.showCreationOptions}
-            isLoadingLocation={s.isLoadingLocation}
-            isLoadingSearch={s.isLoadingSearch}
             showAddressSearch={s.showAddressSearch}
+            draftAddress={s.draftAddress}
             showPremiumLimitModal={s.showPremiumLimitModal}
             currentAreaCount={s.currentAreaCount}
             freeAreaLimit={s.freeAreaLimit}
             isCheckingLimit={s.isCheckingLimit}
+            isLoadingLocation={s.isLoadingLocation}
+            isLoadingSearch={s.isLoadingSearch}
+            areaError={s.areaError}
+            selectedStation={s.selectedStation}
+            showWarningsSheet={s.showWarningsSheet}
+            showResultCard={s.showResultCard}
+            selectedRoute={s.selectedRoute}
+            showDetailPanels={s.showDetailPanels}
+            selectedCommunityReport={s.selectedCommunityReport}
+            showCommunityReportSheet={s.showCommunityReportSheet}
             showAdminAreaConfirmModal={s.showAdminAreaConfirmModal}
             selectedAdminArea={s.selectedAdminArea}
             showWardSelectionSheet={s.showWardSelectionSheet}
@@ -345,12 +290,12 @@ export default function MapScreen() {
             nav={s.nav}
             router={s.router}
             isUsingGPSOrigin={s.isUsingGPSOrigin}
-            onCloseAreaCard={() => s.setSelectedArea(null)}
+            onCloseAreaCard={s.handleCloseAreaCard}
             onStartEditArea={s.handleStartEditArea}
             onDeleteArea={s.handleDeleteArea}
             onCloseStation={() => s.setSelectedStationId(null)}
             onCloseRoute={() => s.setSelectedRoute(null)}
-            onCloseCommunityReport={() => s.setSelectedCommunityReport(null)}
+            onCloseCommunityReport={handleCloseCommunityReport}
             onCloseWarnings={() => s.setShowWarningsSheet(false)}
             onSelectRoute={handleSelectRoute}
             onExitRouting={handleCloseRouting}

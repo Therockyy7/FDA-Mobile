@@ -9,6 +9,8 @@ interface CommunityReportMarkerProps {
   report: NearbyFloodReport;
   mapRef: React.RefObject<any>;
   onPress: (report: NearbyFloodReport) => void;
+  // Added back to satisfy MapContent but not used to prevent Android rendering issues
+  isSelected?: boolean;
 }
 
 const LATITUDE_OFFSET = 0.008;
@@ -28,14 +30,12 @@ export function CommunityReportMarker({
 
   return (
     <Marker
+      key={`community-report-${report.id}`}
       coordinate={{
         latitude: report.latitude,
         longitude: report.longitude,
       }}
-      zIndex={new Date(report.createdAt).getTime()}
-      onPress={(e) => {
-        // Prevent map's onPress from being called when clicking marker
-        e.stopPropagation();
+      onPress={() => {
         onPress(report);
         mapRef.current?.animateToRegion(
           {

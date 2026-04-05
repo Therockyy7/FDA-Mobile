@@ -17,6 +17,8 @@ import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { Media, Post } from "../types/post-types";
 import { CommunityService } from "../services/community.service";
+import { useQueryClient } from "@tanstack/react-query";
+import { COMMUNITY_REPORTS_QUERY_KEY } from "~/features/map/hooks/queries/useCommunityReportsQuery";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const MEDIA_WIDTH = SCREEN_WIDTH - 24; // Account for marginHorizontal: 12
@@ -286,10 +288,24 @@ export function PostCard({
   };
 
   const handleOpenDetails = () => {
-    router.push({
-      pathname: "/community/[id]",
-      params: { id: post.id },
-    } as any);
+    if (post.latitude && post.longitude) {
+      // Navigate to Map and show report
+      router.push({
+        pathname: "/map",
+        params: { 
+          reportId: post.id,
+          reportLat: post.latitude,
+          reportLng: post.longitude,
+          reportSeverity: post.severity || "medium",
+          reportCreatedAt: post.createdAt,
+        },
+      } as any);
+    } else {
+      router.push({
+        pathname: "/community/[id]",
+        params: { id: post.id },
+      } as any);
+    }
   };
 
   const handleEdit = () => {
@@ -299,6 +315,8 @@ export function PostCard({
       params: { postId: post.id },
     } as any);
   };
+
+  const queryClient = useQueryClient();
 
   const handleDelete = () => {
     setShowMenu(false);
@@ -310,6 +328,8 @@ export function PostCard({
         onPress: async () => {
           try {
             await CommunityService.deleteFloodReport(post.id);
+            // Invalidate map markers so they refresh immediately
+            queryClient.invalidateQueries({ queryKey: [COMMUNITY_REPORTS_QUERY_KEY] });
             onDeletePost?.(post.id);
           } catch {
             Alert.alert("Lỗi", "Không thể xóa bài đăng");

@@ -12,9 +12,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { useUser } from "~/features/auth/hooks/useAuth";
 
 import { PostCard } from "~/features/community/components/PostCard";
 import { CommunityService } from "~/features/community/services/community.service";
@@ -32,7 +32,8 @@ export default function CommunityScreen() {
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
-  const [myUserId, setMyUserId] = useState<string | null>(null);
+  const currentUser = useUser();
+  const myUserId = currentUser?.id ?? null;
 
   // Animated header scroll
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -50,20 +51,6 @@ export default function CommunityScreen() {
     ).start();
   }, [shimmerAnim]);
 
-  useEffect(() => {
-    async function getMyUserId() {
-      try {
-        const userData = await AsyncStorage.getItem("user_data");
-        if (userData) {
-          const parsed = JSON.parse(userData);
-          setMyUserId(parsed.id);
-        }
-      } catch (error) {
-        console.error("Lỗi khi lấy user data:", error);
-      }
-    }
-    getMyUserId();
-  }, []);
 
   const fetchCommunityReports = useCallback(async (filter?: string) => {
     try {

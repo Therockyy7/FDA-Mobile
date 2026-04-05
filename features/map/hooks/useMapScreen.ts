@@ -1,12 +1,12 @@
 // features/map/hooks/useMapScreen.ts
 // Extracts all event handlers and effects from MapScreen.
-// Receives already-instantiated hook results as context object.
+// Receives the full MapScreenState as context.
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { Region } from "react-native-maps";
+import MapView, { Region } from "react-native-maps";
 import type { MapPressEvent } from "react-native-maps";
 import type { NearbyFloodReport } from "~/features/community/services/community.service";
-import type { FloodRoute } from "../constants/map-data";
+import type { FloodRoute, FloodZone } from "../constants/map-data";
 import { DANANG_CENTER } from "../constants/map-data";
 import {
   debounce,
@@ -18,16 +18,12 @@ import {
 } from "../lib/map-utils";
 import { getRouteBounds } from "../lib/polyline-utils";
 import { LocationService } from "../services/location.service";
-import type { FloodSeverityFeature } from "../types/map-layers.types";
-import type { FloodStatusParams, MapLayerSettings } from "../types/map-layers.types";
-import type { FloodZone } from "../types/map-data.types";
-import type { AreaWithStatus } from "../types/map-layers.types";
-import type { TransportMode } from "../types/routing.types";
+import type { AreaWithStatus, FloodSeverityFeature, FloodStatusParams, MapLayerSettings } from "../types/map-layers.types";
+import type { MapScreenState } from "./useMapScreenState";
+import { useNavigation } from "./useNavigation";
+import { useSafeRoute } from "./routing";
 import type { LatLng } from "../types/safe-route.types";
-import type { useNavigation } from "./useNavigation";
-import type { useSafeRoute } from "./routing/useSafeRoute";
-import type MapView from "react-native-maps";
-
+import { TransportMode } from "../types";
 interface EditAreaParams {
   id: string;
   name: string;
@@ -95,6 +91,8 @@ interface MapScreenCtx {
   setShowResultCard: (v: boolean) => void;
   setShowNavSearch: (v: boolean) => void;
   setIsLoading: (v: boolean) => void;
+  setShowCommunityReportSheet: (v: boolean) => void;
+  setShowWarningsSheet: (v: boolean) => void;
   viewMode: string;
 
   // Edit params from navigation
@@ -106,6 +104,11 @@ interface MapScreenCtx {
     editName?: string;
     editAddress?: string;
     stationId?: string;
+    reportId?: string;
+    reportLat?: string;
+    reportLng?: string;
+    reportSeverity?: string;
+    reportCreatedAt?: string;
   };
   floodSeverity: any;
 }
@@ -128,14 +131,10 @@ export function useMapScreen(ctx: MapScreenCtx) {
     userLocation,
     setEndCoord,
     setDestinationText,
-    setStartCoord,
     selectGPSAsOrigin,
-    selectGPSAsDestination,
     openRouting,
     closeRouting,
     resetRouting,
-    startPickingOrigin,
-    startPickingDestination,
     isPickingOnMap,
     setPointFromMap,
     handleAreaMapPress,
@@ -144,13 +143,15 @@ export function useMapScreen(ctx: MapScreenCtx) {
     setSelectedZone,
     setSelectedStationId,
     setSelectedArea,
-    setSelectedAdminArea,
     setSelectedCommunityReport,
+    setShowCommunityReportSheet,
+    setSelectedAdminArea,
     setShowDetailPanels,
     handleStartEditAreaFromParams,
     setShowResultCard,
     setShowNavSearch,
     setIsLoading,
+    setShowWarningsSheet,
     viewMode,
     params,
     floodSeverity,
@@ -162,7 +163,8 @@ export function useMapScreen(ctx: MapScreenCtx) {
   // ── Initialization ──────────────────────────────────────────
   useEffect(() => {
     setTimeout(() => setIsLoading(false), 800);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // setIsLoading is a stable setter from useState
 
   useEffect(() => {
     const initialBounds = getBufferedBounds(DANANG_CENTER);
@@ -173,7 +175,7 @@ export function useMapScreen(ctx: MapScreenCtx) {
       refreshFloodSeverity(initialBounds);
     }
     if (settings?.overlays?.communityReports) {
-      const radiusMeters = (DANANG_CENTER.latitudeDelta / 2) * 111320;
+      const radiusMeters = (DANANG_CENTER.latitudeDelta / 2) * 111320 * 1.5;
       refreshNearbyFloodReports({
         latitude: DANANG_CENTER.latitude,
         longitude: DANANG_CENTER.longitude,
@@ -194,7 +196,8 @@ export function useMapScreen(ctx: MapScreenCtx) {
   useEffect(() => {
     setSelectedZone(null);
     setSelectedRoute(null);
-  }, [viewMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode]); // setters are stable, intentionally omitted
 
   // Fit map to route after results arrive
   useEffect(() => {
@@ -204,9 +207,10 @@ export function useMapScreen(ctx: MapScreenCtx) {
       const hasAlternatives = safeRoute.alternativeRoutes.length > 0;
       setShowResultCard(!hasAlternatives);
     }
-  }, [safeRoute.primaryRoute, safeRoute.alternativeRoutes, mapRef]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safeRoute.primaryRoute, safeRoute.alternativeRoutes, mapRef]); // setShowResultCard is stable
 
-  // Handle edit params from Areas screen navigation
+  // Handle edit area params from Areas screen navigation
   useEffect(() => {
     if (params.editAreaId && params.editLat && params.editLng && params.editRadius) {
       const lat = parseFloat(params.editLat);
@@ -235,6 +239,41 @@ export function useMapScreen(ctx: MapScreenCtx) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.editAreaId]);
 
+  // Handle report params from Community screen → navigate to map + show marker
+  useEffect(() => {
+    if (params.reportId && params.reportLat && params.reportLng) {
+      const lat = parseFloat(params.reportLat);
+      const lng = parseFloat(params.reportLng);
+
+      const report: NearbyFloodReport = {
+        id: params.reportId,
+        latitude: lat,
+        longitude: lng,
+        severity: (params.reportSeverity as any) || "medium",
+        createdAt: params.reportCreatedAt || new Date().toISOString(),
+        distanceMeters: 0,
+      };
+
+      // Set the selected report → marker appears
+      setSelectedCommunityReport(report);
+      // Open the sheet
+      setShowCommunityReportSheet(true);
+
+      // Animate map to the report location (with offset for bottom sheet)
+      setTimeout(() => {
+        mapRef.current?.animateToRegion(
+          {
+            latitude: lat - 0.0015,
+            longitude: lng,
+            latitudeDelta: 0.004,
+            longitudeDelta: 0.004,
+          },
+          1000,
+        );
+      }, 500);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.reportId, params.reportLat, params.reportLng]);
   // Handle stationId param from notifications or other screens
   useEffect(() => {
     if (params.stationId && floodSeverity?.features?.length > 0) {
@@ -250,25 +289,29 @@ export function useMapScreen(ctx: MapScreenCtx) {
 
   // ── Navigation handlers ──────────────────────────────────────
   const handleStartNavigation = useCallback(() => {
-    // Clear all selected items before starting navigation
-    // to prevent empty sheets from re-appearing behind NavigationHUD
     setSelectedArea(null);
     setSelectedStationId(null);
     setSelectedCommunityReport(null);
+    setShowCommunityReportSheet(false);
     setSelectedRoute(null);
     setSelectedZone(null);
     setShowDetailPanels(false);
     setShowResultCard(false);
+    setShowWarningsSheet(false);
     nav.startNavigation();
-  }, [nav, setSelectedArea, setSelectedStationId, setSelectedCommunityReport, setSelectedRoute, setSelectedZone, setShowDetailPanels, setShowResultCard]);
+  }, [
+    nav,
+    setSelectedArea, setSelectedStationId, setSelectedCommunityReport, setShowCommunityReportSheet,
+    setSelectedRoute, setSelectedZone, setShowDetailPanels, setShowResultCard,
+    setShowWarningsSheet,
+  ]);
 
   const handleStopNavigation = useCallback(() => {
     nav.stopNavigation();
-    // Clear all selected items when stopping navigation
-    // to prevent stale sheets from appearing
     setSelectedArea(null);
     setSelectedStationId(null);
     setSelectedCommunityReport(null);
+    setShowCommunityReportSheet(false);
     setSelectedRoute(null);
     setSelectedZone(null);
     setShowDetailPanels(false);
@@ -278,14 +321,17 @@ export function useMapScreen(ctx: MapScreenCtx) {
       const bounds = getRouteBounds(currentRoute.coordinates);
       mapRef.current?.animateToRegion(bounds, 600);
     }
-  }, [nav, safeRoute, mapRef, setSelectedArea, setSelectedStationId, setSelectedCommunityReport, setSelectedRoute, setSelectedZone, setShowDetailPanels, setShowResultCard]);
+  }, [
+    nav, safeRoute, mapRef,
+    setSelectedArea, setSelectedStationId, setSelectedCommunityReport, setShowCommunityReportSheet,
+    setSelectedRoute, setSelectedZone, setShowDetailPanels, setShowResultCard,
+  ]);
 
   // ── Safe route handlers ──────────────────────────────────────
   const handleFindRoute = useCallback(async () => {
     const start = isUsingGPSOrigin
       ? (userLocation ?? { latitude: DANANG_CENTER.latitude, longitude: DANANG_CENTER.longitude })
       : (startCoord ?? userLocation ?? { latitude: DANANG_CENTER.latitude, longitude: DANANG_CENTER.longitude });
-
     if (!endCoord) return;
     await safeRoute.findRoute(start, endCoord, transportMode);
   }, [isUsingGPSOrigin, startCoord, userLocation, endCoord, transportMode, safeRoute]);
@@ -325,7 +371,7 @@ export function useMapScreen(ctx: MapScreenCtx) {
 
   // ── Destination-first NAV FAB flow ───────────────────────────
   const handleNavDestinationSelected = useCallback(
-    (coord: LatLng, label: string) => {
+    (coord: { latitude: number; longitude: number }, label: string) => {
       setEndCoord(coord);
       setDestinationText(label);
       selectGPSAsOrigin();
@@ -394,16 +440,26 @@ export function useMapScreen(ctx: MapScreenCtx) {
     [setSelectedArea, setSelectedRoute, setSelectedZone, setSelectedStationId, mapRef],
   );
 
+  // ── Community report handlers ────────────────────────────────
   const handleCommunityReportPress = useCallback(
     (report: NearbyFloodReport) => {
       setSelectedArea(null);
       setSelectedRoute(null);
       setSelectedZone(null);
       setSelectedStationId(null);
+      // Set report data → marker stays on map
       setSelectedCommunityReport(report);
+      // Show the bottom sheet
+      setShowCommunityReportSheet(true);
     },
-    [setSelectedArea, setSelectedRoute, setSelectedZone, setSelectedStationId, setSelectedCommunityReport],
+    [setSelectedArea, setSelectedRoute, setSelectedZone, setSelectedStationId, setSelectedCommunityReport, setShowCommunityReportSheet],
   );
+
+  // Close sheet BUT keep selectedCommunityReport → marker stays
+  const handleCloseCommunityReport = useCallback(() => {
+    setShowCommunityReportSheet(false);
+    // DO NOT clear selectedCommunityReport — marker must persist
+  }, [setShowCommunityReportSheet]);
 
   // ── Viewport-aware marker fetching ───────────────────────────
   const fetchMarkersInViewPort = useMemo(
@@ -423,17 +479,10 @@ export function useMapScreen(ctx: MapScreenCtx) {
         if (settings?.overlays?.flood) {
           refreshFloodSeverity(bufferedBounds);
         }
-        if (settings?.overlays?.communityReports) {
-          const radiusMeters = (newRegion.latitudeDelta / 2) * 111320;
-          refreshNearbyFloodReports({
-            latitude: newRegion.latitude,
-            longitude: newRegion.longitude,
-            radiusMeters: Math.round(radiusMeters),
-            hours: 720,
-          });
-        }
+        // Community reports are now driven by region in useMapData via useMemo(communityParams)
+        // so no manual refresh needed here — React Query will refetch when params change
       }, 400),
-    [refreshFloodSeverity, refreshNearbyFloodReports, settings?.overlays?.flood, settings?.overlays?.communityReports],
+    [refreshFloodSeverity, settings?.overlays?.flood, settings?.overlays?.communityReports],
   );
 
   const handleRegionChange = useCallback(
@@ -464,6 +513,7 @@ export function useMapScreen(ctx: MapScreenCtx) {
     handleRoutePress,
     handleFloodMarkerPress,
     handleCommunityReportPress,
+    handleCloseCommunityReport,
     fetchMarkersInViewPort,
     handleRegionChange,
     handleMapTouchStart,

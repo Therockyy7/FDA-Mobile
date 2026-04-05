@@ -1,3 +1,4 @@
+// features/map/components/reports/CommunityReportMarker.tsx
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View } from "react-native";
@@ -8,6 +9,8 @@ interface CommunityReportMarkerProps {
   report: NearbyFloodReport;
   mapRef: React.RefObject<any>;
   onPress: (report: NearbyFloodReport) => void;
+  // Added back to satisfy MapContent but not used to prevent Android rendering issues
+  isSelected?: boolean;
 }
 
 const LATITUDE_OFFSET = 0.008;

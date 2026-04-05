@@ -82,7 +82,9 @@ export function DistrictsForecastCard() {
   }
 
   return (
-    <View style={{ paddingHorizontal: 16, paddingVertical: 4, paddingBottom: 24 }}>
+    <View
+      style={{ paddingHorizontal: 16, paddingVertical: 4, paddingBottom: 24 }}
+    >
       {/* ═══ Ultra Compact Header + Weather Bar ═══ */}
       <View
         style={{
@@ -163,7 +165,11 @@ export function DistrictsForecastCard() {
               {data.weather_summary.tide_height_m}m
             </Text>
           </View>
-          <TouchableOpacity onPress={fetchData} activeOpacity={0.6} style={{ paddingLeft: 4 }}>
+          <TouchableOpacity
+            onPress={fetchData}
+            activeOpacity={0.6}
+            style={{ paddingLeft: 4 }}
+          >
             <Ionicons name="sync" size={14} color={themeConfig.subtext} />
           </TouchableOpacity>
         </View>
@@ -201,7 +207,9 @@ export function DistrictsForecastCard() {
             >
               <TouchableOpacity
                 activeOpacity={0.7}
-                onPress={() => router.push(`/prediction/${district.area_id}` as any)}
+                onPress={() =>
+                  router.push(`/prediction/${district.area_id}` as any)
+                }
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -250,7 +258,14 @@ export function DistrictsForecastCard() {
                 </View>
 
                 {/* 2. Mini Horizontal Timeline */}
-                <View style={{ flex: 1.5, flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <View
+                  style={{
+                    flex: 1.5,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
                   {district.temporal_evolution.map((h, i) => {
                     if (i > 1) return null; // Show max 2 future points (3h and 5h) to save space
                     const hConfig = getRiskConfigByLevel(h.risk_level);
@@ -300,7 +315,13 @@ export function DistrictsForecastCard() {
                     justifyContent: "center",
                   }}
                 >
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
                     <View
                       style={{
                         width: 6,

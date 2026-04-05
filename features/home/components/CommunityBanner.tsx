@@ -191,7 +191,7 @@ export function CommunityBanner() {
           {/* Report Flood Button */}
           <Animated.View style={{ flex: 1, opacity: shimmerOpacity }}>
             <TouchableOpacity
-              onPress={() => router.push("/community/create-post" as any)}
+              onPress={() => router.push("/community/create-post?openCamera=true" as any)}
               activeOpacity={0.8}
             >
               <LinearGradient

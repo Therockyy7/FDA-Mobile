@@ -1,9 +1,9 @@
 // features/map/components/reports/CommunityReportSheet.tsx
 import React, { useEffect, useState } from "react";
-import { StyleSheet, ScrollView, View, ActivityIndicator, Text } from "react-native";
+import { StyleSheet, View, ActivityIndicator, Text } from "react-native";
 import { NearbyFloodReport, CommunityService } from "~/features/community/services/community.service";
 import { PostCard } from "~/features/community/components/PostCard";
-import { getPostMock } from "../../lib/post-adapter";
+import { transformFloodReportToPost } from "~/features/community/types/post-types";
 
 interface CommunityReportSheetProps {
   report: NearbyFloodReport;
@@ -13,19 +13,34 @@ interface CommunityReportSheetProps {
 export function CommunityReportSheet({ report, onClose }: CommunityReportSheetProps) {
   const [fullReport, setFullReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setError(false);
+    setFullReport(null);
+
     (async () => {
       try {
         const data = await CommunityService.getFloodReportById(report.id);
-        if (!cancelled) setFullReport(data);
-      } catch {
-        // non-critical
+        console.log("[CommunityReportSheet] Fetched report data:", JSON.stringify(data, null, 2));
+        if (!cancelled) {
+          if (data && data.id) {
+            setFullReport(data);
+          } else {
+            console.warn("[CommunityReportSheet] Report missing id field:", data);
+            setError(true);
+          }
+        }
+      } catch (e) {
+        console.error("[CommunityReportSheet] Error fetching report:", e);
+        if (!cancelled) setError(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
+
     return () => {
       cancelled = true;
     };
@@ -40,20 +55,56 @@ export function CommunityReportSheet({ report, onClose }: CommunityReportSheetPr
     );
   }
 
-  if (!fullReport) {
+  if (error || !fullReport) {
+    // Fallback: render minimal card from NearbyFloodReport (marker data)
+    const fallbackPost = {
+      id: report.id,
+      authorId: "",
+      authorName: "Người dùng FDA",
+      createdAt: report.createdAt,
+      content: `Báo cáo ngập lụt tại toạ độ (${report.latitude.toFixed(5)}, ${report.longitude.toFixed(5)})`,
+      waterLevelStatus: (
+        report.severity === "high" ? "danger" :
+        report.severity === "medium" ? "warning" : "safe"
+      ) as "safe" | "warning" | "danger",
+      likesCount: 0,
+      commentsCount: 0,
+      sharesCount: 0,
+      latitude: report.latitude,
+      longitude: report.longitude,
+      severity: report.severity,
+    };
+
     return (
-      <View style={styles.center}>
-        <Text style={styles.loadingText}>Không thể tải báo cáo</Text>
+      <View style={styles.container}>
+        <PostCard post={fallbackPost} />
       </View>
     );
   }
 
-  const postMock = getPostMock(fullReport) as any;
+  // Build compatible object for transformFloodReportToPost
+  const reportForTransform = {
+    id: fullReport.id,
+    reporterUserId: fullReport.reporterUserId ?? "",
+    latitude: fullReport.latitude,
+    longitude: fullReport.longitude,
+    address: fullReport.address ?? "",
+    description: fullReport.description ?? "",
+    severity: fullReport.severity ?? "medium",
+    trustScore: fullReport.trustScore ?? 0,
+    score: fullReport.score ?? fullReport.trustScore ?? 0,
+    status: fullReport.status ?? "",
+    confidenceLevel: fullReport.confidenceLevel ?? "medium",
+    createdAt: fullReport.createdAt ?? report.createdAt,
+    media: fullReport.media ?? [],
+  };
+
+  const postData = transformFloodReportToPost(reportForTransform);
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <PostCard post={postMock} />
-    </ScrollView>
+    <View style={styles.container}>
+      <PostCard post={postData} />
+    </View>
   );
 }
 

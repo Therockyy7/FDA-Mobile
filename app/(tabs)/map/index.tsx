@@ -84,6 +84,8 @@ export default function MapScreen() {
     setShowResultCard: s.setShowResultCard,
     setShowNavSearch: s.setShowNavSearch,
     setIsLoading: s.setIsLoading,
+    setShowCommunityReportSheet: s.setShowCommunityReportSheet,
+    setShowWarningsSheet: s.setShowWarningsSheet,
     viewMode: s.viewMode,
     params: s.params,
     floodSeverity: s.floodSeverity,

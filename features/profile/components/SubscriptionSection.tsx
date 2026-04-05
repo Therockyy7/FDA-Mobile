@@ -151,101 +151,56 @@ const SubscriptionSection: React.FC<Props> = ({
         {/* Subscription Info */}
         {!isLoading && !error && (
           <>
-            <View style={{ padding: 16 }}>
-              <TouchableOpacity
-                style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
-                onPress={() => router.push("/plans/current")}
-                activeOpacity={0.7}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
-                  {/* Icon */}
-                  <View
-                    style={{
-                      width: 52,
-                      height: 52,
-                      borderRadius: 16,
-                      backgroundColor: isDarkColorScheme ? "#334155" : "#F1F5F9",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginRight: 14,
-                    }}
-                  >
-                    <Ionicons name={tierIcon} size={26} color={tierColor} />
-                  </View>
-
-                  {/* Plan Name + Status */}
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                      <Text style={{ fontSize: 17, fontWeight: "800", color: colors.text }}>
-                        {subscription?.planName || "Chưa có gói"}
-                      </Text>
-                    </View>
-                    {subscription && (
-                      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
-                        <View
-                          style={{
-                            backgroundColor: getStatusColor(subscription.status),
-                            paddingHorizontal: 8,
-                            paddingVertical: 2,
-                            borderRadius: 20,
-                          }}
-                        >
-                          <Text style={{ fontSize: 11, fontWeight: "700", color: "#FFFFFF" }}>
-                            {getStatusLabel(subscription.status)}
-                          </Text>
-                        </View>
-                      </View>
-                    )}
-                  </View>
+            <TouchableOpacity
+              style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16 }}
+              onPress={() => router.push("/plans/current")}
+              activeOpacity={0.7}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+                {/* Icon */}
+                <View
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 16,
+                    backgroundColor: isDarkColorScheme ? "#334155" : "#F1F5F9",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: 14,
+                  }}
+                >
+                  <Ionicons name={tierIcon} size={26} color={tierColor} />
                 </View>
 
-                {/* Chevron */}
-                <Ionicons name="chevron-forward" size={20} color={colors.subtext} />
-              </TouchableOpacity>
-
-              {/* Plan Details */}
-              {subscription && (
-                <>
-                  <View style={{ height: 1, backgroundColor: colors.divider, marginVertical: 14 }} />
-
-                  {/* Price */}
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-                    <Text style={{ fontSize: 13, color: colors.subtext }}>Giá gói</Text>
-                    <Text style={{ fontSize: 13, fontWeight: "700", color: colors.text }}>
-                      {formatPrice(subscription.priceMonth)}
+                {/* Plan Name + Status */}
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <Text style={{ fontSize: 17, fontWeight: "800", color: colors.text }}>
+                      {subscription?.planName || "Chưa có gói"}
                     </Text>
                   </View>
+                  {subscription && (
+                    <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+                      <View
+                        style={{
+                          backgroundColor: getStatusColor(subscription.status),
+                          paddingHorizontal: 8,
+                          paddingVertical: 2,
+                          borderRadius: 20,
+                        }}
+                      >
+                        <Text style={{ fontSize: 11, fontWeight: "700", color: "#FFFFFF" }}>
+                          {getStatusLabel(subscription.status)}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              </View>
 
-                  {/* Channels */}
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-                    <Text style={{ fontSize: 13, color: colors.subtext }}>Kênh thông báo</Text>
-                    <Text style={{ fontSize: 13, fontWeight: "600", color: colors.text }}>
-                      {subscription.availableChannels?.length
-                        ? subscription.availableChannels.join(", ")
-                        : "—"}
-                    </Text>
-                  </View>
-
-                  {/* Dispatch Delay */}
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-                    <Text style={{ fontSize: 13, color: colors.subtext }}>Độ trễ cảnh báo</Text>
-                    <Text style={{ fontSize: 13, fontWeight: "600", color: colors.text }}>
-                      {subscription.dispatchDelay.highPrioritySeconds < 60
-                        ? `< ${subscription.dispatchDelay.highPrioritySeconds}s`
-                        : `${subscription.dispatchDelay.highPrioritySeconds / 60} phút`}
-                    </Text>
-                  </View>
-
-                  {/* Retries */}
-                  <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                    <Text style={{ fontSize: 13, color: colors.subtext }}>Số lần gửi lại</Text>
-                    <Text style={{ fontSize: 13, fontWeight: "600", color: colors.text }}>
-                      {subscription.maxRetries}
-                    </Text>
-                  </View>
-                </>
-              )}
-            </View>
+              {/* Chevron */}
+              <Ionicons name="chevron-forward" size={20} color={colors.subtext} />
+            </TouchableOpacity>
 
             {/* View Plans CTA */}
             <TouchableOpacity
@@ -256,7 +211,7 @@ const SubscriptionSection: React.FC<Props> = ({
                 paddingVertical: 14,
                 borderTopWidth: 1,
                 borderTopColor: colors.divider,
-                backgroundColor: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
+                backgroundColor: isDarkColorScheme ? "#0F172A" : "#F8FAFB",
               }}
               onPress={() => router.push("/plans")}
               activeOpacity={0.7}

@@ -3,10 +3,10 @@
 // Receives the full MapScreenState as context.
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { Region } from "react-native-maps";
+import MapView, { Region } from "react-native-maps";
 import type { MapPressEvent } from "react-native-maps";
 import type { NearbyFloodReport } from "~/features/community/services/community.service";
-import type { FloodRoute } from "../constants/map-data";
+import type { FloodRoute, FloodZone } from "../constants/map-data";
 import { DANANG_CENTER } from "../constants/map-data";
 import {
   debounce,
@@ -18,10 +18,102 @@ import {
 } from "../lib/map-utils";
 import { getRouteBounds } from "../lib/polyline-utils";
 import { LocationService } from "../services/location.service";
-import type { FloodSeverityFeature } from "../types/map-layers.types";
+import type { AreaWithStatus, FloodSeverityFeature, FloodStatusParams, MapLayerSettings } from "../types/map-layers.types";
 import type { MapScreenState } from "./useMapScreenState";
+import { useNavigation } from "./useNavigation";
+import { useSafeRoute } from "./routing";
+import type { LatLng } from "../types/safe-route.types";
+import { TransportMode } from "../types";
+interface EditAreaParams {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  radiusMeters: number;
+  addressText: string;
+}
 
-export function useMapScreen(ctx: MapScreenState) {
+interface MapScreenCtx {
+  // Data
+  settings: MapLayerSettings;
+  refreshFloodSeverity: (params?: FloodStatusParams) => void;
+  refreshAreas: () => void;
+  refreshNearbyFloodReports: (params: {
+    latitude: number;
+    longitude: number;
+    radiusMeters: number;
+    hours: number;
+  }) => void;
+
+  // Camera
+  mapRef: React.RefObject<MapView | null>;
+  focusOnRoute: (route: FloodRoute) => void;
+  onRegionChangeComplete: (region: Region) => void;
+
+  // Navigation
+  nav: ReturnType<typeof useNavigation>;
+
+  // Safe route
+  safeRoute: ReturnType<typeof useSafeRoute>;
+
+  // Routing UI
+  isUsingGPSOrigin: boolean;
+  startCoord: LatLng | null;
+  endCoord: LatLng | null;
+  transportMode: TransportMode;
+  userLocation: LatLng | null;
+  setEndCoord: (c: LatLng) => void;
+  setDestinationText: (t: string) => void;
+  setStartCoord: (c: LatLng) => void;
+  selectGPSAsOrigin: () => void;
+  selectGPSAsDestination: (loc: LatLng) => void;
+  openRouting: () => void;
+  closeRouting: () => void;
+  resetRouting: () => void;
+  startPickingOrigin: () => void;
+  startPickingDestination: () => void;
+  isPickingOnMap: boolean;
+  setPointFromMap: (coord: LatLng, label: string) => void;
+
+  // Area
+  handleAreaMapPress: (event: MapPressEvent) => void;
+  updateDraftAreaFromMapCenter: (region: Region) => void;
+  setSelectedRoute: (r: FloodRoute | null) => void;
+  setSelectedZone: (z: FloodZone | null) => void;
+  setSelectedStationId: (id: string | null) => void;
+  setSelectedArea: (a: AreaWithStatus | null) => void;
+  setSelectedAdminArea: (area: any) => void;
+  setSelectedCommunityReport: (r: NearbyFloodReport | null) => void;
+  setShowDetailPanels: (v: boolean) => void;
+  handleStartEditAreaFromParams: (area: EditAreaParams) => void;
+
+  // UI state setters
+  setShowResultCard: (v: boolean) => void;
+  setShowNavSearch: (v: boolean) => void;
+  setIsLoading: (v: boolean) => void;
+  setShowCommunityReportSheet: (v: boolean) => void;
+  setShowWarningsSheet: (v: boolean) => void;
+  viewMode: string;
+
+  // Edit params from navigation
+  params: {
+    editAreaId?: string;
+    editLat?: string;
+    editLng?: string;
+    editRadius?: string;
+    editName?: string;
+    editAddress?: string;
+    stationId?: string;
+    reportId?: string;
+    reportLat?: string;
+    reportLng?: string;
+    reportSeverity?: string;
+    reportCreatedAt?: string;
+  };
+  floodSeverity: any;
+}
+
+export function useMapScreen(ctx: MapScreenCtx) {
   const {
     settings,
     refreshFloodSeverity,
@@ -62,6 +154,7 @@ export function useMapScreen(ctx: MapScreenState) {
     setShowWarningsSheet,
     viewMode,
     params,
+    floodSeverity,
   } = ctx;
 
   const loadedBoundsRef = useRef<ViewportBounds | null>(null);
@@ -181,6 +274,18 @@ export function useMapScreen(ctx: MapScreenState) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.reportId, params.reportLat, params.reportLng]);
+  // Handle stationId param from notifications or other screens
+  useEffect(() => {
+    if (params.stationId && floodSeverity?.features?.length > 0) {
+      const feature = floodSeverity.features.find(
+        (f: any) => f.properties?.stationId === params.stationId,
+      );
+      if (feature) {
+        handleFloodMarkerPress(feature);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.stationId, floodSeverity]);
 
   // ── Navigation handlers ──────────────────────────────────────
   const handleStartNavigation = useCallback(() => {
@@ -293,10 +398,11 @@ export function useMapScreen(ctx: MapScreenState) {
         // Keep coordinate label
       }
       setPointFromMap({ latitude, longitude }, label);
+      openRouting();
     } catch {
       // Camera read failed
     }
-  }, [mapRef, setPointFromMap]);
+  }, [mapRef, setPointFromMap, openRouting]);
 
   // ── Map press ────────────────────────────────────────────────
   const handleMapPress = useCallback(

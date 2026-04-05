@@ -33,6 +33,7 @@ export interface RouteDirectionPanelProps {
   // Origin
   originText: string;
   onOriginChange: (value: string) => void;
+  onOriginClear: () => void;
   isUsingGPSOrigin: boolean;
   onUseGPSAsOrigin: () => void;
   onPickOriginOnMap: () => void;
@@ -42,6 +43,7 @@ export interface RouteDirectionPanelProps {
   // Destination
   destinationText: string;
   onDestinationChange: (value: string) => void;
+  onDestinationClear: () => void;
   isUsingGPSDest: boolean;
   onUseGPSAsDest: () => void;
   onPickDestinationOnMap: () => void;

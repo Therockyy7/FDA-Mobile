@@ -1,5 +1,6 @@
 // app/(tabs)/plans/index.tsx
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -15,12 +16,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
-import { usePricingPlans } from "~/features/plans/hooks/usePricingPlans";
-import { useCurrentSubscription } from "~/features/plans/hooks/useCurrentSubscription";
-import PricingPlansList from "~/features/plans/components/PricingPlansList";
-import { useColorScheme } from "~/lib/useColorScheme";
 import { useUser } from "~/features/auth/stores/hooks";
-import { LinearGradient } from "expo-linear-gradient";
+import PricingPlansList from "~/features/plans/components/PricingPlansList";
+import { useCurrentSubscription } from "~/features/plans/hooks/useCurrentSubscription";
+import { usePricingPlans } from "~/features/plans/hooks/usePricingPlans";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const IS_MOBILE = SCREEN_WIDTH < 768;
@@ -50,13 +50,12 @@ export default function PlansScreen() {
   const colors = {
     background: isDarkColorScheme ? "#0F172A" : "#F0F4F8",
     headerBg: isDarkColorScheme ? "#1E293B" : "#1B4D89",
-    statusBarStyle: isDarkColorScheme ? "light-content" : "light-content" as const,
+    statusBarStyle: isDarkColorScheme
+      ? "light-content"
+      : ("light-content" as const),
     text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
     subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
     border: isDarkColorScheme ? "#334155" : "#E2E8F0",
-    heroBg: isDarkColorScheme ? "#1E293B" : "rgba(213,227,255,0.3)",
-    heroText: isDarkColorScheme ? "#F1F5F9" : "#0d1c32",
-    heroSubtext: isDarkColorScheme ? "#94A3B8" : "#39475f",
   };
 
   const plans = plansData?.data ?? [];
@@ -95,7 +94,6 @@ export default function PlansScreen() {
         </SafeAreaView>
       </LinearGradient>
 
-
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ flexGrow: 1 }}
@@ -111,16 +109,6 @@ export default function PlansScreen() {
           />
         }
       >
-        {/* Hero Panel */}
-        <View style={[styles.hero, { backgroundColor: colors.heroBg, paddingBottom: 24 }]}>
-          <Text style={[styles.heroTitle, { color: colors.heroText }]}>
-            Chọn gói phù hợp để nhận cảnh báo nhanh hơn
-          </Text>
-          <Text style={[styles.heroSubtitle, { color: colors.heroSubtext }]}>
-            Theo dõi ngập lụt, nhận cảnh báo sớm và quản lý khu vực quan tâm hiệu quả hơn.
-          </Text>
-        </View>
-
         {/* Loading State */}
         {isLoadingPlans && (
           <View style={styles.stateContainer}>
@@ -154,7 +142,11 @@ export default function PlansScreen() {
         {/* Empty State */}
         {!isLoadingPlans && !plansError && plans.length === 0 && (
           <View style={styles.stateContainer}>
-            <Ionicons name="pricetag-outline" size={48} color={colors.subtext} />
+            <Ionicons
+              name="pricetag-outline"
+              size={48}
+              color={colors.subtext}
+            />
             <Text style={[styles.stateTitle, { color: colors.text }]}>
               Không có gói cước nào
             </Text>
@@ -173,13 +165,13 @@ export default function PlansScreen() {
             isLoadingPlans={isLoadingPlans}
             isLoadingSubscription={isLoadingSubscription}
             plansError={null}
-            subscriptionError={subscriptionError ? (subscriptionError as Error).message : null}
+            subscriptionError={
+              subscriptionError ? (subscriptionError as Error).message : null
+            }
             onRetryPlans={() => refetchPlans()}
             onRetrySubscription={() => refetchSubscription()}
           />
         )}
-
-        <View style={{ height: 100 }} />
       </ScrollView>
     </View>
   );
@@ -208,23 +200,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "800",
     color: "#FFFFFF",
-  },
-  hero: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-    alignItems: "center",
-  },
-  heroTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  heroSubtitle: {
-    fontSize: 14,
-    fontWeight: "500",
-    textAlign: "center",
-    lineHeight: 20,
   },
   stateContainer: {
     flex: 1,

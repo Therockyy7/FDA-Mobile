@@ -52,6 +52,7 @@ export interface NotificationItem {
   sentAt: string;
   deliveredAt: string | null;
   createdAt: string;
+  isRead?: boolean;
 }
 
 export interface NotificationHistoryResponse {

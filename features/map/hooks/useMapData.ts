@@ -2,15 +2,18 @@
 // Convenience wrapper that aggregates all map data sources.
 // Delegates to flood/ hooks for flood data, plus area queries.
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { NearbyFloodReportsParams } from "~/features/community/services/community.service";
 import { useFloodLayerSettings, useFloodSignalR } from "./flood";
+import { getFloodHubConnection } from "~/lib/signalr-client";
 import { useFloodData } from "./flood/useFloodData";
 import { DEFAULT_MAP_SETTINGS } from "../stores/useMapSettingsStore";
+import { useAreaRealtimeStore } from "../stores/useAreaRealtimeStore";
 import { useAdminAreasQuery } from "./queries/useAdminAreasQuery";
 import { useAreasQuery } from "./queries/useAreasQuery";
 import { useCommunityReportsQuery, COMMUNITY_REPORTS_QUERY_KEY } from "./queries/useCommunityReportsQuery";
+import { useAreaSignalR } from "./areas/useAreaSignalR";
 import { DANANG_CENTER } from "../constants/map-data";
 
 const DEFAULT_COMMUNITY_PARAMS: NearbyFloodReportsParams = {
@@ -71,15 +74,42 @@ export function useMapData(communityParams?: NearbyFloodReportsParams) {
     queryClient.invalidateQueries({ queryKey: [COMMUNITY_REPORTS_QUERY_KEY] });
   };
 
-  // User areas
+  // User areas (batch fetch — single request)
+
   const areasQuery = useAreasQuery();
-  const areas = areasQuery.data ?? [];
+  const areasBase = areasQuery.data ?? [];
   const areasLoading = areasQuery.isLoading;
+
+  // Subscribe to SignalR area updates for all loaded areas
+  const areaIds = useMemo(() => areasBase.map((a) => a.id), [areasBase]);
+  useAreaSignalR(areaIds);
+
+  // Merge realtime status updates over base query data (realtime wins)
+  const areaRealtimeUpdates = useAreaRealtimeStore((s) => s.updates);
+  const areas = useMemo(
+    () =>
+      areasBase.map((a) => {
+        const rt = areaRealtimeUpdates[a.id];
+        return rt ? { ...a, ...rt } : a;
+      }),
+    [areasBase, areaRealtimeUpdates],
+  );
 
   // Admin areas
   const adminAreasQuery = useAdminAreasQuery();
   const adminAreas = adminAreasQuery.data ?? [];
   const adminAreasLoading = adminAreasQuery.isLoading;
+
+  // Callbacks for subscribe/unsubscribe when areas are created or deleted outside this hook
+  const subscribeToArea = useCallback((areaId: string) => {
+    const connection = getFloodHubConnection();
+    connection.invoke("SubscribeToArea", areaId).catch(() => {});
+  }, []);
+
+  const unsubscribeFromArea = useCallback((areaId: string) => {
+    const connection = getFloodHubConnection();
+    connection.invoke("UnsubscribeFromArea", areaId).catch(() => {});
+  }, []);
 
   return {
     // Settings
@@ -99,6 +129,8 @@ export function useMapData(communityParams?: NearbyFloodReportsParams) {
     areas,
     areasLoading,
     refreshAreas,
+    subscribeToArea,
+    unsubscribeFromArea,
     // Community reports
     communityReports,
     refreshNearbyFloodReports,

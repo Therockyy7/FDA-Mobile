@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { notificationService } from "../services/notification.service";
 import {
   NotificationHistoryRequest,
@@ -6,22 +6,15 @@ import {
 } from "../types/notifications-types";
 
 export const useNotificationHistory = (
-  params: Omit<NotificationHistoryRequest, "pageNumber">
+  params: NotificationHistoryRequest
 ) => {
-  return useInfiniteQuery<NotificationHistoryResponse, Error>({
+  return useQuery<NotificationHistoryResponse, Error>({
     queryKey: ["notifications", "history", params],
-    queryFn: ({ pageParam = 1 }) =>
+    queryFn: () =>
       notificationService.getNotificationHistory({
         ...params,
-        pageNumber: pageParam as number,
+        pageNumber: params.pageNumber || 1,
         pageSize: params.pageSize || 10,
       }),
-    getNextPageParam: (lastPage) => {
-      if (lastPage.pageNumber < lastPage.totalPages) {
-        return lastPage.pageNumber + 1;
-      }
-      return undefined;
-    },
-    initialPageParam: 1,
   });
 };

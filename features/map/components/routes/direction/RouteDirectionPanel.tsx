@@ -25,6 +25,7 @@ export function RouteDirectionPanel({
   onClose,
   originText,
   onOriginChange,
+  onOriginClear,
   isUsingGPSOrigin,
   onUseGPSAsOrigin,
   onPickOriginOnMap,
@@ -32,6 +33,7 @@ export function RouteDirectionPanel({
   onOriginPlaceSelected,
   destinationText,
   onDestinationChange,
+  onDestinationClear,
   isUsingGPSDest,
   onUseGPSAsDest,
   onPickDestinationOnMap,
@@ -57,11 +59,8 @@ export function RouteDirectionPanel({
   const isReady = phase === "ready";
 
   const handleBack = () => {
-    if (phase === "idle") {
-      onClose();
-    } else {
-      setPhase("idle");
-    }
+    onClose();
+    setPhase("idle");
   };
 
   const handleSearchSelect = (coord: LatLng, label: string) => {
@@ -200,7 +199,9 @@ export function RouteDirectionPanel({
           placeholder="Tìm điểm đến..."
           accentColor="#4F46E5"
           initialQuery={isUsingGPSDest ? "" : destinationText}
+          onQueryClear={onDestinationClear}
         />
+
       </>
     );
   }
@@ -434,6 +435,9 @@ export function RouteDirectionPanel({
           searchTarget === "origin"
             ? isUsingGPSOrigin ? "" : originText
             : isUsingGPSDest ? "" : destinationText
+        }
+        onQueryClear={
+          searchTarget === "origin" ? onOriginClear : onDestinationClear
         }
       />
     </>

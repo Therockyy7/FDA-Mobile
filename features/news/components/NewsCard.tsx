@@ -61,7 +61,6 @@ export function NewsCard({ item, onPress }: NewsCardProps) {
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
-        opacity: isRead ? 0.6 : 1, // Dim if read
       }}
     >
       {/* Top badges row */}

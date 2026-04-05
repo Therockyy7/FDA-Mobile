@@ -22,7 +22,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: "2",
-    priority: "high",
+    priority: "warning",
     category: "water_level",
     title: "MỰC NƯỚC SÔNG HÀN DÂNG CAO",
     location: "Cầu Rồng, Quận Sơn Trà",
@@ -40,7 +40,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: "3",
-    priority: "high",
+    priority: "warning",
     category: "flood",
     title: "NGẬP LỤT KHU DÂN CƯ",
     location: "Phường Hải Châu 1, Quận Hải Châu",
@@ -58,7 +58,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: "4",
-    priority: "medium",
+    priority: "caution",
     category: "weather",
     title: "DỰ BÁO MƯA LỚN",
     location: "Quận Thanh Khê, Quận Liên Chiểu",
@@ -73,7 +73,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: "5",
-    priority: "medium",
+    priority: "caution",
     category: "traffic",
     title: "GIAO THÔNG TẮC NGHẼN",
     location: "Đường Điện Biên Phủ, Thanh Khê",
@@ -89,7 +89,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: "6",
-    priority: "medium",
+    priority: "caution",
     category: "water_level",
     title: "TRIỀU CƯỜNG BẤT THƯỜNG",
     location: "Bãi biển Mỹ Khê, Quận Ngũ Hành Sơn",
@@ -106,7 +106,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: "7",
-    priority: "medium",
+    priority: "caution",
     category: "flood",
     title: "CẢNH BÁO NGẬP ĐÔ THỊ",
     location: "Đường 2 Tháng 9, Quận Hải Châu",
@@ -122,7 +122,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: "8",
-    priority: "low",
+    priority: "info",
     category: "weather",
     title: "THỜI TIẾT THUẬN LỢI",
     location: "Bán đảo Sơn Trà",
@@ -137,7 +137,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: "9",
-    priority: "low",
+    priority: "info",
     category: "system",
     title: "CẬP NHẬT HỆ THỐNG",
     location: "Toàn bộ khu vực Đà Nẵng",
@@ -151,7 +151,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: "10",
-    priority: "medium",
+    priority: "caution",
     category: "traffic",
     title: "TẮC ĐƯỜNG NGẬP NƯỚC",
     location: "Cầu Trần Thị Lý, Quận Hải Châu",
@@ -170,6 +170,6 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
 export const FILTER_OPTIONS: FilterOption[] = [
   { key: "all", label: "Tất cả" },
   { key: "critical", label: "Khẩn cấp", color: "#DC2626" },
-  { key: "high", label: "Quan trọng", color: "#F59E0B" },
-  { key: "medium", label: "Thông báo", color: "#007AFF" },
+  { key: "warning", label: "Quan trọng", color: "#F59E0B" },
+  { key: "caution", label: "Thông báo", color: "#007AFF" },
 ];

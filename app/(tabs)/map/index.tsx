@@ -43,7 +43,52 @@ export default function MapScreen() {
     handleCloseCommunityReport,
     handleRegionChange,
     handleMapTouchStart,
-  } = useMapScreen(s);
+
+  } = useMapScreen({
+    settings: s.settings,
+    refreshFloodSeverity: s.refreshFloodSeverity,
+    refreshAreas: s.refreshAreas,
+    refreshNearbyFloodReports: s.refreshNearbyFloodReports,
+    mapRef: s.mapRef,
+    focusOnRoute: s.focusOnRoute,
+    onRegionChangeComplete: s.onRegionChangeComplete,
+    nav: s.nav,
+    safeRoute: s.safeRoute,
+    isUsingGPSOrigin: s.isUsingGPSOrigin,
+    startCoord: s.startCoord,
+    endCoord: s.endCoord,
+    transportMode: s.transportMode,
+    userLocation: s.userLocation,
+    setEndCoord: s.setEndCoord,
+    setDestinationText: s.setDestinationText,
+    setStartCoord: s.setStartCoord,
+    selectGPSAsOrigin: s.selectGPSAsOrigin,
+    selectGPSAsDestination: s.selectGPSAsDestination,
+    openRouting: s.openRouting,
+    closeRouting: s.closeRouting,
+    resetRouting: s.resetRouting,
+    startPickingOrigin: s.startPickingOrigin,
+    startPickingDestination: s.startPickingDestination,
+    isPickingOnMap: s.isPickingOnMap,
+    setPointFromMap: s.setPointFromMap,
+    handleAreaMapPress: s.handleAreaMapPress,
+    updateDraftAreaFromMapCenter: s.updateDraftAreaFromMapCenter,
+    setSelectedRoute: s.setSelectedRoute,
+    setSelectedZone: s.setSelectedZone,
+    setSelectedStationId: s.setSelectedStationId,
+    setSelectedArea: s.setSelectedArea,
+    setSelectedAdminArea: s.setSelectedAdminArea,
+    setSelectedCommunityReport: s.setSelectedCommunityReport,
+    setShowDetailPanels: s.setShowDetailPanels,
+    handleStartEditAreaFromParams: s.handleStartEditAreaFromParams,
+    setShowResultCard: s.setShowResultCard,
+    setShowNavSearch: s.setShowNavSearch,
+    setIsLoading: s.setIsLoading,
+    viewMode: s.viewMode,
+    params: s.params,
+    floodSeverity: s.floodSeverity,
+  });
+
 
   const handleSelectWard = (area: any) => {
     s.setShowWardSelectionSheet(false);
@@ -64,46 +109,63 @@ export default function MapScreen() {
       {/* Header — hide when community report sheet is open */}
       {!s.showCommunityReportSheet && (
         <MapHeaderSwitch
-          navIsNavigating={s.nav.isNavigating}
-          safeRouteHasResults={s.safeRoute.hasResults}
-          originText={s.originText}
-          onOriginChange={s.setOriginText}
-          isUsingGPSOrigin={s.isUsingGPSOrigin}
-          onUseGPSAsOrigin={s.selectGPSAsOrigin}
-          onPickOriginOnMap={s.startPickingOrigin}
-          hasOriginCoord={s.startCoord !== null}
-          onOriginPlaceSelected={(coord: LatLng) => {
-            s.setStartCoord(coord);
-            s.mapRef.current?.animateToRegion(
-              { latitude: coord.latitude, longitude: coord.longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 },
-              500,
-            );
-          }}
-          destinationText={s.destinationText}
-          onDestinationChange={s.setDestinationText}
-          isUsingGPSDest={s.isUsingGPSDest}
-          onUseGPSAsDest={() => {
-            if (s.userLocation) s.selectGPSAsDestination(s.userLocation);
-          }}
-          onPickDestinationOnMap={s.startPickingDestination}
-          hasDestinationCoord={s.endCoord !== null}
-          onDestinationPlaceSelected={(coord: LatLng) => {
-            s.setEndCoord(coord);
-            s.mapRef.current?.animateToRegion(
-              { latitude: coord.latitude, longitude: coord.longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 },
-              500,
-            );
-          }}
-          onSwap={s.swapOriginDestination}
-          transportMode={s.transportMode}
-          onModeChange={s.setTransportMode}
-          onFindRoute={handleFindRoute}
-          safeRouteIsLoading={s.safeRoute.isLoading}
-          safeRouteError={s.safeRoute.error}
-          onCloseRouting={handleCloseRouting}
-          userLocation={s.userLocation}
-          selectGPSAsDestination={s.selectGPSAsDestination}
-        />
+        navIsNavigating={s.nav.isNavigating}
+        safeRouteHasResults={s.safeRoute.hasResults}
+        originText={s.originText}
+        onOriginChange={s.setOriginText}
+        onOriginClear={() => { s.setOriginText(""); s.setStartCoord(null); }}
+        isUsingGPSOrigin={s.isUsingGPSOrigin}
+        onUseGPSAsOrigin={s.selectGPSAsOrigin}
+        onPickOriginOnMap={s.startPickingOrigin}
+        hasOriginCoord={s.startCoord !== null}
+        onOriginPlaceSelected={(coord: LatLng) => {
+          s.setStartCoord(coord);
+          s.openRouting();
+          s.mapRef.current?.animateToRegion(
+            {
+              latitude: coord.latitude,
+              longitude: coord.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            },
+            500,
+          );
+        }}
+        destinationText={s.destinationText}
+        onDestinationChange={s.setDestinationText}
+        onDestinationClear={() => { s.setDestinationText(""); s.setEndCoord(null); }}
+        isUsingGPSDest={s.isUsingGPSDest}
+        onUseGPSAsDest={() => {
+          if (s.userLocation) {
+            s.selectGPSAsDestination(s.userLocation);
+            s.openRouting();
+          }
+        }}
+        onPickDestinationOnMap={s.startPickingDestination}
+        hasDestinationCoord={s.endCoord !== null}
+        onDestinationPlaceSelected={(coord: LatLng) => {
+          s.setEndCoord(coord);
+          s.openRouting();
+          s.mapRef.current?.animateToRegion(
+            {
+              latitude: coord.latitude,
+              longitude: coord.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            },
+            500,
+          );
+        }}
+        onSwap={s.swapOriginDestination}
+        transportMode={s.transportMode}
+        onModeChange={s.setTransportMode}
+        onFindRoute={handleFindRoute}
+        safeRouteIsLoading={s.safeRoute.isLoading}
+        safeRouteError={s.safeRoute.error}
+        onCloseRouting={handleCloseRouting}
+        userLocation={s.userLocation}
+        selectGPSAsDestination={s.selectGPSAsDestination}
+      />
       )}
 
       <View style={{ flex: 1, position: "relative" }}>

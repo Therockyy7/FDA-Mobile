@@ -93,7 +93,9 @@ interface MapScreenCtx {
   setIsLoading: (v: boolean) => void;
   setShowCommunityReportSheet: (v: boolean) => void;
   setShowWarningsSheet: (v: boolean) => void;
+  setAreaDisplayMode: (v: "user" | "admin") => void;
   viewMode: string;
+  adminAreas: any[];
 
   // Edit params from navigation
   params: {
@@ -109,6 +111,8 @@ interface MapScreenCtx {
     reportLng?: string;
     reportSeverity?: string;
     reportCreatedAt?: string;
+    satelliteBbox?: string; // Format: "min_lon,min_lat,max_lon,max_lat"
+    returnToPrediction?: string;
   };
   floodSeverity: any;
 }
@@ -152,6 +156,8 @@ export function useMapScreen(ctx: MapScreenCtx) {
     setShowNavSearch,
     setIsLoading,
     setShowWarningsSheet,
+    setAreaDisplayMode,
+    adminAreas,
     viewMode,
     params,
     floodSeverity,
@@ -286,6 +292,35 @@ export function useMapScreen(ctx: MapScreenCtx) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.stationId, floodSeverity]);
+
+  // Handle satellite verification bounds
+  useEffect(() => {
+    if (params.satelliteBbox && mapRef.current) {
+      try {
+        const [minLon, minLat, maxLon, maxLat] = params.satelliteBbox.split(",").map(parseFloat);
+        if (!isNaN(minLon) && !isNaN(minLat) && !isNaN(maxLon) && !isNaN(maxLat)) {
+          // Add small padding to the bounding box
+          const padding = 0.02;
+          mapRef.current.animateToRegion({
+            latitude: (minLat + maxLat) / 2,
+            longitude: (minLon + maxLon) / 2,
+            latitudeDelta: Math.abs(maxLat - minLat) + padding,
+            longitudeDelta: Math.abs(maxLon - minLon) + padding,
+          }, 1000);
+          
+          if (params.returnToPrediction && adminAreas) {
+            const matchedArea = adminAreas.find((a: any) => a.id === params.returnToPrediction);
+            if (matchedArea) {
+              setSelectedAdminArea(matchedArea);
+              setAreaDisplayMode("admin");
+            }
+          }
+        }
+      } catch {
+        // failed to parse
+      }
+    }
+  }, [params.satelliteBbox, params.returnToPrediction, adminAreas, mapRef, setSelectedAdminArea, setAreaDisplayMode]);
 
   // ── Navigation handlers ──────────────────────────────────────
   const handleStartNavigation = useCallback(() => {

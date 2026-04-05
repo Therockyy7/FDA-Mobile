@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
 import React, { useCallback, useEffect, useState } from "react";
+import MapView, { Circle, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import {
   ActivityIndicator,
   Alert,
@@ -26,6 +27,7 @@ import { Text } from "~/components/ui/text";
 import { FloodHistorySection } from "~/features/areas/components/charts";
 import { EditAreaSheet } from "~/features/areas/components/EditAreaSheet";
 import { AreaService } from "~/features/areas/services/area.service";
+import { LocationService } from "~/features/map/services/location.service";
 import type {
   Area,
   AreaStatusResponse,
@@ -116,7 +118,10 @@ const getStatusConfig = (status?: string) => {
 
 export default function AreaDetailScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, source } = useLocalSearchParams<{
+    id: string;
+    source?: string;
+  }>();
   const insets = useSafeAreaInsets();
   const { isDarkColorScheme } = useColorScheme();
 
@@ -136,6 +141,18 @@ export default function AreaDetailScreen() {
   const [editingArea, setEditingArea] = useState<Area | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [localAddress, setLocalAddress] = useState<string | null>(null);
+
+  // Auto geocode if address is missing
+  useEffect(() => {
+    if (area && !area.addressText) {
+      LocationService.reverseGeocode(area.latitude, area.longitude)
+        .then((address) => {
+          if (address) setLocalAddress(address);
+        })
+        .catch(() => {});
+    }
+  }, [area]);
 
   // Theme colors
   const colors = {
@@ -404,7 +421,17 @@ export default function AreaDetailScreen() {
             }}
           >
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={() => {
+                if (source === "map") {
+                  // Navigate to map and pass focus parameters so MapScreen handles camera centering
+                  router.navigate({
+                    pathname: "/map",
+                    params: { focusLat: area.latitude, focusLng: area.longitude, focusRadius: area.radiusMeters }
+                  });
+                } else {
+                  router.back();
+                }
+              }}
               style={{
                 width: 40,
                 height: 40,
@@ -468,20 +495,7 @@ export default function AreaDetailScreen() {
 
             <View style={{ flexDirection: "row", gap: 8 }}>
               <TouchableOpacity
-                onPress={() => {
-                  // Navigate to map with edit mode
-                  router.push({
-                    pathname: "/",
-                    params: {
-                      editAreaId: area.id,
-                      editLat: area.latitude.toString(),
-                      editLng: area.longitude.toString(),
-                      editRadius: area.radiusMeters.toString(),
-                      editName: area.name,
-                      editAddress: area.addressText || "",
-                    },
-                  });
-                }}
+                onPress={() => setEditingArea(area)}
                 style={{
                   width: 40,
                   height: 40,
@@ -788,104 +802,196 @@ export default function AreaDetailScreen() {
         <View
           style={{
             backgroundColor: colors.cardBg,
-            borderRadius: 18,
-            padding: 16,
-            marginBottom: 14,
+            borderRadius: 24,
+            padding: 18,
+            marginBottom: 16,
             borderWidth: 1,
             borderColor: colors.border,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: isDarkColorScheme ? 0 : 0.04,
+            shadowRadius: 12,
+            elevation: 3,
           }}
         >
-          <Text
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: "#007AFF15", alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="map-outline" size={18} color="#007AFF" />
+            </View>
+            <Text
+              style={{
+                fontSize: 17,
+                fontWeight: "800",
+                color: colors.text,
+              }}
+            >
+              Thông tin vùng
+            </Text>
+          </View>
+
+          {/* Mini Map */}
+          <View
             style={{
-              fontSize: 14,
-              fontWeight: "700",
-              color: colors.text,
-              marginBottom: 14,
+              height: 200,
+              width: "100%",
+              borderRadius: 16,
+              overflow: "hidden",
+              marginBottom: 16,
+              borderWidth: 1,
+              borderColor: isDarkColorScheme ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
             }}
           >
-            Thông tin vùng
-          </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+            <MapView
+              provider={PROVIDER_GOOGLE}
+              style={{ width: "100%", height: "100%" }}
+              initialRegion={{
+                latitude: area.latitude,
+                longitude: area.longitude,
+                latitudeDelta: Math.max((area.radiusMeters / 111000) * 2.2, 0.002),
+                longitudeDelta: Math.max((area.radiusMeters / 111000) * 2.2, 0.002),
+              }}
+              mapType="standard"
+              showsUserLocation={false}
+              showsCompass={false}
+              toolbarEnabled={false}
+              pitchEnabled={false}
+              scrollEnabled={true}
+              zoomEnabled={true}
+            >
+              <Circle
+                center={{ latitude: area.latitude, longitude: area.longitude }}
+                radius={area.radiusMeters}
+                fillColor={statusConfig.main + "25"}
+                strokeColor={statusConfig.main}
+                strokeWidth={2}
+              />
+              <Marker
+                coordinate={{ latitude: area.latitude, longitude: area.longitude }}
+              >
+                <View
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    backgroundColor: statusConfig.main,
+                    borderWidth: 3,
+                    borderColor: "white",
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 3,
+                    elevation: 4,
+                  }}
+                />
+              </Marker>
+            </MapView>
+          </View>
+
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
             <View
               style={{
-                width: "48%",
-                backgroundColor: colors.mutedBg,
-                borderRadius: 12,
+                flex: 1,
+                minWidth: "46%",
+                backgroundColor: isDarkColorScheme ? "rgba(255,255,255,0.03)" : "#F8FAFC",
+                borderWidth: 1,
+                borderColor: isDarkColorScheme ? "rgba(255,255,255,0.05)" : "#E2E8F0",
+                borderRadius: 16,
                 padding: 14,
               }}
             >
-              <MaterialCommunityIcons
-                name="radius-outline"
-                size={20}
-                color="#007AFF"
-              />
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                <MaterialCommunityIcons
+                  name="radius-outline"
+                  size={16}
+                  color="#007AFF"
+                />
+                <Text
+                  style={{ fontSize: 11, fontWeight: "700", color: colors.subtext }}
+                >
+                  BÁN KÍNH
+                </Text>
+              </View>
               <Text
-                style={{ fontSize: 10, color: colors.subtext, marginTop: 6 }}
-              >
-                BÁN KÍNH
-              </Text>
-              <Text
-                style={{ fontSize: 18, fontWeight: "800", color: colors.text }}
+                style={{ fontSize: 16, fontWeight: "800", color: colors.text }}
               >
                 {formatRadius(area.radiusMeters)}
               </Text>
             </View>
+
             <View
               style={{
-                width: "48%",
-                backgroundColor: colors.mutedBg,
-                borderRadius: 12,
+                flex: 1,
+                minWidth: "46%",
+                backgroundColor: isDarkColorScheme ? "rgba(255,255,255,0.03)" : "#F8FAFC",
+                borderWidth: 1,
+                borderColor: isDarkColorScheme ? "rgba(255,255,255,0.05)" : "#E2E8F0",
+                borderRadius: 16,
                 padding: 14,
               }}
             >
-              <Ionicons name="navigate" size={20} color="#8B5CF6" />
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                <Ionicons name="location-outline" size={16} color="#8B5CF6" />
+                <Text
+                  style={{ fontSize: 11, fontWeight: "700", color: colors.subtext }}
+                >
+                  VỊ TRÍ
+                </Text>
+              </View>
               <Text
-                style={{ fontSize: 10, color: colors.subtext, marginTop: 6 }}
+                style={{ fontSize: 13, fontWeight: "700", color: colors.text }}
+                numberOfLines={2}
               >
-                TỌA ĐỘ
-              </Text>
-              <Text
-                style={{ fontSize: 11, fontWeight: "600", color: colors.text }}
-              >
-                {area.latitude.toFixed(4)}, {area.longitude.toFixed(4)}
+                {area.addressText || localAddress || "Đang lấy địa chỉ..."}
               </Text>
             </View>
+
             <View
               style={{
-                width: "48%",
-                backgroundColor: colors.mutedBg,
-                borderRadius: 12,
+                flex: 1,
+                minWidth: "46%",
+                backgroundColor: isDarkColorScheme ? "rgba(255,255,255,0.03)" : "#F8FAFC",
+                borderWidth: 1,
+                borderColor: isDarkColorScheme ? "rgba(255,255,255,0.05)" : "#E2E8F0",
+                borderRadius: 16,
                 padding: 14,
               }}
             >
-              <Ionicons name="calendar" size={20} color="#10B981" />
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                <Ionicons name="calendar-outline" size={16} color="#10B981" />
+                <Text
+                  style={{ fontSize: 11, fontWeight: "700", color: colors.subtext }}
+                >
+                  NGÀY TẠO
+                </Text>
+              </View>
               <Text
-                style={{ fontSize: 10, color: colors.subtext, marginTop: 6 }}
-              >
-                NGÀY TẠO
-              </Text>
-              <Text
-                style={{ fontSize: 11, fontWeight: "600", color: colors.text }}
+                style={{ fontSize: 13, fontWeight: "700", color: colors.text }}
               >
                 {formatDate(area.createdAt)}
               </Text>
             </View>
+
             <View
               style={{
-                width: "48%",
-                backgroundColor: colors.mutedBg,
-                borderRadius: 12,
+                flex: 1,
+                minWidth: "46%",
+                backgroundColor: isDarkColorScheme ? "rgba(255,255,255,0.03)" : "#F8FAFC",
+                borderWidth: 1,
+                borderColor: isDarkColorScheme ? "rgba(255,255,255,0.05)" : "#E2E8F0",
+                borderRadius: 16,
                 padding: 14,
               }}
             >
-              <Ionicons name="time" size={20} color="#F59E0B" />
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                <Ionicons name="time-outline" size={16} color="#F59E0B" />
+                <Text
+                  style={{ fontSize: 11, fontWeight: "700", color: colors.subtext }}
+                >
+                  CẬP NHẬT
+                </Text>
+              </View>
               <Text
-                style={{ fontSize: 10, color: colors.subtext, marginTop: 6 }}
-              >
-                CẬP NHẬT
-              </Text>
-              <Text
-                style={{ fontSize: 11, fontWeight: "600", color: colors.text }}
+                style={{ fontSize: 13, fontWeight: "700", color: colors.text }}
               >
                 {formatDate(area.updatedAt)}
               </Text>

@@ -113,6 +113,9 @@ interface MapScreenCtx {
     reportCreatedAt?: string;
     satelliteBbox?: string; // Format: "min_lon,min_lat,max_lon,max_lat"
     returnToPrediction?: string;
+    focusLat?: string;
+    focusLng?: string;
+    focusRadius?: string;
   };
   floodSeverity: any;
 }
@@ -244,6 +247,26 @@ export function useMapScreen(ctx: MapScreenCtx) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.editAreaId]);
+
+  // Handle focus area params from AreaDetailScreen back navigation
+  useEffect(() => {
+    if (params.focusLat && params.focusLng && params.focusRadius) {
+      const lat = parseFloat(params.focusLat);
+      const lng = parseFloat(params.focusLng);
+      const radius = parseFloat(params.focusRadius);
+
+      mapRef.current?.animateToRegion(
+        {
+          latitude: lat,
+          longitude: lng,
+          latitudeDelta: (radius / 111320) * 4 || 0.01,
+          longitudeDelta: (radius / 111320) * 4 || 0.01,
+        },
+        500,
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.focusLat, params.focusLng, params.focusRadius]);
 
   // Handle report params from Community screen → navigate to map + show marker
   useEffect(() => {

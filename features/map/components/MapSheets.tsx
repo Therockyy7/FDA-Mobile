@@ -217,7 +217,7 @@ export function MapSheets({
             onDelete={onDeleteArea}
             onViewDetails={() => {
               onCloseAreaCard();
-              router.push({ pathname: "/areas/[id]", params: { id: selectedArea.id } });
+              router.push({ pathname: "/areas/[id]", params: { id: selectedArea.id, source: "map" } });
             }}
           />
         )}

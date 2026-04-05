@@ -13,15 +13,15 @@ import { Text } from "~/components/ui/text";
 import { AiFactorsCard } from "~/features/prediction/components/AiFactorsCard";
 import { CommunityReportsCard } from "~/features/prediction/components/CommunityReportsCard";
 import { ForecastWindowsCard } from "~/features/prediction/components/ForecastWindowsCard";
+import { HybridEnsembleCard } from "~/features/prediction/components/HybridEnsembleCard";
 import { ImpactCard } from "~/features/prediction/components/ImpactCard";
 import { NewAiConsultantCard } from "~/features/prediction/components/NewAiConsultantCard";
-import { StationsCard } from "~/features/prediction/components/StationsCard";
 import { PredictionHeroHeader } from "~/features/prediction/components/PredictionHeroHeader";
+import { SatelliteVerificationCard } from "~/features/prediction/components/SatelliteVerificationCard";
+import { StationsCard } from "~/features/prediction/components/StationsCard";
 import { PredictionService } from "~/features/prediction/services/prediction.service";
 import { PredictionResponse } from "~/features/prediction/types/prediction.types";
 import { useColorScheme } from "~/lib/useColorScheme";
-
-import { HybridEnsembleCard } from "~/features/prediction/components/HybridEnsembleCard";
 
 export default function PredictionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -164,6 +164,12 @@ export default function PredictionScreen() {
 
               {/* Hybrid Methodology */}
               <HybridEnsembleCard prediction={prediction} />
+
+              {/* 🛰️ AI Prithvi Satellite Verification */}
+              <SatelliteVerificationCard
+                areaId={prediction.administrativeAreaId}
+                areaName={prediction.administrativeArea?.name}
+              />
 
               {/* AI factors breakdown */}
               <AiFactorsCard aiPrediction={prediction.forecast.aiPrediction} />

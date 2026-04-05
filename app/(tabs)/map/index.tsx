@@ -12,6 +12,7 @@ import {
   PickOnMapOverlay,
   StreetViewHint,
 } from "~/features/map/components/overlays";
+import { Text } from "~/components/ui/text";
 import { ewkbToLatLngArray, getBoundsFromCoords } from "~/features/map/lib/ewkb-parser";
 import type { LatLng } from "~/features/map/types/safe-route.types";
 
@@ -21,6 +22,7 @@ import { MapHeaderSwitch } from "~/features/map/components/MapHeaderSwitch";
 import { MapSheets } from "~/features/map/components/MapSheets";
 import { useMapScreen } from "~/features/map/hooks/useMapScreen";
 import { useMapScreenState } from "~/features/map/hooks/useMapScreenState";
+import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
 
 export default function MapScreen() {
   // Single aggregated state
@@ -86,6 +88,8 @@ export default function MapScreen() {
     setIsLoading: s.setIsLoading,
     setShowCommunityReportSheet: s.setShowCommunityReportSheet,
     setShowWarningsSheet: s.setShowWarningsSheet,
+    setAreaDisplayMode: s.setAreaDisplayMode,
+    adminAreas: s.adminAreas,
     viewMode: s.viewMode,
     params: s.params,
     floodSeverity: s.floodSeverity,
@@ -108,8 +112,8 @@ export default function MapScreen() {
     <View style={{ flex: 1, backgroundColor: "#0B1A33" }}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      {/* Header — hide when community report sheet is open */}
-      {!s.showCommunityReportSheet && (
+      {/* Header — hide when community report sheet is open or viewing AI Prediction Map */}
+      {!s.showCommunityReportSheet && !s.params.returnToPrediction && (
         <MapHeaderSwitch
         navIsNavigating={s.nav.isNavigating}
         safeRouteHasResults={s.safeRoute.hasResults}
@@ -171,6 +175,51 @@ export default function MapScreen() {
       )}
 
       <View style={{ flex: 1, position: "relative" }}>
+        {/* Return to Prediction Button */}
+        {s.params.returnToPrediction && !s.nav.isNavigating && (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => {
+              const dest = s.params.returnToPrediction;
+              if (!dest) return;
+              
+              // Clear Map view states so that pressing the back button in Prediction screen
+              // shows the original clean Map without the AI layers
+              s.setSelectedAdminArea(null);
+              s.setAreaDisplayMode("user");
+              useSatelliteFloodStore.getState().clear();
+              
+              // Move forward to the prediction screen
+              router.push(`/prediction/${dest}` as any);
+              
+              // Clear URL search params visually and state-wise
+              router.setParams({ returnToPrediction: "", satelliteBbox: "" });
+            }}
+            style={{
+              position: "absolute",
+              top: StatusBar.currentHeight ? StatusBar.currentHeight + 16 : 56,
+              left: 16,
+              zIndex: 100,
+              backgroundColor: "#A855F7",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              paddingVertical: 10,
+              paddingHorizontal: 16,
+              borderRadius: 100,
+              shadowColor: "#A855F7",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8,
+            }}
+          >
+            <Ionicons name="arrow-back" size={18} color="#FFFFFF" />
+            <Text style={{ fontSize: 13, fontWeight: "800", color: "#FFFFFF" }}>
+              Quay lại AI
+            </Text>
+          </TouchableOpacity>
+        )}
         {/* Loading Overlay */}
         <MapLoadingOverlay visible={s.isLoading} />
 
@@ -245,8 +294,8 @@ export default function MapScreen() {
           onDraftAreaCenterChange={s.setDraftAreaCenter}
         />
 
-        {/* Floating UI — hide when sheet open or ward selection */}
-        {!s.showWardSelectionSheet && !s.showCommunityReportSheet && (
+        {/* Floating UI — hide when sheet open, ward selection, or viewing AI Prediction Map */}
+        {!s.showWardSelectionSheet && !s.showCommunityReportSheet && !s.params.returnToPrediction && (
           <MapFloatingUI
             selectedRoute={s.selectedRoute}
             selectedZone={s.selectedZone}
@@ -290,7 +339,8 @@ export default function MapScreen() {
           !s.selectedRoute &&
           !s.showCreateAreaSheet &&
           !s.showWardSelectionSheet &&
-          !s.showCommunityReportSheet && (
+          !s.showCommunityReportSheet &&
+          !s.params.returnToPrediction && (
           <TouchableOpacity
             onPress={() => router.push("/community/create-post?openCamera=true" as any)}
             activeOpacity={0.85}
@@ -318,7 +368,7 @@ export default function MapScreen() {
         )}
 
         {/* Sheets */}
-        {!s.nav.isNavigating && (
+        {!s.nav.isNavigating && !s.params.returnToPrediction && (
           <MapSheets
             showLayerSheet={s.showLayerSheet}
             selectedStationId={s.selectedStationId}

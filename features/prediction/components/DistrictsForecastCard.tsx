@@ -7,13 +7,33 @@ import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 import { PredictionService } from "../services/prediction.service";
-import type { DistrictsForecastResponse } from "../types/districts-forecast.types";
 import { getRiskConfigByLevel } from "../types/prediction.types";
+
+interface MappedForecastData {
+  weather_summary: {
+    precip_now_mm: number;
+    humidity_pct: number;
+  };
+  districts: {
+    area_id: string;
+    area_name: string;
+    status: string;
+    now: {
+      risk_level: string;
+      probability: number;
+    };
+    temporal_evolution: {
+      horizon: string;
+      probability: number;
+      risk_level: string;
+    }[];
+  }[];
+}
 
 export function DistrictsForecastCard() {
   const { isDarkColorScheme } = useColorScheme();
   const router = useRouter();
-  const [data, setData] = useState<DistrictsForecastResponse | null>(null);
+  const [data, setData] = useState<MappedForecastData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,8 +41,37 @@ export function DistrictsForecastCard() {
     try {
       setLoading(true);
       setError(null);
-      const result = await PredictionService.getDistrictsForecast("3,5,7");
-      setData(result);
+      
+      const areaIds = ["3", "5", "7"];
+      const results = await Promise.all(
+        areaIds.map((id) => PredictionService.getFloodRiskPrediction(id))
+      );
+
+      const mappedData: MappedForecastData = {
+        weather_summary: {
+          precip_now_mm:
+            results[0]?.forecast?.aiPrediction?.components?.weather?.precipitation_3h_mm || 0,
+          humidity_pct:
+            results[0]?.forecast?.aiPrediction?.components?.weather?.avg_humidity_pct || 0,
+        },
+        districts: results.map((res, index) => ({
+          area_id: res.administrativeArea?.id || areaIds[index],
+          area_name: res.administrativeArea?.name || `Quận ${areaIds[index]}`,
+          status: res.status || "Normal",
+          now: {
+            risk_level: res.forecast?.aiPrediction?.riskLevel || "Thấp",
+            probability: res.forecast?.aiPrediction?.ensembleProbability || 0,
+          },
+          temporal_evolution:
+            res.forecast?.windows?.map((w) => ({
+              horizon: w.horizon,
+              probability: w.probability,
+              risk_level: w.status,
+            })) || [],
+        })),
+      };
+
+      setData(mappedData);
     } catch (err: any) {
       setError(err.message || "Không thể tải dự báo.");
     } finally {
@@ -162,7 +211,7 @@ export function DistrictsForecastCard() {
                 color: themeConfig.text,
               }}
             >
-              {data.weather_summary.tide_height_m}m
+              {data.weather_summary.humidity_pct}%
             </Text>
           </View>
           <TouchableOpacity

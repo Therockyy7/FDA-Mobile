@@ -14,7 +14,6 @@ import { useNavigation } from "~/features/map/hooks/useNavigation";
 import { useRoutingUI, useSafeRoute } from "~/features/map/hooks/routing";
 import { useStreetView } from "~/features/map/hooks/useStreetView";
 import { useUserLocation } from "~/features/map/hooks/useUserLocation";
-import { isPointFeature } from "~/features/map/types/map-layers.types";
 import type { FloodSeverityFeature } from "~/features/map/types/map-layers.types";
 import type { MapType } from "~/features/map/types/map-display.types";
 import type { LatLng } from "~/features/map/types/safe-route.types";
@@ -34,6 +33,8 @@ export interface MapScreenState {
     reportLng?: string;
     reportSeverity?: string;
     reportCreatedAt?: string;
+    satelliteBbox?: string;
+    returnToPrediction?: string;
   };
   // UI state
   isLoading: boolean;
@@ -195,6 +196,8 @@ export function useMapScreenState(): MapScreenState {
     reportSeverity?: string;
     reportCreatedAt?: string;
     stationId?: string;
+    satelliteBbox?: string;
+    returnToPrediction?: string;
   }>();
 
   // UI state

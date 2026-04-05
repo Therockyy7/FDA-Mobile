@@ -15,6 +15,7 @@ import {
 } from "~/features/map/components/routes";
 import { FloodSeverityMarkers, FloodZonePolygons } from "~/features/map/components/stations";
 import { CommunityReportMarker } from "~/features/map/components/reports";
+import { SatelliteFloodOverlay } from "~/features/map/components/satellite/SatelliteFloodOverlay";
 import { FLOOD_ROUTES, DANANG_CENTER } from "~/features/map/constants/map-data";
 import { STANDARD_MAP_STYLE } from "~/features/map/constants/map-style";
 import type { FloodSeverityFeature } from "~/features/map/types/map-layers.types";
@@ -172,6 +173,8 @@ export function MapContent({
 
       {/* Flood Severity */}
       <FloodSeverityMarkers floodSeverity={floodSeverity} onMarkerPress={onFloodMarkerPress} />
+      {/* 🛰️ AI Satellite Flood Polygons (Prithvi) */}
+      <SatelliteFloodOverlay />
     </MapView>
   );
 }

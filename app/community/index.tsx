@@ -2,19 +2,28 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
 import { MotiView } from "moti";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useState } from "react";
+
 import {
-  Animated,
-  Easing,
+  Image,
   Platform,
   RefreshControl,
   StatusBar,
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedProps,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
 import { useUser } from "~/features/auth/hooks/useAuth";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 import { PostCard } from "~/features/community/components/PostCard";
 import { CommunityService } from "~/features/community/services/community.service";
@@ -23,10 +32,20 @@ import {
   transformFloodReportToPost,
 } from "~/features/community/types/post-types";
 
+// ── Constants ──────────────────────────────────────────────────
+const HERO_FULL_HEIGHT = 170;
+const HERO_MIN_HEIGHT = 0; // slides fully away
+const SCROLL_DISTANCE = HERO_FULL_HEIGHT - HERO_MIN_HEIGHT;
 
 export default function CommunityScreen() {
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
+  const insets = useSafeAreaInsets();
+  const statusBarH =
+    Platform.OS === "android"
+      ? StatusBar.currentHeight || insets.top
+      : insets.top;
+
   const [posts, setPosts] = useState<Post[]>();
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string>("all");
@@ -35,22 +54,13 @@ export default function CommunityScreen() {
   const currentUser = useUser();
   const myUserId = currentUser?.id ?? null;
 
-  // Animated header scroll
-  const scrollY = useRef(new Animated.Value(0)).current;
+  // Reanimated shared value for scroll position
+  const scrollY = useSharedValue(0);
 
-  // CTA shimmer
-  const shimmerAnim = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.timing(shimmerAnim, {
-        toValue: 1,
-        duration: 3000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
-    ).start();
-  }, [shimmerAnim]);
-
+  // Scroll handler (Reanimated)
+  const scrollHandler = useAnimatedScrollHandler((e) => {
+    scrollY.value = e.contentOffset.y;
+  });
 
   const fetchCommunityReports = useCallback(async (filter?: string) => {
     try {
@@ -89,7 +99,12 @@ export default function CommunityScreen() {
   };
 
   const filters = [
-    { id: "all", label: "Tất cả", icon: "apps-outline" as const, color: "#6366F1" },
+    {
+      id: "all",
+      label: "Tất cả",
+      icon: "apps-outline" as const,
+      color: "#6366F1",
+    },
     {
       id: "danger",
       label: "Khẩn cấp",
@@ -118,6 +133,13 @@ export default function CommunityScreen() {
       ? posts
       : posts?.filter((p) => p.waterLevelStatus === activeFilter);
 
+  // Dynamic metrics derived from actual posts response
+  const dangerCount =
+    posts?.filter((p) => p.waterLevelStatus === "danger").length || 0;
+  const uniqueReporters = Array.from(
+    new Set(posts?.map((p) => p.authorId) || []),
+  ).slice(0, 3);
+
   const handleFilterChange = (filterId: string) => {
     setActiveFilter(filterId);
     fetchCommunityReports(filterId);
@@ -129,11 +151,38 @@ export default function CommunityScreen() {
     }, [fetchCommunityReports]),
   );
 
-  // Animated header opacity
-  const headerBgOpacity = scrollY.interpolate({
-    inputRange: [0, 180],
-    outputRange: [0, 1],
-    extrapolate: "clamp",
+  // ── Animated styles (Reanimated) ──────────────────────────
+  const heroAnimStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE],
+      [0, -SCROLL_DISTANCE],
+      Extrapolation.CLAMP,
+    );
+    const opacity = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE * 0.6],
+      [1, 0],
+      Extrapolation.CLAMP,
+    );
+    return { transform: [{ translateY }], opacity };
+  });
+
+  // Sticky compact bar fades in
+  const stickyBarStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [SCROLL_DISTANCE * 0.5, SCROLL_DISTANCE],
+      [0, 1],
+      Extrapolation.CLAMP,
+    );
+    return { opacity };
+  });
+
+  const stickyAnimatedProps = useAnimatedProps(() => {
+    return {
+      pointerEvents: scrollY.value > SCROLL_DISTANCE * 0.5 ? "auto" : "none",
+    } as any;
   });
 
   const colors = {
@@ -142,233 +191,19 @@ export default function CommunityScreen() {
     border: isDarkColorScheme ? "#334155" : "#E2E8F0",
     text: isDarkColorScheme ? "#F1F5F9" : "#0F172A",
     subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
-    softBg: isDarkColorScheme ? "#1E293B" : "#F1F5F9",
   };
 
   const renderHeader = () => (
     <View>
-      {/* ═══ Hero Section ═══ */}
-      <LinearGradient
-        colors={
-          isDarkColorScheme
-            ? ["#1E1B4B", "#312E81", "#3730A3"]
-            : ["#6366F1", "#4F46E5", "#4338CA"]
-        }
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{
-          paddingTop:
-            Platform.OS === "android"
-              ? (StatusBar.currentHeight || 0) + 12
-              : 56,
-          paddingBottom: 28,
-        }}
-      >
-        {/* Decorative circles */}
-        <View
-          style={{
-            position: "absolute",
-            top: -40,
-            right: -60,
-            width: 200,
-            height: 200,
-            borderRadius: 100,
-            backgroundColor: "rgba(255,255,255,0.05)",
-          }}
-        />
-        <View
-          style={{
-            position: "absolute",
-            bottom: -30,
-            left: -40,
-            width: 150,
-            height: 150,
-            borderRadius: 75,
-            backgroundColor: "rgba(255,255,255,0.04)",
-          }}
-        />
-
-        {/* ── Top Bar ── */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingHorizontal: 16,
-            marginBottom: 20,
-          }}
-        >
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 14,
-              backgroundColor: "rgba(255,255,255,0.12)",
-              alignItems: "center",
-              justifyContent: "center",
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.08)",
-            }}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={20} color="white" />
-          </TouchableOpacity>
-
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <TouchableOpacity
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 14,
-                backgroundColor: "rgba(255,255,255,0.12)",
-                alignItems: "center",
-                justifyContent: "center",
-                borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.08)",
-              }}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="search" size={18} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() =>
-                router.push({
-                  pathname: "/community/profile",
-                  params: { userId: myUserId || "" },
-                } as any)
-              }
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 14,
-                backgroundColor: "rgba(255,255,255,0.12)",
-                alignItems: "center",
-                justifyContent: "center",
-                borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.08)",
-              }}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="person-outline" size={18} color="white" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* ── Title + Subtitle ── */}
-        <View style={{ paddingHorizontal: 20 }}>
-          <MotiView
-            from={{ opacity: 0, translateY: 10 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: "timing", duration: 500 }}
-          >
-            <Text
-              style={{
-                color: "rgba(255,255,255,0.6)",
-                fontSize: 11,
-                fontWeight: "700",
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                marginBottom: 6,
-              }}
-            >
-              Mạng lưới cộng đồng
-            </Text>
-            <Text
-              style={{
-                color: "white",
-                fontSize: 26,
-                fontWeight: "900",
-                letterSpacing: -0.5,
-                lineHeight: 32,
-              }}
-            >
-              Flood Monitor
-            </Text>
-          </MotiView>
-
-          {/* ── Stats Row ── */}
-          <MotiView
-            from={{ opacity: 0, translateY: 15 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: "timing", duration: 500, delay: 150 }}
-            style={{
-              flexDirection: "row",
-              marginTop: 16,
-              gap: 10,
-            }}
-          >
-            {[
-              {
-                value: totalCount || 0,
-                label: "Báo cáo",
-                icon: "document-text" as const,
-                valueColor: "#FCD34D",
-              },
-              {
-                value: "2.3K",
-                label: "Thành viên",
-                icon: "people" as const,
-                valueColor: "#A5F3FC",
-              },
-              {
-                value: "12",
-                label: "Đang online",
-                icon: "radio" as const,
-                valueColor: "#86EFAC",
-              },
-            ].map((stat, idx) => (
-              <View
-                key={idx}
-                style={{
-                  flex: 1,
-                  backgroundColor: "rgba(255,255,255,0.08)",
-                  borderRadius: 16,
-                  paddingVertical: 12,
-                  paddingHorizontal: 10,
-                  alignItems: "center",
-                  borderWidth: 1,
-                  borderColor: "rgba(255,255,255,0.06)",
-                }}
-              >
-                <Ionicons
-                  name={stat.icon}
-                  size={16}
-                  color="rgba(255,255,255,0.5)"
-                  style={{ marginBottom: 4 }}
-                />
-                <Text
-                  style={{
-                    color: stat.valueColor,
-                    fontSize: 18,
-                    fontWeight: "900",
-                    letterSpacing: -0.5,
-                  }}
-                >
-                  {stat.value}
-                </Text>
-                <Text
-                  style={{
-                    color: "rgba(255,255,255,0.5)",
-                    fontSize: 9,
-                    fontWeight: "600",
-                    marginTop: 2,
-                  }}
-                >
-                  {stat.label}
-                </Text>
-              </View>
-            ))}
-          </MotiView>
-        </View>
-      </LinearGradient>
+      {/* Spacer so content starts below the hero */}
+      <View style={{ height: HERO_FULL_HEIGHT }} />
 
       {/* ═══ Create Post CTA ═══ */}
       <MotiView
         from={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: "timing", duration: 400, delay: 200 }}
-        style={{ paddingHorizontal: 16, marginTop: -16 }}
+        transition={{ type: "timing", duration: 400, delay: 100 }}
+        style={{ paddingHorizontal: 16, marginTop: 12 }}
       >
         <TouchableOpacity
           onPress={() => router.push("/community/create-post" as any)}
@@ -376,13 +211,13 @@ export default function CommunityScreen() {
         >
           <View
             style={{
-              borderRadius: 20,
+              borderRadius: 18,
               overflow: "hidden",
               shadowColor: "#6366F1",
-              shadowOffset: { width: 0, height: 6 },
-              shadowOpacity: 0.15,
-              shadowRadius: 14,
-              elevation: 6,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.12,
+              shadowRadius: 10,
+              elevation: 5,
             }}
           >
             <LinearGradient
@@ -392,32 +227,26 @@ export default function CommunityScreen() {
                   : ["#FFFFFF", "#FEFEFE"]
               }
               style={{
-                padding: 16,
-                borderRadius: 20,
+                padding: 14,
+                borderRadius: 18,
                 borderWidth: 1,
                 borderColor: isDarkColorScheme ? "#334155" : "#E2E8F0",
               }}
             >
-              {/* Top: Avatar + Input hint */}
               <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 12,
-                  marginBottom: 14,
-                }}
+                style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
               >
                 <LinearGradient
                   colors={["#6366F1", "#8B5CF6"]}
                   style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 14,
+                    width: 38,
+                    height: 38,
+                    borderRadius: 12,
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <Ionicons name="person" size={20} color="white" />
+                  <Ionicons name="person" size={18} color="white" />
                 </LinearGradient>
                 <View
                   style={{
@@ -425,8 +254,8 @@ export default function CommunityScreen() {
                     backgroundColor: isDarkColorScheme
                       ? "rgba(99, 102, 241, 0.08)"
                       : "#F5F3FF",
-                    borderRadius: 14,
-                    paddingVertical: 11,
+                    borderRadius: 12,
+                    paddingVertical: 10,
                     paddingHorizontal: 14,
                     borderWidth: 1,
                     borderColor: isDarkColorScheme
@@ -445,108 +274,33 @@ export default function CommunityScreen() {
                   </Text>
                 </View>
               </View>
-
-              {/* Bottom: Quick action chips */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  gap: 8,
-                  paddingTop: 12,
-                  borderTopWidth: 1,
-                  borderTopColor: isDarkColorScheme ? "#334155" : "#F1F5F9",
-                }}
-              >
-                {[
-                  {
-                    icon: "camera" as const,
-                    label: "Ảnh/Video",
-                    bg: isDarkColorScheme
-                      ? "rgba(16,185,129,0.1)"
-                      : "#ECFDF5",
-                    color: "#10B981",
-                    borderColor: isDarkColorScheme
-                      ? "rgba(16,185,129,0.2)"
-                      : "#A7F3D0",
-                  },
-                  {
-                    icon: "location" as const,
-                    label: "Vị trí",
-                    bg: isDarkColorScheme
-                      ? "rgba(249,115,22,0.1)"
-                      : "#FFF7ED",
-                    color: "#F97316",
-                    borderColor: isDarkColorScheme
-                      ? "rgba(249,115,22,0.2)"
-                      : "#FDBA74",
-                  },
-                  {
-                    icon: "alert-circle" as const,
-                    label: "Mức độ",
-                    bg: isDarkColorScheme
-                      ? "rgba(239,68,68,0.1)"
-                      : "#FEF2F2",
-                    color: "#EF4444",
-                    borderColor: isDarkColorScheme
-                      ? "rgba(239,68,68,0.2)"
-                      : "#FCA5A5",
-                  },
-                ].map((chip, idx) => (
-                  <View
-                    key={idx}
-                    style={{
-                      flex: 1,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 5,
-                      paddingVertical: 8,
-                      borderRadius: 12,
-                      backgroundColor: chip.bg,
-                      borderWidth: 1,
-                      borderColor: chip.borderColor,
-                    }}
-                  >
-                    <Ionicons name={chip.icon} size={14} color={chip.color} />
-                    <Text
-                      style={{
-                        color: chip.color,
-                        fontSize: 11,
-                        fontWeight: "700",
-                      }}
-                    >
-                      {chip.label}
-                    </Text>
-                  </View>
-                ))}
-              </View>
             </LinearGradient>
           </View>
         </TouchableOpacity>
       </MotiView>
 
       {/* ═══ Filter Section ═══ */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 6 }}>
-        {/* Section title */}
+      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 6 }}>
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            marginBottom: 14,
+            marginBottom: 12,
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <View
               style={{
                 width: 4,
-                height: 18,
+                height: 16,
                 borderRadius: 2,
                 backgroundColor: "#6366F1",
               }}
             />
             <Text
               style={{
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: "800",
                 color: colors.text,
                 letterSpacing: -0.3,
@@ -569,13 +323,7 @@ export default function CommunityScreen() {
             }}
           >
             <Ionicons name="time-outline" size={12} color="#6366F1" />
-            <Text
-              style={{
-                color: "#6366F1",
-                fontSize: 11,
-                fontWeight: "600",
-              }}
-            >
+            <Text style={{ color: "#6366F1", fontSize: 11, fontWeight: "600" }}>
               Mới nhất
             </Text>
           </View>
@@ -599,16 +347,14 @@ export default function CommunityScreen() {
                     justifyContent: "center",
                     gap: 5,
                     paddingVertical: 9,
-                    borderRadius: 14,
+                    borderRadius: 12,
                     backgroundColor: isActive
                       ? filter.color
                       : isDarkColorScheme
                         ? "#1E293B"
                         : "#FFFFFF",
                     borderWidth: isActive ? 0 : 1,
-                    borderColor: isActive
-                      ? "transparent"
-                      : colors.border,
+                    borderColor: isActive ? "transparent" : colors.border,
                     shadowColor: isActive ? filter.color : "transparent",
                     shadowOffset: { width: 0, height: 3 },
                     shadowOpacity: isActive ? 0.3 : 0,
@@ -664,11 +410,7 @@ export default function CommunityScreen() {
           marginBottom: 16,
         }}
       >
-        <MaterialCommunityIcons
-          name="water-off"
-          size={36}
-          color="#6366F1"
-        />
+        <MaterialCommunityIcons name="water-off" size={36} color="#6366F1" />
       </View>
       <Text
         style={{
@@ -732,62 +474,404 @@ export default function CommunityScreen() {
         backgroundColor="transparent"
       />
 
-      {/* Sticky mini header (shows on scroll) */}
+      {/* ═══ Animated Collapsible Hero ═══ */}
       <Animated.View
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          opacity: headerBgOpacity,
-        }}
+        style={[
+          {
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: HERO_FULL_HEIGHT,
+            zIndex: 100,
+            overflow: "hidden",
+          },
+          heroAnimStyle,
+        ]}
       >
         <LinearGradient
           colors={
             isDarkColorScheme
-              ? ["#1E1B4B", "#1E1B4BEE"]
-              : ["#6366F1", "#6366F1EE"]
+              ? ["#1E1B4B", "#312E81", "#3730A3"]
+              : ["#6366F1", "#4F46E5", "#4338CA"]
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ flex: 1, paddingTop: statusBarH + 8, paddingBottom: 18 }}
+        >
+          {/* Decorative blobs */}
+          <View
+            style={{
+              position: "absolute",
+              top: -30,
+              right: -50,
+              width: 180,
+              height: 180,
+              borderRadius: 90,
+              backgroundColor: "rgba(255,255,255,0.06)",
+            }}
+          />
+          <View
+            style={{
+              position: "absolute",
+              bottom: -20,
+              left: -30,
+              width: 130,
+              height: 130,
+              borderRadius: 65,
+              backgroundColor: "rgba(255,255,255,0.04)",
+            }}
+          />
+
+          {/* ── Top Bar ── */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingHorizontal: 16,
+              marginBottom: 14,
+            }}
+          >
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 12,
+                backgroundColor: "rgba(255,255,255,0.15)",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="arrow-back" size={20} color="white" />
+            </TouchableOpacity>
+
+            {/* Title centred */}
+            <Animated.View
+              style={[
+                { alignItems: "center" },
+                // hide title text when hero fully visible (it appears in body)
+              ]}
+            >
+              <Text
+                style={{
+                  color: "rgba(255,255,255,0.7)",
+                  fontSize: 10,
+                  fontWeight: "700",
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                }}
+              >
+                Mạng lưới cộng đồng
+              </Text>
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 20,
+                  fontWeight: "900",
+                  letterSpacing: -0.5,
+                }}
+              >
+                Flood Monitor
+              </Text>
+            </Animated.View>
+
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <TouchableOpacity
+                onPress={() =>
+                  router.push({
+                    pathname: "/community/profile",
+                    params: { userId: myUserId || "" },
+                  } as any)
+                }
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 12,
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="person-outline" size={18} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* ── Community Pulse Row ── */}
+          <MotiView
+            from={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "timing", duration: 500, delay: 100 }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingHorizontal: 16,
+              marginTop: 6,
+            }}
+          >
+            {/* Active Members / Overview Pill */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: isDarkColorScheme
+                  ? "rgba(255,255,255,0.08)"
+                  : "rgba(255,255,255,0.15)",
+                padding: 6,
+                paddingRight: 16,
+                borderRadius: 24,
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.1)",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 8,
+              }}
+            >
+              <View style={{ flexDirection: "row", marginRight: 10 }}>
+                {uniqueReporters.length > 0
+                  ? uniqueReporters.map((id, index) => (
+                      <Image
+                        key={id}
+                        source={{ uri: `https://i.pravatar.cc/100?u=${id}` }}
+                        style={{
+                          width: 30,
+                          height: 30,
+                          borderRadius: 15,
+                          borderWidth: 1.5,
+                          borderColor: isDarkColorScheme
+                            ? "#312E81"
+                            : "#4F46E5",
+                          marginLeft: index > 0 ? -12 : 0,
+                          zIndex: 3 - index,
+                        }}
+                      />
+                    ))
+                  : [1, 2, 3].map((num, i) => (
+                      <View
+                        key={num}
+                        style={{
+                          width: 30,
+                          height: 30,
+                          borderRadius: 15,
+                          backgroundColor: "rgba(255,255,255,0.2)",
+                          borderWidth: 1.5,
+                          borderColor: isDarkColorScheme
+                            ? "#312E81"
+                            : "#4F46E5",
+                          marginLeft: i > 0 ? -12 : 0,
+                          zIndex: 3 - i,
+                        }}
+                      />
+                    ))}
+              </View>
+              <View>
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 13,
+                    fontWeight: "900",
+                    letterSpacing: -0.3,
+                  }}
+                >
+                  {totalCount > 0
+                    ? `${totalCount} báo cáo`
+                    : "Đang cập nhật..."}
+                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                    marginTop: 2,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: 3,
+                      backgroundColor: "#4ADE80",
+                      shadowColor: "#4ADE80",
+                      shadowOpacity: 0.8,
+                      shadowRadius: 4,
+                      elevation: 2,
+                    }}
+                  />
+                  <Text
+                    style={{
+                      color: "rgba(255,255,255,0.8)",
+                      fontSize: 10,
+                      fontWeight: "600",
+                    }}
+                  >
+                    Cập nhật liên tục
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Danger Alerts Badge */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 10,
+                backgroundColor: isDarkColorScheme
+                  ? "rgba(255,255,255,0.08)"
+                  : "rgba(255,255,255,0.15)",
+                paddingVertical: 8,
+                paddingHorizontal: 12,
+                borderRadius: 18,
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.1)",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 8,
+              }}
+            >
+              <LinearGradient
+                colors={["#EF4444", "#F87171"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Ionicons name="flame" size={16} color="white" />
+              </LinearGradient>
+              <View style={{ paddingRight: 4 }}>
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 16,
+                    fontWeight: "900",
+                    letterSpacing: -0.5,
+                  }}
+                >
+                  {dangerCount}
+                </Text>
+                <Text
+                  style={{
+                    color: "rgba(255,255,255,0.8)",
+                    fontSize: 10,
+                    fontWeight: "700",
+                  }}
+                >
+                  Nguy hiểm
+                </Text>
+              </View>
+            </View>
+          </MotiView>
+        </LinearGradient>
+      </Animated.View>
+
+      {/* ═══ Sticky compact bar (fades in when hero scrolls away) ═══ */}
+      <Animated.View
+        animatedProps={stickyAnimatedProps}
+        style={[
+          {
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 101,
+          },
+          stickyBarStyle,
+        ]}
+      >
+        <LinearGradient
+          colors={
+            isDarkColorScheme
+              ? ["#1E1B4BF0", "#1E1B4BEE"]
+              : ["#6366F1F0", "#4F46E5EE"]
           }
           style={{
-            paddingTop:
-              Platform.OS === "android"
-                ? (StatusBar.currentHeight || 0) + 8
-                : 52,
-            paddingBottom: 10,
-            paddingHorizontal: 16,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
+            paddingHorizontal: 16,
+            paddingTop: statusBarH + 10,
+            paddingBottom: 14,
           }}
         >
           <TouchableOpacity
             onPress={() => router.back()}
-            hitSlop={8}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={22} color="white" />
-          </TouchableOpacity>
-          <Text
             style={{
-              color: "white",
-              fontSize: 16,
-              fontWeight: "800",
-              letterSpacing: -0.3,
+              width: 38,
+              height: 38,
+              borderRadius: 12,
+              backgroundColor: "rgba(255,255,255,0.15)",
+              alignItems: "center",
+              justifyContent: "center",
             }}
-          >
-            Cộng đồng
-          </Text>
-          <TouchableOpacity
-            onPress={() => router.push("/community/create-post" as any)}
-            hitSlop={8}
             activeOpacity={0.7}
           >
-            <Ionicons name="add-circle" size={24} color="white" />
+            <Ionicons name="arrow-back" size={20} color="white" />
+          </TouchableOpacity>
+
+          <View style={{ alignItems: "center", gap: 2 }}>
+            <Text
+              style={{
+                color: "white",
+                fontSize: 16,
+                fontWeight: "800",
+                letterSpacing: -0.3,
+              }}
+            >
+              Cộng đồng
+            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+                backgroundColor: "rgba(255,255,255,0.15)",
+                borderRadius: 8,
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+              }}
+            >
+              <Ionicons name="document-text-outline" size={10} color="white" />
+              <Text style={{ color: "white", fontSize: 10, fontWeight: "700" }}>
+                {totalCount} báo cáo
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname: "/community/profile",
+                params: { userId: myUserId || "" },
+              } as any)
+            }
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 12,
+              backgroundColor: "rgba(255,255,255,0.15)",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="person-outline" size={18} color="white" />
           </TouchableOpacity>
         </LinearGradient>
       </Animated.View>
 
+      {/* ═══ Content List ═══ */}
       <Animated.FlatList
         data={filteredPosts}
         keyExtractor={(item) => item.id}
@@ -808,12 +892,9 @@ export default function CommunityScreen() {
         )}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={!loading ? renderEmptyState : null}
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true },
-        )}
+        onScroll={scrollHandler}
         scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
@@ -823,8 +904,8 @@ export default function CommunityScreen() {
             colors={["#6366F1"]}
             progressViewOffset={
               Platform.OS === "android"
-                ? (StatusBar.currentHeight || 0) + 10
-                : 0
+                ? (StatusBar.currentHeight || 0) + HERO_FULL_HEIGHT
+                : HERO_FULL_HEIGHT
             }
           />
         }

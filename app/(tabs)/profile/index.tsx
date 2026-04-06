@@ -1,12 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
-import { Alert, Platform, StatusBar } from "react-native";
+import { Alert, Platform, StatusBar, View } from "react-native";
 import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import ModalChangePassword from "~/features/auth/components/ModalChangePassword";
 import ModalConfirmLogout from "~/features/auth/components/ModalConfirmLogout";
@@ -331,8 +330,10 @@ export default function ProfileScreen() {
     refetch: refetchSubscription,
   } = useCurrentSubscription();
 
+  const HEADER_MAX_HEIGHT = 320;
+
   return (
-    <SafeAreaView
+    <View
       style={{
         flex: 1,
         backgroundColor: isDarkColorScheme ? "#0B1A33" : "#F9FAFB",
@@ -340,26 +341,13 @@ export default function ProfileScreen() {
     >
       <StatusBar
         barStyle={isDarkColorScheme ? "light-content" : "dark-content"}
-        backgroundColor={isDarkColorScheme ? "#1E293B" : "#007AFF"}
+        backgroundColor="transparent"
         translucent
-      />
-
-      <ProfileHeader
-        displayName={displayName}
-        email={email}
-        avatarUrl={displayAvatar}
-        // ✅ Thay đổi: Mở modal thay vì gọi API ngay
-        onLogout={() => setShowLogoutModal(true)}
-        createdAt={createdAt}
-        role={roles}
-        status={status}
-        onPickAvatar={handlePickAvatar}
-        scrollY={scrollY}
       />
 
       <Animated.ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingTop: HEADER_MAX_HEIGHT, paddingBottom: 120 }}
         scrollEventThrottle={16}
         onScroll={scrollHandler}
       >
@@ -379,6 +367,10 @@ export default function ProfileScreen() {
           onVerifyPhone={handleSendPhoneOTP}
           isCheckingPassword={checkingPassword}
         />
+        
+        {/* Nút lưu được đôn lên ngay dưới Info Section */}
+        <SaveButton onPress={handleSaveChanges} loading={isUpdating} />
+
         <SubscriptionSection
           subscription={subscriptionData?.subscription ?? null}
           isLoading={isLoadingSubscription}
@@ -409,8 +401,6 @@ export default function ProfileScreen() {
         />
 
         <OtherSettingsSection />
-
-        <SaveButton onPress={handleSaveChanges} loading={isUpdating} />
 
         {/* Change Password Modal */}
         <ModalChangePassword
@@ -447,6 +437,20 @@ export default function ProfileScreen() {
           error={phoneOtpError}
         />
       </Animated.ScrollView>
-    </SafeAreaView>
+
+      {/* Header is now absolute overlay to prevent reflow lag */}
+      <ProfileHeader
+        displayName={displayName}
+        email={email}
+        avatarUrl={displayAvatar}
+        // ✅ Thay đổi: Mở modal thay vì gọi API ngay
+        onLogout={() => setShowLogoutModal(true)}
+        createdAt={createdAt}
+        role={roles}
+        status={status}
+        onPickAvatar={handlePickAvatar}
+        scrollY={scrollY}
+      />
+    </View>
   );
 }

@@ -1,11 +1,13 @@
 // features/home/hooks/useHomeWeatherData.ts
 import { useCallback, useEffect, useState } from "react";
+import * as Location from "expo-location";
 import { AreaService } from "~/features/areas/services/area.service";
 import { PredictionService } from "~/features/prediction/services/prediction.service";
 import type { PredictionResponse } from "~/features/prediction/types/prediction.types";
 import { WeatherService } from "../services/weather.service";
 import type { AiRiskSummary, RainfallForecastItem } from "../types/home-types";
 import type { OpenMeteoResponse } from "../types/open-meteo.types";
+import type { Area } from "~/features/map/types/map-layers.types";
 
 export interface HomeWeatherState {
   meteo: OpenMeteoResponse | null;
@@ -69,16 +71,18 @@ function getEmptyForecast(): RainfallForecastItem[] {
 
 /** Convert PredictionResponse to AiRiskSummary */
 function predictionToRiskSummary(pred: PredictionResponse): AiRiskSummary {
-  const prob = Math.round(pred.ensemble_prediction.probability * 100);
+  const ai = pred.forecast?.aiPrediction;
+  const prob = Math.round((ai?.ensembleProbability ?? 0) * 100);
 
   let riskLevel: AiRiskSummary["riskLevel"] = "low";
   let riskLabelVn = "Rủi ro thấp";
 
-  const apiLevel = pred.ensemble_prediction.risk_level?.toLowerCase() || "";
+  const apiLevel = ai?.riskLevel?.toLowerCase() || "";
   if (
     apiLevel.includes("critical") ||
     apiLevel.includes("very high") ||
-    apiLevel.includes("rất cao")
+    apiLevel.includes("rất cao") ||
+    apiLevel.includes("nguy hiểm")
   ) {
     riskLevel = "critical";
     riskLabelVn = "Cực kỳ nguy hiểm";
@@ -97,28 +101,20 @@ function predictionToRiskSummary(pred: PredictionResponse): AiRiskSummary {
     riskLabelVn = "Rủi ro thấp";
   }
 
+  // Dominant factor from AI components
   let dominantFactor = "water_level";
   let dominantFactorVn = "Mực nước";
 
-  if (pred.interpretability?.dominant_factor) {
-    dominantFactor = pred.interpretability.dominant_factor.factor_name;
-    dominantFactorVn = pred.interpretability.dominant_factor.factor_name_vn;
-  } else if (pred.ai_engine_output?.contribution_scores) {
-    const scores = pred.ai_engine_output.contribution_scores;
-    const entries = Object.entries(scores);
-    if (entries.length > 0) {
-      entries.sort((a, b) => b[1] - a[1]);
-      dominantFactor = entries[0][0];
-      const translations: Record<string, string> = {
-        rainfall_intensity: "Cường độ mưa",
-        water_level: "Mực nước",
-        soil_saturation: "Độ bão hòa đất",
-        historical_pattern: "Lịch sử ngập lụt",
-        drainage_capacity: "Năng lực thoát nước",
-        slope: "Độ dốc địa hình",
-      };
-      dominantFactorVn = translations[dominantFactor] || dominantFactor;
-    }
+  if (ai?.components) {
+    const { weather, saturation, terrain } = ai.components;
+    const scores = [
+      { name: "rainfall", val: weather?.contribution ?? 0, label: "Lượng mưa" },
+      { name: "saturation", val: saturation?.saturation_level ?? 0, label: "Độ bão hòa" },
+      { name: "terrain", val: terrain?.drainage_risk ?? 0, label: "Địa hình" },
+    ];
+    scores.sort((a, b) => b.val - a.val);
+    dominantFactor = scores[0].name;
+    dominantFactorVn = scores[0].label;
   }
 
   const now = new Date();
@@ -130,10 +126,11 @@ function predictionToRiskSummary(pred: PredictionResponse): AiRiskSummary {
     dominantFactor,
     dominantFactorVn,
     recommendation:
-      pred.ensemble_prediction.recommendation ||
+      ai?.impact?.recommendation ||
+      pred.summary ||
       "Theo dõi các bản tin cập nhật để nắm bắt tình hình.",
-    areaId: pred.area_id,
-    areaName: pred.area_name,
+    areaId: pred.administrativeAreaId,
+    areaName: pred.administrativeArea?.name || "Khu vực của bạn",
     updatedAt: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
   };
 }
@@ -154,11 +151,11 @@ export function useHomeWeatherData() {
 
     try {
       // 1) Get user's first area for prediction + flood history
-      let firstAreaId: string | null = null;
+      let userArea: Area | null = null;
       try {
         const areas = await AreaService.getAreas();
         if (areas.length > 0) {
-          firstAreaId = areas[0].id;
+          userArea = areas[0];
         }
       } catch {
         console.warn("⚠️ Could not fetch user areas");
@@ -175,10 +172,10 @@ export function useHomeWeatherData() {
 
       // 3) Fetch flood history for rainfall forecast
       let rainfallForecast: RainfallForecastItem[] = getEmptyForecast();
-      if (firstAreaId) {
+      if (userArea) {
         try {
           const history = await AreaService.getFloodHistory({
-            areaId: firstAreaId,
+            areaId: userArea.id,
             granularity: "hourly",
             limit: 6,
           });
@@ -190,13 +187,58 @@ export function useHomeWeatherData() {
 
       // 4) Fetch AI prediction
       let aiRisk: AiRiskSummary | null = null;
-      if (firstAreaId) {
+      if (userArea) {
         try {
-          const prediction =
-            await PredictionService.getFloodRiskPrediction(firstAreaId);
+          // IMPORTANT: Prediction AI requires an AdminArea ID (Ward), not a custom Area ID.
+          // We must map coordinates to an administrative area.
+          let adminAreaId: string | null = null;
+
+          // Strategy 1: Reverse Geocode to get candidate ward names
+          const { latitude, longitude } = userArea;
+          try {
+            const [geo] = await Location.reverseGeocodeAsync({ latitude, longitude });
+            if (geo) {
+              const candidates = [
+                geo.district, // Often maps to ward level in expo-location VN
+                geo.name,
+                geo.city,
+                geo.subregion,
+              ].filter(Boolean) as string[];
+
+              for (const term of candidates) {
+                if (adminAreaId) break;
+                const adminRes = await AreaService.getAdminAreas({
+                  searchTerm: term,
+                  pageSize: 5,
+                });
+                if (adminRes.administrativeAreas.length > 0) {
+                  adminAreaId = adminRes.administrativeAreas[0].id;
+                  // console.log(`✅ Mapped user area to admin ward: ${adminRes.administrativeAreas[0].name} for prediction`);
+                }
+              }
+            }
+          } catch (geoErr) {
+            console.warn("⚠️ Reverse geocoding failed for prediction mapping:", geoErr);
+          }
+
+          // Strategy 2: Fallback to searching by user-provided name/address if Strategy 1 failed
+          if (!adminAreaId) {
+            const fallbackTerms = [userArea.addressText, userArea.name].filter(Boolean);
+            for (const term of fallbackTerms) {
+              if (adminAreaId) break;
+              const adminRes = await AreaService.getAdminAreas({ searchTerm: term, pageSize: 5 });
+              if (adminRes.administrativeAreas.length > 0) {
+                adminAreaId = adminRes.administrativeAreas[0].id;
+              }
+            }
+          }
+
+          // Use found adminAreaId or fallback to custom area ID (which will likely 404 but it's the last resort)
+          const targetPredictionId = adminAreaId || userArea.id;
+          const prediction = await PredictionService.getFloodRiskPrediction(targetPredictionId);
           aiRisk = predictionToRiskSummary(prediction);
-        } catch {
-          console.warn("⚠️ Could not fetch AI prediction");
+        } catch (err) {
+          console.warn("⚠️ Could not fetch AI prediction:", err);
         }
       }
 

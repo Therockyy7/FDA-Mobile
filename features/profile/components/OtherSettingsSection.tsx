@@ -3,68 +3,85 @@ import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "~/components/ui/text";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 const OtherSettingsSection: React.FC = () => {
+  const { isDarkColorScheme } = useColorScheme();
+
+  const colors = {
+    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
+    textMain: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
+    textSub: isDarkColorScheme ? "#94A3B8" : "#6B7280",
+    divider: isDarkColorScheme ? "#334155" : "#F1F5F9",
+    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
+  };
+
   return (
-    <View style={{ padding: 16 }}>
+    <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
       <Text
         style={{
           fontSize: 18,
           fontWeight: "800",
-          color: "#1F2937",
-          marginBottom: 16,
+          color: colors.textMain,
+          marginBottom: 12,
+          marginLeft: 4,
         }}
       >
         Khác
       </Text>
 
-      <View style={{ gap: 12 }}>
+      <View
+        style={{
+          backgroundColor: colors.cardBg,
+          borderRadius: 20,
+          borderWidth: 1,
+          borderColor: colors.border,
+          overflow: "hidden",
+          shadowColor: isDarkColorScheme ? "#000" : "#64748B",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: isDarkColorScheme ? 0.3 : 0.04,
+          shadowRadius: 10,
+          elevation: 2,
+        }}
+      >
         {/* Help Center */}
         <TouchableOpacity
           style={{
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            backgroundColor: "white",
             padding: 16,
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: "#E5E7EB",
           }}
           activeOpacity={0.7}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              flex: 1,
-            }}
-          >
+          <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
             <View
               style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                backgroundColor: "#EFF6FF",
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                backgroundColor: isDarkColorScheme ? "rgba(59, 130, 246, 0.15)" : "#EFF6FF",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Ionicons name="help-circle" size={22} color="#007AFF" />
+              <Ionicons name="help-circle" size={20} color={isDarkColorScheme ? "#60A5FA" : "#007AFF"} />
             </View>
             <Text
               style={{
                 fontSize: 15,
                 fontWeight: "700",
-                color: "#1F2937",
+                color: colors.textMain,
                 marginLeft: 12,
               }}
             >
               Trung tâm trợ giúp
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+          <Ionicons name="chevron-forward" size={18} color={colors.textSub} />
         </TouchableOpacity>
+
+        <View style={{ height: 1, backgroundColor: colors.divider, marginLeft: 58 }} />
 
         {/* Privacy Policy */}
         <TouchableOpacity
@@ -72,46 +89,38 @@ const OtherSettingsSection: React.FC = () => {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            backgroundColor: "white",
             padding: 16,
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: "#E5E7EB",
           }}
           activeOpacity={0.7}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              flex: 1,
-            }}
-          >
+          <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
             <View
               style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                backgroundColor: "#F0FDF4",
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                backgroundColor: isDarkColorScheme ? "rgba(16, 185, 129, 0.15)" : "#F0FDF4",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Ionicons name="shield-checkmark" size={22} color="#10B981" />
+              <Ionicons name="shield-checkmark" size={20} color={isDarkColorScheme ? "#34D399" : "#10B981"} />
             </View>
             <Text
               style={{
                 fontSize: 15,
                 fontWeight: "700",
-                color: "#1F2937",
+                color: colors.textMain,
                 marginLeft: 12,
               }}
             >
               Chính sách bảo mật
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+          <Ionicons name="chevron-forward" size={18} color={colors.textSub} />
         </TouchableOpacity>
+
+        <View style={{ height: 1, backgroundColor: colors.divider, marginLeft: 58 }} />
 
         {/* About */}
         <TouchableOpacity
@@ -119,59 +128,47 @@ const OtherSettingsSection: React.FC = () => {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            backgroundColor: "white",
             padding: 16,
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: "#E5E7EB",
           }}
           activeOpacity={0.7}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              flex: 1,
-            }}
-          >
+          <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
             <View
               style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                backgroundColor: "#FEF3C7",
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                backgroundColor: isDarkColorScheme ? "rgba(245, 158, 11, 0.15)" : "#FEF3C7",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Ionicons
-                name="information-circle"
-                size={22}
-                color="#F59E0B"
-              />
+              <Ionicons name="information-circle" size={20} color={isDarkColorScheme ? "#FBBF24" : "#F59E0B"} />
             </View>
             <Text
               style={{
                 fontSize: 15,
                 fontWeight: "700",
-                color: "#1F2937",
+                color: colors.textMain,
                 marginLeft: 12,
               }}
             >
               Về ứng dụng
             </Text>
           </View>
-          <Text
-            style={{
-              fontSize: 13,
-              fontWeight: "600",
-              color: "#9CA3AF",
-              marginRight: 8,
-            }}
-          >
-            v2.5.0
-          </Text>
-          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text
+              style={{
+                fontSize: 13,
+                fontWeight: "600",
+                color: colors.textSub,
+                marginRight: 6,
+              }}
+            >
+              v2.5.0
+            </Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.textSub} />
+          </View>
         </TouchableOpacity>
       </View>
     </View>

@@ -1,5 +1,6 @@
 // features/profile/components/ProfileHeader.tsx
 import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
@@ -18,6 +19,7 @@ import Animated, {
   interpolate,
   useAnimatedStyle,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 
@@ -33,9 +35,7 @@ type Props = {
   scrollY?: SharedValue<number>;
 };
 
-const HEADER_MAX_HEIGHT = 260;
-const HEADER_MIN_HEIGHT = 90; // Increased for proper icon visibility
-const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
+const HEADER_MAX_HEIGHT = 320;
 
 const ProfileHeader: React.FC<Props> = ({
   displayName,
@@ -51,6 +51,11 @@ const ProfileHeader: React.FC<Props> = ({
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
 
+  const insets = useSafeAreaInsets();
+  const statusBarHeight = Platform.OS === "android" ? StatusBar.currentHeight || insets.top : insets.top;
+  const HEADER_MIN_HEIGHT = Math.max(80, statusBarHeight + 50); // Ensure minimal space for buttons
+  const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
+
   const formattedDate = createdAt
     ? new Date(createdAt).toLocaleDateString("vi-VN", {
         day: "2-digit",
@@ -59,25 +64,38 @@ const ProfileHeader: React.FC<Props> = ({
       })
     : "";
 
-  // Header height animation
+  // Header translates up instead of changing height
   const headerAnimatedStyle = useAnimatedStyle(() => {
-    const height = scrollY
+    const translateY = scrollY
       ? interpolate(
           scrollY.value,
           [0, HEADER_SCROLL_DISTANCE],
-          [HEADER_MAX_HEIGHT, HEADER_MIN_HEIGHT],
+          [0, -HEADER_SCROLL_DISTANCE],
           Extrapolation.CLAMP
         )
-      : HEADER_MAX_HEIGHT;
-    return { height };
+      : 0;
+    return { transform: [{ translateY }] };
   });
 
-  // Full info fades out
+  // Keep top nav bar pinned to screen top while header translates up
+  const topNavAnimatedStyle = useAnimatedStyle(() => {
+    const translateY = scrollY
+      ? interpolate(
+          scrollY.value,
+          [0, HEADER_SCROLL_DISTANCE],
+          [0, HEADER_SCROLL_DISTANCE],
+          Extrapolation.CLAMP
+        )
+      : 0;
+    return { transform: [{ translateY }] };
+  });
+
+  // Full info fades out smoothly and translates up slightly
   const fullInfoAnimatedStyle = useAnimatedStyle(() => {
     const opacity = scrollY
       ? interpolate(
           scrollY.value,
-          [0, HEADER_SCROLL_DISTANCE * 0.5],
+          [0, HEADER_SCROLL_DISTANCE * 0.4],
           [1, 0],
           Extrapolation.CLAMP
         )
@@ -85,19 +103,48 @@ const ProfileHeader: React.FC<Props> = ({
     const scale = scrollY
       ? interpolate(
           scrollY.value,
-          [0, HEADER_SCROLL_DISTANCE * 0.5],
-          [1, 0.8],
+          [0, HEADER_SCROLL_DISTANCE * 0.4],
+          [1, 0.9],
           Extrapolation.CLAMP
         )
       : 1;
+    const translateY = scrollY
+      ? interpolate(
+          scrollY.value,
+          [0, HEADER_SCROLL_DISTANCE * 0.4],
+          [0, -15],
+          Extrapolation.CLAMP
+        )
+      : 0;
+
     return {
       opacity,
-      transform: [{ scale }],
+      transform: [{ scale }, { translateY }],
     } as ViewStyle;
   });
 
-  // Collapsed info fades in
+  // Collapsed info fades in later
   const collapsedInfoAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = scrollY
+      ? interpolate(
+          scrollY.value,
+          [HEADER_SCROLL_DISTANCE * 0.6, HEADER_SCROLL_DISTANCE],
+          [0, 1],
+          Extrapolation.CLAMP
+        )
+      : 0;
+    const translateY = scrollY
+      ? interpolate(
+          scrollY.value,
+          [HEADER_SCROLL_DISTANCE * 0.6, HEADER_SCROLL_DISTANCE],
+          [10, 0],
+          Extrapolation.CLAMP
+        )
+      : 0;
+    return { opacity, transform: [{ translateY }] };
+  });
+
+  const bgBlurAnimatedStyle = useAnimatedStyle(() => {
     const opacity = scrollY
       ? interpolate(
           scrollY.value,
@@ -110,15 +157,26 @@ const ProfileHeader: React.FC<Props> = ({
   });
 
   const colors = {
-    gradientStart: isDarkColorScheme ? "#1E3A5F" : "#007AFF",
-    gradientEnd: isDarkColorScheme ? "#0B1A33" : "#1D4ED8",
+    gradientStart: isDarkColorScheme ? "#1E293B" : "#2563EB",
+    gradientEnd: isDarkColorScheme ? "#0B1120" : "#1D4ED8",
+    avatarBorder: isDarkColorScheme ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.4)",
   };
 
-  const statusBarHeight =
-    Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0;
-
   return (
-    <Animated.View style={[{ overflow: "hidden" }, headerAnimatedStyle]}>
+    <Animated.View 
+      style={[
+        { 
+          position: "absolute", 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          height: HEADER_MAX_HEIGHT, 
+          overflow: "hidden", 
+          zIndex: 100 
+        }, 
+        headerAnimatedStyle
+      ]}
+    >
       <LinearGradient
         colors={[colors.gradientStart, colors.gradientEnd]}
         start={{ x: 0, y: 0 }}
@@ -127,8 +185,6 @@ const ProfileHeader: React.FC<Props> = ({
           flex: 1,
           paddingTop: statusBarHeight + 10,
           paddingHorizontal: 16,
-          alignItems: "center",
-          justifyContent: "center",
         }}
       >
         {/* Background Lottie Animation */}
@@ -136,27 +192,38 @@ const ProfileHeader: React.FC<Props> = ({
           source={require("../../../assets/animations/profile-waves.json")}
           autoPlay
           loop
-          speed={0.5}
+          speed={0.4}
           style={{
             position: "absolute",
             width: "150%",
             height: "100%",
             left: "-25%",
             bottom: 0,
-            opacity: 0.25,
+            opacity: isDarkColorScheme ? 0.15 : 0.25,
             zIndex: 0,
           }}
         />
 
+        {/* Animated Glassmorphism Background for Collapsed State */}
+        <Animated.View style={[
+          { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 },
+          bgBlurAnimatedStyle
+        ]}>
+          <BlurView intensity={isDarkColorScheme ? 80 : 50} tint={isDarkColorScheme ? "dark" : "light"} style={{ flex: 1 }} />
+        </Animated.View>
+
         {/* Top Navigation Bar - Always visible */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            zIndex: 10,
-            bottom: 20,
-          }}
+        <Animated.View
+          style={[
+            {
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              zIndex: 10,
+              height: 40,
+            },
+            topNavAnimatedStyle
+          ]}
         >
           {/* Back Button */}
           <TouchableOpacity
@@ -164,8 +231,8 @@ const ProfileHeader: React.FC<Props> = ({
             style={{
               width: 40,
               height: 40,
-              borderRadius: 14,
-              backgroundColor: "rgba(255,255,255,0.15)",
+              borderRadius: 20,
+              backgroundColor: "rgba(255,255,255,0.2)",
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -190,11 +257,11 @@ const ProfileHeader: React.FC<Props> = ({
             <Image
               source={{ uri: avatarUrl || "https://i.pravatar.cc/300?img=12" }}
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 12,
-                borderWidth: 2,
-                borderColor: "rgba(255,255,255,0.3)",
+                width: 34,
+                height: 34,
+                borderRadius: 17,
+                borderWidth: 1.5,
+                borderColor: "rgba(255,255,255,0.6)",
                 marginRight: 10,
               }}
             />
@@ -203,29 +270,12 @@ const ProfileHeader: React.FC<Props> = ({
                 fontSize: 16,
                 fontWeight: "700",
                 color: "white",
-                maxWidth: 150,
+                maxWidth: 160,
               }}
               numberOfLines={1}
             >
               {displayName}
             </Text>
-            {role?.includes("ADMIN") && (
-              <View
-                style={{
-                  backgroundColor: "#F59E0B",
-                  paddingHorizontal: 6,
-                  paddingVertical: 2,
-                  borderRadius: 5,
-                  marginLeft: 8,
-                }}
-              >
-                <Text
-                  style={{ fontSize: 8, fontWeight: "800", color: "white" }}
-                >
-                  ADMIN
-                </Text>
-              </View>
-            )}
           </Animated.View>
 
           {/* Logout Button */}
@@ -234,8 +284,8 @@ const ProfileHeader: React.FC<Props> = ({
             style={{
               width: 40,
               height: 40,
-              borderRadius: 14,
-              backgroundColor: "rgba(239, 68, 68, 0.2)",
+              borderRadius: 20,
+              backgroundColor: "rgba(220, 38, 38, 0.2)",
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -243,7 +293,7 @@ const ProfileHeader: React.FC<Props> = ({
           >
             <Ionicons name="log-out-outline" size={20} color="#FCA5A5" />
           </TouchableOpacity>
-        </View>
+        </Animated.View>
 
         {/* Full Profile Info - Fades out on scroll */}
         <Animated.View
@@ -253,189 +303,129 @@ const ProfileHeader: React.FC<Props> = ({
               alignItems: "center",
               justifyContent: "center",
               zIndex: 5,
-              bottom: 22,
+              marginTop: 10,
             },
             fullInfoAnimatedStyle,
           ]}
         >
-          {/* Avatar with Camera Button */}
-          <View
-            style={{
-              shadowColor: "#007AFF",
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.4,
-              shadowRadius: 15,
-              elevation: 8,
-            }}
-          >
-            <View style={{ position: "relative" }}>
+          {/* Avatar Area */}
+          <View style={{ marginBottom: 16 }}>
+            <View
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.3,
+                shadowRadius: 15,
+                elevation: 10,
+              }}
+            >
               <View
                 style={{
-                  width: 90,
-                  height: 90,
-                  borderRadius: 28,
-                  backgroundColor: "white",
-                  padding: 3,
-                  borderWidth: 2,
-                  borderColor: "rgba(255,255,255,0.4)",
+                  width: 100,
+                  height: 100,
+                  borderRadius: 50,
+                  backgroundColor: "rgba(255,255,255,0.1)",
+                  padding: 4,
+                  borderWidth: 1,
+                  borderColor: colors.avatarBorder,
                 }}
               >
                 <Image
                   source={{
                     uri: avatarUrl || "https://i.pravatar.cc/300?img=12",
                   }}
-                  style={{ width: "100%", height: "100%", borderRadius: 24 }}
+                  style={{ width: "100%", height: "100%", borderRadius: 46 }}
                 />
               </View>
-
-              {/* Camera Button */}
-              <TouchableOpacity
-                onPress={onPickAvatar}
-                activeOpacity={0.8}
-                style={{
-                  position: "absolute",
-                  bottom: -4,
-                  right: -4,
-                  width: 30,
-                  height: 30,
-                  borderRadius: 10,
-                  backgroundColor: "#22C55E",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderWidth: 2,
-                  borderColor: colors.gradientStart,
-                }}
-              >
-                <Ionicons name="camera" size={14} color="white" />
-              </TouchableOpacity>
-
-              {/* Online Status */}
-              {status === "ACTIVE" && (
-                <View
-                  style={{
-                    position: "absolute",
-                    top: 2,
-                    right: 2,
-                    width: 12,
-                    height: 12,
-                    borderRadius: 6,
-                    backgroundColor: "#22C55E",
-                    borderWidth: 2,
-                    borderColor: colors.gradientStart,
-                  }}
-                />
-              )}
             </View>
+
+            {/* Camera Button directly on Avatar */}
+            <TouchableOpacity
+              onPress={onPickAvatar}
+              activeOpacity={0.8}
+              style={{
+                position: "absolute",
+                bottom: 2,
+                right: 2,
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: "#22C55E",
+                alignItems: "center",
+                justifyContent: "center",
+                borderWidth: 3,
+                borderColor: colors.gradientStart,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+              }}
+            >
+              <Ionicons name="camera" size={14} color="white" />
+            </TouchableOpacity>
           </View>
 
           {/* Name and Role */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginTop: 10,
-              gap: 6,
-            }}
-          >
-            <Text style={{ fontSize: 20, fontWeight: "800", color: "white" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text style={{ fontSize: 22, fontWeight: "800", color: "white", letterSpacing: 0.5 }}>
               {displayName}
             </Text>
             {role?.includes("ADMIN") && (
-              <View
-                style={{
-                  backgroundColor: "#F59E0B",
-                  paddingHorizontal: 8,
-                  paddingVertical: 3,
-                  borderRadius: 6,
-                }}
-              >
-                <Text
-                  style={{ fontSize: 9, fontWeight: "800", color: "white" }}
-                >
-                  ADMIN
-                </Text>
+              <View style={{ backgroundColor: "#F59E0B", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 }}>
+                <Text style={{ fontSize: 10, fontWeight: "800", color: "white" }}>ADMIN</Text>
               </View>
             )}
           </View>
 
           {/* Email */}
-          <Text
-            style={{
-              fontSize: 12,
-              fontWeight: "500",
-              color: "rgba(255,255,255,0.7)",
-              marginTop: 2,
-            }}
-          >
+          <Text style={{ fontSize: 13, fontWeight: "500", color: "rgba(255,255,255,0.7)", marginTop: 6 }}>
             {email || "Chưa cập nhật email"}
           </Text>
 
           {/* Stats Row */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginTop: 8,
-              gap: 8,
-            }}
-          >
+          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16, gap: 10 }}>
+            {/* Joined Date Badge */}
             {formattedDate && (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: "rgba(255,255,255,0.12)",
-                  paddingHorizontal: 10,
-                  paddingVertical: 4,
-                  borderRadius: 14,
-                }}
-              >
-                <Ionicons
-                  name="calendar-outline"
-                  size={10}
-                  color="rgba(255,255,255,0.7)"
-                />
-                <Text
-                  style={{
-                    fontSize: 10,
-                    color: "rgba(255,255,255,0.8)",
-                    marginLeft: 4,
-                  }}
-                >
+              <View style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: "rgba(255,255,255,0.15)",
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.1)",
+              }}>
+                <Ionicons name="calendar-outline" size={12} color="rgba(255,255,255,0.9)" />
+                <Text style={{ fontSize: 11, fontWeight: "600", color: "rgba(255,255,255,0.9)", marginLeft: 6 }}>
                   {formattedDate}
                 </Text>
               </View>
             )}
 
-            <View
-              style={{
+            {/* Online Status Badge */}
+            <View style={{
                 flexDirection: "row",
                 alignItems: "center",
-                backgroundColor:
-                  status === "ACTIVE"
-                    ? "rgba(34, 197, 94, 0.15)"
-                    : "rgba(255,255,255,0.12)",
-                paddingHorizontal: 10,
-                paddingVertical: 4,
-                borderRadius: 14,
-              }}
-            >
-              <View
-                style={{
-                  width: 5,
-                  height: 5,
+                backgroundColor: status === "ACTIVE" ? "rgba(34, 197, 94, 0.2)" : "rgba(255,255,255,0.1)",
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: status === "ACTIVE" ? "rgba(34, 197, 94, 0.3)" : "rgba(255,255,255,0.1)",
+              }}>
+              <View style={{
+                  width: 6,
+                  height: 6,
                   borderRadius: 3,
-                  backgroundColor: status === "ACTIVE" ? "#22C55E" : "#9CA3AF",
-                  marginRight: 4,
-                }}
-              />
-              <Text
-                style={{
-                  fontSize: 10,
-                  color:
-                    status === "ACTIVE" ? "#86EFAC" : "rgba(255,255,255,0.7)",
-                }}
-              >
+                  backgroundColor: status === "ACTIVE" ? "#4ADE80" : "#9CA3AF",
+                  marginRight: 6,
+                  shadowColor: status === "ACTIVE" ? "#4ADE80" : "transparent",
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.8,
+                  shadowRadius: 4,
+                }} />
+              <Text style={{ fontSize: 11, fontWeight: "600", color: status === "ACTIVE" ? "#86EFAC" : "rgba(255,255,255,0.7)" }}>
                 {status === "ACTIVE" ? "Online" : "Offline"}
               </Text>
             </View>

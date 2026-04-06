@@ -1,6 +1,8 @@
 import React from "react";
 import { TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { Text } from "~/components/ui/text";
+import { LinearGradient } from "expo-linear-gradient";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 type Props = {
   onPress: () => void;
@@ -8,37 +10,53 @@ type Props = {
 };
 
 const SaveButton: React.FC<Props> = ({ onPress, loading = false }) => {
+  const { isDarkColorScheme } = useColorScheme();
+
+  const colors = {
+    gradientStart: loading ? "#93C5FD" : "#2563EB",
+    gradientEnd: loading ? "#60A5FA" : "#1D4ED8",
+    shadow: isDarkColorScheme ? "#2563EB" : "#1D4ED8"
+  };
+
   return (
-    <View style={{ padding: 16 }}>
+    <View style={{ paddingHorizontal: 16, paddingVertical: 24, paddingBottom: 40 }}>
       <TouchableOpacity
         onPress={onPress}
         disabled={loading}
-        style={{
-          backgroundColor: loading ? "#93C5FD" : "#007AFF",
-          borderRadius: 16,
-          paddingVertical: 16,
-          alignItems: "center",
-          shadowColor: "#007AFF",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 6,
-          flexDirection: "row",
-          justifyContent: "center",
-          gap: 8
-        }}
         activeOpacity={0.8}
+        style={{
+            shadowColor: colors.shadow,
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.3,
+            shadowRadius: 16,
+            elevation: 8,
+        }}
       >
-        {loading && <ActivityIndicator color="white" />}
-        <Text
+        <LinearGradient
+          colors={[colors.gradientStart, colors.gradientEnd]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={{
-            fontSize: 16,
-            fontWeight: "800",
-            color: "white",
+            borderRadius: 20,
+            paddingVertical: 18,
+            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "center",
+            gap: 10
           }}
         >
-          {loading ? "Đang lưu..." : "Lưu thay đổi"}
-        </Text>
+          {loading && <ActivityIndicator color="white" />}
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "800",
+              color: "white",
+              letterSpacing: 0.5,
+            }}
+          >
+            {loading ? "Đang lưu..." : "Lưu Thay Đổi"}
+          </Text>
+        </LinearGradient>
       </TouchableOpacity>
     </View>
   );

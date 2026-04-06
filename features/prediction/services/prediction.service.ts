@@ -41,7 +41,7 @@ export const PredictionService = {
 
       return response.data.data;
     } catch (error) {
-      console.error("❌ Failed to fetch prediction:", error);
+      console.error("❌ Failed to fetch prediction:" + `${areaId}`, error);
       throw error;
     }
   },

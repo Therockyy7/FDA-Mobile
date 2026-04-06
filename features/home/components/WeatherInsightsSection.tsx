@@ -6,6 +6,7 @@ import LottieView from "lottie-react-native";
 import React, { useEffect, useMemo, useRef } from "react";
 import { Animated, Easing, ScrollView, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { useColorScheme } from "~/lib/useColorScheme";
 import type { AiRiskSummary, RainfallForecastItem } from "../types/home-types";
 import type { OpenMeteoResponse } from "../types/open-meteo.types";
 import {
@@ -97,6 +98,53 @@ function getSoilStatus(moisture: number): {
   };
 }
 
+/* ────────── weather animation map ────────── */
+
+type WeatherAnimDef = {
+  source: any;
+  bgOpacity: number;
+  iconSpeed: number;
+  iconSize: number;
+};
+
+function getWeatherAnimation(code: number): WeatherAnimDef {
+  // ⚡ Thunder / Storm
+  if ([95, 96, 99].includes(code)) return {
+    source: require("../../../assets/animations/thunder.json"),
+    bgOpacity: 0.22, iconSpeed: 1.0, iconSize: 130,
+  };
+  // 🌧 Heavy rain / Pouring
+  if ([65, 82].includes(code)) return {
+    source: require("../../../assets/animations/rain-storm.json"),
+    bgOpacity: 0.20, iconSpeed: 0.9, iconSize: 120,
+  };
+  // 🌦 Rain / Drizzle / Showers
+  if ([51, 53, 55, 61, 63, 80, 81].includes(code)) return {
+    source: require("../../../assets/animations/drizzle.json"),
+    bgOpacity: 0.16, iconSpeed: 0.7, iconSize: 120,
+  };
+  // 🌫 Fog / Mist
+  if ([45, 48].includes(code)) return {
+    source: require("../../../assets/animations/fog.json"),
+    bgOpacity: 0.18, iconSpeed: 0.5, iconSize: 130,
+  };
+  // ☁️ Overcast
+  if (code === 3) return {
+    source: require("../../../assets/animations/cloudy.json"),
+    bgOpacity: 0.14, iconSpeed: 0.4, iconSize: 115,
+  };
+  // 🌤 Partly cloudy
+  if ([1, 2].includes(code)) return {
+    source: require("../../../assets/animations/partly-cloudy.json"),
+    bgOpacity: 0.10, iconSpeed: 0.6, iconSize: 120,
+  };
+  // ☀️ Clear / Sunny
+  return {
+    source: require("../../../assets/animations/sunny.json"),
+    bgOpacity: 0.09, iconSpeed: 0.5, iconSize: 125,
+  };
+}
+
 /* ────────── component ────────── */
 
 export function WeatherInsightsSection({
@@ -171,6 +219,9 @@ export function WeatherInsightsSection({
 
   const riskColors = aiRisk ? getRiskColors(aiRisk.riskLevel) : null;
 
+  // Weather-specific Lottie animation
+  const weatherAnim = useMemo(() => getWeatherAnimation(weatherCode), [weatherCode]);
+
   // Find today's daily data
   const todayMax = meteo.daily.temperature_2m_max[0];
   const todayMin = meteo.daily.temperature_2m_min[0];
@@ -220,31 +271,31 @@ export function WeatherInsightsSection({
           elevation: 8,
         }}
       >
-        {/* Lottie ambient background */}
+        {/* ── Lottie ambient background ── */}
         <LottieView
-          source={require("../../../assets/animations/rain-storm.json")}
+          source={weatherAnim.source}
           autoPlay
           loop
-          speed={0.4}
+          speed={weatherAnim.iconSpeed * 0.6}
           style={{
             position: "absolute",
             width: "100%",
             height: "100%",
-            opacity: theme.severity === "safe" ? 0.08 : 0.18,
+            opacity: weatherAnim.bgOpacity,
           }}
         />
 
         <View style={{ padding: 20 }}>
           {/* Top: Temp + condition */}
           <View className="flex-row items-center justify-between mb-1">
-            <View>
+            <View style={{ flex: 1 }}>
               <View className="flex-row items-end gap-1">
                 <Text
                   style={{
-                    fontSize: 56,
+                    fontSize: 58,
                     fontWeight: "900",
                     color: "white",
-                    lineHeight: 60,
+                    lineHeight: 62,
                     letterSpacing: -2,
                   }}
                 >
@@ -264,9 +315,10 @@ export function WeatherInsightsSection({
               <Text
                 style={{
                   color: "rgba(255,255,255,0.9)",
-                  fontSize: 16,
-                  fontWeight: "700",
+                  fontSize: 17,
+                  fontWeight: "800",
                   marginTop: 2,
+                  letterSpacing: -0.3,
                 }}
               >
                 {theme.labelVn}
@@ -282,21 +334,21 @@ export function WeatherInsightsSection({
               </Text>
             </View>
 
-            {/* Large weather icon */}
+            {/* ── Lottie weather icon (large, animated) ── */}
             <View
               style={{
-                width: 80,
-                height: 80,
-                borderRadius: 40,
-                backgroundColor: "rgba(255,255,255,0.15)",
+                width: weatherAnim.iconSize,
+                height: weatherAnim.iconSize,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <MaterialCommunityIcons
-                name={theme.icon as any}
-                size={48}
-                color="white"
+              <LottieView
+                source={weatherAnim.source}
+                autoPlay
+                loop
+                speed={weatherAnim.iconSpeed}
+                style={{ width: weatherAnim.iconSize, height: weatherAnim.iconSize }}
               />
             </View>
           </View>
@@ -798,19 +850,10 @@ export function WeatherInsightsSection({
 
                 {/* CTA */}
                 <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: "rgba(255,255,255,0.2)",
-                    paddingVertical: 10,
-                    borderRadius: 12,
-                    gap: 6,
-                  }}
+                  className="flex-row items-center justify-end gap-1 mt-1"
                 >
-                  <MaterialCommunityIcons name="chart-line" size={16} color="white" />
-                  <Text style={{ color: "white", fontSize: 12, fontWeight: "700" }}>
-                    Xem phân tích chi tiết
+                  <Text style={{ color: "white", fontSize: 11, fontWeight: "700" }}>
+                    Chi tiết AI
                   </Text>
                   <Ionicons name="chevron-forward" size={14} color="white" />
                 </View>
@@ -822,3 +865,72 @@ export function WeatherInsightsSection({
     </View>
   );
 }
+
+// ──────────────────────────────────────────────
+// Skeleton Loading Component for Weather Insights
+// ──────────────────────────────────────────────
+
+export const WeatherInsightsSkeleton = () => {
+  const { isDarkColorScheme } = useColorScheme();
+  const pulseAnim = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 0.4, duration: 800, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [pulseAnim]);
+
+  const skeletonBg = isDarkColorScheme ? "#1E293B" : "#E2E8F0";
+  const itemBorder = isDarkColorScheme ? "#334155" : "#F1F5F9";
+
+  return (
+    <View className="px-4 py-2 mt-4">
+      {/* Header Skeleton */}
+      <View className="flex-row items-center gap-2 mb-3">
+        <Animated.View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: skeletonBg, opacity: pulseAnim }} />
+        <View>
+          <Animated.View style={{ width: 140, height: 18, borderRadius: 8, backgroundColor: skeletonBg, opacity: pulseAnim, marginBottom: 4 }} />
+          <Animated.View style={{ width: 100, height: 10, borderRadius: 4, backgroundColor: skeletonBg, opacity: pulseAnim }} />
+        </View>
+      </View>
+
+      {/* 1) HERO SKELETON */}
+      <Animated.View style={{ height: 200, borderRadius: 24, backgroundColor: skeletonBg, opacity: pulseAnim, marginBottom: 12, padding: 20, justifyContent: "space-between" }}>
+        <View className="flex-row items-center justify-between">
+          <View>
+            <View style={{ width: 80, height: 50, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.1)", marginBottom: 8 }} />
+            <View style={{ width: 100, height: 14, borderRadius: 6, backgroundColor: "rgba(0,0,0,0.1)" }} />
+          </View>
+          <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: "rgba(0,0,0,0.1)" }} />
+        </View>
+        <View className="flex-row gap-2 mt-4">
+          <View style={{ flex: 1, height: 48, borderRadius: 16, backgroundColor: "rgba(0,0,0,0.1)" }} />
+          <View style={{ flex: 1, height: 48, borderRadius: 16, backgroundColor: "rgba(0,0,0,0.1)" }} />
+          <View style={{ flex: 1, height: 48, borderRadius: 16, backgroundColor: "rgba(0,0,0,0.1)" }} />
+        </View>
+      </Animated.View>
+
+      {/* 2) HOURLY SKELETON */}
+      <View style={{ height: 120, borderRadius: 20, backgroundColor: isDarkColorScheme ? "#0F172A" : "white", borderWidth: 1, borderColor: itemBorder, marginBottom: 12 }}>
+        <Animated.View style={{ flex: 1, backgroundColor: skeletonBg, opacity: pulseAnim, borderRadius: 20 }} />
+      </View>
+
+      {/* 3) 7-DAY SKELETON */}
+      <View style={{ padding: 16, borderRadius: 20, backgroundColor: isDarkColorScheme ? "#0F172A" : "white", borderWidth: 1, borderColor: itemBorder, marginBottom: 12 }}>
+        <View className="flex-row items-center gap-2 mb-4">
+          <Animated.View style={{ width: 120, height: 14, borderRadius: 6, backgroundColor: skeletonBg, opacity: pulseAnim }} />
+        </View>
+        {[1,2,3].map((i) => (
+          <View key={i} className="flex-row items-center justify-between py-2.5">
+            <Animated.View style={{ width: 40, height: 12, borderRadius: 6, backgroundColor: skeletonBg, opacity: pulseAnim }} />
+            <Animated.View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: skeletonBg, opacity: pulseAnim }} />
+            <Animated.View style={{ width: 100, height: 8, borderRadius: 4, backgroundColor: skeletonBg, opacity: pulseAnim }} />
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+};

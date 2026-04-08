@@ -17,6 +17,7 @@ const STATUS_CONFIG: Record<string, {
   Moderate: { gradient: ["#D97706", "#F59E0B"], accent: "#FDE68A", label: "Cảnh báo vừa", icon: "warning" },
   High:     { gradient: ["#DC2626", "#EF4444"], accent: "#FCA5A5", label: "Nguy hiểm cao", icon: "alert-circle" },
   Severe:   { gradient: ["#7C3AED", "#A78BFA"], accent: "#DDD6FE", label: "Rất nguy hiểm", icon: "flash" },
+  Critical: { gradient: ["#991B1B", "#DC2626"], accent: "#FECACA", label: "Khẩn cấp",      icon: "warning" },
 };
 
 interface Props {

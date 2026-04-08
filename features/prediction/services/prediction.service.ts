@@ -32,7 +32,7 @@ export const PredictionService = {
       const response = await predictionClient.post<PredictionApiResponse>(
         `/api/v1/area/${areaId}/predict-flood-assemble`,
       );
-
+      console.log("Prediction API response :", areaId);
       if (!response.data.success) {
         throw new Error(
           response.data.message || "Prediction API returned non-success status",

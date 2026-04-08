@@ -99,4 +99,6 @@ export interface SatelliteAnalysisParams {
   area_id: string;
   use_bbox?: boolean;
   use_fusion?: boolean;
+  capture_mode?: 'square' | 'polygon' | 'circle';
+  include_permanent_water?: boolean;
 }

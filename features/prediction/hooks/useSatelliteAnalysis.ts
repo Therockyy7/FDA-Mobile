@@ -52,7 +52,7 @@ export function useSatelliteAnalysis(areaId: string): UseSatelliteAnalysisReturn
   }, [areaId, clearResult, clearFloodStore]);
 
   const runAnalysis = useCallback(
-    async (useBbox = true, useFusion = true) => {
+    async (useBbox = true, useFusion = true, captureMode?: 'square' | 'polygon' | 'circle', includePermanentWater = false) => {
       setResult(areaId, { state: "loading", error: null, data: null, elapsedSeconds: 0 });
       clearFloodStore();
 
@@ -67,6 +67,8 @@ export function useSatelliteAnalysis(areaId: string): UseSatelliteAnalysisReturn
           area_id: areaId,
           use_bbox: useBbox,
           use_fusion: useFusion,
+          capture_mode: captureMode,
+          include_permanent_water: includePermanentWater,
         });
         
         setResult(areaId, { data: result, state: "success" });

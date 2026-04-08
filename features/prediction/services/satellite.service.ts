@@ -35,14 +35,14 @@ export const SatelliteService = {
   runSatelliteAnalysis: async (
     params: SatelliteAnalysisParams,
   ): Promise<SatelliteAnalysisResponse> => {
-    const { area_id, use_bbox = true, use_fusion = true } = params;
+    const { area_id, use_bbox = true, use_fusion = true, capture_mode, include_permanent_water = false } = params;
 
     try {
       // API expects use_bbox & use_fusion as query string params, not body
       const response = await predictionClient.post<SatelliteAnalysisResponse>(
         `/api/v1/area/${area_id}/verify/satellite-analysis`,
         null,                          
-        { params: { use_bbox, use_fusion } },
+        { params: { use_bbox, use_fusion, capture_mode, include_permanent_water } },
       );
 
       if (response.data.status !== "success") {

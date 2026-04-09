@@ -24,21 +24,30 @@ interface ApiAreaCardProps {
 // Get status config based on AreaStatus
 const getStatusConfig = (status?: string) => {
   switch (status) {
-    case "Warning":
+    case "Critical":
       return {
         main: "#EF4444",
         secondary: "#FCA5A5",
         bg: "#FEE2E2",
         gradient: ["#EF4444", "#DC2626"] as const,
-        text: "Cảnh báo",
+        text: "Nguy hiểm",
         icon: "alert-circle" as const,
       };
-    case "Watch":
+    case "Warning":
       return {
-        main: "#F59E0B",
-        secondary: "#FCD34D",
-        bg: "#FEF3C7",
-        gradient: ["#F59E0B", "#D97706"] as const,
+        main: "#F97316",
+        secondary: "#FDBA74",
+        bg: "#FFF7ED",
+        gradient: ["#F97316", "#EA580C"] as const,
+        text: "Cảnh báo",
+        icon: "warning" as const,
+      };
+    case "Caution":
+      return {
+        main: "#FBBF24",
+        secondary: "#FDE68A",
+        bg: "#FEF9C3",
+        gradient: ["#FBBF24", "#F59E0B"] as const,
         text: "Theo dõi",
         icon: "eye" as const,
       };
@@ -51,8 +60,7 @@ const getStatusConfig = (status?: string) => {
         text: "Không rõ",
         icon: "help-circle" as const,
       };
-    case "Normal":
-    default:
+    default: // Safe
       return {
         main: "#10B981",
         secondary: "#6EE7B7",
@@ -108,7 +116,7 @@ export function ApiAreaCard({
 
   // Pulse animation for warning status
   useEffect(() => {
-    if (status?.status === "Warning") {
+    if (["Warning", "Critical"].includes(status?.status ?? "")) {
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
@@ -163,7 +171,7 @@ export function ApiAreaCard({
       }}
     >
       {/* Animated Background Lottie for Warning Status */}
-      {status?.status === "Warning" && (
+      {["Warning", "Critical"].includes(status?.status ?? "") && (
         <LottieView
           source={require("../../../assets/animations/water-rise.json")}
           autoPlay

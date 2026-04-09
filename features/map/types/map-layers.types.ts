@@ -150,14 +150,14 @@ export interface Area {
 }
 
 // Area status types
-export type AreaStatus = "Normal" | "Watch" | "Warning" | "Unknown";
+export type AreaStatus = "Critical" | "Warning" | "Caution" | "Safe" | "Unknown";
 
 // Area status response from /api/v1/areas/{id}/status
 export interface AreaStatusResponse {
   areaId: string;
   status: AreaStatus;
   severityLevel: number;
-  summary: string;
+  summary?: string;
   contributingStations: ContributingStation[];
   evaluatedAt: string;
 }
@@ -166,7 +166,7 @@ export interface AreaStatusResponse {
 export interface AreaWithStatus extends Area {
   status: AreaStatus;
   severityLevel: number;
-  summary: string;
+  summary?: string;
   contributingStations: ContributingStation[];
   evaluatedAt: string | null;
 }
@@ -183,23 +183,26 @@ interface ContributingStation {
 
 // Area status color mapping
 export const AREA_STATUS_COLORS: Record<AreaStatus, string> = {
-  Normal: "#10B981", // Green
-  Watch: "#FBBF24", // Yellow
-  Warning: "#EF4444", // Red
-  Unknown: "#9CA3AF", // Gray
+  Critical: "#EF4444", // Đỏ
+  Warning: "#F97316", // Cam
+  Caution: "#FBBF24", // Vàng
+  Safe: "#10B981", // Xanh
+  Unknown: "#9CA3AF", // Xám
 };
 
 export const AREA_STATUS_LABELS: Record<AreaStatus, string> = {
-  Normal: "Bình thường",
-  Watch: "Theo dõi",
+  Critical: "Nguy hiểm",
   Warning: "Cảnh báo",
+  Caution: "Theo dõi",
+  Safe: "Bình thường",
   Unknown: "Không xác định",
 };
 
 export const AREA_STATUS_ICONS: Record<AreaStatus, string> = {
-  Normal: "checkmark-circle",
-  Watch: "eye",
+  Critical: "alert-circle",
   Warning: "warning",
+  Caution: "eye",
+  Safe: "checkmark-circle",
   Unknown: "help-circle",
 };
 

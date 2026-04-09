@@ -25,34 +25,43 @@ interface WaterLevelAreaCardProps {
 // Status config
 const getStatusConfig = (status?: string) => {
   switch (status) {
-    case "Warning":
+    case "Critical":
       return {
         color: "#EF4444",
         bg: "#FEE2E2",
         darkBg: "rgba(239,68,68,0.15)",
-        label: "Cảnh báo",
+        label: "Nguy hiểm",
         icon: "alert-circle" as const,
         gradient: ["#EF4444", "#DC2626"] as const,
       };
-    case "Watch":
+    case "Warning":
       return {
-        color: "#F59E0B",
-        bg: "#FEF3C7",
-        darkBg: "rgba(245,158,11,0.15)",
+        color: "#F97316",
+        bg: "#FFF7ED",
+        darkBg: "rgba(249,115,22,0.15)",
+        label: "Cảnh báo",
+        icon: "warning" as const,
+        gradient: ["#F97316", "#EA580C"] as const,
+      };
+    case "Caution":
+      return {
+        color: "#FBBF24",
+        bg: "#FEF9C3",
+        darkBg: "rgba(251,191,36,0.15)",
         label: "Theo dõi",
         icon: "eye" as const,
-        gradient: ["#F59E0B", "#D97706"] as const,
+        gradient: ["#FBBF24", "#F59E0B"] as const,
       };
     case "Unknown":
       return {
         color: "#6B7280",
         bg: "#F3F4F6",
         darkBg: "rgba(107,114,128,0.15)",
-        label: "Chưa rõ",
+        label: "Không rõ",
         icon: "help-circle" as const,
         gradient: ["#6B7280", "#4B5563"] as const,
       };
-    default:
+    default: // Safe
       return {
         color: "#10B981",
         bg: "#D1FAE5",
@@ -123,7 +132,7 @@ export function WaterLevelAreaCard({
         borderRadius: 20,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: status?.status === "Warning" ? `${cfg.color}60` : c.border,
+        borderColor: ["Warning", "Critical"].includes(status?.status ?? "") ? `${cfg.color}60` : c.border,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.08,

@@ -231,7 +231,6 @@ export const AreaService = {
       if (params.limit) queryParts.push(`limit=${params.limit}`);
 
       const url = `/api/v1/flood-history?${queryParts.join("&")}`;
-      // console.log("📊 Fetching flood history:", url);
 
       const res = await apiClient.get<FloodHistoryResponse>(url);
       return res.data.data;

@@ -3,6 +3,7 @@ import type {
   DistrictForecast,
   DistrictsForecastResponse,
 } from "~/features/prediction/types/districts-forecast.types";
+import { PredictionService } from "../services/prediction.service";
 
 export type ForecastHorizon = "now" | "1h" | "3h" | "6h" | "9h" | "12h" | "24h";
 
@@ -74,8 +75,8 @@ export const useDistrictsForecast = (enabled: boolean = true) => {
     try {
       setLoading(true);
       setError(null);
-      // const result = await PredictionService.getDistrictsForecast("1,3,6,9,12,24");
-      // setData(result);
+      const result = await PredictionService.getDistrictsForecast("1,3,6,9,12,24");
+      setData(result);
     } catch (err: any) {
       setError(err.message || "Không thể tải dự báo quận/huyện");
     } finally {

@@ -1160,14 +1160,64 @@ export function SatelliteVerificationCard({ areaId, areaName }: Props) {
   );
 
   // ── Success UI ──
-  const renderSuccess = (result: SatelliteAnalysisResponse) => (
-    <MotiView
-      from={{ opacity: 0, translateY: 12 }}
-      animate={{ opacity: 1, translateY: 0 }}
-      transition={{ type: "timing", duration: 400 }}
-    >
-      <View style={{ gap: 14 }}>
-        {/* Summary hero */}
+  const renderSuccess = (result: SatelliteAnalysisResponse) => {
+    if (result.status === "no_flood_detected") {
+      return (
+        <MotiView
+          from={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: "spring", damping: 14 }}
+        >
+          <View
+            style={{
+              backgroundColor: isDark ? "rgba(16,185,129,0.1)" : "#ECFDF5",
+              borderRadius: 16,
+              padding: 24,
+              alignItems: "center",
+              justifyContent: "center",
+              borderWidth: 1,
+              borderColor: isDark ? "rgba(16,185,129,0.2)" : "#D1FAE5",
+              gap: 12,
+            }}
+          >
+            <View
+              style={{
+                width: 56, height: 56, borderRadius: 28,
+                backgroundColor: isDark ? "rgba(16,185,129,0.2)" : "#D1FAE5",
+                alignItems: "center", justifyContent: "center",
+              }}
+            >
+              <Ionicons name="leaf-outline" size={28} color="#10B981" />
+            </View>
+            <Text style={{ fontSize: 16, fontWeight: "800", color: text, textAlign: "center" }}>
+              An toàn · Không phát hiện ngập lụt
+            </Text>
+            <Text style={{ fontSize: 13, color: muted, textAlign: "center", lineHeight: 20 }}>
+              Dữ liệu vệ tinh mới nhất xác nhận không có bất thường về độ ẩm hoặc ngập úng tại khu vực này.
+            </Text>
+            
+            <TouchableOpacity
+              onPress={handleRun}
+              style={{ marginTop: 8 }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: isDark ? "rgba(100,116,139,0.15)" : "#E2E8F0", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}>
+                <Ionicons name="refresh-outline" size={14} color={muted} />
+                <Text style={{ fontSize: 12, fontWeight: "600", color: muted }}>Quét lại</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </MotiView>
+      );
+    }
+
+    return (
+      <MotiView
+        from={{ opacity: 0, translateY: 12 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: "timing", duration: 400 }}
+      >
+        <View style={{ gap: 14 }}>
+          {/* Summary hero */}
         <LinearGradient
           colors={["#4C1D95", "#7C3AED", "#9333EA"]}
           start={{ x: 0, y: 0 }}
@@ -1455,9 +1505,11 @@ export function SatelliteVerificationCard({ areaId, areaName }: Props) {
                     color:
                       item.platform === "Sentinel-1" ? "#8B5CF6" : "#0EA5E9",
                   };
+                  // Stage layers silently — map will commit (make visible) them
+                  // only AFTER animateToRegion finishes to avoid JS thread lag.
                   useSatelliteFloodStore
                     .getState()
-                    .setLayers([layer as any], result.bbox);
+                    .setPendingLayers([layer as any], result.bbox);
                 } else {
                   useSatelliteFloodStore.getState().clear();
                 }
@@ -1519,6 +1571,7 @@ export function SatelliteVerificationCard({ areaId, areaName }: Props) {
       </View>
     </MotiView>
   );
+  };
 
   // ─── Root card ───────────────────────────────────────────────────────────
   return (

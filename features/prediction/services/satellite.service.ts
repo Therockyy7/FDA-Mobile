@@ -45,7 +45,7 @@ export const SatelliteService = {
         { params: { use_bbox, use_fusion, capture_mode, include_permanent_water } },
       );
 
-      if (response.data.status !== "success") {
+      if (response.data.status !== "success" && response.data.status !== "no_flood_detected") {
         throw new Error(
           response.data.error || "Satellite analysis returned non-success status",
         );

@@ -24,6 +24,8 @@ import { useNavigation } from "./useNavigation";
 import { useSafeRoute } from "./routing";
 import type { LatLng } from "../types/safe-route.types";
 import { TransportMode } from "../types";
+import { useSatelliteFloodStore } from "../stores/useSatelliteFloodStore";
+
 interface EditAreaParams {
   id: string;
   name: string;
@@ -318,19 +320,43 @@ export function useMapScreen(ctx: MapScreenCtx) {
 
   // Handle satellite verification bounds
   useEffect(() => {
-    if (params.satelliteBbox && mapRef.current) {
+    if (!params.satelliteBbox) return;
+
+    const doAnimate = () => {
       try {
-        const [minLon, minLat, maxLon, maxLat] = params.satelliteBbox.split(",").map(parseFloat);
+        const [minLon, minLat, maxLon, maxLat] = params.satelliteBbox!.split(",").map(parseFloat);
         if (!isNaN(minLon) && !isNaN(minLat) && !isNaN(maxLon) && !isNaN(maxLat)) {
-          // Add small padding to the bounding box
+          const ANIMATION_DURATION = 1000;
           const padding = 0.02;
-          mapRef.current.animateToRegion({
-            latitude: (minLat + maxLat) / 2,
-            longitude: (minLon + maxLon) / 2,
-            latitudeDelta: Math.abs(maxLat - minLat) + padding,
-            longitudeDelta: Math.abs(maxLon - minLon) + padding,
-          }, 1000);
-          
+
+          const animate = () => {
+            if (!mapRef.current) return;
+            mapRef.current.animateToRegion(
+              {
+                latitude: (minLat + maxLat) / 2,
+                longitude: (minLon + maxLon) / 2,
+                latitudeDelta: Math.abs(maxLat - minLat) + padding,
+                longitudeDelta: Math.abs(maxLon - minLon) + padding,
+              },
+              ANIMATION_DURATION,
+            );
+
+            // Commit (make visible) the pre-staged satellite polygons AFTER
+            // the camera animation completes so the heavy GeoJSON rendering
+            // does not block the JS thread during the pan/zoom.
+            setTimeout(() => {
+              useSatelliteFloodStore.getState().commitLayers();
+            }, ANIMATION_DURATION + 200);
+          };
+
+          // If mapRef isn't ready yet (e.g. tab just mounted), retry briefly
+          if (mapRef.current) {
+            animate();
+          } else {
+            const retryTimer = setTimeout(animate, 400);
+            return () => clearTimeout(retryTimer);
+          }
+
           if (params.returnToPrediction && adminAreas) {
             const matchedArea = adminAreas.find((a: any) => a.id === params.returnToPrediction);
             if (matchedArea) {
@@ -340,9 +366,12 @@ export function useMapScreen(ctx: MapScreenCtx) {
           }
         }
       } catch {
-        // failed to parse
+        // failed to parse bbox
       }
-    }
+    };
+
+    doAnimate();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.satelliteBbox, params.returnToPrediction, adminAreas, mapRef, setSelectedAdminArea, setAreaDisplayMode]);
 
   // ── Navigation handlers ──────────────────────────────────────

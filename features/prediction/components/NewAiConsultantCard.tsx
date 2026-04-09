@@ -9,12 +9,13 @@ interface Props {
   aiConsultant: AiConsultant;
 }
 
-// Parse markdown headings ## into sections
+// Parse markdown headings ## into sections, or fallback to line-break blocks
 function parseSections(text: string): { title: string; content: string }[] {
-  const sections: { title: string; content: string }[] = [];
+  let sections: { title: string; content: string }[] = [];
   const lines = text.split("\n");
   let current: { title: string; content: string } | null = null;
 
+  // Attempt 1: Parse Markdown Headers (## )
   for (const line of lines) {
     if (line.startsWith("## ")) {
       if (current) sections.push(current);
@@ -24,7 +25,34 @@ function parseSections(text: string): { title: string; content: string }[] {
     }
   }
   if (current) sections.push(current);
+
+  // Attempt 2: If no Markdown headers found, assuming plain text separated by empty lines.
+  // The first line of each block is treated as the title, rest as content.
+  if (sections.length === 0) {
+    const blocks = text.split(/\n\s*\n/);
+    for (const block of blocks) {
+      const blockLines = block.trim().split("\n");
+      if (blockLines.length > 0) {
+        const title = blockLines[0].trim();
+        const content = blockLines.slice(1).join("\n").trim();
+        
+        // Only classify as a section if there is actual content under the title
+        if (content) {
+          sections.push({ title, content });
+        } else if (title) {
+          // If it's just a single paragraph without a title, show it under a generic title
+          sections.push({ title: "Thông tin chung", content: title });
+        }
+      }
+    }
+  }
+
   return sections;
+}
+
+// Remove Vietnamese accents for easier matching
+function normalizeText(str: string) {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
 const SECTION_ICONS: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string }> = {
@@ -36,8 +64,9 @@ const SECTION_ICONS: Record<string, { icon: keyof typeof Ionicons.glyphMap; colo
 };
 
 function getSectionMeta(title: string) {
+  const normalizedTitle = normalizeText(title);
   const key = Object.keys(SECTION_ICONS).find(k =>
-    title.toLowerCase().replace(/\s+/g, " ").includes(k)
+    normalizedTitle.includes(k)
   );
   return SECTION_ICONS[key ?? "default"];
 }

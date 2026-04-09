@@ -1,13 +1,20 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
-  ScrollView,
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated, {
+  useAnimatedRef,
+  useAnimatedScrollHandler,
+  useSharedValue,
+  scrollTo,
+  runOnUI,
+} from "react-native-reanimated";
+import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import { AiFactorsCard } from "~/features/prediction/components/AiFactorsCard";
@@ -16,7 +23,10 @@ import { ForecastWindowsCard } from "~/features/prediction/components/ForecastWi
 import { HybridEnsembleCard } from "~/features/prediction/components/HybridEnsembleCard";
 import { ImpactCard } from "~/features/prediction/components/ImpactCard";
 import { NewAiConsultantCard } from "~/features/prediction/components/NewAiConsultantCard";
-import { PredictionHeroHeader } from "~/features/prediction/components/PredictionHeroHeader";
+import {
+  PREDICTION_HEADER_MAX_HEIGHT,
+  PredictionHeroHeader,
+} from "~/features/prediction/components/PredictionHeroHeader";
 import { SatelliteVerificationCard } from "~/features/prediction/components/SatelliteVerificationCard";
 import { StationsCard } from "~/features/prediction/components/StationsCard";
 import { PredictionService } from "~/features/prediction/services/prediction.service";
@@ -24,7 +34,7 @@ import { PredictionResponse } from "~/features/prediction/types/prediction.types
 import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function PredictionScreen() {
-  const { id, scrollTo } = useLocalSearchParams<{
+  const { id, scrollTo: scrollToParam } = useLocalSearchParams<{
     id: string;
     scrollTo?: string;
   }>();
@@ -36,10 +46,35 @@ export default function PredictionScreen() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  // ── Scroll-to-satellite refs ──────────────────────────────────────────────
-  const scrollRef = useRef<ScrollView>(null);
+  // ── Reanimated scroll — same pattern as Profile screen ────────────────────
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  const scrollY = useSharedValue(0);
+
+  const scrollHandler = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+  });
+
+  // ── Track satellite card Y for auto-scroll ────────────────────────────────
   const satelliteCardY = useRef<number>(0);
   const didScrollToSatellite = useRef(false);
+
+  // ── Auto-clear flood overlay when user returns from map ───────────────────
+  // Layers are only shown while user is on the map screen; coming back always
+  // resets them so they don't persist unexpectedly.
+  const isFirstFocus = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      // Skip the very first focus (initial screen open)
+      if (isFirstFocus.current) {
+        return () => {
+          // Mark first focus done when screen loses focus for the first time
+          isFirstFocus.current = false;
+        };
+      }
+      // User came back (e.g. from map) — clear flood polygons from map
+      useSatelliteFloodStore.getState().clear();
+    }, []),
+  );
 
   const loadPrediction = useCallback(async (areaId: string) => {
     try {
@@ -64,20 +99,18 @@ export default function PredictionScreen() {
 
   // ── Auto-scroll to SatelliteVerificationCard when coming from pill ─────────
   useEffect(() => {
-    if (scrollTo === "satellite" && !loading && !didScrollToSatellite.current) {
-      // Small delay to let the layout settle after navigation
+    if (scrollToParam === "satellite" && !loading && !didScrollToSatellite.current) {
       const t = setTimeout(() => {
-        if (satelliteCardY.current > 0 && scrollRef.current) {
-          scrollRef.current.scrollTo({
-            y: satelliteCardY.current - 16, // 16px breathing room
-            animated: true,
-          });
+        if (satelliteCardY.current > 0) {
+          runOnUI(() => {
+            scrollTo(scrollRef, 0, satelliteCardY.current - 16, true);
+          })();
           didScrollToSatellite.current = true;
         }
-      }, 400);
+      }, 450);
       return () => clearTimeout(t);
     }
-  }, [scrollTo, loading]);
+  }, [scrollToParam, loading]);
 
   const onRefresh = useCallback(() => {
     if (id) {
@@ -91,79 +124,60 @@ export default function PredictionScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView
-        ref={scrollRef}
-        style={{ flex: 1, backgroundColor: bgColor }}
-        contentContainerStyle={{
-          paddingBottom: insets.bottom + 32,
-          flexGrow: 1,
-          justifyContent: loading && !refreshing ? "center" : undefined,
-          alignItems: loading && !refreshing ? "center" : undefined,
-        }}
-        scrollEventThrottle={64}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#6366F1"]}
-            tintColor="#6366F1"
-          />
-        }
-      >
-        {/* ── Loading ── */}
-        {loading && !refreshing ? (
-          <View style={{ alignItems: "center", padding: 24 }}>
-            <View style={{
-              width: 72, height: 72, borderRadius: 24,
-              backgroundColor: isDarkColorScheme ? "#1E293B" : "#EEF2FF",
-              alignItems: "center", justifyContent: "center",
-              marginBottom: 16,
-            }}>
-              <ActivityIndicator size="large" color="#6366F1" />
-            </View>
-            <Text style={{ fontSize: 15, fontWeight: "700", color: isDarkColorScheme ? "#E2E8F0" : "#1E293B", marginBottom: 4 }}>
-              Đang phân tích AI...
-            </Text>
-            <Text style={{ fontSize: 12, color: isDarkColorScheme ? "#94A3B8" : "#64748B", textAlign: "center" }}>
-              Tổng hợp dữ liệu từ vệ tinh, cảm biến và mô hình thời tiết
-            </Text>
-          </View>
-        ) : error ? (
-          /* ── Error ── */
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24 }}>
-            <View style={{
-              width: 72, height: 72, borderRadius: 24,
-              backgroundColor: isDarkColorScheme ? "#1E293B" : "#FEE2E2",
-              alignItems: "center", justifyContent: "center",
-              marginBottom: 16,
-            }}>
-              <Ionicons name="alert-circle" size={36} color="#EF4444" />
-            </View>
-            <Text style={{ fontSize: 16, fontWeight: "800", color: isDarkColorScheme ? "#F1F5F9" : "#1F2937", marginBottom: 8 }}>
-              Không thể tải dự báo
-            </Text>
-            <Text style={{ fontSize: 13, color: "#EF4444", textAlign: "center", marginBottom: 24, lineHeight: 20 }}>
-              {error}
-            </Text>
-            <TouchableOpacity
-              onPress={onRefresh}
-              style={{
-                backgroundColor: "#6366F1",
-                paddingHorizontal: 28, paddingVertical: 12,
-                borderRadius: 14,
-                flexDirection: "row", alignItems: "center", gap: 8,
-              }}
-            >
-              <Ionicons name="refresh" size={16} color="#fff" />
-              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>Thử lại</Text>
-            </TouchableOpacity>
-          </View>
-        ) : prediction ? (
-          /* ── Content ── */
-          <>
-            {/* Hero header with gradient + stats */}
-            <PredictionHeroHeader prediction={prediction} />
 
+      <View style={{ flex: 1, backgroundColor: bgColor }}>
+        <Animated.ScrollView
+          ref={scrollRef}
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            paddingTop: PREDICTION_HEADER_MAX_HEIGHT,
+            paddingBottom: insets.bottom + 32,
+            flexGrow: 1,
+          }}
+          scrollEventThrottle={16}
+          onScroll={scrollHandler}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#6366F1"]}
+              tintColor="#6366F1"
+              progressViewOffset={PREDICTION_HEADER_MAX_HEIGHT}
+            />
+          }
+        >
+          {error ? (
+            /* ── Error ── */
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24 }}>
+              <View style={{
+                width: 72, height: 72, borderRadius: 24,
+                backgroundColor: isDarkColorScheme ? "#1E293B" : "#FEE2E2",
+                alignItems: "center", justifyContent: "center",
+                marginBottom: 16,
+              }}>
+                <Ionicons name="alert-circle" size={36} color="#EF4444" />
+              </View>
+              <Text style={{ fontSize: 16, fontWeight: "800", color: isDarkColorScheme ? "#F1F5F9" : "#1F2937", marginBottom: 8 }}>
+                Không thể tải dự báo
+              </Text>
+              <Text style={{ fontSize: 13, color: "#EF4444", textAlign: "center", marginBottom: 24, lineHeight: 20 }}>
+                {error}
+              </Text>
+              <TouchableOpacity
+                onPress={onRefresh}
+                style={{
+                  backgroundColor: "#6366F1",
+                  paddingHorizontal: 28, paddingVertical: 12,
+                  borderRadius: 14,
+                  flexDirection: "row", alignItems: "center", gap: 8,
+                }}
+              >
+                <Ionicons name="refresh" size={16} color="#fff" />
+                <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>Thử lại</Text>
+              </TouchableOpacity>
+            </View>
+          ) : prediction ? (
+            /* ── Content ── */
             <View style={{ paddingHorizontal: 16, paddingTop: 24, gap: 16 }}>
               {/* Summary banner */}
               <View style={{
@@ -179,32 +193,28 @@ export default function PredictionScreen() {
                 </Text>
               </View>
 
-              {/* 3h / 5h / 7h forecast windows */}
               <ForecastWindowsCard
                 windows={prediction.forecast.windows}
                 evaluatedAt={prediction.evaluatedAt}
               />
 
-              {/* Impact assessment */}
               <ImpactCard aiPrediction={prediction.forecast.aiPrediction} />
 
-              {/* Hybrid Methodology */}
               <HybridEnsembleCard prediction={prediction} />
 
-              {/* 🛰️ AI Prithvi Satellite Verification — capture layout Y for scroll */}
+              {/* 🛰️ Satellite card — capture Y for pill auto-scroll */}
               <View
                 onLayout={(e) => {
-                  satelliteCardY.current = e.nativeEvent.layout.y;
-                  // If we got here from the pill and layout just resolved, scroll now
+                  const y = PREDICTION_HEADER_MAX_HEIGHT + 24 + e.nativeEvent.layout.y;
+                  satelliteCardY.current = y;
                   if (
-                    scrollTo === "satellite" &&
+                    scrollToParam === "satellite" &&
                     !didScrollToSatellite.current &&
                     e.nativeEvent.layout.y > 0
                   ) {
-                    scrollRef.current?.scrollTo({
-                      y: e.nativeEvent.layout.y - 16,
-                      animated: true,
-                    });
+                    runOnUI(() => {
+                      scrollTo(scrollRef, 0, y - 16, true);
+                    })();
                     didScrollToSatellite.current = true;
                   }
                 }}
@@ -215,21 +225,14 @@ export default function PredictionScreen() {
                 />
               </View>
 
-              {/* AI factors breakdown */}
               <AiFactorsCard aiPrediction={prediction.forecast.aiPrediction} />
-
-              {/* Monitoring stations */}
               <StationsCard stations={prediction.contributingStations} />
-
-              {/* Community reports */}
               <CommunityReportsCard reports={prediction.communityReports} />
 
-              {/* AI consultant detail */}
               {prediction.aiConsultant?.finalSummary ? (
                 <NewAiConsultantCard aiConsultant={prediction.aiConsultant} />
               ) : null}
 
-              {/* Evaluated at footer */}
               <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 6, paddingTop: 4 }}>
                 <Ionicons name="time-outline" size={12} color={isDarkColorScheme ? "#475569" : "#94A3B8"} />
                 <Text style={{ fontSize: 11, color: isDarkColorScheme ? "#475569" : "#94A3B8" }}>
@@ -237,9 +240,44 @@ export default function PredictionScreen() {
                 </Text>
               </View>
             </View>
-          </>
-        ) : null}
-      </ScrollView>
+          ) : null}
+        </Animated.ScrollView>
+
+        {/* Absolute header — sits on top of ScrollView */}
+        {prediction && (
+          <PredictionHeroHeader prediction={prediction} scrollY={scrollY} />
+        )}
+
+        {/* ── Loading overlay — full-screen centered, above everything ── */}
+        {loading && !refreshing && (
+          <View
+            style={{
+              position: "absolute",
+              top: 0, left: 0, right: 0, bottom: 0,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: bgColor,
+            }}
+          >
+            <View style={{
+              width: 72, height: 72, borderRadius: 24,
+              backgroundColor: isDarkColorScheme ? "#1E293B" : "#EEF2FF",
+              alignItems: "center", justifyContent: "center",
+              marginBottom: 16,
+            }}>
+              <ActivityIndicator size="large" color="#6366F1" />
+            </View>
+            <Text style={{ fontSize: 15, fontWeight: "700", color: isDarkColorScheme ? "#E2E8F0" : "#1E293B", marginBottom: 4 }}>
+              Đang phân tích AI...
+            </Text>
+            <Text style={{ fontSize: 12, color: isDarkColorScheme ? "#94A3B8" : "#64748B", textAlign: "center" }}>
+              Tổng hợp dữ liệu từ vệ tinh, cảm biến và mô hình thời tiết
+            </Text>
+          </View>
+        )}
+      </View>
     </>
   );
 }
+
+

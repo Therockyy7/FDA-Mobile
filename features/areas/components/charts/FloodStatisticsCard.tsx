@@ -188,14 +188,13 @@ export function FloodStatisticsCard({
 
       {/* Main stats grid */}
       <View style={{ padding: 16 }}>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 10 }}>
           {/* Max level */}
           <View
             style={{
-              flex: 1,
-              minWidth: "45%",
+              width: "48%",
               backgroundColor: colors.cardBg,
-              padding: 14,
+              padding: 12,
               borderRadius: 12,
               borderWidth: 1,
               borderColor: colors.border,
@@ -220,14 +219,15 @@ export function FloodStatisticsCard({
                   color="#EF4444"
                 />
               </View>
-              <View>
-                <Text style={{ fontSize: 10, color: colors.subtext }}>
-                  Mực nước cao nhất
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, color: colors.subtext }} numberOfLines={1}>
+                  Cao nhất
                 </Text>
                 <Text
-                  style={{ fontSize: 18, fontWeight: "800", color: "#EF4444" }}
+                  style={{ fontSize: 17, fontWeight: "800", color: "#EF4444" }}
+                  numberOfLines={1} adjustsFontSizeToFit
                 >
-                  {Math.round(summary.maxWaterLevel * 100)}cm
+                  {summary.maxWaterLevel.toFixed(2)}m
                 </Text>
               </View>
             </View>
@@ -236,10 +236,9 @@ export function FloodStatisticsCard({
           {/* Min level */}
           <View
             style={{
-              flex: 1,
-              minWidth: "45%",
+              width: "48%",
               backgroundColor: colors.cardBg,
-              padding: 14,
+              padding: 12,
               borderRadius: 12,
               borderWidth: 1,
               borderColor: colors.border,
@@ -264,14 +263,15 @@ export function FloodStatisticsCard({
                   color="#10B981"
                 />
               </View>
-              <View>
-                <Text style={{ fontSize: 10, color: colors.subtext }}>
-                  Mực nước thấp nhất
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, color: colors.subtext }} numberOfLines={1}>
+                  Thấp nhất
                 </Text>
                 <Text
-                  style={{ fontSize: 18, fontWeight: "800", color: "#10B981" }}
+                  style={{ fontSize: 17, fontWeight: "800", color: "#10B981" }}
+                  numberOfLines={1} adjustsFontSizeToFit
                 >
-                  {Math.round(summary.minWaterLevel * 100)}cm
+                  {summary.minWaterLevel.toFixed(2)}m
                 </Text>
               </View>
             </View>
@@ -280,10 +280,9 @@ export function FloodStatisticsCard({
           {/* Average level */}
           <View
             style={{
-              flex: 1,
-              minWidth: "45%",
+              width: "48%",
               backgroundColor: colors.cardBg,
-              padding: 14,
+              padding: 12,
               borderRadius: 12,
               borderWidth: 1,
               borderColor: colors.border,
@@ -304,14 +303,15 @@ export function FloodStatisticsCard({
               >
                 <Ionicons name="analytics" size={18} color="#007AFF" />
               </View>
-              <View>
-                <Text style={{ fontSize: 10, color: colors.subtext }}>
-                  Mực nước trung bình
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, color: colors.subtext }} numberOfLines={1}>
+                  Trung bình
                 </Text>
                 <Text
-                  style={{ fontSize: 18, fontWeight: "800", color: "#007AFF" }}
+                  style={{ fontSize: 17, fontWeight: "800", color: "#007AFF" }}
+                  numberOfLines={1} adjustsFontSizeToFit
                 >
-                  {Math.round(summary.avgWaterLevel * 100)}cm
+                  {summary.avgWaterLevel.toFixed(2)}m
                 </Text>
               </View>
             </View>
@@ -320,10 +320,9 @@ export function FloodStatisticsCard({
           {/* Flood hours */}
           <View
             style={{
-              flex: 1,
-              minWidth: "45%",
+              width: "48%",
               backgroundColor: colors.cardBg,
-              padding: 14,
+              padding: 12,
               borderRadius: 12,
               borderWidth: 1,
               borderColor: colors.border,
@@ -344,12 +343,13 @@ export function FloodStatisticsCard({
               >
                 <Ionicons name="time" size={18} color="#F97316" />
               </View>
-              <View>
-                <Text style={{ fontSize: 10, color: colors.subtext }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, color: colors.subtext }} numberOfLines={1}>
                   Tổng giờ ngập
                 </Text>
                 <Text
-                  style={{ fontSize: 18, fontWeight: "800", color: "#F97316" }}
+                  style={{ fontSize: 17, fontWeight: "800", color: "#F97316" }}
+                  numberOfLines={1} adjustsFontSizeToFit
                 >
                   {summary.totalFloodHours}h
                 </Text>

@@ -34,6 +34,7 @@ interface Props {
   selectedStation: any;
   selectedStationId: string | null;
   selectedCommunityReport: any;
+  showCommunityReportSheet: boolean;
   areaError: any;
   showWarningsSheet: boolean;
   showResultCard: boolean;
@@ -108,6 +109,7 @@ export function MapSheets({
   selectedStation,
   selectedStationId,
   selectedCommunityReport,
+  showCommunityReportSheet,
   areaError,
   showWarningsSheet,
   showResultCard,
@@ -215,7 +217,7 @@ export function MapSheets({
             onDelete={onDeleteArea}
             onViewDetails={() => {
               onCloseAreaCard();
-              router.push({ pathname: "/areas/[id]", params: { id: selectedArea.id } });
+              router.push({ pathname: "/areas/[id]", params: { id: selectedArea.id, source: "map" } });
             }}
           />
         )}
@@ -227,7 +229,7 @@ export function MapSheets({
       </MapBottomSheet>
 
       {/* Community Report */}
-      <MapBottomSheet isOpen={!!selectedCommunityReport && !nav.isNavigating} onClose={onCloseCommunityReport} snapPoints={["60%", "90%"]}>
+      <MapBottomSheet isOpen={showCommunityReportSheet && !nav.isNavigating} onClose={onCloseCommunityReport} snapPoints={["60%", "90%"]}>
         {selectedCommunityReport && <CommunityReportSheet report={selectedCommunityReport} onClose={onCloseCommunityReport} />}
       </MapBottomSheet>
 

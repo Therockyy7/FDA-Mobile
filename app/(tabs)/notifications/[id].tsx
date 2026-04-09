@@ -19,15 +19,26 @@ export default function NotificationDetailScreen() {
   const queryClient = useQueryClient();
 
   const notification = useMemo(() => {
-    // Search within React Query cache since we don't have a single GET /id endpoint
+    // Search within React Query cache — handles both useQuery (flat)
+    // and useInfiniteQuery (pages) data structures
     const queries = queryClient.getQueriesData({
       queryKey: ["notifications", "history"],
     });
     for (const [, queryData] of queries) {
       if (!queryData) continue;
-      const pages = (queryData as any).pages;
-      if (pages) {
-        const found = pages
+      const data = queryData as any;
+
+      // useQuery structure: data.notifications is a flat array
+      if (data?.notifications && Array.isArray(data.notifications)) {
+        const found = data.notifications.find(
+          (n: NotificationItem) => n.notificationId === id,
+        );
+        if (found) return found as NotificationItem;
+      }
+
+      // useInfiniteQuery structure: data.pages[].notifications
+      if (data?.pages && Array.isArray(data.pages)) {
+        const found = data.pages
           .flatMap((p: any) => p.notifications || [])
           .find((n: NotificationItem) => n.notificationId === id);
         if (found) return found as NotificationItem;

@@ -1,7 +1,6 @@
 // app/(tabs)/home.tsx
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
   StatusBar,
@@ -9,10 +8,12 @@ import {
 } from "react-native";
 
 import { TabLoadingScreen } from "~/components/ui/TabLoadingScreen";
-import { Text } from "~/components/ui/text";
 import { CommunityBanner } from "~/features/home/components/CommunityBanner";
 import { HomeHeader } from "~/features/home/components/HomeHeader";
-import { WeatherInsightsSection } from "~/features/home/components/WeatherInsightsSection";
+import {
+  WeatherInsightsSection,
+  WeatherInsightsSkeleton,
+} from "~/features/home/components/WeatherInsightsSection";
 import { useHomeWeatherData } from "~/features/home/hooks/useHomeWeatherData";
 import { DistrictsForecastCard } from "~/features/prediction/components/DistrictsForecastCard";
 
@@ -70,12 +71,7 @@ export default function HomeScreen() {
 
         {/* ═══ WEATHER SECTION ═══ */}
         {weatherLoading && !meteo ? (
-          <View className="px-4 py-8 items-center">
-            <ActivityIndicator size="small" color="#06B6D4" />
-            <Text className="text-slate-400 text-xs mt-2">
-              Đang tải dữ liệu thời tiết...
-            </Text>
-          </View>
+          <WeatherInsightsSkeleton />
         ) : meteo ? (
           <WeatherInsightsSection
             meteo={meteo}

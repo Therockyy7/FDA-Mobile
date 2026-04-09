@@ -198,12 +198,12 @@ export default function AreasScreen() {
     setDeletingArea(null);
   }, []);
 
-  // Edit area - navigate to map with edit mode
+  // Edit area - navigate to map with edit mode (like AreaActionBar)
   const handleEdit = useCallback(
     (area: Area) => {
-      // Navigate to map with area's position and edit mode
+      // Navigate to Map tab with edit params → triggers handleStartEditAreaFromParams
       router.push({
-        pathname: "/" as any,
+        pathname: "/(tabs)/map" as any,
         params: {
           editAreaId: area.id,
           editLat: area.latitude.toString(),

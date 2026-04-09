@@ -19,6 +19,8 @@ export function useCommunityReportsQuery(
       return res.reports;
     },
     enabled: enabled && params !== null,
-    staleTime: 30_000,
+    staleTime: 0,           // Always consider data stale → refetch on focus
+    refetchInterval: 60_000, // Auto-refresh every 60s while map is open
+    refetchOnWindowFocus: true,
   });
 }

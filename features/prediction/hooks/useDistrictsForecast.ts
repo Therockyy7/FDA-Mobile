@@ -1,25 +1,31 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PredictionService } from "~/features/prediction/services/prediction.service";
 import type {
-  DistrictsForecastResponse,
   DistrictForecast,
+  DistrictsForecastResponse,
 } from "~/features/prediction/types/districts-forecast.types";
 
 export type ForecastHorizon = "now" | "1h" | "3h" | "6h" | "9h" | "12h" | "24h";
 
 export const FORECAST_HORIZONS: ForecastHorizon[] = [
-  "now", "1h", "3h", "6h", "9h", "12h", "24h",
+  "now",
+  "1h",
+  "3h",
+  "6h",
+  "9h",
+  "12h",
+  "24h",
 ];
 
 // Static fallback color mapping
 const RISK_COLORS: Record<string, { hex: string; bg: string }> = {
-  'Cao':  { hex: '#DC2626', bg: 'rgba(239, 68, 68, 0.4)' },
-  'Cam':  { hex: '#EA580C', bg: 'rgba(249, 115, 22, 0.4)' },
-  'Vang': { hex: '#CA8A04', bg: 'rgba(234, 179, 8, 0.4)' },
-  'Thấp': { hex: '#16A34A', bg: 'rgba(34, 197, 94, 0.4)' },
+  Cao: { hex: "#DC2626", bg: "rgba(239, 68, 68, 0.4)" },
+  Cam: { hex: "#EA580C", bg: "rgba(249, 115, 22, 0.4)" },
+  Vang: { hex: "#CA8A04", bg: "rgba(234, 179, 8, 0.4)" },
+  Thấp: { hex: "#16A34A", bg: "rgba(34, 197, 94, 0.4)" },
 };
 
-const DEFAULT_COLOR = RISK_COLORS['Thấp'];
+const DEFAULT_COLOR = RISK_COLORS["Thấp"];
 
 /**
  * Get the color for a district at a specific forecast horizon.
@@ -69,7 +75,8 @@ export const useDistrictsForecast = (enabled: boolean = true) => {
     try {
       setLoading(true);
       setError(null);
-      const result = await PredictionService.getDistrictsForecast("1,3,6,9,12,24");
+      const result =
+        await PredictionService.getDistrictsForecast("1,3,6,9,12,24");
       setData(result);
     } catch (err: any) {
       setError(err.message || "Không thể tải dự báo quận/huyện");

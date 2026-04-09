@@ -33,13 +33,14 @@ const AppSettingsSection: React.FC<Props> = ({
   };
 
   return (
-    <View style={{ padding: 16 }}>
+    <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
       <Text
         style={{
           fontSize: 18,
           fontWeight: "800",
           color: colors.title,
-          marginBottom: 16,
+          marginBottom: 12,
+          marginLeft: 4,
         }}
       >
         Cài đặt ứng dụng
@@ -48,10 +49,15 @@ const AppSettingsSection: React.FC<Props> = ({
       <View
         style={{
           backgroundColor: colors.background,
-          borderRadius: 16,
+          borderRadius: 20,
           borderWidth: 1,
           borderColor: colors.border,
           overflow: "hidden",
+          shadowColor: darkMode ? "#000" : "#64748B",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: darkMode ? 0.3 : 0.04,
+          shadowRadius: 10,
+          elevation: 2,
         }}
       >
         {/* Dark Mode */}

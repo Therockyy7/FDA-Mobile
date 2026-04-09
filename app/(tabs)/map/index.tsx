@@ -1,8 +1,10 @@
 // app/(tabs)/map/index.tsx
 // Thin orchestrator: wires hooks into a single state object, renders components.
 
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
-import { StatusBar, View } from "react-native";
+import { StatusBar, TouchableOpacity, View } from "react-native";
 
 import {
   MapLoadingOverlay,
@@ -10,20 +12,24 @@ import {
   PickOnMapOverlay,
   StreetViewHint,
 } from "~/features/map/components/overlays";
+import { Text } from "~/components/ui/text";
 import { ewkbToLatLngArray, getBoundsFromCoords } from "~/features/map/lib/ewkb-parser";
 import type { LatLng } from "~/features/map/types/safe-route.types";
 
-import { CommunityFloatingHint } from "~/features/map/components/CommunityFloatingHint";
 import { MapContent } from "~/features/map/components/MapContent";
 import { MapFloatingUI } from "~/features/map/components/MapFloatingUI";
 import { MapHeaderSwitch } from "~/features/map/components/MapHeaderSwitch";
 import { MapSheets } from "~/features/map/components/MapSheets";
 import { useMapScreen } from "~/features/map/hooks/useMapScreen";
 import { useMapScreenState } from "~/features/map/hooks/useMapScreenState";
+import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
 
 export default function MapScreen() {
+  // Single aggregated state
   const s = useMapScreenState();
+  const router = useRouter();
 
+  // All handlers — useMapScreen now accepts the full MapScreenState
   const {
     handleStartNavigation,
     handleStopNavigation,
@@ -36,8 +42,10 @@ export default function MapScreen() {
     handleRoutePress,
     handleFloodMarkerPress,
     handleCommunityReportPress,
+    handleCloseCommunityReport,
     handleRegionChange,
     handleMapTouchStart,
+
   } = useMapScreen({
     settings: s.settings,
     refreshFloodSeverity: s.refreshFloodSeverity,
@@ -78,16 +86,19 @@ export default function MapScreen() {
     setShowResultCard: s.setShowResultCard,
     setShowNavSearch: s.setShowNavSearch,
     setIsLoading: s.setIsLoading,
+    setShowCommunityReportSheet: s.setShowCommunityReportSheet,
+    setShowWarningsSheet: s.setShowWarningsSheet,
+    setAreaDisplayMode: s.setAreaDisplayMode,
+    adminAreas: s.adminAreas,
     viewMode: s.viewMode,
     params: s.params,
     floodSeverity: s.floodSeverity,
   });
 
+
   const handleSelectWard = (area: any) => {
     s.setShowWardSelectionSheet(false);
     s.setSelectedAdminArea(area);
-    
-    // Parse coordinates and animate map
     if (area.geometry) {
       const coords = ewkbToLatLngArray(area.geometry);
       const bounds = getBoundsFromCoords(coords);
@@ -99,14 +110,10 @@ export default function MapScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0B1A33" }}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="transparent"
-        translucent
-      />
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      {/* Header */}
-      {!s.selectedCommunityReport && (
+      {/* Header — hide when community report sheet is open or viewing AI Prediction Map */}
+      {!s.showCommunityReportSheet && !s.params.returnToPrediction && (
         <MapHeaderSwitch
         navIsNavigating={s.nav.isNavigating}
         safeRouteHasResults={s.safeRoute.hasResults}
@@ -168,10 +175,55 @@ export default function MapScreen() {
       )}
 
       <View style={{ flex: 1, position: "relative" }}>
+        {/* Return to Prediction Button */}
+        {s.params.returnToPrediction && !s.nav.isNavigating && (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => {
+              const dest = s.params.returnToPrediction;
+              if (!dest) return;
+              
+              // Clear Map view states so that pressing the back button in Prediction screen
+              // shows the original clean Map without the AI layers
+              s.setSelectedAdminArea(null);
+              s.setAreaDisplayMode("user");
+              useSatelliteFloodStore.getState().clear();
+              
+              // Move forward to the prediction screen
+              router.push(`/prediction/${dest}` as any);
+              
+              // Clear URL search params visually and state-wise
+              router.setParams({ returnToPrediction: "", satelliteBbox: "" });
+            }}
+            style={{
+              position: "absolute",
+              top: StatusBar.currentHeight ? StatusBar.currentHeight + 16 : 56,
+              left: 16,
+              zIndex: 100,
+              backgroundColor: "#A855F7",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              paddingVertical: 10,
+              paddingHorizontal: 16,
+              borderRadius: 100,
+              shadowColor: "#A855F7",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8,
+            }}
+          >
+            <Ionicons name="arrow-back" size={18} color="#FFFFFF" />
+            <Text style={{ fontSize: 13, fontWeight: "800", color: "#FFFFFF" }}>
+              Quay lại AI
+            </Text>
+          </TouchableOpacity>
+        )}
         {/* Loading Overlay */}
         <MapLoadingOverlay visible={s.isLoading} />
 
-        {/* Navigation HUD (during active navigation) */}
+        {/* Navigation HUD */}
         {s.nav.isNavigating && (
           <NavigationHUD
             instruction={s.nav.currentInstruction}
@@ -224,6 +276,7 @@ export default function MapScreen() {
           streetViewLocation={s.streetViewLocation}
           floodSeverity={s.floodSeverity}
           communityReports={s.communityReports}
+          selectedCommunityReport={s.selectedCommunityReport}
           onRegionChangeComplete={handleRegionChange}
           onLongPress={s.handleMapLongPress}
           onPress={handleMapPress}
@@ -241,8 +294,8 @@ export default function MapScreen() {
           onDraftAreaCenterChange={s.setDraftAreaCenter}
         />
 
-        {/* Floating UI */}
-        {(!s.showWardSelectionSheet && !s.selectedCommunityReport) && (
+        {/* Floating UI — hide when sheet open, ward selection, or viewing AI Prediction Map */}
+        {!s.showWardSelectionSheet && !s.showCommunityReportSheet && !s.params.returnToPrediction && (
           <MapFloatingUI
             selectedRoute={s.selectedRoute}
             selectedZone={s.selectedZone}
@@ -277,50 +330,71 @@ export default function MapScreen() {
         )}
 
         {/* Street View Hint */}
-        <StreetViewHint
-          visible={!!s.streetViewLocation && !s.isRoutingUIVisible}
-        />
+        <StreetViewHint visible={!!s.streetViewLocation && !s.isRoutingUIVisible} />
 
-        {/* Community Floating Hint */}
-        <CommunityFloatingHint
-          visible={
-            !s.isRoutingUIVisible &&
-            !s.nav.isNavigating &&
-            !s.selectedArea &&
-            !s.selectedRoute &&
-            !s.showCreateAreaSheet &&
-            !s.showWardSelectionSheet &&
-            !s.selectedCommunityReport
-          }
-        />
+        {/* Camera FAB — quick flood report */}
+        {!s.isRoutingUIVisible &&
+          !s.nav.isNavigating &&
+          !s.selectedArea &&
+          !s.selectedRoute &&
+          !s.showCreateAreaSheet &&
+          !s.showWardSelectionSheet &&
+          !s.showCommunityReportSheet &&
+          !s.params.returnToPrediction && (
+          <TouchableOpacity
+            onPress={() => router.push("/community/create-post?openCamera=true" as any)}
+            activeOpacity={0.85}
+            style={{
+              position: "absolute",
+              left: 16,
+              bottom: 24,
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              backgroundColor: "#6366F1",
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#6366F1",
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.4,
+              shadowRadius: 10,
+              elevation: 8,
+              borderWidth: 2.5,
+              borderColor: "white",
+            }}
+          >
+            <Ionicons name="camera" size={26} color="white" />
+          </TouchableOpacity>
+        )}
 
-        {/* Hide all sheets during navigation */}
-        {!s.nav.isNavigating && (
+        {/* Sheets */}
+        {!s.nav.isNavigating && !s.params.returnToPrediction && (
           <MapSheets
-            selectedArea={s.selectedArea}
-            selectedRoute={s.selectedRoute}
-            showDetailPanels={s.showDetailPanels}
-            selectedStation={s.selectedStation}
-            selectedStationId={s.selectedStationId}
-            selectedCommunityReport={s.selectedCommunityReport}
-            areaError={s.areaError}
-            showWarningsSheet={s.showWarningsSheet}
-            showResultCard={s.showResultCard}
             showLayerSheet={s.showLayerSheet}
+            selectedStationId={s.selectedStationId}
+            selectedArea={s.selectedArea}
             isAdjustingRadius={s.isAdjustingRadius}
-            draftAreaRadius={s.draftAreaRadius}
-            editingArea={s.editingArea}
-            draftAddress={s.draftAddress}
             showCreateAreaSheet={s.showCreateAreaSheet}
             isCreatingArea={s.isCreatingArea}
+            draftAreaRadius={s.draftAreaRadius}
+            editingArea={s.editingArea}
             showCreationOptions={s.showCreationOptions}
-            isLoadingLocation={s.isLoadingLocation}
-            isLoadingSearch={s.isLoadingSearch}
             showAddressSearch={s.showAddressSearch}
+            draftAddress={s.draftAddress}
             showPremiumLimitModal={s.showPremiumLimitModal}
             currentAreaCount={s.currentAreaCount}
             freeAreaLimit={s.freeAreaLimit}
             isCheckingLimit={s.isCheckingLimit}
+            isLoadingLocation={s.isLoadingLocation}
+            isLoadingSearch={s.isLoadingSearch}
+            areaError={s.areaError}
+            selectedStation={s.selectedStation}
+            showWarningsSheet={s.showWarningsSheet}
+            showResultCard={s.showResultCard}
+            selectedRoute={s.selectedRoute}
+            showDetailPanels={s.showDetailPanels}
+            selectedCommunityReport={s.selectedCommunityReport}
+            showCommunityReportSheet={s.showCommunityReportSheet}
             showAdminAreaConfirmModal={s.showAdminAreaConfirmModal}
             selectedAdminArea={s.selectedAdminArea}
             showWardSelectionSheet={s.showWardSelectionSheet}
@@ -330,12 +404,12 @@ export default function MapScreen() {
             nav={s.nav}
             router={s.router}
             isUsingGPSOrigin={s.isUsingGPSOrigin}
-            onCloseAreaCard={() => s.setSelectedArea(null)}
+            onCloseAreaCard={s.handleCloseAreaCard}
             onStartEditArea={s.handleStartEditArea}
             onDeleteArea={s.handleDeleteArea}
             onCloseStation={() => s.setSelectedStationId(null)}
             onCloseRoute={() => s.setSelectedRoute(null)}
-            onCloseCommunityReport={() => s.setSelectedCommunityReport(null)}
+            onCloseCommunityReport={handleCloseCommunityReport}
             onCloseWarnings={() => s.setShowWarningsSheet(false)}
             onSelectRoute={handleSelectRoute}
             onExitRouting={handleCloseRouting}

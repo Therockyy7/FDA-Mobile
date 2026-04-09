@@ -262,52 +262,208 @@ export interface ModelInfo {
   confidence_level: string;
 }
 
-// ==================== FULL PREDICTION RESPONSE ====================
+// ==================== NEW API WRAPPER FORMAT ====================
+// API mới trả về { success: true, message: string, data: PredictionData }
+// Đây là schema dựa trên response thực tế từ:
+// POST /api/v1/area/{areaId}/predict/flood-risk-ensemble
 
-export interface PredictionResponse {
-  status: string;
-  area_id: string;
-  area_name: string;
-  administrative_level: string;
-  timestamp: string;
-
-  // Core prediction
-  ensemble_prediction: EnsemblePrediction;
-  valid_period: ValidPeriod;
-
-  // Assessment
-  impact_assessment: ImpactAssessment;
-  confidence_breakdown: ConfidenceBreakdown;
-  discrepancy_analysis: DiscrepancyAnalysis;
-  action_plan: ActionPlan;
-
-  // Engine outputs
-  ai_engine_output: AiEngineOutput;
-  physics_engine_output: PhysicsEngineOutput;
-
-  // Data context
-  data_quality: DataQuality;
-  community_risk?: CommunityRisk;
-  input_data: InputData;
-  weighting_strategy: WeightingStrategy;
-  interpretability: Interpretability;
-
-  // Shadow / HITL
-  shadow_mode: ShadowMode;
-  human_in_the_loop: {
-    requires_manual_review: boolean;
-    review_reason: string;
-  };
-
-  // AI text
-  ai_consultant_advice: string;
-
-  // Model info
-  model_info: ModelInfo;
-
-  // Legacy / satellite
-  satellite_truth: any;
-  discrepancy_alert: string;
-  decision_logic: Record<string, any>;
-  area_logic: Record<string, any>;
+export interface ForecastWindow {
+  horizon: string;         // "3h" | "5h" | "7h"
+  probability: number;
+  status: string;          // "Normal" | "Moderate" | "High" etc.
+  severityLevel: number;
 }
+
+export interface ValidPeriodNew {
+  start: string;
+  end: string;
+  durationHours: number;
+  nextUpdateExpected: string;
+}
+
+export interface AccuracyMetrics {
+  baseline_accuracy: string;
+  phase_1_accuracy: string;
+  phase_2_accuracy: string;
+  phase_3_accuracy: string;
+  total_improvement: string;
+}
+
+export interface WeatherComponent {
+  precipitation_24h_mm: number;
+  precipitation_6h_mm: number;
+  precipitation_3h_mm: number;
+  avg_humidity_pct: number;
+  max_wind_ms: number;
+  precip_risk: number;
+  short_term_risk: number;
+  precipitation_probability: number;
+  weather_code: number;
+  contribution: number;
+  key_drivers: string[];
+}
+
+export interface SaturationComponent {
+  saturation_level: number;
+  status: string;
+  infiltration_capacity: number;
+  runoff_factor: number;
+  soil_moisture_m3m3: number;
+  elevation_m: number;
+  slope_degrees: number;
+  distance_to_river: number;
+  drainage_risk: number;
+  source: string;
+  date: string;
+  confidence: number;
+  method: string;
+  note: string;
+}
+
+export interface TerrainComponent {
+  elevation_m: number;
+  slope_degrees: number;
+  aspect_degrees: number;
+  flow_accumulation: number;
+  drainage_risk: number;
+  flood_potential: string;
+  distance_to_river: number;
+  source: string;
+  confidence: number;
+  resolution_m: number;
+  computed_at: string;
+}
+
+export interface HistoricalSimilarityMatch {
+  event_name: string;
+  event_date: string;
+  event_description: string;
+  event_type: string;
+  severity: string;
+  casualties: number;
+  economic_damage_vnd: string;
+  verified_flood_area_km2: number;
+  areas_affected_count: number;
+  distance: number;
+  similarity_score: number;
+}
+
+export interface HistoricalSimilarityComponent {
+  best_match: string;
+  best_match_date: string;
+  best_match_similarity: number;
+  best_match_type: string;
+  best_match_severity: string;
+  similarity_signal: number;
+  top_matches: HistoricalSimilarityMatch[];
+}
+
+export interface AiPredictionComponents {
+  weather: WeatherComponent;
+  saturation: SaturationComponent;
+  terrain: TerrainComponent;
+  historical_similarity: HistoricalSimilarityComponent;
+}
+
+export interface AiPredictionImpact {
+  estimated_depth_m: number;
+  estimated_area_affected: string;
+  recommendation: string;
+}
+
+export interface AiPrediction {
+  ensembleProbability: number;
+  riskLevel: string;           // "MODERATE" | "HIGH" | "LOW" etc.
+  confidence: number;
+  accuracyMetrics: AccuracyMetrics;
+  components: AiPredictionComponents;
+  impact: AiPredictionImpact;
+}
+
+export interface Forecast {
+  validPeriod: ValidPeriodNew;
+  windows: ForecastWindow[];
+  aiPrediction: AiPrediction;
+}
+
+export interface ContributingStation {
+  stationId: string;
+  stationCode: string;
+  distance: number;
+  waterLevel: number;
+  severity: string;
+  weight: number;
+  street: {
+    id: string;
+    name: string;
+    code: string;
+  };
+  ward: {
+    id: string;
+    name: string;
+    code: string;
+  };
+}
+
+export interface CommunityReport {
+  id: string;
+  latitude: number;
+  longitude: number;
+  description: string;
+  severity: string;
+  trustScore: number;
+  status: string;
+  createdAt: string;
+}
+
+export interface AdministrativeArea {
+  id: string;
+  name: string;
+  level: string;
+  code: string;
+  parentId: string | null;
+  parentName: string | null;
+}
+
+export interface AiConsultant {
+  provider: string;
+  finalSummary: string;
+}
+
+export interface SatelliteVerification {
+  available: boolean;
+  source: string;
+  status: string;
+  message: string;
+  metadata: any | null;
+  visuals: {
+    thumbnail_url: string | null;
+    raw_satellite_tif: string | null;
+    geojson_url: string | null;
+    cloudinary_enabled: boolean;
+  };
+}
+
+// PredictionResponse = the `data` field inside the API envelope
+export interface PredictionResponse {
+  administrativeAreaId: string;
+  status: string;            // "Moderate" | "High" | "Normal" etc.
+  severityLevel: number;
+  summary: string;
+  contributingStations: ContributingStation[];
+  communityReports: CommunityReport[];
+  evaluatedAt: string;
+  administrativeArea: AdministrativeArea;
+  geoJson: any | null;
+  forecast: Forecast;
+  aiConsultant: AiConsultant;
+  satelliteVerification: SatelliteVerification;
+}
+
+// Top-level API envelope
+export interface PredictionApiResponse {
+  success: boolean;
+  message: string;
+  data: PredictionResponse;
+}
+

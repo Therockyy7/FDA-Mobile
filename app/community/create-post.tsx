@@ -11,20 +11,24 @@ import {
 import { Text } from "~/components/ui/text";
 import { Ionicons } from "@expo/vector-icons";
 
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from "expo-location";
 
 import { CustomCamera, CapturedMedia } from "~/components/CustomCamera";
+import { useQueryClient } from "@tanstack/react-query";
 import { CommunityService } from "~/features/community/services/community.service";
+import { COMMUNITY_REPORTS_QUERY_KEY } from "~/features/map/hooks/queries/useCommunityReportsQuery";
 
 type Severity = "low" | "medium" | "high";
 
 export default function CreatePostScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { openCamera } = useLocalSearchParams<{ openCamera?: string }>();
   const [content, setContent] = useState("");
   const [severity, setSeverity] = useState<Severity>("medium");
-  const [showCamera, setShowCamera] = useState(false);
+  const [showCamera, setShowCamera] = useState(openCamera === "true");
   const [mediaList, setMediaList] = useState<CapturedMedia[]>([]);
   const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
   const [locationAddress, setLocationAddress] = useState<string>("");
@@ -137,20 +141,25 @@ export default function CreatePostScreen() {
           videos: videos.length > 0 ? videos : undefined,
         },
         (progressEvent) => {
-          if (progressEvent.total) {
-            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          if (progressEvent.total && progressEvent.total > 0) {
+            const percent = Math.min(
+              100,
+              Math.max(0, Math.round((progressEvent.loaded * 100) / progressEvent.total))
+            );
             setUploadProgress(percent);
           }
         }
       );
 
       if (response.success) {
+        // Invalidate map community reports so markers refresh immediately
+        queryClient.invalidateQueries({ queryKey: [COMMUNITY_REPORTS_QUERY_KEY] });
         Alert.alert(
           "Thành công",
           response.status === "hidden"
             ? "Báo cáo của bạn đã được ghi nhận nhưng sẽ được kiểm duyệt trước khi hiển thị."
             : "Báo cáo ngập lụt đã được đăng thành công!",
-          [{ text: "OK", onPress: () => router.back() }]
+          [{ text: "OK", onPress: () => router.replace("/community" as any) }]
         );
       } else {
         Alert.alert("Lỗi", response.message);

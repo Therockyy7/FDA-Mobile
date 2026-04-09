@@ -37,7 +37,7 @@ export function FloodZonePolygons({ floodSeverity }: FloodZonePolygonsProps) {
 
         return (
           <Polygon
-            key={`flood-zone-${properties.stationId}`}
+            key={`flood-zone-${properties.stationId}-${properties.severityLevel}-${properties.fillColor}`}
             coordinates={coordinates}
             fillColor={hexToRgba(properties.fillColor, properties.fillOpacity)}
             strokeColor={hexToRgba(properties.fillColor, 0.8)}

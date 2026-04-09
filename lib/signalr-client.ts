@@ -10,6 +10,28 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const SIGNALR_HUB_URL = process.env.EXPO_PUBLIC_SIGNALR_HUB_URL ?? "https://uat.fda.id.vn/hubs/flood-data";
 
 let connection: HubConnection | null = null;
+let startingPromise: Promise<void> | null = null;
+let consumerCount = 0;
+
+/**
+ * Increment consumer count and start the hub.
+ * Call this in useEffect on mount — prevents stopFloodHub() from running
+ * while any consumer (flood or area) is still alive.
+ */
+export async function retainFloodHub(): Promise<void> {
+  consumerCount++;
+  await startFloodHub();
+}
+
+/**
+ * Decrement consumer count. Stops the hub only when the last consumer releases.
+ */
+export async function releaseFloodHub(): Promise<void> {
+  consumerCount = Math.max(0, consumerCount - 1);
+  if (consumerCount === 0) {
+    await stopFloodHub();
+  }
+}
 
 /**
  * Get or create the SignalR hub connection singleton.
@@ -34,18 +56,32 @@ export function getFloodHubConnection(): HubConnection {
 
 /**
  * Start the connection if not already connected.
+ * Returns the HubConnection that is (or will be) Connected — callers must
+ * use this returned reference, NOT getFloodHubConnection(), because the
+ * singleton may be replaced by stopFloodHub() between start and invoke.
  */
-export async function startFloodHub(): Promise<void> {
+export async function startFloodHub(): Promise<HubConnection> {
   const conn = getFloodHubConnection();
-  if (conn.state === HubConnectionState.Disconnected) {
-    try {
-      await conn.start();
-      console.log("✅ SignalR: Connected to flood-data hub");
-    } catch (err) {
-      // Don't throw — let withAutomaticReconnect handle retries
-      console.warn("⚠️ SignalR: Failed to connect (will auto-retry)", err);
-    }
+
+  if (conn.state === HubConnectionState.Connected) return conn;
+
+  // Another caller already started — wait for the same promise
+  if (startingPromise) {
+    await startingPromise;
+    // Return the connection that was connected (may differ from current singleton)
+    return conn;
   }
+
+  if (conn.state === HubConnectionState.Disconnected) {
+    startingPromise = conn.start()
+      .then(() => { console.log("✅ SignalR: Connected to flood-data hub"); })
+      .catch((err) => { console.warn("⚠️ SignalR: Failed to connect (will auto-retry)", err); })
+      .finally(() => { startingPromise = null; });
+
+    await startingPromise;
+  }
+
+  return conn;
 }
 
 /**

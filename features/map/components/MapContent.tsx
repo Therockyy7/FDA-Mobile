@@ -96,7 +96,7 @@ export function MapContent({
     >
       {/* User Areas */}
       {viewMode === "zones" && areaDisplayMode === "user" && areas.map((area) => (
-        <AreaCircleOverlay key={area.id} area={area} isSelected={selectedArea?.id === area.id} onPress={() => onAreaPress(area)} />
+        <AreaCircleOverlay key={`${area.id}-${area.status}-${area.severityLevel}`} area={area} isSelected={selectedArea?.id === area.id} onPress={() => onAreaPress(area)} />
       ))}
 
       {/* Admin Areas (Only Selected) */}

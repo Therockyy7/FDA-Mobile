@@ -6,10 +6,18 @@ import { useFloodRealtimeStore } from "../../stores/useFloodRealtimeStore";
 import type {
   FloodSeverityFeature,
   FloodSeverityGeoJSON,
+  FloodZoneFeature,
   SensorUpdateData,
 } from "../../types/map-layers.types";
+import { SEVERITY_COLORS } from "../../types/map-layers.types";
 import type { FloodStatusParams } from "../../types/map-layers.types";
 import { useFloodSeverityQuery } from "../queries/useFloodSeverityQuery";
+
+// Map sensor severity → floodZone fillColor (same palette as SEVERITY_COLORS)
+const FLOOD_ZONE_SEVERITY_COLORS: Record<string, string> = {
+  warning: SEVERITY_COLORS.warning,   // "#F97316"
+  critical: SEVERITY_COLORS.critical, // "#EF4444"
+};
 
 /**
  * Merges real-time Zustand updates into the GeoJSON REST response.
@@ -25,7 +33,30 @@ function mergeRealtimeIntoGeoJSON(
   if (Object.keys(updates).length === 0) return base;
 
   const updatedFeatures = base.features.map((feature) => {
-    if (feature.geometry.type !== "Point") return feature;
+    // Update FloodZone polygon color when its station's severity changes
+    if (feature.geometry.type === "Polygon") {
+      const zone = feature as FloodZoneFeature;
+      const update = updates[zone.properties.stationId];
+      if (!update) return feature;
+
+      // If station severity dropped below warning, the zone should disappear —
+      // server will remove it on next REST fetch. For now keep the polygon but
+      // update its color to reflect the new severity.
+      const newFillColor =
+        FLOOD_ZONE_SEVERITY_COLORS[update.severity] ?? zone.properties.fillColor;
+
+      return {
+        ...zone,
+        properties: {
+          ...zone.properties,
+          severity: update.severity as FloodZoneFeature["properties"]["severity"],
+          severityLevel: update.severityLevel,
+          waterLevel: update.waterLevel,
+          fillColor: newFillColor,
+        },
+      } as FloodZoneFeature;
+    }
+
     const f = feature as FloodSeverityFeature;
     const update = updates[f.properties.stationId];
     if (!update) return feature;

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { PredictionService } from "~/features/prediction/services/prediction.service";
 import type {
   DistrictForecast,
   DistrictsForecastResponse,
@@ -75,9 +74,8 @@ export const useDistrictsForecast = (enabled: boolean = true) => {
     try {
       setLoading(true);
       setError(null);
-      const result =
-        await PredictionService.getDistrictsForecast("1,3,6,9,12,24");
-      setData(result);
+      // const result = await PredictionService.getDistrictsForecast("1,3,6,9,12,24");
+      // setData(result);
     } catch (err: any) {
       setError(err.message || "Không thể tải dự báo quận/huyện");
     } finally {

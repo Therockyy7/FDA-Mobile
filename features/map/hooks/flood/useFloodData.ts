@@ -6,16 +6,16 @@ import { useFloodRealtimeStore } from "../../stores/useFloodRealtimeStore";
 import type {
   FloodSeverityFeature,
   FloodSeverityGeoJSON,
+  FloodStatusParams,
   FloodZoneFeature,
   SensorUpdateData,
 } from "../../types/map-layers.types";
 import { SEVERITY_COLORS } from "../../types/map-layers.types";
-import type { FloodStatusParams } from "../../types/map-layers.types";
 import { useFloodSeverityQuery } from "../queries/useFloodSeverityQuery";
 
 // Map sensor severity → floodZone fillColor (same palette as SEVERITY_COLORS)
 const FLOOD_ZONE_SEVERITY_COLORS: Record<string, string> = {
-  warning: SEVERITY_COLORS.warning,   // "#F97316"
+  warning: SEVERITY_COLORS.warning, // "#F97316"
   critical: SEVERITY_COLORS.critical, // "#EF4444"
 };
 
@@ -39,17 +39,22 @@ function mergeRealtimeIntoGeoJSON(
       const update = updates[zone.properties.stationId];
       if (!update) return feature;
 
-      // If station severity dropped below warning, the zone should disappear —
-      // server will remove it on next REST fetch. For now keep the polygon but
-      // update its color to reflect the new severity.
+      // If severity dropped below warning, remove the polygon immediately
+      // instead of waiting for the next REST fetch.
+      if (update.severity === "safe" || update.severity === "caution") {
+        return null;
+      }
+
       const newFillColor =
-        FLOOD_ZONE_SEVERITY_COLORS[update.severity] ?? zone.properties.fillColor;
+        FLOOD_ZONE_SEVERITY_COLORS[update.severity] ??
+        zone.properties.fillColor;
 
       return {
         ...zone,
         properties: {
           ...zone.properties,
-          severity: update.severity as FloodZoneFeature["properties"]["severity"],
+          severity:
+            update.severity as FloodZoneFeature["properties"]["severity"],
           severityLevel: update.severityLevel,
           waterLevel: update.waterLevel,
           fillColor: newFillColor,
@@ -118,7 +123,7 @@ function mergeRealtimeIntoGeoJSON(
 
   return {
     ...base,
-    features: [...updatedFeatures, ...newFeatures],
+    features: [...updatedFeatures.filter((f) => f !== null), ...newFeatures],
     metadata: {
       ...base.metadata,
       totalStations: base.metadata.totalStations + newFeatures.length,
@@ -130,7 +135,12 @@ export function useFloodData(
   params: FloodStatusParams | null | undefined,
   enabled: boolean,
 ) {
-  const { data: restData, isLoading, isFetching, refetch } = useFloodSeverityQuery(params ?? null, enabled);
+  const {
+    data: restData,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useFloodSeverityQuery(params ?? null, enabled);
   const realtimeUpdates = useFloodRealtimeStore((s) => s.updates);
 
   const floodSeverity = useMemo(

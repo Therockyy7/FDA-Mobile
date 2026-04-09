@@ -2,20 +2,24 @@
 // Aggregates all state from hooks into a single object.
 // Reduces prop-drilling across MapScreen → child components.
 
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import type { NearbyFloodReport, NearbyFloodReportsParams } from "~/features/community/services/community.service";
+import type {
+  NearbyFloodReport,
+  NearbyFloodReportsParams,
+} from "~/features/community/services/community.service";
 
 import { useControlArea } from "~/features/areas/hooks/useControlArea";
+import { useRoutingUI, useSafeRoute } from "~/features/map/hooks/routing";
 import { useMapCamera } from "~/features/map/hooks/useMapCamera";
 import { useMapData } from "~/features/map/hooks/useMapData";
 import { useMapDisplay } from "~/features/map/hooks/useMapDisplay";
 import { useNavigation } from "~/features/map/hooks/useNavigation";
-import { useRoutingUI, useSafeRoute } from "~/features/map/hooks/routing";
 import { useStreetView } from "~/features/map/hooks/useStreetView";
 import { useUserLocation } from "~/features/map/hooks/useUserLocation";
-import type { FloodSeverityFeature } from "~/features/map/types/map-layers.types";
 import type { MapType } from "~/features/map/types/map-display.types";
+import type { FloodSeverityFeature } from "~/features/map/types/map-layers.types";
+import { isPointFeature } from "~/features/map/types/map-layers.types";
 import type { LatLng } from "~/features/map/types/safe-route.types";
 
 export interface MapScreenState {
@@ -204,19 +208,38 @@ export function useMapScreenState(): MapScreenState {
   const [isLoading, setIsLoading] = useState(true);
   const [showLayerSheet, setShowLayerSheet] = useState(false);
   const [showNavSearch, setShowNavSearch] = useState(false);
-  const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
-  const [areaDisplayMode, setAreaDisplayMode] = useState<"user" | "admin">("user");
-  const [showAdminAreaConfirmModal, setShowAdminAreaConfirmModal] = useState(false);
+  const [selectedStationId, setSelectedStationId] = useState<string | null>(
+    null,
+  );
+  const [areaDisplayMode, setAreaDisplayMode] = useState<"user" | "admin">(
+    "user",
+  );
+  const [showAdminAreaConfirmModal, setShowAdminAreaConfirmModal] =
+    useState(false);
   const [selectedAdminArea, setSelectedAdminArea] = useState<any>(null);
   const [showResultCard, setShowResultCard] = useState(false);
   const [showWarningsSheet, setShowWarningsSheet] = useState(false);
   // Community report state — DECOUPLED: selection vs sheet visibility
-  const [selectedCommunityReport, setSelectedCommunityReport] = useState<NearbyFloodReport | null>(null);
-  const [showCommunityReportSheet, setShowCommunityReportSheet] = useState(false);
+  const [selectedCommunityReport, setSelectedCommunityReport] =
+    useState<NearbyFloodReport | null>(null);
+  const [showCommunityReportSheet, setShowCommunityReportSheet] =
+    useState(false);
   const [showWardSelectionSheet, setShowWardSelectionSheet] = useState(false);
 
   // Map camera — needed for communityParams calculation
-  const { mapRef, region, is3DEnabled, camera, onRegionChangeComplete, toggle3DView, rotateCamera, zoomIn, zoomOut, goToMyLocation, focusOnRoute } = useMapCamera();
+  const {
+    mapRef,
+    region,
+    is3DEnabled,
+    camera,
+    onRegionChangeComplete,
+    toggle3DView,
+    rotateCamera,
+    zoomIn,
+    zoomOut,
+    goToMyLocation,
+    focusOnRoute,
+  } = useMapCamera();
 
   // Derive community params from current map region so markers load for current viewport
   const communityParams = useMemo<NearbyFloodReportsParams | undefined>(() => {
@@ -245,35 +268,112 @@ export function useMapScreenState(): MapScreenState {
 
   // Safe route
   const safeRoute = useSafeRoute();
-  const { selectedZone, setSelectedZone, selectedRoute, setSelectedRoute, showDetailPanels, setShowDetailPanels } = safeRoute;
+  const {
+    selectedZone,
+    setSelectedZone,
+    selectedRoute,
+    setSelectedRoute,
+    showDetailPanels,
+    setShowDetailPanels,
+  } = safeRoute;
 
   // User location
-  const { location: userLocation, permissionGranted: locationPermission } = useUserLocation();
+  const { location: userLocation, permissionGranted: locationPermission } =
+    useUserLocation();
 
   // Navigation
   const nav = useNavigation({ route: safeRoute.getSelectedRoute(), mapRef });
 
   // Street view
-  const { streetViewLocation, setStreetViewLocation, openStreetView, handleMapLongPress } = useStreetView();
+  const {
+    streetViewLocation,
+    setStreetViewLocation,
+    openStreetView,
+    handleMapLongPress,
+  } = useStreetView();
 
   // Routing UI
-  const { isRoutingUIVisible, openRouting, closeRouting, transportMode, setTransportMode, originText, setOriginText, startCoord, setStartCoord, destinationText, setDestinationText, endCoord, setEndCoord, isUsingGPSOrigin, selectGPSAsOrigin, isUsingGPSDest, selectGPSAsDestination, pickingTarget, isPickingOnMap, startPickingOrigin, startPickingDestination, cancelPicking, setPointFromMap, swapOriginDestination, resetRouting } = useRoutingUI();
+  const {
+    isRoutingUIVisible,
+    openRouting,
+    closeRouting,
+    transportMode,
+    setTransportMode,
+    originText,
+    setOriginText,
+    startCoord,
+    setStartCoord,
+    destinationText,
+    setDestinationText,
+    endCoord,
+    setEndCoord,
+    isUsingGPSOrigin,
+    selectGPSAsOrigin,
+    isUsingGPSDest,
+    selectGPSAsDestination,
+    pickingTarget,
+    isPickingOnMap,
+    startPickingOrigin,
+    startPickingDestination,
+    cancelPicking,
+    setPointFromMap,
+    swapOriginDestination,
+    resetRouting,
+  } = useRoutingUI();
 
   // Map display
-  const { mapType, viewMode, setViewMode, showLegend, toggleLegend, stats, handleMapTypeChange } = useMapDisplay();
+  const {
+    mapType,
+    viewMode,
+    setViewMode,
+    showLegend,
+    toggleLegend,
+    stats,
+    handleMapTypeChange,
+  } = useMapDisplay();
 
   // Area control
 
   const {
-    selectedArea, isAdjustingRadius, showCreateAreaSheet, isCreatingArea, draftAreaCenter, draftAreaRadius,
-    editingArea, showCreationOptions, showAddressSearch,
-    draftAddress, setSelectedArea, setDraftAreaRadius, setDraftAreaCenter, handleAreaPress, handleCloseAreaCard,
-    handleDeleteArea, handleStartCreateArea, handleStartEditArea, handleStartEditAreaFromParams,
-    handleConfirmLocation, handleCancelCreateArea, handleCreateAreaSubmit, handleCloseCreateArea,
-    handleMapPress: handleAreaMapPress, handleOptionSelect, handleAddressSelected,
-    handleCloseCreationOptions, handleCloseAddressSearch, showPremiumLimitModal, currentAreaCount,
-    freeAreaLimit, handleClosePremiumLimitModal, handleUpgradePremium, isCheckingLimit, isLoadingLocation,
-    isLoadingSearch, areaError, handleCloseErrorModal, updateDraftAreaFromMapCenter,
+    selectedArea,
+    isAdjustingRadius,
+    showCreateAreaSheet,
+    isCreatingArea,
+    draftAreaCenter,
+    draftAreaRadius,
+    editingArea,
+    showCreationOptions,
+    showAddressSearch,
+    draftAddress,
+    setSelectedArea,
+    setDraftAreaRadius,
+    setDraftAreaCenter,
+    handleAreaPress,
+    handleCloseAreaCard,
+    handleDeleteArea,
+    handleStartCreateArea,
+    handleStartEditArea,
+    handleStartEditAreaFromParams,
+    handleConfirmLocation,
+    handleCancelCreateArea,
+    handleCreateAreaSubmit,
+    handleCloseCreateArea,
+    handleMapPress: handleAreaMapPress,
+    handleOptionSelect,
+    handleAddressSelected,
+    handleCloseCreationOptions,
+    handleCloseAddressSearch,
+    showPremiumLimitModal,
+    currentAreaCount,
+    freeAreaLimit,
+    handleClosePremiumLimitModal,
+    handleUpgradePremium,
+    isCheckingLimit,
+    isLoadingLocation,
+    isLoadingSearch,
+    areaError,
+    handleCloseErrorModal,
+    updateDraftAreaFromMapCenter,
   } = useControlArea({
     mapRef,
     region,
@@ -290,10 +390,12 @@ export function useMapScreenState(): MapScreenState {
   // Selected station
   const selectedStation = useMemo(() => {
     if (!selectedStationId || !floodSeverity?.features) return null;
-    return floodSeverity.features.find(
-      (f: FloodSeverityFeature): f is FloodSeverityFeature =>
-        f.geometry.type === "Point" && f.properties.stationId === selectedStationId
-    ) ?? null;
+
+    return (
+      (
+        floodSeverity.features.filter(isPointFeature) as FloodSeverityFeature[]
+      ).find((f) => f.properties.stationId === selectedStationId) ?? null
+    );
   }, [selectedStationId, floodSeverity]);
 
   const handleCloseAdminConfirm = () => {
@@ -301,38 +403,137 @@ export function useMapScreenState(): MapScreenState {
   };
 
   return {
-    router, params,
-    isLoading, setIsLoading,
-    showLayerSheet, setShowLayerSheet,
-    showNavSearch, setShowNavSearch,
-    selectedStationId, setSelectedStationId,
-    areaDisplayMode, setAreaDisplayMode,
-    showAdminAreaConfirmModal, setShowAdminAreaConfirmModal,
-    selectedAdminArea, setSelectedAdminArea,
-    showWardSelectionSheet, setShowWardSelectionSheet,
-    showResultCard, setShowResultCard,
-    showWarningsSheet, setShowWarningsSheet,
-    selectedCommunityReport, setSelectedCommunityReport,
-    showCommunityReportSheet, setShowCommunityReportSheet,
-    settings, areas, floodSeverity, communityReports, adminAreas,
-    refreshFloodSeverity, refreshAreas, refreshNearbyFloodReports, refreshCommunityReports,
+    router,
+    params,
+    isLoading,
+    setIsLoading,
+    showLayerSheet,
+    setShowLayerSheet,
+    showNavSearch,
+    setShowNavSearch,
+    selectedStationId,
+    setSelectedStationId,
+    areaDisplayMode,
+    setAreaDisplayMode,
+    showAdminAreaConfirmModal,
+    setShowAdminAreaConfirmModal,
+    selectedAdminArea,
+    setSelectedAdminArea,
+    showWardSelectionSheet,
+    setShowWardSelectionSheet,
+    showResultCard,
+    setShowResultCard,
+    showWarningsSheet,
+    setShowWarningsSheet,
+    selectedCommunityReport,
+    setSelectedCommunityReport,
+    showCommunityReportSheet,
+    setShowCommunityReportSheet,
+    settings,
+    areas,
+    floodSeverity,
+    communityReports,
+    adminAreas,
+    refreshFloodSeverity,
+    refreshAreas,
+    refreshNearbyFloodReports,
+    refreshCommunityReports,
     safeRoute,
-    selectedZone, setSelectedZone, selectedRoute, setSelectedRoute, showDetailPanels, setShowDetailPanels,
-    userLocation, locationPermission,
-    mapRef, region, is3DEnabled, camera, onRegionChangeComplete, toggle3DView, rotateCamera, zoomIn, zoomOut, goToMyLocation, focusOnRoute,
+    selectedZone,
+    setSelectedZone,
+    selectedRoute,
+    setSelectedRoute,
+    showDetailPanels,
+    setShowDetailPanels,
+    userLocation,
+    locationPermission,
+    mapRef,
+    region,
+    is3DEnabled,
+    camera,
+    onRegionChangeComplete,
+    toggle3DView,
+    rotateCamera,
+    zoomIn,
+    zoomOut,
+    goToMyLocation,
+    focusOnRoute,
     nav,
-    streetViewLocation, setStreetViewLocation, openStreetView, handleMapLongPress,
-    isRoutingUIVisible, openRouting, closeRouting, transportMode, setTransportMode, originText, setOriginText, startCoord, setStartCoord, destinationText, setDestinationText, endCoord, setEndCoord, isUsingGPSOrigin, selectGPSAsOrigin, isUsingGPSDest, selectGPSAsDestination, pickingTarget, isPickingOnMap, startPickingOrigin, startPickingDestination, cancelPicking, setPointFromMap, swapOriginDestination, resetRouting,
-    mapType, viewMode, setViewMode, showLegend, toggleLegend, stats, handleMapTypeChange,
-    selectedArea, isAdjustingRadius, showCreateAreaSheet, isCreatingArea, draftAreaCenter, draftAreaRadius,
-    editingArea, showCreationOptions, showAddressSearch, draftAddress,
-    setSelectedArea, setDraftAreaRadius, setDraftAreaCenter, handleAreaPress, handleCloseAreaCard,
-    handleDeleteArea, handleStartCreateArea, handleStartEditArea, handleStartEditAreaFromParams,
-    handleConfirmLocation, handleCancelCreateArea, handleCreateAreaSubmit, handleCloseCreateArea,
-    handleAreaMapPress, handleOptionSelect, handleAddressSelected, handleCloseCreationOptions,
-    handleCloseAddressSearch, showPremiumLimitModal, currentAreaCount, freeAreaLimit,
-    handleClosePremiumLimitModal, handleUpgradePremium, isCheckingLimit, isLoadingLocation,
-    isLoadingSearch, areaError, handleCloseErrorModal, updateDraftAreaFromMapCenter,
+    streetViewLocation,
+    setStreetViewLocation,
+    openStreetView,
+    handleMapLongPress,
+    isRoutingUIVisible,
+    openRouting,
+    closeRouting,
+    transportMode,
+    setTransportMode,
+    originText,
+    setOriginText,
+    startCoord,
+    setStartCoord,
+    destinationText,
+    setDestinationText,
+    endCoord,
+    setEndCoord,
+    isUsingGPSOrigin,
+    selectGPSAsOrigin,
+    isUsingGPSDest,
+    selectGPSAsDestination,
+    pickingTarget,
+    isPickingOnMap,
+    startPickingOrigin,
+    startPickingDestination,
+    cancelPicking,
+    setPointFromMap,
+    swapOriginDestination,
+    resetRouting,
+    mapType,
+    viewMode,
+    setViewMode,
+    showLegend,
+    toggleLegend,
+    stats,
+    handleMapTypeChange,
+    selectedArea,
+    isAdjustingRadius,
+    showCreateAreaSheet,
+    isCreatingArea,
+    draftAreaCenter,
+    draftAreaRadius,
+    editingArea,
+    showCreationOptions,
+    showAddressSearch,
+    draftAddress,
+    setSelectedArea,
+    setDraftAreaRadius,
+    setDraftAreaCenter,
+    handleAreaPress,
+    handleCloseAreaCard,
+    handleDeleteArea,
+    handleStartCreateArea,
+    handleStartEditArea,
+    handleStartEditAreaFromParams,
+    handleConfirmLocation,
+    handleCancelCreateArea,
+    handleCreateAreaSubmit,
+    handleCloseCreateArea,
+    handleAreaMapPress,
+    handleOptionSelect,
+    handleAddressSelected,
+    handleCloseCreationOptions,
+    handleCloseAddressSearch,
+    showPremiumLimitModal,
+    currentAreaCount,
+    freeAreaLimit,
+    handleClosePremiumLimitModal,
+    handleUpgradePremium,
+    isCheckingLimit,
+    isLoadingLocation,
+    isLoadingSearch,
+    areaError,
+    handleCloseErrorModal,
+    updateDraftAreaFromMapCenter,
     selectedStation,
     handleCloseAdminConfirm,
   };

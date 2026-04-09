@@ -9,8 +9,10 @@ import {
   stopFloodHub,
 } from "~/lib/signalr-client";
 import { useFloodRealtimeStore } from "../../stores/useFloodRealtimeStore";
-import type { SensorUpdateData, SensorUpdatePayload } from "../../types/map-layers.types";
-
+import type {
+  SensorUpdateData,
+  SensorUpdatePayload,
+} from "../../types/map-layers.types";
 
 /**
  * Connects to the SignalR flood-data hub and writes real-time sensor updates
@@ -32,7 +34,7 @@ export function useFloodSignalR(enabled: boolean) {
             : null;
 
       if (data?.stationId) {
-        console.log(`🔄 [FloodSignalR] Applying update: stationId=${data.stationId}`);
+        // console.log(`🔄 [FloodSignalR] Applying update: stationId=${data.stationId}`);
         applyUpdate(data);
       }
     },
@@ -45,20 +47,28 @@ export function useFloodSignalR(enabled: boolean) {
     const connection = getFloodHubConnection();
 
     connection.on("ReceiveSensorUpdate", (...args: unknown[]) => {
-      console.log("📡 [FloodSignalR] ReceiveSensorUpdate received:", JSON.stringify(args[0]));
+      // console.log("📡 [FloodSignalR] ReceiveSensorUpdate received:", JSON.stringify(args[0]));
       handleSensorUpdate(args[0] as SensorUpdatePayload | SensorUpdateData);
     });
     connection.on("ReceiveStationUpdate", (...args: unknown[]) => {
-      console.log("📡 [FloodSignalR] ReceiveStationUpdate received:", JSON.stringify(args[0]));
+      // console.log("📡 [FloodSignalR] ReceiveStationUpdate received:", JSON.stringify(args[0]));
       handleSensorUpdate(args[0] as SensorUpdatePayload | SensorUpdateData);
     });
 
-    connection.onreconnecting(() => { console.log("🔄 [FloodSignalR] Reconnecting..."); });
-    connection.onreconnected(() => { console.log("✅ [FloodSignalR] Reconnected"); });
-    connection.onclose(() => { console.log("⏹️ [FloodSignalR] Connection closed"); });
+    connection.onreconnecting(() => {
+      console.log("🔄 [FloodSignalR] Reconnecting...");
+    });
+    connection.onreconnected(() => {
+      console.log("✅ [FloodSignalR] Reconnected");
+    });
+    connection.onclose(() => {
+      console.log("⏹️ [FloodSignalR] Connection closed");
+    });
 
     retainFloodHub()
-      .then(() => console.log("🔌 [FloodSignalR] Hub retained, listening for updates"))
+      .then(() =>
+        console.log("🔌 [FloodSignalR] Hub retained, listening for updates"),
+      )
       .catch(() => {});
 
     return () => {

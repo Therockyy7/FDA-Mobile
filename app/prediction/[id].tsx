@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -24,7 +24,10 @@ import { PredictionResponse } from "~/features/prediction/types/prediction.types
 import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function PredictionScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, scrollTo } = useLocalSearchParams<{
+    id: string;
+    scrollTo?: string;
+  }>();
   const insets = useSafeAreaInsets();
   const { isDarkColorScheme } = useColorScheme();
 
@@ -32,6 +35,11 @@ export default function PredictionScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  // ── Scroll-to-satellite refs ──────────────────────────────────────────────
+  const scrollRef = useRef<ScrollView>(null);
+  const satelliteCardY = useRef<number>(0);
+  const didScrollToSatellite = useRef(false);
 
   const loadPrediction = useCallback(async (areaId: string) => {
     try {
@@ -54,6 +62,23 @@ export default function PredictionScreen() {
     }
   }, [id, loadPrediction]);
 
+  // ── Auto-scroll to SatelliteVerificationCard when coming from pill ─────────
+  useEffect(() => {
+    if (scrollTo === "satellite" && !loading && !didScrollToSatellite.current) {
+      // Small delay to let the layout settle after navigation
+      const t = setTimeout(() => {
+        if (satelliteCardY.current > 0 && scrollRef.current) {
+          scrollRef.current.scrollTo({
+            y: satelliteCardY.current - 16, // 16px breathing room
+            animated: true,
+          });
+          didScrollToSatellite.current = true;
+        }
+      }, 400);
+      return () => clearTimeout(t);
+    }
+  }, [scrollTo, loading]);
+
   const onRefresh = useCallback(() => {
     if (id) {
       setRefreshing(true);
@@ -67,6 +92,7 @@ export default function PredictionScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView
+        ref={scrollRef}
         style={{ flex: 1, backgroundColor: bgColor }}
         contentContainerStyle={{
           paddingBottom: insets.bottom + 32,
@@ -165,11 +191,29 @@ export default function PredictionScreen() {
               {/* Hybrid Methodology */}
               <HybridEnsembleCard prediction={prediction} />
 
-              {/* 🛰️ AI Prithvi Satellite Verification */}
-              <SatelliteVerificationCard
-                areaId={prediction.administrativeAreaId}
-                areaName={prediction.administrativeArea?.name}
-              />
+              {/* 🛰️ AI Prithvi Satellite Verification — capture layout Y for scroll */}
+              <View
+                onLayout={(e) => {
+                  satelliteCardY.current = e.nativeEvent.layout.y;
+                  // If we got here from the pill and layout just resolved, scroll now
+                  if (
+                    scrollTo === "satellite" &&
+                    !didScrollToSatellite.current &&
+                    e.nativeEvent.layout.y > 0
+                  ) {
+                    scrollRef.current?.scrollTo({
+                      y: e.nativeEvent.layout.y - 16,
+                      animated: true,
+                    });
+                    didScrollToSatellite.current = true;
+                  }
+                }}
+              >
+                <SatelliteVerificationCard
+                  areaId={prediction.administrativeAreaId}
+                  areaName={prediction.administrativeArea?.name}
+                />
+              </View>
 
               {/* AI factors breakdown */}
               <AiFactorsCard aiPrediction={prediction.forecast.aiPrediction} />
@@ -199,5 +243,3 @@ export default function PredictionScreen() {
     </>
   );
 }
-
-

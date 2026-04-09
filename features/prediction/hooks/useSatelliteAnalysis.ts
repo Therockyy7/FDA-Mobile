@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { SatelliteService } from "../services/satellite.service";
 import type { SatelliteAnalysisResponse } from "../types/satellite.types";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
@@ -24,8 +24,15 @@ const PLATFORM_COLORS: Record<string, string> = {
 };
 
 export function useSatelliteAnalysis(areaId: string): UseSatelliteAnalysisReturn {
-  const { results, setResult, clearResult } = useSatelliteAnalysisStore();
-  
+  const {
+    results,
+    setResult,
+    clearResult,
+    setActiveLoadingAreaId,
+    startTicker,
+    stopTicker,
+  } = useSatelliteAnalysisStore();
+
   const currentState = results[areaId] || {
     state: "idle",
     data: null,
@@ -35,32 +42,39 @@ export function useSatelliteAnalysis(areaId: string): UseSatelliteAnalysisReturn
 
   const { data, state, error, elapsedSeconds } = currentState;
   const { setLayers, clear: clearFloodStore } = useSatelliteFloodStore();
-  
-  const tickerRef = useRef<any>(null);
 
-  // Clear interval on unmount
-  useEffect(() => {
-    return () => {
-      if (tickerRef.current) clearInterval(tickerRef.current);
-    };
-  }, []);
+  // When this component unmounts, do NOT stop the ticker —
+  // it must keep running in the background so the pill stays updated.
+  // The ticker is only stopped when the API call finishes or reset() is called.
 
   const reset = useCallback(() => {
     clearResult(areaId);
     clearFloodStore();
-    if (tickerRef.current) clearInterval(tickerRef.current);
-  }, [areaId, clearResult, clearFloodStore]);
+    setActiveLoadingAreaId(null);
+    stopTicker();
+  }, [areaId, clearResult, clearFloodStore, setActiveLoadingAreaId, stopTicker]);
 
   const runAnalysis = useCallback(
-    async (useBbox = true, useFusion = true, captureMode?: 'square' | 'polygon' | 'circle', includePermanentWater = false) => {
-      setResult(areaId, { state: "loading", error: null, data: null, elapsedSeconds: 0 });
+    async (
+      useBbox = true,
+      useFusion = true,
+      captureMode?: "square" | "polygon" | "circle",
+      includePermanentWater = false,
+    ) => {
+      const now = new Date().toISOString();
+
+      setResult(areaId, {
+        state: "loading",
+        error: null,
+        data: null,
+        elapsedSeconds: 0,
+        startedAt: now,
+      });
+      setActiveLoadingAreaId(areaId);
       clearFloodStore();
 
-      const startedAt = Date.now();
-      if (tickerRef.current) clearInterval(tickerRef.current);
-      tickerRef.current = setInterval(() => {
-        setResult(areaId, { elapsedSeconds: Math.floor((Date.now() - startedAt) / 1000) });
-      }, 1000);
+      // Start the global ticker — persists even after this component unmounts
+      startTicker(areaId, now);
 
       try {
         const result = await SatelliteService.runSatelliteAnalysis({
@@ -70,7 +84,7 @@ export function useSatelliteAnalysis(areaId: string): UseSatelliteAnalysisReturn
           capture_mode: captureMode,
           include_permanent_water: includePermanentWater,
         });
-        
+
         setResult(areaId, { data: result, state: "success" });
 
         // ── Push flood polygons into the global map store ──────────────────
@@ -95,12 +109,13 @@ export function useSatelliteAnalysis(areaId: string): UseSatelliteAnalysisReturn
           err?.message ||
           "Không thể phân tích vệ tinh. Vui lòng thử lại.";
         setResult(areaId, { error: msg, state: "error" });
+        setActiveLoadingAreaId(null);
       } finally {
-        if (tickerRef.current) clearInterval(tickerRef.current);
-        setResult(areaId, { elapsedSeconds: Math.floor((Date.now() - startedAt) / 1000) });
+        // Stop the global ticker — API call is complete
+        stopTicker();
       }
     },
-    [areaId, setResult, clearFloodStore, setLayers]
+    [areaId, setResult, clearFloodStore, setLayers, setActiveLoadingAreaId, startTicker, stopTicker],
   );
 
   return { data, state, error, elapsedSeconds, runAnalysis, reset };

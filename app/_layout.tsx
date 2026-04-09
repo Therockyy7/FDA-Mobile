@@ -26,6 +26,7 @@ import { initFCM } from "~/features/alerts/fcm/initFCM";
 import { useInAppNotification } from "~/features/alerts/fcm/useInAppNotification";
 import { initializeAuth } from "~/features/auth/stores/auth.slice";
 import { useNotificationNavigation } from "~/features/notifications/lib/useNotificationNavigation";
+import { SatelliteLoadingPill } from "~/features/prediction/components/SatelliteLoadingPill";
 
 import { NAV_THEME } from "~/lib/constants";
 import { useColorScheme } from "~/lib/useColorScheme";
@@ -161,6 +162,9 @@ function RootStack() {
               }}
               onDismiss={dismiss}
             />
+
+            {/* 🛰️ Satellite analysis background progress pill */}
+            <SatelliteLoadingPill />
           </View>
         </ThemeProvider>
       </SafeAreaProvider>

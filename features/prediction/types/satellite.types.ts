@@ -81,7 +81,7 @@ export interface IndividualSatelliteResult {
 
 // Top-level satellite analysis API response
 export interface SatelliteAnalysisResponse {
-  status: 'success' | 'error';
+  status: 'success' | 'error' | 'no_flood_detected';
   fusion_mode: boolean;
   fusion_method: string;
   sources_used: string[];

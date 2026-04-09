@@ -30,6 +30,14 @@ interface SatelliteFloodStore {
   visible: boolean;
 
   setLayers: (layers: SatelliteFloodLayer[], bbox: SatelliteBbox) => void;
+  /**
+   * Store layers WITHOUT making them visible yet.
+   * Call commitLayers() after the map has animated to the bbox
+   * to avoid blocking the JS thread during camera animation.
+   */
+  setPendingLayers: (layers: SatelliteFloodLayer[], bbox: SatelliteBbox) => void;
+  /** Make previously pending layers visible (call after animateToRegion completes). */
+  commitLayers: () => void;
   toggleVisible: () => void;
   setVisible: (v: boolean) => void;
   clear: () => void;
@@ -41,6 +49,10 @@ export const useSatelliteFloodStore = create<SatelliteFloodStore>((set) => ({
   visible: true,
 
   setLayers: (layers, bbox) => set({ layers, bbox, visible: true }),
+  // Stage layers silently — map can animate without heavy polygon rendering
+  setPendingLayers: (layers, bbox) => set({ layers, bbox, visible: false }),
+  // Reveal staged layers after camera animation completes
+  commitLayers: () => set({ visible: true }),
   toggleVisible: () => set((s) => ({ visible: !s.visible })),
   setVisible: (visible) => set({ visible }),
   clear: () => set({ layers: [], bbox: null, visible: true }),

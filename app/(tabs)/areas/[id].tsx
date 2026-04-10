@@ -5,7 +5,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import MapView, { Circle, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import {
   ActivityIndicator,
   Alert,
@@ -15,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import MapView, { Circle, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import Animated, {
   Extrapolation,
   interpolate,
@@ -29,9 +29,7 @@ import { EditAreaSheet } from "~/features/areas/components/EditAreaSheet";
 import { AreaService } from "~/features/areas/services/area.service";
 import { useAreaSignalR } from "~/features/map/hooks/areas/useAreaSignalR";
 import { LocationService } from "~/features/map/services/location.service";
-import {
-  useAreaRealtimeStore,
-} from "~/features/map/stores/useAreaRealtimeStore";
+import { useAreaRealtimeStore } from "~/features/map/stores/useAreaRealtimeStore";
 import type {
   Area,
   AreaStatusResponse,
@@ -80,41 +78,50 @@ const formatRelativeTime = (dateString?: string) => {
 // Get status config with gradient
 const getStatusConfig = (status?: string) => {
   switch (status) {
-    case "Warning":
+    case "Critical":
       return {
         main: "#EF4444",
         bg: "#FEE2E2",
         gradient: ["#EF4444", "#DC2626"] as const,
         headerGradient: ["#EF4444", "#B91C1C", "#991B1B"] as const,
-        text: "Cảnh báo",
+        text: "Nguy hiểm",
         icon: "alert-circle" as const,
       };
-    case "Watch":
+    case "Warning":
       return {
-        main: "#F59E0B",
+        main: "#F97316",
+        bg: "#FFEDD5",
+        gradient: ["#F97316", "#EA580C"] as const,
+        headerGradient: ["#F97316", "#EA580C", "#C2410C"] as const,
+        text: "Cảnh báo",
+        icon: "warning" as const,
+      };
+    case "Caution":
+      return {
+        main: "#FBBF24",
         bg: "#FEF3C7",
-        gradient: ["#F59E0B", "#D97706"] as const,
-        headerGradient: ["#F59E0B", "#D97706", "#B45309"] as const,
+        gradient: ["#FBBF24", "#D97706"] as const,
+        headerGradient: ["#FBBF24", "#D97706", "#B45309"] as const,
         text: "Theo dõi",
         icon: "eye" as const,
       };
     case "Unknown":
       return {
-        main: "#6B7280",
+        main: "#9CA3AF",
         bg: "#F3F4F6",
-        gradient: ["#6B7280", "#4B5563"] as const,
-        headerGradient: ["#6B7280", "#4B5563", "#374151"] as const,
-        text: "Không rõ",
+        gradient: ["#9CA3AF", "#6B7280"] as const,
+        headerGradient: ["#9CA3AF", "#6B7280", "#4B5563"] as const,
+        text: "Không xác định",
         icon: "help-circle" as const,
       };
-    case "Normal":
+    case "Safe":
     default:
       return {
         main: "#10B981",
         bg: "#D1FAE5",
         gradient: ["#10B981", "#059669"] as const,
         headerGradient: ["#10B981", "#059669", "#047857"] as const,
-        text: "An toàn",
+        text: "Bình thường",
         icon: "checkmark-circle" as const,
       };
   }
@@ -162,7 +169,8 @@ export default function AreaDetailScreen() {
       severityLevel: rt.severityLevel,
       summary: rt.summary ?? status.summary,
       evaluatedAt: rt.evaluatedAt ?? status.evaluatedAt,
-      contributingStations: rt.contributingStations ?? status.contributingStations,
+      contributingStations:
+        rt.contributingStations ?? status.contributingStations,
     };
   }, [status, realtimeUpdates, id]);
 
@@ -449,7 +457,11 @@ export default function AreaDetailScreen() {
                   // Navigate to map and pass focus parameters so MapScreen handles camera centering
                   router.navigate({
                     pathname: "/map",
-                    params: { focusLat: area.latitude, focusLng: area.longitude, focusRadius: area.radiusMeters }
+                    params: {
+                      focusLat: area.latitude,
+                      focusLng: area.longitude,
+                      focusRadius: area.radiusMeters,
+                    },
                   });
                 } else {
                   router.back();
@@ -837,8 +849,24 @@ export default function AreaDetailScreen() {
             elevation: 3,
           }}
         >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: "#007AFF15", alignItems: "center", justifyContent: "center" }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 16,
+            }}
+          >
+            <View
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                backgroundColor: "#007AFF15",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               <Ionicons name="map-outline" size={18} color="#007AFF" />
             </View>
             <Text
@@ -861,7 +889,9 @@ export default function AreaDetailScreen() {
               overflow: "hidden",
               marginBottom: 16,
               borderWidth: 1,
-              borderColor: isDarkColorScheme ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
+              borderColor: isDarkColorScheme
+                ? "rgba(255,255,255,0.1)"
+                : "rgba(0,0,0,0.05)",
             }}
           >
             <MapView
@@ -870,8 +900,14 @@ export default function AreaDetailScreen() {
               initialRegion={{
                 latitude: area.latitude,
                 longitude: area.longitude,
-                latitudeDelta: Math.max((area.radiusMeters / 111000) * 2.2, 0.002),
-                longitudeDelta: Math.max((area.radiusMeters / 111000) * 2.2, 0.002),
+                latitudeDelta: Math.max(
+                  (area.radiusMeters / 111000) * 2.2,
+                  0.002,
+                ),
+                longitudeDelta: Math.max(
+                  (area.radiusMeters / 111000) * 2.2,
+                  0.002,
+                ),
               }}
               mapType="standard"
               showsUserLocation={false}
@@ -889,7 +925,10 @@ export default function AreaDetailScreen() {
                 strokeWidth={2}
               />
               <Marker
-                coordinate={{ latitude: area.latitude, longitude: area.longitude }}
+                coordinate={{
+                  latitude: area.latitude,
+                  longitude: area.longitude,
+                }}
               >
                 <View
                   style={{
@@ -915,21 +954,36 @@ export default function AreaDetailScreen() {
               style={{
                 flex: 1,
                 minWidth: "46%",
-                backgroundColor: isDarkColorScheme ? "rgba(255,255,255,0.03)" : "#F8FAFC",
+                backgroundColor: isDarkColorScheme
+                  ? "rgba(255,255,255,0.03)"
+                  : "#F8FAFC",
                 borderWidth: 1,
-                borderColor: isDarkColorScheme ? "rgba(255,255,255,0.05)" : "#E2E8F0",
+                borderColor: isDarkColorScheme
+                  ? "rgba(255,255,255,0.05)"
+                  : "#E2E8F0",
                 borderRadius: 16,
                 padding: 14,
               }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  marginBottom: 8,
+                }}
+              >
                 <MaterialCommunityIcons
                   name="radius-outline"
                   size={16}
                   color="#007AFF"
                 />
                 <Text
-                  style={{ fontSize: 11, fontWeight: "700", color: colors.subtext }}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: "700",
+                    color: colors.subtext,
+                  }}
                 >
                   BÁN KÍNH
                 </Text>
@@ -945,17 +999,32 @@ export default function AreaDetailScreen() {
               style={{
                 flex: 1,
                 minWidth: "46%",
-                backgroundColor: isDarkColorScheme ? "rgba(255,255,255,0.03)" : "#F8FAFC",
+                backgroundColor: isDarkColorScheme
+                  ? "rgba(255,255,255,0.03)"
+                  : "#F8FAFC",
                 borderWidth: 1,
-                borderColor: isDarkColorScheme ? "rgba(255,255,255,0.05)" : "#E2E8F0",
+                borderColor: isDarkColorScheme
+                  ? "rgba(255,255,255,0.05)"
+                  : "#E2E8F0",
                 borderRadius: 16,
                 padding: 14,
               }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  marginBottom: 8,
+                }}
+              >
                 <Ionicons name="location-outline" size={16} color="#8B5CF6" />
                 <Text
-                  style={{ fontSize: 11, fontWeight: "700", color: colors.subtext }}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: "700",
+                    color: colors.subtext,
+                  }}
                 >
                   VỊ TRÍ
                 </Text>
@@ -972,17 +1041,32 @@ export default function AreaDetailScreen() {
               style={{
                 flex: 1,
                 minWidth: "46%",
-                backgroundColor: isDarkColorScheme ? "rgba(255,255,255,0.03)" : "#F8FAFC",
+                backgroundColor: isDarkColorScheme
+                  ? "rgba(255,255,255,0.03)"
+                  : "#F8FAFC",
                 borderWidth: 1,
-                borderColor: isDarkColorScheme ? "rgba(255,255,255,0.05)" : "#E2E8F0",
+                borderColor: isDarkColorScheme
+                  ? "rgba(255,255,255,0.05)"
+                  : "#E2E8F0",
                 borderRadius: 16,
                 padding: 14,
               }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  marginBottom: 8,
+                }}
+              >
                 <Ionicons name="calendar-outline" size={16} color="#10B981" />
                 <Text
-                  style={{ fontSize: 11, fontWeight: "700", color: colors.subtext }}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: "700",
+                    color: colors.subtext,
+                  }}
                 >
                   NGÀY TẠO
                 </Text>
@@ -998,25 +1082,40 @@ export default function AreaDetailScreen() {
               style={{
                 flex: 1,
                 minWidth: "46%",
-                backgroundColor: isDarkColorScheme ? "rgba(255,255,255,0.03)" : "#F8FAFC",
+                backgroundColor: isDarkColorScheme
+                  ? "rgba(255,255,255,0.03)"
+                  : "#F8FAFC",
                 borderWidth: 1,
-                borderColor: isDarkColorScheme ? "rgba(255,255,255,0.05)" : "#E2E8F0",
+                borderColor: isDarkColorScheme
+                  ? "rgba(255,255,255,0.05)"
+                  : "#E2E8F0",
                 borderRadius: 16,
                 padding: 14,
               }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  marginBottom: 8,
+                }}
+              >
                 <Ionicons name="time-outline" size={16} color="#F59E0B" />
                 <Text
-                  style={{ fontSize: 11, fontWeight: "700", color: colors.subtext }}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: "700",
+                    color: colors.subtext,
+                  }}
                 >
-                  CẬP NHẬT
+                  ĐÁNH GIÁ LÚC
                 </Text>
               </View>
               <Text
                 style={{ fontSize: 13, fontWeight: "700", color: colors.text }}
               >
-                {formatDate(area.updatedAt)}
+                {formatDate(mergedStatus?.evaluatedAt)}
               </Text>
             </View>
           </View>
@@ -1056,7 +1155,11 @@ export default function AreaDetailScreen() {
               </View>
 
               {mergedStatus.contributingStations.map((station, index) => {
-                const cfg = getStatusConfig(station.severity);
+                const severity = station.severity
+                  ? station.severity.charAt(0).toUpperCase() +
+                    station.severity.slice(1)
+                  : undefined;
+                const cfg = getStatusConfig(severity);
                 return (
                   <View
                     key={station.stationCode}
@@ -1112,7 +1215,7 @@ export default function AreaDetailScreen() {
                           color: cfg.main,
                         }}
                       >
-                        {station.waterLevel}m
+                        {station.waterLevel}cm
                       </Text>
                       <Text
                         style={{
@@ -1141,10 +1244,7 @@ export default function AreaDetailScreen() {
           isDark={isDarkColorScheme}
         />
 
-        <TouchableOpacity
-          onPress={() => router.push("/")}
-          activeOpacity={0.85}
-        >
+        <TouchableOpacity onPress={() => router.push("/")} activeOpacity={0.85}>
           <LinearGradient
             colors={["#007AFF", "#2563EB"]}
             style={{

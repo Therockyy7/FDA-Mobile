@@ -33,14 +33,18 @@ import GuestProfileScreen from "~/features/profile/components/GuestProfileScreen
 import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function ProfileScreen() {
+  const user = useUser();
+  if (!user) {
+    return <GuestProfileScreen />;
+  }
+  return <ProfileScreenContent />;
+}
+
+function ProfileScreenContent() {
   const dispatch = useAppDispatch();
   const signOut = useSignOut();
   const user = useUser();
   const { isDarkColorScheme, setColorScheme } = useColorScheme();
-
-  if (!user) {
-    return <GuestProfileScreen />;
-  }
 
   // Reanimated shared value for smooth scroll animation (UI thread)
   const scrollY = useSharedValue(0);

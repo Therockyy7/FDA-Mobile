@@ -91,46 +91,48 @@ export default function AreasScreen() {
   // const {handleStartEditArea} = useControlArea();
 
   // Fetch areas from API
-  const fetchAreas = useCallback(async () => {
+  const fetchAreas = useCallback(async (showFullLoading = false) => {
+    if (showFullLoading) setIsLoading(true);
     try {
-      const fetchedAreas = await AreaService.getAreas();
+      // FE-10A: single batch call instead of getAreas() + N × getAreaStatus()
+      const areasWithStatus = await AreaService.getAreasWithStatus();
 
-      // Fetch status for each area
-      const areasWithStatus: AreaWithStatus[] = await Promise.all(
-        fetchedAreas.map(async (area) => {
-          try {
-            const status = await AreaService.getAreaStatus(area.id);
-            return { area, status };
-          } catch {
-            return { area, status: undefined };
-          }
-        }),
+      const ALERT_KEYS = areasWithStatus.map(
+        (a) => `${ALERT_SETTINGS_KEY_PREFIX}${a.id}`,
+      );
+      const storedValues = await Promise.all(
+        ALERT_KEYS.map((k) => AsyncStorage.getItem(k).catch(() => null)),
       );
 
-      const areasWithAlerts: AreaWithStatus[] = await Promise.all(
-        areasWithStatus.map(async (entry) => {
-          try {
-            const stored = await AsyncStorage.getItem(
-              `${ALERT_SETTINGS_KEY_PREFIX}${entry.area.id}`,
-            );
-            if (stored) {
-              const parsed = JSON.parse(stored) as {
-                notificationChannels?: NotificationChannels;
-              };
-              return {
-                ...entry,
-                alertChannels:
-                  parsed.notificationChannels || DEFAULT_ALERT_CHANNELS,
-              };
-            }
-          } catch {
-            // Ignore storage errors and fall back to defaults
+      const result: AreaWithStatus[] = areasWithStatus.map((a, i) => {
+        let alertChannels = DEFAULT_ALERT_CHANNELS;
+        try {
+          const stored = storedValues[i];
+          if (stored) {
+            const parsed = JSON.parse(stored) as {
+              notificationChannels?: NotificationChannels;
+            };
+            alertChannels =
+              parsed.notificationChannels || DEFAULT_ALERT_CHANNELS;
           }
-          return { ...entry, alertChannels: DEFAULT_ALERT_CHANNELS };
-        }),
-      );
+        } catch {
+          // ignore
+        }
+        return {
+          area: a,
+          status: {
+            areaId: a.id,
+            status: a.status,
+            severityLevel: a.severityLevel,
+            summary: a.summary,
+            contributingStations: a.contributingStations,
+            evaluatedAt: a.evaluatedAt ?? new Date().toISOString(),
+          },
+          alertChannels,
+        };
+      });
 
-      setAreas(areasWithAlerts);
+      setAreas(result);
     } catch (error) {
       console.error("Failed to fetch areas:", error);
     } finally {
@@ -142,15 +144,16 @@ export default function AreasScreen() {
   // Refresh areas when screen gains focus (after returning from Map edit)
   useFocusEffect(
     useCallback(() => {
-      fetchAreas();
-    }, [fetchAreas]),
+      // Chỉ hiện full loading lần đầu (areas chưa có data)
+      fetchAreas(areas.length === 0);
+    }, [fetchAreas, areas.length]),
   );
 
   // Pull to refresh
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
     if (activeTab === "my-areas") {
-      fetchAreas();
+      fetchAreas(false);
     } else {
       queryClient.invalidateQueries({ queryKey: [ADMIN_AREAS_QUERY_KEY] }).finally(() =>
         setRefreshing(false),

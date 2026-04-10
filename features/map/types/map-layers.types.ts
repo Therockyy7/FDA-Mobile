@@ -236,7 +236,7 @@ export interface SensorUpdateData {
   distance: number;
   sensorHeight: number;
   unit: string;
-  status: number;
+  stationStatus: string;
   severity: "safe" | "caution" | "warning" | "critical";
   severityLevel: 0 | 1 | 2 | 3;
   markerColor: string;

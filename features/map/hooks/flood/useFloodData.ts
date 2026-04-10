@@ -83,6 +83,7 @@ function mergeRealtimeIntoGeoJSON(
         markerColor: update.markerColor,
         alertLevel: update.alertLevel,
         measuredAt: update.measuredAt,
+        stationStatus: update.stationStatus,
       },
     } as FloodSeverityFeature;
   });
@@ -114,8 +115,8 @@ function mergeRealtimeIntoGeoJSON(
         measuredAt: update.measuredAt,
         severity: update.severity,
         severityLevel: update.severityLevel,
-        stationStatus: "active",
-        lastSeenAt: null,
+        stationStatus: update.stationStatus,
+        lastSeenAt: update.measuredAt,
         markerColor: update.markerColor,
         alertLevel: update.alertLevel,
       },

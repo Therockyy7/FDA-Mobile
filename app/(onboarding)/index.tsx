@@ -11,7 +11,7 @@ import { OnboardingSlide } from "~/features/onboarding/components/OnboardingSlid
 import { ONBOARDING_SLIDES } from "~/features/onboarding/constants/onboardingSlides";
 import { setOnboardingSeen } from "~/features/onboarding/lib/onboardingStorage";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("screen");
 
 export default function OnboardingCarouselScreen() {
   const insets = useSafeAreaInsets();
@@ -20,8 +20,7 @@ export default function OnboardingCarouselScreen() {
   const carouselRef = React.useRef<React.ElementRef<typeof Carousel>>(null);
 
   const isLast = activeIndex === ONBOARDING_SLIDES.length - 1;
-  const bottomSafe = Math.max(18, insets.bottom + 14);
-  const panelPaddingBottom = bottomSafe;
+  const bottomSafe = Math.max(16, insets.bottom + 8);
 
   const goNext = () => {
     if (isLast) return;
@@ -40,20 +39,26 @@ export default function OnboardingCarouselScreen() {
     router.replace("/(tabs)/map");
   };
 
+  const activeSlide = ONBOARDING_SLIDES[activeIndex];
+
   return (
-    <View style={{ flex: 1, backgroundColor: "#000000" }}>
+    <View style={{ flex: 1, backgroundColor: activeSlide?.backgroundGradient?.[1] ?? "#000000" }}>
+      {/* Carousel – full screen with gradient per slide */}
       <Carousel
         ref={carouselRef}
         width={SCREEN_WIDTH}
         height={SCREEN_HEIGHT}
         data={ONBOARDING_SLIDES}
+        loop={false}
         pagingEnabled
+        scrollAnimationDuration={200}
         onSnapToItem={(idx) => setActiveIndex(idx)}
         renderItem={({ item }) => (
           <OnboardingSlide slide={item} height={SCREEN_HEIGHT} topInset={insets.top} />
         )}
       />
 
+      {/* ── BOTTOM PANEL (overlaid at fixed position) ── */}
       <View
         pointerEvents="box-none"
         style={{
@@ -61,76 +66,80 @@ export default function OnboardingCarouselScreen() {
           left: 0,
           right: 0,
           bottom: 0,
-          paddingHorizontal: 18,
-          paddingBottom: panelPaddingBottom,
+          paddingHorizontal: 24,
+          paddingBottom: bottomSafe,
         }}
       >
-        <View style={{ alignItems: "center" }}>
+        {/* Title + Description + Dots */}
+        <View style={{ alignItems: "center", marginBottom: 12 }}>
           <Text
             style={{
               color: "rgba(255,255,255,0.98)",
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: "900",
-              letterSpacing: 0.4,
+              letterSpacing: 0.3,
               textAlign: "center",
               textTransform: "uppercase",
+              lineHeight: 30,
             }}
           >
-            {ONBOARDING_SLIDES[activeIndex]?.headline.replace("\n", " ")}
+            {activeSlide?.bottomTitle}
           </Text>
 
           <Text
             style={{
-              marginTop: 10,
-              color: "rgba(255,255,255,0.82)",
-              fontSize: 14,
+              marginTop: 6,
+              color: "rgba(255,255,255,0.78)",
+              fontSize: 13,
               fontWeight: "600",
               lineHeight: 20,
               textAlign: "center",
             }}
           >
-            {ONBOARDING_SLIDES[activeIndex]?.description}
+            {activeSlide?.description}
           </Text>
 
-          <View style={{ marginTop: 14, marginBottom: isLast ? 14 : 0 }}>
+          <View style={{ marginTop: 10 }}>
             <OnboardingPagination length={ONBOARDING_SLIDES.length} activeIndex={activeIndex} />
           </View>
+        </View>
 
-          {isLast ? (
+        {/* Action buttons */}
+        {isLast ? (
+          <Button
+            onPress={finish}
+            className="h-14 w-full"
+            style={{
+              backgroundColor: "#14B86B",
+              borderRadius: 999,
+            }}
+          >
+            <Text style={{ color: "#FFFFFF", fontWeight: "900", fontSize: 15, letterSpacing: 0.6 }}>
+              GET STARTED
+            </Text>
+          </Button>
+        ) : (
+          <View
+            className="w-full flex-row items-center justify-between"
+            style={{ marginTop: 2 }}
+          >
+            <Pressable onPress={skip} hitSlop={12}>
+              <Text style={{ color: "rgba(255,255,255,0.65)", fontWeight: "700", fontSize: 14 }}>
+                Bỏ qua
+              </Text>
+            </Pressable>
             <Button
-              onPress={finish}
-              className="h-14 w-full"
-              style={{
-                backgroundColor: "#14B86B",
-                borderRadius: 999,
-                marginTop: 8,
-              }}
+              onPress={goNext}
+              className="h-12 px-8"
+              style={{ backgroundColor: "rgba(253,184,19,0.95)", borderRadius: 999 }}
             >
-              <Text style={{ color: "#FFFFFF", fontWeight: "900", letterSpacing: 0.6 }}>
-                GET STARTED
+              <Text style={{ color: "#0B1A33", fontWeight: "900", fontSize: 14, letterSpacing: 0.4 }}>
+                Tiếp
               </Text>
             </Button>
-          ) : (
-            <View className="w-full flex-row items-center justify-between" style={{ marginTop: 18 }}>
-              <Pressable onPress={skip} hitSlop={12}>
-                <Text style={{ color: "rgba(255,255,255,0.7)", fontWeight: "700" }}>
-                  Bỏ qua
-                </Text>
-              </Pressable>
-              <Button
-                onPress={goNext}
-                className="h-12 px-8"
-                style={{ backgroundColor: "rgba(253,184,19,0.95)", borderRadius: 999 }}
-              >
-                <Text style={{ color: "#0B1A33", fontWeight: "900", letterSpacing: 0.4 }}>
-                  Tiếp
-                </Text>
-              </Button>
-            </View>
-          )}
-        </View>
+          </View>
+        )}
       </View>
     </View>
   );
 }
-

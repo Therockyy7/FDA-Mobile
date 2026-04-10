@@ -1,46 +1,51 @@
 export type OnboardingSlide = {
   key: string;
-  headline: string;
+  topTitle: string;
+  bottomTitle: string;
   description: string;
-  gradient: [string, string];
-  image: number;
+  backgroundGradient: [string, string];
+  mascotImage: number;
 };
 
 export const ONBOARDING_SLIDES: OnboardingSlide[] = [
   {
     key: "realtime_map",
-    headline: "BẢN ĐỒ NGẬP LỤT\nREALTIME",
+    topTitle: "BẢN ĐỒ NGẬP LỤT\nREALTIME",
+    bottomTitle: "BẢN ĐỒ NGẬP LỤT REALTIME",
     description: "Bản đồ tương tác với cảnh báo realtime\nGPS, sông nước, định vị",
-    gradient: ["#07162B", "#0B2B52"],
-    image: require("../../../assets/images/mascot/onboarding_realtime_map.png"),
+    backgroundGradient: ["#07162B", "#0B2B52"],
+    mascotImage: require("../../../assets/images/mascot_no_bg/onboarding_realtime_map.png"),
   },
   {
     key: "safe_navigation",
-    headline: "TÌM ĐƯỜNG\nAN TOÀN",
+    topTitle: "TÌM ĐƯỜNG\nAN TOÀN",
+    bottomTitle: "TÌM ĐƯỜNG AN TOÀN",
     description: "Điều hướng tránh vùng ngập\nNavigation, an toàn",
-    gradient: ["#0AA37A", "#0B6FA0"],
-    image: require("../../../assets/images/mascot/onboarding_safe_navigation.png"),
+    backgroundGradient: ["#0AA37A", "#0B6FA0"],
+    mascotImage: require("../../../assets/images/mascot_no_bg/onboarding_safe_navigation.png"),
   },
   {
     key: "ai_prediction",
-    headline: "AI DỰ ĐOÁN\nNGẬP LỤT",
+    topTitle: "AI DỰ ĐOÁN\nNGẬP LỤT",
+    bottomTitle: "AI DỰ ĐOÁN NGẬP LỤT",
     description: "Ensemble model kết hợp AI + Satellite\nAI brain, phân tích dữ liệu",
-    gradient: ["#081A32", "#0B2C56"],
-    image: require("../../../assets/images/mascot/onboarding_ai_prediction.png"),
+    backgroundGradient: ["#081A32", "#0B2C56"],
+    mascotImage: require("../../../assets/images/mascot_no_bg/onboarding_ai_prediction.png"),
   },
   {
     key: "realtime_alerts",
-    headline: "CẢNH BÁO\nTHỜI GIAN THỰC",
+    topTitle: "CẢNH BÁO\nTHỜI GIAN THỰC",
+    bottomTitle: "CẢNH BÁO THỜI GIAN THỰC",
     description: "Nhận thông báo FCM khi có ngập\nChuông cảnh báo, notify",
-    gradient: ["#B88910", "#6C4F0A"],
-    image: require("../../../assets/images/mascot/onboarding_realtime_alerts.png"),
+    backgroundGradient: ["#B88910", "#6C4F0A"],
+    mascotImage: require("../../../assets/images/mascot_no_bg/onboarding_realtime_alerts.png"),
   },
   {
     key: "community_report",
-    headline: "CỘNG ĐỒNG\nBÁO CÁO NGẬP",
+    topTitle: "CỘNG ĐỒNG\nBÁO CÁO NGẬP",
+    bottomTitle: "CỘNG ĐỒNG BÁO CÁO NGẬP",
     description: "Cộng đồng, report, camera",
-    gradient: ["#0F7DBB", "#0E5DA8"],
-    image: require("../../../assets/images/mascot/onboarding_community_report.png"),
+    backgroundGradient: ["#0F7DBB", "#0E5DA8"],
+    mascotImage: require("../../../assets/images/mascot_no_bg/onboarding_community_report.png"),
   },
 ];
-

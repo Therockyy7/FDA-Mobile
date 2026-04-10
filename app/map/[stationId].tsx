@@ -48,34 +48,41 @@ export default function StationDetailScreen() {
 
   // Get station data from realtime Zustand store (updated by SignalR)
   const realtimeUpdates = useFloodRealtimeStore((s) => s.updates);
+  const selectedStations = useFloodRealtimeStore((s) => s.selectedStations);
 
   const station = useMemo((): FloodSeverityFeature | null => {
     if (!stationId) return null;
+
+    // Priority 1: SignalR realtime update (always fresh)
     const update = realtimeUpdates[stationId];
-    if (!update) return null;
-    return {
-      type: "Feature",
-      geometry: { type: "Point", coordinates: [update.longitude, update.latitude] },
-      properties: {
-        stationId: update.stationId,
-        stationCode: update.stationCode,
-        stationName: update.stationName,
-        locationDesc: null,
-        roadName: null,
-        waterLevel: update.waterLevel,
-        distance: update.distance,
-        sensorHeight: update.sensorHeight,
-        unit: update.unit,
-        measuredAt: update.measuredAt,
-        severity: update.severity,
-        severityLevel: update.severityLevel,
-        stationStatus: "active",
-        lastSeenAt: null,
-        markerColor: update.markerColor,
-        alertLevel: update.alertLevel,
-      },
-    };
-  }, [realtimeUpdates, stationId]);
+    if (update) {
+      return {
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [update.longitude, update.latitude] },
+        properties: {
+          stationId: update.stationId,
+          stationCode: update.stationCode,
+          stationName: update.stationName,
+          locationDesc: null,
+          roadName: null,
+          waterLevel: update.waterLevel,
+          distance: update.distance,
+          sensorHeight: update.sensorHeight,
+          unit: update.unit,
+          measuredAt: update.measuredAt,
+          severity: update.severity,
+          severityLevel: update.severityLevel,
+          stationStatus: "active",
+          lastSeenAt: null,
+          markerColor: update.markerColor,
+          alertLevel: update.alertLevel,
+        },
+      };
+    }
+
+    // Priority 2: station saved when user tapped marker on map
+    return selectedStations[stationId] ?? null;
+  }, [realtimeUpdates, selectedStations, stationId]);
 
   const colors = {
     background: isDarkColorScheme ? "#0B1A33" : "#F1F5F9",

@@ -16,6 +16,7 @@ import {
 } from "~/features/map/components/areas";
 import { LayerToggleSheet } from "~/features/map/components/controls";
 import { FloodStationCard } from "~/features/map/components/stations";
+import { useFloodRealtimeStore } from "~/features/map/stores/useFloodRealtimeStore";
 import {
   RouteDetailCard,
   SafeRouteAlternatives,
@@ -263,6 +264,7 @@ export function MapSheets({
             station={selectedStation}
             onClose={onCloseStation}
             onViewDetails={() => {
+              useFloodRealtimeStore.getState().setSelectedStation(selectedStation);
               onCloseStation();
               router.push(`/map/${selectedStationId}`);
             }}

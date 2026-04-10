@@ -241,14 +241,14 @@ export default function StationDetailScreen() {
                       styles.statusDot,
                       {
                         backgroundColor:
-                          properties.stationStatus === "active"
+                          properties.stationStatus === "online"
                             ? "#22C55E"
                             : "#EF4444",
                       },
                     ]}
                   />
                   <Text style={[styles.statusValue, { color: colors.text }]}>
-                    {properties.stationStatus === "active"
+                    {properties.stationStatus === "online"
                       ? "Đang hoạt động"
                       : "Ngừng hoạt động"}
                   </Text>

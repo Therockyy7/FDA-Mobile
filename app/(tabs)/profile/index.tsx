@@ -29,6 +29,7 @@ import ProfileHeader from "~/features/profile/components/ProfileHeader";
 import ProfileInfoSection from "~/features/profile/components/ProfileInfoSection";
 import SaveButton from "~/features/profile/components/SaveButton";
 import SubscriptionSection from "~/features/profile/components/SubscriptionSection";
+import GuestProfileScreen from "~/features/profile/components/GuestProfileScreen";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function ProfileScreen() {
@@ -36,6 +37,10 @@ export default function ProfileScreen() {
   const signOut = useSignOut();
   const user = useUser();
   const { isDarkColorScheme, setColorScheme } = useColorScheme();
+
+  if (!user) {
+    return <GuestProfileScreen />;
+  }
 
   // Reanimated shared value for smooth scroll animation (UI thread)
   const scrollY = useSharedValue(0);

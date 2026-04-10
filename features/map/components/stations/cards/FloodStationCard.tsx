@@ -1,18 +1,19 @@
 // features/map/components/stations/cards/FloodStationCard.tsx
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import {
   FloodSeverityFeature,
   SEVERITY_COLORS,
   SEVERITY_LABELS,
-} from "../../../types/map-layers.types";
-import { StationHeader } from "./StationHeader";
+} from "~/features/map/types/map-layers.types";
 import { StationStats } from "./StationStats";
 import { StationSensorInfo } from "./StationSensorInfo";
 import { StationFooter } from "./StationFooter";
+import { RADIUS } from "~/features/map/lib/map-ui-utils";
 
 interface FloodStationCardProps {
   station: FloodSeverityFeature;
@@ -21,100 +22,70 @@ interface FloodStationCardProps {
 }
 
 function getSeverityIcon(severity: string) {
-  switch (severity) {
-    case "critical":
-      return { name: "alert-circle" as const, gradient: ["#EF4444", "#DC2626"] };
-    case "warning":
-      return { name: "alert" as const, gradient: ["#F97316", "#EA580C"] };
-    case "caution":
-      return {
-        name: "information-circle" as const,
-        gradient: ["#EAB308", "#CA8A04"],
-      };
-    default:
-      return { name: "checkmark-circle" as const, gradient: ["#22C55E", "#16A34A"] };
-  }
+  if (severity === "critical") return "alert-circle" as const;
+  if (severity === "warning") return "alert" as const;
+  if (severity === "caution") return "information-circle" as const;
+  return "checkmark-circle" as const;
 }
 
-export function FloodStationCard({
-  station,
-  onClose,
-  onViewDetails,
-}: FloodStationCardProps) {
+export function FloodStationCard({ station, onClose, onViewDetails }: FloodStationCardProps) {
   const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
   const { properties } = station;
 
-  const severityColor =
-    properties.markerColor ||
-    SEVERITY_COLORS[properties.severity] ||
-    SEVERITY_COLORS.unknown;
-  const severityLabel =
-    SEVERITY_LABELS[properties.severity] || SEVERITY_LABELS.unknown;
+  const severityColor = properties.markerColor || SEVERITY_COLORS[properties.severity] || SEVERITY_COLORS.unknown;
+  const severityLabel = SEVERITY_LABELS[properties.severity] || SEVERITY_LABELS.unknown;
+  const severityIcon = getSeverityIcon(properties.severity);
 
   const colors = {
-    background: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-    cardBg: isDarkColorScheme ? "#334155" : "#F8FAFC",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
-    border: isDarkColorScheme ? "#475569" : "#E2E8F0",
+    card: isDark ? "rgba(15,23,42,0.98)" : "#FFFFFF",
+    text: isDark ? "#F1F5F9" : "#1F2937",
+    subtext: isDark ? "#94A3B8" : "#64748B",
+    muted: isDark ? "#64748B" : "#9CA3AF",
+    cardBg: isDark ? "#1E293B" : "#F8FAFC",
   };
 
-  const severityConfig = getSeverityIcon(properties.severity);
-
   return (
-    <View style={{ flex: 1 }}>
-      {/* Top gradient strip */}
-      <View style={{ height: 4, backgroundColor: severityColor }} />
-
-      <View style={{ padding: 16 }}>
-        <StationHeader
-          stationName={properties.stationName}
-          stationCode={properties.stationCode}
-          severityColor={severityColor}
-          onClose={onClose}
-          colors={colors}
-        />
-
-        {/* Location Info */}
-        {(properties.roadName || properties.locationDesc) && (
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "flex-start",
-              marginBottom: 12,
-              backgroundColor: colors.cardBg,
-              padding: 10,
-              borderRadius: 10,
-            }}
-          >
-            <Ionicons
-              name="location"
-              size={16}
-              color={colors.subtext}
-              style={{ marginTop: 2 }}
-            />
-            <View style={{ marginLeft: 8, flex: 1 }}>
+    <View style={[styles.root, { backgroundColor: colors.card }]}>
+      {/* Thin gradient header */}
+      <LinearGradient
+        colors={[severityColor, `${severityColor}C0`]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.header}
+      >
+        <View style={styles.headerRow}>
+          <View style={[styles.iconBox, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
+            <MaterialCommunityIcons name="water" size={16} color="white" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.name} numberOfLines={1}>{properties.stationName}</Text>
+            <View style={styles.meta}>
+              <Text style={styles.code}>{properties.stationCode}</Text>
               {properties.roadName && (
-                <Text style={{ fontSize: 13, fontWeight: "600", color: colors.text }}>
-                  {properties.roadName}
-                </Text>
-              )}
-              {properties.locationDesc && (
-                <Text style={{ fontSize: 12, color: colors.subtext, marginTop: 2 }}>
-                  {properties.locationDesc}
-                </Text>
+                <>
+                  <Text style={styles.metaSep}>·</Text>
+                  <Ionicons name="location" size={10} color="rgba(255,255,255,0.65)" />
+                  <Text style={styles.road} numberOfLines={1}>{properties.roadName}</Text>
+                </>
               )}
             </View>
           </View>
-        )}
+          <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
+            <Ionicons name="close" size={15} color="white" />
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
 
+      {/* Tight body */}
+      <View style={styles.body}>
         <StationStats
           waterLevel={properties.waterLevel}
           unit={properties.unit}
           alertLevel={properties.alertLevel}
           severityColor={severityColor}
           severityLabel={severityLabel}
-          severityConfig={severityConfig}
+          severityConfig={{ name: severityIcon }}
           colors={colors}
         />
 
@@ -137,13 +108,53 @@ export function FloodStationCard({
   );
 }
 
-export default React.memo(FloodStationCard, (prevProps, nextProps) => {
-  const prev = prevProps.station?.properties;
-  const next = nextProps.station?.properties;
-  return (
-    prev?.stationId === next?.stationId &&
-    prev?.waterLevel === next?.waterLevel &&
-    prev?.severity === next?.severity &&
-    prev?.measuredAt === next?.measuredAt
-  );
+const styles = StyleSheet.create({
+  root: {
+    borderRadius: RADIUS.sheet,
+    overflow: "hidden",
+    paddingBottom: 8,
+  },
+  header: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  iconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  name: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "white",
+    marginBottom: 1,
+  },
+  meta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  code: { fontSize: 11, color: "rgba(255,255,255,0.65)", fontWeight: "600" },
+  metaSep: { color: "rgba(255,255,255,0.4)", fontSize: 11 },
+  road: { fontSize: 11, color: "rgba(255,255,255,0.65)", flex: 1 },
+  closeBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  body: {
+    padding: 10,
+  },
 });

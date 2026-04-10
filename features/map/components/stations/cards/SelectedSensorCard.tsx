@@ -1,9 +1,11 @@
+// features/map/components/stations/cards/SelectedSensorCard.tsx
 import { Ionicons } from "@expo/vector-icons";
+import React from "react";
 import { Animated, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { Sensor } from "../..//../constants/map-data";
-import { getStatusColor } from "../..//../lib/map-utils";
-
+import { Sensor } from "~/features/map/constants/map-data";
+import { getStatusColor } from "~/features/map/lib/map-utils";
+import { CARD_SHADOW, RADIUS, STATUS_BADGE, useMapColors } from "~/features/map/lib/map-ui-utils";
 
 interface SelectedSensorCardProps {
   sensor: Sensor;
@@ -11,8 +13,15 @@ interface SelectedSensorCardProps {
   onClose: () => void;
 }
 
+const STATUS_LABEL: Record<string, string> = {
+  safe: "AN TOÀN",
+  warning: "CẢNH BÁO",
+  danger: "NGUY HIỂM",
+};
+
 export function SelectedSensorCard({ sensor, slideAnim, onClose }: SelectedSensorCardProps) {
-  const colors = getStatusColor(sensor.status);
+  const colors = useMapColors();
+  const status = getStatusColor(sensor.status);
 
   return (
     <Animated.View
@@ -25,16 +34,14 @@ export function SelectedSensorCard({ sensor, slideAnim, onClose }: SelectedSenso
       }}
     >
       <View
-        style={{
-          backgroundColor: "white",
-          borderRadius: 16,
-          padding: 16,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.15,
-          shadowRadius: 16,
-          elevation: 10,
-        }}
+        style={[
+          CARD_SHADOW,
+          {
+            backgroundColor: colors.card,
+            borderRadius: RADIUS.card,
+            padding: 16,
+          },
+        ]}
       >
         {/* Top strip */}
         <View
@@ -44,12 +51,13 @@ export function SelectedSensorCard({ sensor, slideAnim, onClose }: SelectedSenso
             left: 0,
             right: 0,
             height: 3,
-            backgroundColor: colors.main,
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
+            backgroundColor: status.main,
+            borderTopLeftRadius: RADIUS.card,
+            borderTopRightRadius: RADIUS.card,
           }}
         />
 
+        {/* Header Row */}
         <View
           style={{
             flexDirection: "row",
@@ -59,17 +67,10 @@ export function SelectedSensorCard({ sensor, slideAnim, onClose }: SelectedSenso
           }}
         >
           <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                fontSize: 18,
-                fontWeight: "700",
-                color: "#1F2937",
-                marginBottom: 2,
-              }}
-            >
+            <Text style={{ fontSize: 18, fontWeight: "700", color: colors.text, marginBottom: 2 }}>
               {sensor.name}
             </Text>
-            <Text style={{ fontSize: 12, color: "#6B7280" }}>
+            <Text style={{ fontSize: 12, color: colors.subtext }}>
               {sensor.location}
             </Text>
           </View>
@@ -78,51 +79,34 @@ export function SelectedSensorCard({ sensor, slideAnim, onClose }: SelectedSenso
             style={{
               width: 28,
               height: 28,
-              backgroundColor: "#F3F4F6",
+              backgroundColor: colors.border,
               borderRadius: 14,
               alignItems: "center",
               justifyContent: "center",
             }}
             activeOpacity={0.7}
           >
-            <Ionicons name="close" size={16} color="#6B7280" />
+            <Ionicons name="close" size={16} color={colors.subtext} />
           </TouchableOpacity>
         </View>
 
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 16,
-          }}
-        >
+        {/* Water Level + Stats Row */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+          {/* Water Level Box */}
           <View
             style={{
-              backgroundColor: colors.bg,
+              backgroundColor: status.bg,
               padding: 12,
-              borderRadius: 12,
+              borderRadius: RADIUS.chip,
             }}
           >
-            <Text
-              style={{
-                fontSize: 24,
-                fontWeight: "900",
-                color: colors.main,
-              }}
-            >
+            <Text style={{ fontSize: 24, fontWeight: "900", color: status.main }}>
               {sensor.waterLevel}
             </Text>
-            <Text
-              style={{
-                fontSize: 10,
-                color: colors.text,
-                marginTop: 2,
-              }}
-            >
-              cm
-            </Text>
+            <Text style={{ fontSize: 10, color: status.text, marginTop: 2 }}>cm</Text>
           </View>
 
+          {/* Right stats */}
           <View style={{ flex: 1 }}>
             <View
               style={{
@@ -132,35 +116,24 @@ export function SelectedSensorCard({ sensor, slideAnim, onClose }: SelectedSenso
               }}
             >
               <View>
-                <Text style={{ fontSize: 10, color: "#9CA3AF" }}>Nhiệt độ</Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "700",
-                    color: "#1F2937",
-                  }}
-                >
+                <Text style={{ fontSize: 10, color: colors.muted }}>Nhiệt độ</Text>
+                <Text style={{ fontSize: 14, fontWeight: "700", color: colors.text }}>
                   {sensor.temperature}°C
                 </Text>
               </View>
               <View>
-                <Text style={{ fontSize: 10, color: "#9CA3AF" }}>Độ ẩm</Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "700",
-                    color: "#1F2937",
-                  }}
-                >
+                <Text style={{ fontSize: 10, color: colors.muted }}>Độ ẩm</Text>
+                <Text style={{ fontSize: 14, fontWeight: "700", color: colors.text }}>
                   {sensor.humidity}%
                 </Text>
               </View>
             </View>
+            {/* Progress Bar */}
             <View
               style={{
                 height: 6,
-                backgroundColor: "#E5E7EB",
-                borderRadius: 3,
+                backgroundColor: colors.border,
+                borderRadius: RADIUS.progress,
                 overflow: "hidden",
               }}
             >
@@ -168,11 +141,47 @@ export function SelectedSensorCard({ sensor, slideAnim, onClose }: SelectedSenso
                 style={{
                   width: `${(sensor.waterLevel / sensor.maxLevel) * 100}%`,
                   height: "100%",
-                  backgroundColor: colors.main,
+                  backgroundColor: status.main,
+                  borderRadius: RADIUS.progress,
                 }}
               />
             </View>
           </View>
+        </View>
+
+        {/* Status Badge — standard pattern */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            alignSelf: "flex-start",
+            backgroundColor: status.bg,
+            paddingHorizontal: STATUS_BADGE.paddingHorizontal,
+            paddingVertical: STATUS_BADGE.paddingVertical,
+            borderRadius: STATUS_BADGE.borderRadius,
+            marginTop: 12,
+            gap: 5,
+          }}
+        >
+          <View
+            style={{
+              width: STATUS_BADGE.dotSize,
+              height: STATUS_BADGE.dotSize,
+              borderRadius: 3,
+              backgroundColor: status.main,
+            }}
+          />
+          <Ionicons name="radio-button-on" size={STATUS_BADGE.fontSize + 2} color={status.main} />
+          <Text
+            style={{
+              fontSize: STATUS_BADGE.fontSize,
+              fontWeight: STATUS_BADGE.fontWeight,
+              color: status.main,
+              letterSpacing: STATUS_BADGE.letterSpacing,
+            }}
+          >
+            {STATUS_LABEL[sensor.status] ?? STATUS_LABEL.safe}
+          </Text>
         </View>
       </View>
     </Animated.View>

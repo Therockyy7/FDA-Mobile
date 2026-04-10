@@ -3,11 +3,12 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View } from "react-native";
 import { Circle, Marker } from "react-native-maps";
+import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
 import {
   AREA_STATUS_COLORS,
   AREA_STATUS_ICONS,
   type AreaWithStatus,
-} from "../..//../types/map-layers.types";
+} from "~/features/map/types/map-layers.types";
 
 interface AreaCircleOverlayProps {
   area: AreaWithStatus;
@@ -20,8 +21,10 @@ export function AreaCircleOverlay({
   isSelected,
   onPress,
 }: AreaCircleOverlayProps) {
-  const statusColor = AREA_STATUS_COLORS[area.status] || AREA_STATUS_COLORS.Unknown;
-  const statusIcon = AREA_STATUS_ICONS[area.status] || AREA_STATUS_ICONS.Unknown;
+  const statusColor =
+    AREA_STATUS_COLORS[area.status] ?? AREA_STATUS_COLORS.Unknown;
+  const statusIcon =
+    AREA_STATUS_ICONS[area.status] ?? AREA_STATUS_ICONS.Unknown;
 
   const center = {
     latitude: area.latitude,
@@ -52,30 +55,24 @@ export function AreaCircleOverlay({
       )}
 
       {/* Tappable center marker with status icon */}
-      <Marker
-        coordinate={center}
-        anchor={{ x: 0.5, y: 1 }}
-        onPress={onPress}
-      >
+      <Marker coordinate={center} anchor={{ x: 0.5, y: 1 }} onPress={onPress}>
         <View style={{ alignItems: "center" }}>
           {/* Badge */}
           <View
-            style={{
-              backgroundColor: "white",
-              borderRadius: 12,
-              paddingHorizontal: 8,
-              paddingVertical: 6,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 4,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 4,
-              borderWidth: 2,
-              borderColor: statusColor,
-            }}
+            style={[
+              CARD_SHADOW,
+              {
+                backgroundColor: "white",
+                borderRadius: 12,
+                paddingHorizontal: 8,
+                paddingVertical: 6,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+                borderWidth: 2,
+                borderColor: statusColor,
+              },
+            ]}
           >
             <Ionicons name={statusIcon as any} size={14} color={statusColor} />
           </View>

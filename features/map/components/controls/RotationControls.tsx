@@ -2,6 +2,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
+import { useColorScheme } from "~/lib/useColorScheme";
+import { OVERLAY_SHADOW } from "~/features/map/lib/map-ui-utils";
 
 interface RotationControlsProps {
   onRotateLeft: () => void;
@@ -9,19 +11,18 @@ interface RotationControlsProps {
 }
 
 export function RotationControls({ onRotateLeft, onRotateRight }: RotationControlsProps) {
+  const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
+
   return (
     <View
       style={{
-        backgroundColor: "white",
+        backgroundColor: isDark ? "#1E293B" : "white",
         borderRadius: 20,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.12,
-        shadowRadius: 12,
-        elevation: 6,
+        ...OVERLAY_SHADOW,
         overflow: "hidden",
         borderWidth: 1,
-        borderColor: "#F1F5F9",
+        borderColor: isDark ? "#334155" : "#F1F5F9",
       }}
     >
       <TouchableOpacity
@@ -36,7 +37,7 @@ export function RotationControls({ onRotateLeft, onRotateRight }: RotationContro
       >
         <Ionicons name="return-up-back" size={20} color="#3B82F6" />
       </TouchableOpacity>
-      <View style={{ height: 1, backgroundColor: "#F1F5F9" }} />
+      <View style={{ height: 1, backgroundColor: isDark ? "#334155" : "#F1F5F9" }} />
       <TouchableOpacity
         onPress={onRotateRight}
         style={{

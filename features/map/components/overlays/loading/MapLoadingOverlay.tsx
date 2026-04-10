@@ -12,6 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { OVERLAY_SHADOW } from "~/features/map/lib/map-ui-utils";
 import { LoadingDot } from "./LoadingDot";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -26,6 +27,7 @@ export function MapLoadingOverlay({
   message = "Đang tải bản đồ...",
 }: MapLoadingOverlayProps) {
   const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.8);
   const textOpacity = useSharedValue(0.6);
@@ -67,11 +69,11 @@ export function MapLoadingOverlay({
   }));
 
   const colors = {
-    background: isDarkColorScheme ? "rgba(15, 23, 42, 0.97)" : "rgba(255, 255, 255, 0.97)",
-    cardBg: isDarkColorScheme ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.9)",
-    cardBorder: isDarkColorScheme ? "#334155" : "#E2E8F0",
-    textPrimary: isDarkColorScheme ? "#E2E8F0" : "#1F2937",
-    textSecondary: isDarkColorScheme ? "#94A3B8" : "#64748B",
+    background: isDark ? "rgba(15, 23, 42, 0.97)" : "rgba(255, 255, 255, 0.97)",
+    cardBg: isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.9)",
+    cardBorder: isDark ? "#334155" : "#E2E8F0",
+    textPrimary: isDark ? "#E2E8F0" : "#1F2937",
+    textSecondary: isDark ? "#94A3B8" : "#64748B",
   };
 
   if (!visible) return null;
@@ -90,7 +92,13 @@ export function MapLoadingOverlay({
       </View>
 
       {/* Main content card */}
-      <Animated.View style={[styles.contentCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, contentStyle]}>
+      <Animated.View
+        style={[
+          styles.contentCard,
+          { backgroundColor: colors.cardBg, borderColor: colors.cardBorder },
+          contentStyle,
+        ]}
+      >
         <View style={styles.lottieContainer}>
           <LottieView
             source={require("../../../../../assets/animations/water-rise.json")}
@@ -148,11 +156,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 50,
     borderRadius: 28,
     borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 12,
+    ...OVERLAY_SHADOW,
   },
   lottieContainer: {
     width: 100,

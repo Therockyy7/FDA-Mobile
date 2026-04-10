@@ -61,9 +61,9 @@ export function CommunityReportMarker({
             borderColor: "white",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.3,
-            shadowRadius: 4,
-            elevation: 6,
+            shadowOpacity: 0.06,
+            shadowRadius: 8,
+            elevation: 4,
           }}
         >
           <Ionicons name="megaphone" size={18} color="white" />

@@ -8,7 +8,7 @@ import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { formatRadius } from "../../../lib/formatters";
+import { formatRadius } from "~/features/map/lib/formatters";
 
 interface RadiusAdjustBarProps {
   visible: boolean;

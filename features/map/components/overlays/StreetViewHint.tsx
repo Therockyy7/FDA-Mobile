@@ -1,13 +1,19 @@
+// features/map/components/overlays/StreetViewHint.tsx
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { useColorScheme } from "~/lib/useColorScheme";
+import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
 
 interface StreetViewHintProps {
   visible: boolean;
 }
 
 export function StreetViewHint({ visible }: StreetViewHintProps) {
+  const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
+
   if (!visible) return null;
 
   return (
@@ -16,14 +22,10 @@ export function StreetViewHint({ visible }: StreetViewHintProps) {
         position: "absolute",
         top: 80,
         right: 16,
-        backgroundColor: "rgba(245, 158, 11, 0.95)",
+        backgroundColor: isDark ? "rgba(245,158,11,0.95)" : "rgba(245,158,11,0.95)",
         borderRadius: 16,
         padding: 12,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 6,
+        ...CARD_SHADOW,
         maxWidth: 200,
         flexDirection: "row",
         alignItems: "center",

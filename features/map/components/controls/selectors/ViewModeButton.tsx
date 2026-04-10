@@ -4,7 +4,8 @@ import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Text } from "~/components/ui/text";
-import type { ViewMode } from "../../../types/map-display.types";
+import { useColorScheme } from "~/lib/useColorScheme";
+import type { ViewMode } from "~/features/map/types/map-display.types";
 
 interface ViewModeButtonProps {
   mode: ViewMode;
@@ -13,6 +14,8 @@ interface ViewModeButtonProps {
 }
 
 export function ViewModeButton({ mode, currentMode, onPress }: ViewModeButtonProps) {
+  const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
   const isActive = mode === currentMode;
 
   if (mode === "zones") {
@@ -30,8 +33,8 @@ export function ViewModeButton({ mode, currentMode, onPress }: ViewModeButtonPro
           </LinearGradient>
         ) : (
           <View style={styles.button}>
-            <Ionicons name="water-outline" size={20} color="#9CA3AF" style={styles.icon} />
-            <Text style={styles.inactiveText}>Khu vực</Text>
+            <Ionicons name="water-outline" size={20} color={isDark ? "#94A3B8" : "#9CA3AF"} style={styles.icon} />
+            <Text style={[styles.inactiveText, { color: isDark ? "#94A3B8" : "#6B7280" }]}>Khu vực</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -52,8 +55,8 @@ export function ViewModeButton({ mode, currentMode, onPress }: ViewModeButtonPro
         </LinearGradient>
       ) : (
         <View style={styles.button}>
-          <MaterialCommunityIcons name="waves" size={20} color="#9CA3AF" style={styles.icon} />
-          <Text style={styles.inactiveText}>Tuyến đường</Text>
+          <MaterialCommunityIcons name="waves" size={20} color={isDark ? "#94A3B8" : "#9CA3AF"} style={styles.icon} />
+          <Text style={[styles.inactiveText, { color: isDark ? "#94A3B8" : "#6B7280" }]}>Tuyến đường</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -80,6 +83,5 @@ const styles = {
   inactiveText: {
     fontSize: 15,
     fontWeight: "700" as const,
-    color: "#6B7280",
   },
 };

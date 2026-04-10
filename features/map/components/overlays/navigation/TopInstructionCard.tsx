@@ -4,8 +4,10 @@ import { MotiView } from "moti";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { getManeuverIcon } from "../../../lib/navigation-utils";
-import type { GeoJsonInstruction } from "../../../types/safe-route.types";
+import { useColorScheme } from "~/lib/useColorScheme";
+import { getManeuverIcon } from "~/features/map/lib/navigation-utils";
+import type { GeoJsonInstruction } from "~/features/map/types/safe-route.types";
+import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
 
 interface TopInstructionCardProps {
   instruction: GeoJsonInstruction | null;
@@ -22,24 +24,32 @@ export function TopInstructionCard({
   isOffRoute,
   insetsTop,
 }: TopInstructionCardProps) {
-  const iconName = instruction
-    ? (getManeuverIcon(instruction.text) as any)
-    : "navigate";
+  const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
+  const iconName = instruction ? (getManeuverIcon(instruction.text) as any) : "navigate";
   const isClose = distanceToNextTurn < 100;
+
+  // Glassmorphism dark bg for nav card
+  const cardBg = isDark ? "rgba(15,30,60,0.92)" : "rgba(20,45,90,0.9)";
+  const iconBoxBg = isDark ? "rgba(59,130,246,0.25)" : "rgba(255,255,255,0.2)";
+  const distanceColor = isClose ? "#FCD34D" : "#93C5FD";
+  const textColor = "white";
+  const nextTextColor = isDark ? "#60A5FA" : "#93C5FD";
+  const dividerColor = isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.18)";
 
   return (
     <MotiView
-      from={{ opacity: 0, translateY: -30 }}
+      from={{ opacity: 0, translateY: -40 }}
       animate={{ opacity: 1, translateY: 0 }}
-      transition={{ type: "timing", duration: 400 }}
-      style={[styles.container, { paddingTop: insetsTop + 4 }]}
+      transition={{ type: "spring", stiffness: 280, damping: 26 }}
+      style={[styles.container, { paddingTop: insetsTop + 6 }]}
     >
-      <View style={styles.card}>
+      <View style={[CARD_SHADOW, styles.card, { backgroundColor: cardBg }]}>
         {instruction ? (
           <>
-            {/* Primary instruction */}
+            {/* Primary instruction row */}
             <View style={styles.primaryRow}>
-              <View style={styles.iconBox}>
+              <View style={[styles.iconBox, { backgroundColor: iconBoxBg }]}>
                 <Ionicons name={iconName} size={28} color="white" />
               </View>
               <View style={{ flex: 1 }}>
@@ -47,6 +57,7 @@ export function TopInstructionCard({
                   style={[
                     styles.instructionText,
                     isClose && styles.instructionTextClose,
+                    { color: textColor },
                   ]}
                   numberOfLines={2}
                 >
@@ -56,6 +67,7 @@ export function TopInstructionCard({
                   style={[
                     styles.distanceText,
                     isClose && styles.distanceTextClose,
+                    { color: distanceColor },
                   ]}
                 >
                   {distanceToNextTurn < 1000
@@ -65,33 +77,36 @@ export function TopInstructionCard({
               </View>
             </View>
 
-            {/* Next step preview */}
+            {/* Next instruction */}
             {nextInstruction && (
-              <View style={styles.nextRow}>
-                <Ionicons
-                  name={getManeuverIcon(nextInstruction.text) as any}
-                  size={16}
-                  color="#93C5FD"
-                />
-                <Text style={styles.nextText} numberOfLines={1}>
+              <View style={[styles.nextRow, { borderTopColor: dividerColor }]}>
+                <View style={[styles.miniIcon, { backgroundColor: iconBoxBg }]}>
+                  <Ionicons name={getManeuverIcon(nextInstruction.text) as any} size={14} color="white" />
+                </View>
+                <Text style={[styles.nextText, { color: nextTextColor }]} numberOfLines={1}>
                   Sau đó: {nextInstruction.text}
                 </Text>
               </View>
             )}
           </>
         ) : (
-          <Text style={styles.calculating}>Đang tính toán...</Text>
+          <View style={styles.calculatingRow}>
+            <Text style={[styles.calculating, { color: textColor }]}>Đang tính toán...</Text>
+          </View>
         )}
       </View>
 
-      {/* Off-route warning */}
       {isOffRoute && (
-        <View style={styles.offRouteWarning}>
-          <Ionicons name="warning" size={18} color="white" />
-          <Text style={styles.offRouteText}>
-            Bạn đã lạc đường! Hãy quay lại tuyến đường.
-          </Text>
-        </View>
+        <MotiView
+          from={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          style={styles.offRouteWarning}
+        >
+          <View style={styles.offRouteInner}>
+            <Ionicons name="warning" size={16} color="white" />
+            <Text style={styles.offRouteText}>Bạn đã lạc đường! Hãy quay lại tuyến đường.</Text>
+          </View>
+        </MotiView>
       )}
     </MotiView>
   );
@@ -107,30 +122,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   card: {
-    backgroundColor: "#1E3A5F",
     borderRadius: 16,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
   },
   primaryRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
+    gap: 12,
   },
   iconBox: {
     width: 48,
     height: 48,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  miniIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
     alignItems: "center",
     justifyContent: "center",
   },
   instructionText: {
-    color: "white",
     fontSize: 15,
     fontWeight: "700",
     lineHeight: 20,
@@ -140,14 +156,12 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   distanceText: {
-    color: "#93C5FD",
     fontSize: 16,
     fontWeight: "800",
-    marginTop: 2,
+    marginTop: 3,
   },
   distanceTextClose: {
     fontSize: 22,
-    color: "#FCD34D",
   },
   nextRow: {
     flexDirection: "row",
@@ -156,20 +170,22 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.15)",
   },
   nextText: {
-    color: "#93C5FD",
     fontSize: 12,
     flex: 1,
   },
+  calculatingRow: {
+    alignItems: "center",
+    paddingVertical: 8,
+  },
   calculating: {
-    color: "white",
     fontSize: 15,
-    textAlign: "center",
   },
   offRouteWarning: {
     marginTop: 8,
+  },
+  offRouteInner: {
     backgroundColor: "#DC2626",
     borderRadius: 12,
     paddingVertical: 10,
@@ -177,6 +193,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    shadowColor: "#DC2626",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
   offRouteText: {
     color: "white",

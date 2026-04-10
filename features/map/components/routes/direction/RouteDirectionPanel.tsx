@@ -12,11 +12,11 @@ import {
 import { Image as RNImage } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
-import type { LatLng } from "../../../types/safe-route.types";
+import type { LatLng } from "~/features/map/types/safe-route.types";
 import type { User } from "~/features/auth/stores/auth.slice";
-import type { RouteDirectionPanelProps } from "../../../types/routing.types";
-import { PlaceSearchSheet } from "../sheets/PlaceSearchSheet";
-import { TransportModeButton } from "./TransportModeButton";
+import type { RouteDirectionPanelProps } from "~/features/map/types/routing.types";
+import { PlaceSearchSheet } from "~/features/map/components/routes/sheets/PlaceSearchSheet";
+import { TransportModeButton } from "~/features/map/components/routes/direction/TransportModeButton";
 
 type Phase = "idle" | "ready";
 

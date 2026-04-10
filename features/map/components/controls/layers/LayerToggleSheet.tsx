@@ -10,8 +10,8 @@ import {
 } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { useFloodLayerSettings } from "../../../hooks/flood";
-import type { BaseMapType, MapLayerSettings } from "../../../types/map-layers.types";
+import { useFloodLayerSettings } from "~/features/map/hooks/flood";
+import type { BaseMapType, MapLayerSettings } from "~/features/map/types/map-layers.types";
 import { LayerSheetHeader } from "./LayerSheetHeader";
 import { BaseMapSelector } from "./BaseMapSelector";
 import { AreaDisplayModeSelector } from "./AreaDisplayModeSelector";

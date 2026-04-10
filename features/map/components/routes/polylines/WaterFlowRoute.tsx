@@ -4,8 +4,9 @@ import React, { useMemo } from "react";
 import { View } from "react-native";
 import { Marker } from "react-native-maps";
 import { Text } from "~/components/ui/text";
-import { FloodRoute, MOCK_SENSORS } from "../..//../constants/map-data";
-import { getStatusColor } from "../..//../lib/map-utils";
+import { useColorScheme } from "~/lib/useColorScheme";
+import { FloodRoute, MOCK_SENSORS } from "~/features/map/constants/map-data";
+import { getStatusColor } from "~/features/map/lib/map-utils";
 import { FloodedRoutePolyline } from "./FloodedRoutePolyline";
 
 interface WaterFlowRouteProps {
@@ -19,6 +20,8 @@ export function WaterFlowRoute({
   isSelected,
   onPress,
 }: WaterFlowRouteProps) {
+  const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
   const startPoint = route.coordinates[0];
   const endPoint = route.coordinates[route.coordinates.length - 1];
 
@@ -75,7 +78,7 @@ export function WaterFlowRoute({
                 size={10}
                 color={sensorColors.main}
               />
-              <Text style={{ fontSize: 10, fontWeight: "800", color: "#1F2937" }}>
+              <Text style={{ fontSize: 10, fontWeight: "800", color: isDark ? "#F1F5F9" : "#1F2937" }}>
                 {sensor.waterLevel}cm
               </Text>
             </View>

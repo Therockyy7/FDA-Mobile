@@ -1,9 +1,11 @@
+// features/map/components/areas/components/AdminAreaConfirmModal.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
 import type { AdminArea } from "~/features/areas/types/admin-area.types";
 
 interface AdminAreaConfirmModalProps {
@@ -19,6 +21,7 @@ export function AdminAreaConfirmModal({
 }: AdminAreaConfirmModalProps) {
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
 
   if (!visible || !adminArea) return null;
 
@@ -38,17 +41,15 @@ export function AdminAreaConfirmModal({
     >
       <View
         style={{
-          backgroundColor: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
+          backgroundColor: isDark ? "#1E293B" : "#FFFFFF",
           borderRadius: 24,
           padding: 24,
           marginHorizontal: 20,
           width: "90%",
           maxWidth: 400,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.3,
-          shadowRadius: 20,
-          elevation: 10,
+          ...CARD_SHADOW,
+          borderWidth: 1,
+          borderColor: isDark ? "#334155" : "#E2E8F0",
         }}
       >
         <View style={{ alignItems: "center", marginBottom: 20 }}>
@@ -69,7 +70,7 @@ export function AdminAreaConfirmModal({
             style={{
               fontSize: 20,
               fontWeight: "800",
-              color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
+              color: isDark ? "#F1F5F9" : "#1F2937",
               marginBottom: 8,
               textAlign: "center",
             }}
@@ -79,7 +80,7 @@ export function AdminAreaConfirmModal({
           <Text
             style={{
               fontSize: 14,
-              color: isDarkColorScheme ? "#94A3B8" : "#64748B",
+              color: isDark ? "#94A3B8" : "#64748B",
               textAlign: "center",
               lineHeight: 20,
             }}
@@ -125,7 +126,7 @@ export function AdminAreaConfirmModal({
           <TouchableOpacity
             onPress={onClose}
             style={{
-              backgroundColor: isDarkColorScheme ? "#334155" : "#F1F5F9",
+              backgroundColor: isDark ? "#334155" : "#F1F5F9",
               borderRadius: 16,
               padding: 16,
               alignItems: "center",
@@ -133,7 +134,7 @@ export function AdminAreaConfirmModal({
           >
             <Text
               style={{
-                color: isDarkColorScheme ? "#F1F5F9" : "#64748B",
+                color: isDark ? "#F1F5F9" : "#64748B",
                 fontSize: 16,
                 fontWeight: "600",
               }}

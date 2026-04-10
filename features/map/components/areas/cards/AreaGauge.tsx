@@ -1,102 +1,80 @@
 // features/map/components/areas/cards/AreaGauge.tsx
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { RADIUS } from "~/features/map/lib/map-ui-utils";
 
 interface AreaGaugeProps {
   maxWaterLevel: number;
-  colors: {
-    cardBg: string;
-    subtext: string;
-    text: string;
-    border: string;
-  };
+  colors: { cardBg: string; text: string; subtext: string; border: string };
+}
+
+function getWaterLevelConfig(level: number) {
+  if (level >= 40) return { color: "#EF4444", label: "Nguy hiểm", icon: "alert-circle" };
+  if (level >= 20) return { color: "#F97316", label: "Cảnh báo", icon: "warning" };
+  if (level >= 10) return { color: "#FBBF24", label: "Theo dõi", icon: "eye" };
+  return { color: "#10B981", label: "An toàn", icon: "checkmark-circle" };
 }
 
 export function AreaGauge({ maxWaterLevel, colors }: AreaGaugeProps) {
+  const cfg = getWaterLevelConfig(maxWaterLevel);
+  const fillPercent = Math.min((maxWaterLevel / 60) * 100, 100);
+
   return (
-    <View style={{ alignItems: "center", marginBottom: 24, marginTop: 8 }}>
-      <LinearGradient
-        colors={["#06B6D4", "#007AFF"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{
-          width: 140,
-          height: 140,
-          borderRadius: 70,
-          alignItems: "center",
-          justifyContent: "center",
-          shadowColor: "#06B6D4",
-          shadowOffset: { width: 0, height: 10 },
-          shadowOpacity: 0.4,
-          shadowRadius: 20,
-          elevation: 12,
-          borderWidth: 4,
-          borderColor: "rgba(255,255,255,0.2)",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* Decorative circles */}
-        <View
-          style={{
-            position: "absolute",
-            top: -20,
-            right: -20,
-            width: 80,
-            height: 80,
-            borderRadius: 40,
-            backgroundColor: "rgba(255,255,255,0.1)",
-          }}
-        />
-        <View
-          style={{
-            position: "absolute",
-            bottom: 10,
-            left: -10,
-            width: 60,
-            height: 60,
-            borderRadius: 30,
-            backgroundColor: "rgba(255,255,255,0.1)",
-          }}
-        />
+    <View style={styles.row}>
+      {/* Left: compact value */}
+      <View style={[styles.valueBox, { backgroundColor: colors.cardBg }]}>
+        <Ionicons name={cfg.icon as any} size={14} color={cfg.color} style={{ marginBottom: 4 }} />
+        <View style={{ flexDirection: "row", alignItems: "baseline", gap: 3 }}>
+          <Text style={[styles.value, { color: colors.text }]}>{maxWaterLevel}</Text>
+          <Text style={[styles.unit, { color: colors.subtext }]}>cm</Text>
+        </View>
+        <Text style={[styles.cfgLabel, { color: cfg.color }]}>{cfg.label}</Text>
+      </View>
 
-        <MaterialCommunityIcons
-          name="waves"
-          size={32}
-          color="rgba(255,255,255,0.9)"
-          style={{ marginBottom: 4 }}
-        />
-        <Text style={{ fontSize: 40, fontWeight: "900", color: "white", lineHeight: 48 }}>
-          {maxWaterLevel}
-        </Text>
-        <Text style={{ fontSize: 13, fontWeight: "700", color: "rgba(255,255,255,0.9)", letterSpacing: 1 }}>
-          CM
-        </Text>
-      </LinearGradient>
-
-      <View
-        style={{
-          backgroundColor: colors.cardBg,
-          paddingHorizontal: 16,
-          paddingVertical: 6,
-          borderRadius: 20,
-          marginTop: -18,
-          borderWidth: 1,
-          borderColor: colors.border,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 4,
-          elevation: 2,
-        }}
-      >
-        <Text style={{ fontSize: 12, fontWeight: "700", color: colors.subtext }}>
-          MỰC NƯỚC CAO NHẤT
-        </Text>
+      {/* Right: progress bar */}
+      <View style={styles.progress}>
+        <View style={styles.progressLabelRow}>
+          <Text style={[styles.progressLabel, { color: colors.subtext }]}>MỰC NƯỚC CAO NHẤT</Text>
+          <Text style={[styles.progressPct, { color: colors.text }]}>{Math.round(fillPercent)}%</Text>
+        </View>
+        <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
+          <View style={[styles.progressFill, { width: `${fillPercent}%`, backgroundColor: cfg.color }]} />
+        </View>
+        <View style={styles.scaleRow}>
+          <Text style={[styles.scaleText, { color: colors.subtext }]}>0</Text>
+          <Text style={[styles.scaleText, { color: colors.subtext }]}>30</Text>
+          <Text style={[styles.scaleText, { color: colors.subtext }]}>60cm</Text>
+        </View>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 14,
+    marginTop: 4,
+  },
+  valueBox: {
+    width: 80,
+    padding: 10,
+    borderRadius: RADIUS.chip,
+    alignItems: "center",
+    flexShrink: 0,
+  },
+  value: { fontSize: 24, fontWeight: "900", lineHeight: 28 },
+  unit: { fontSize: 12, fontWeight: "600" },
+  cfgLabel: { fontSize: 10, fontWeight: "700", marginTop: 3 },
+  progress: { flex: 1, justifyContent: "center", gap: 4 },
+  progressLabelRow: { flexDirection: "row", justifyContent: "space-between" },
+  progressLabel: { fontSize: 9, fontWeight: "700", letterSpacing: 0.5 },
+  progressPct: { fontSize: 12, fontWeight: "800" },
+  progressTrack: { height: 6, borderRadius: RADIUS.progress, overflow: "hidden" },
+  progressFill: { height: "100%", borderRadius: RADIUS.progress },
+  scaleRow: { flexDirection: "row", justifyContent: "space-between" },
+  scaleText: { fontSize: 9, fontWeight: "600" },
+});

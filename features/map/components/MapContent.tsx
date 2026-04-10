@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import React from "react";
 import { StyleSheet, View } from "react-native";
+import { useColorScheme } from "~/lib/useColorScheme";
 import { AreaCircleOverlay, AreaPreviewCircle, AdminAreaPolygon } from "~/features/map/components/areas";
 import {
   FloodWarningMarkers,
@@ -75,6 +76,9 @@ export function MapContent({
   onRegionChangeComplete, onLongPress, onPress, onPanDrag,
   onAreaPress, onRoutePress, onSafeRoutePress, onCommunityReportPress, onFloodMarkerPress, openStreetView, onAdminAreaPress, onDraftAreaCenterChange,
 }: Props) {
+  const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
+
   return (
     <MapView
       ref={mapRef}
@@ -186,10 +190,10 @@ const styles = StyleSheet.create({
     padding: 8,
     borderWidth: 3,
     borderColor: "white",
-    shadowColor: "#F59E0B",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 6,
+    elevation: 2,
   },
 });

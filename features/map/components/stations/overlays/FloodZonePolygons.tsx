@@ -1,12 +1,12 @@
 // features/map/components/stations/FloodZonePolygons.tsx
 import React, { useMemo } from "react";
 import { Polygon } from "react-native-maps";
-import { useMapSettings } from "../../../stores/useMapSettingsStore";
+import { useMapSettings } from "~/features/map/stores/useMapSettingsStore";
 import {
   isPolygonFeature,
   type FloodSeverityGeoJSON,
   type FloodZoneFeature,
-} from "../../../types/map-layers.types";
+} from "~/features/map/types/map-layers.types";
 
 interface FloodZonePolygonsProps {
   floodSeverity: FloodSeverityGeoJSON | null;

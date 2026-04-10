@@ -2,8 +2,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
 import React, { useEffect, useRef } from "react";
-import { Animated, TouchableOpacity, View } from "react-native";
+import { Animated, Easing, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { PULSE_ANIM, STATUS_BADGE } from "~/features/map/lib/map-ui-utils";
 
 interface PredictionSliderHeaderProps {
   currentStep: {
@@ -32,13 +33,15 @@ export function PredictionSliderHeader({
       const pulse = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
-            toValue: 0.5,
-            duration: 800,
+            toValue: PULSE_ANIM.scaleTo,
+            duration: PULSE_ANIM.duration,
+            easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
           Animated.timing(pulseAnim, {
             toValue: 1,
-            duration: 800,
+            duration: PULSE_ANIM.duration,
+            easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
         ])
@@ -74,16 +77,11 @@ export function PredictionSliderHeader({
         <View style={styles.titleRow}>
           <Animated.View
             style={{
-              width: 10,
-              height: 10,
-              borderRadius: 5,
+              width: STATUS_BADGE.dotSize,
+              height: STATUS_BADGE.dotSize,
+              borderRadius: 3,
               backgroundColor: currentStep.color,
               opacity: pulseAnim,
-              shadowColor: currentStep.color,
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.8,
-              shadowRadius: 6,
-              elevation: 4,
             }}
           />
           <Text style={[styles.title, { color: textColor }]}>

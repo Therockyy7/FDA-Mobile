@@ -1,91 +1,76 @@
 // features/map/components/areas/cards/AreaStats.tsx
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { formatTime } from "../../../lib/formatters";
+import { formatTime } from "~/features/map/lib/formatters";
+import { RADIUS } from "~/features/map/lib/map-ui-utils";
 
 interface AreaStatsProps {
   radiusMeters: number;
   stationCount: number;
   evaluatedAt: string | null;
-  colors: {
-    cardBg: string;
-    text: string;
-    subtext: string;
-    border: string;
-  };
+  colors: { cardBg: string; text: string; subtext: string };
 }
 
-export function AreaStats({
-  radiusMeters,
-  stationCount,
-  evaluatedAt,
-  colors,
-}: AreaStatsProps) {
+export function AreaStats({ radiusMeters, stationCount, evaluatedAt, colors }: AreaStatsProps) {
   return (
-    <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
+    <View style={styles.row}>
       {/* Radius */}
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: colors.cardBg,
-          padding: 12,
-          borderRadius: 12,
-          alignItems: "center",
-        }}
-      >
-        <MaterialCommunityIcons name="radius-outline" size={20} color={colors.subtext} />
-        <Text style={{ fontSize: 10, color: colors.subtext, marginTop: 4 }}>
-          Bán kính
-        </Text>
-        <Text style={{ fontSize: 14, fontWeight: "700", color: colors.text }}>
-          {radiusMeters >= 1000
-            ? `${(radiusMeters / 1000).toFixed(1)} km`
-            : `${radiusMeters} m`}
-        </Text>
+      <View style={[styles.pill, { backgroundColor: colors.cardBg }]}>
+        <MaterialCommunityIcons name="radius-outline" size={14} color={colors.subtext} />
+        <View>
+          <Text style={[styles.pillLabel, { color: colors.subtext }]}>Bán kính</Text>
+          <Text style={[styles.pillValue, { color: colors.text }]}>
+            {radiusMeters >= 1000 ? `${(radiusMeters / 1000).toFixed(1)}km` : `${radiusMeters}m`}
+          </Text>
+        </View>
       </View>
 
       {/* Stations */}
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: colors.cardBg,
-          padding: 12,
-          borderRadius: 12,
-          alignItems: "center",
-        }}
-      >
-        <MaterialCommunityIcons name="broadcast" size={20} color={colors.subtext} />
-        <Text style={{ fontSize: 10, color: colors.subtext, marginTop: 4 }}>
-          Trạm theo dõi
-        </Text>
-        <Text style={{ fontSize: 14, fontWeight: "700", color: colors.text }}>
-          {stationCount}
-        </Text>
+      <View style={[styles.pill, { backgroundColor: colors.cardBg }]}>
+        <MaterialCommunityIcons name="broadcast" size={14} color={colors.subtext} />
+        <View>
+          <Text style={[styles.pillLabel, { color: colors.subtext }]}>Trạm</Text>
+          <Text style={[styles.pillValue, { color: colors.text }]}>{stationCount}</Text>
+        </View>
       </View>
 
       {/* Updated */}
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: colors.cardBg,
-          padding: 12,
-          borderRadius: 12,
-          alignItems: "center",
-        }}
-      >
-        <Ionicons name="time-outline" size={20} color={colors.subtext} />
-        <Text style={{ fontSize: 10, color: colors.subtext, marginTop: 4 }}>
-          Cập nhật
-        </Text>
-        <Text
-          style={{ fontSize: 12, fontWeight: "700", color: colors.text }}
-          numberOfLines={1}
-        >
-          {formatTime(evaluatedAt)}
-        </Text>
+      <View style={[styles.pill, { backgroundColor: colors.cardBg }]}>
+        <Ionicons name="time-outline" size={14} color={colors.subtext} />
+        <View>
+          <Text style={[styles.pillLabel, { color: colors.subtext }]}>Cập nhật</Text>
+          <Text style={[styles.pillValue, { color: colors.text }]} numberOfLines={1}>
+            {formatTime(evaluatedAt)}
+          </Text>
+        </View>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 12,
+  },
+  pill: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 8,
+    borderRadius: RADIUS.chip,
+    gap: 6,
+  },
+  pillLabel: {
+    fontSize: 10,
+    fontWeight: "500",
+    marginBottom: 1,
+  },
+  pillValue: {
+    fontSize: 13,
+    fontWeight: "800",
+  },
+});

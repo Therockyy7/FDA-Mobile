@@ -3,6 +3,8 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { useColorScheme } from "~/lib/useColorScheme";
+import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
 
 interface PickOnMapOverlayProps {
   visible: boolean;
@@ -17,6 +19,9 @@ export function PickOnMapOverlay({
   onConfirm,
   onCancel,
 }: PickOnMapOverlayProps) {
+  const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
+
   if (!visible) return null;
 
   const accentColor = pickingTarget === "origin" ? "#16A34A" : "#4F46E5";
@@ -32,16 +37,47 @@ export function PickOnMapOverlay({
       </View>
 
       {/* Bottom confirm card */}
-      <View style={styles.card}>
-        <Text style={styles.title}>
+      <View
+        style={[
+          styles.card,
+          {
+            backgroundColor: isDark ? "#1E293B" : "white",
+            borderColor: isDark ? "#334155" : "#E2E8F0",
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.title,
+            { color: isDark ? "#F1F5F9" : "#374151" },
+          ]}
+        >
           {pickingTarget === "origin" ? "Chọn điểm đi" : "Chọn điểm đến"}
         </Text>
-        <Text style={styles.hint}>
+        <Text
+          style={[
+            styles.hint,
+            { color: isDark ? "#94A3B8" : "#9CA3AF" },
+          ]}
+        >
           Di chuyển bản đồ để đặt vị trí tại điểm ghim
         </Text>
         <View style={styles.buttons}>
-          <TouchableOpacity onPress={onCancel} style={styles.cancelBtn}>
-            <Text style={styles.cancelText}>Hủy</Text>
+          <TouchableOpacity
+            onPress={onCancel}
+            style={[
+              styles.cancelBtn,
+              { backgroundColor: isDark ? "#334155" : "#F3F4F6" },
+            ]}
+          >
+            <Text
+              style={[
+                styles.cancelText,
+                { color: isDark ? "#F1F5F9" : "#374151" },
+              ]}
+            >
+              Hủy
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={onConfirm}
@@ -79,24 +115,18 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
     zIndex: 50,
-    backgroundColor: "white",
     borderRadius: 16,
     padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 8,
+    ...CARD_SHADOW,
+    borderWidth: 1,
   },
   title: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#374151",
     marginBottom: 4,
   },
   hint: {
     fontSize: 12,
-    color: "#9CA3AF",
     marginBottom: 12,
   },
   buttons: {
@@ -107,13 +137,11 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 999,
-    backgroundColor: "#F3F4F6",
     alignItems: "center",
   },
   cancelText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#374151",
   },
   confirmBtn: {
     flex: 1,

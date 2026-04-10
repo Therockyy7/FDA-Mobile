@@ -1,14 +1,14 @@
-// features/map/components/FloodSeverityMarkers.tsx
+// features/map/components/stations/markers/FloodSeverityMarkers.tsx
 import React, { useMemo } from "react";
 import { Marker } from "react-native-maps";
-import { useMapSettings } from "../..//../stores/useMapSettingsStore";
+import { useMapSettings } from "~/features/map/stores/useMapSettingsStore";
 import {
   isPointFeature,
   SEVERITY_COLORS,
   SEVERITY_LABELS,
   type FloodSeverityFeature,
   type FloodSeverityGeoJSON,
-} from "../..//../types/map-layers.types";
+} from "~/features/map/types/map-layers.types";
 
 interface FloodSeverityMarkersProps {
   floodSeverity: FloodSeverityGeoJSON | null;

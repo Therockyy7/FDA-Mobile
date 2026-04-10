@@ -1,6 +1,7 @@
 // features/map/components/common/MapBottomSheet.tsx
-import React, { useMemo, useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import { StyleSheet, View, Modal, Pressable, KeyboardAvoidingView, Platform, Dimensions, ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 interface MapBottomSheetProps {
@@ -21,6 +22,7 @@ export function MapBottomSheet({
   enableScroll = true,
 }: MapBottomSheetProps) {
   const { isDarkColorScheme } = useColorScheme();
+  const insets = useSafeAreaInsets();
   const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
   const colors = useMemo(
@@ -65,8 +67,9 @@ export function MapBottomSheet({
             styles.sheet,
             {
               backgroundColor: colors.background,
-              maxHeight: sheetMaxHeight,
+              maxHeight: sheetMaxHeight + insets.bottom + 12,
               minHeight: enableDynamicSizing ? undefined : SCREEN_HEIGHT * 0.3,
+              paddingBottom: insets.bottom + 12,
             },
           ]}
         >
@@ -78,7 +81,7 @@ export function MapBottomSheet({
           {/* Content */}
           {enableScroll ? (
             <ScrollView
-              contentContainerStyle={styles.contentContainer}
+              contentContainerStyle={styles.contentScroll}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
@@ -109,7 +112,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.15,
     shadowRadius: 20,
     elevation: 16,
     paddingTop: 12,
@@ -123,7 +126,10 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
   },
+  contentScroll: {
+    flexGrow: 1,
+  },
   contentContainer: {
-    paddingBottom: 24,
+    paddingBottom: 4,
   },
 });

@@ -1,8 +1,9 @@
 // features/map/components/areas/cards/AreaActionBar.tsx
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { RADIUS } from "~/features/map/lib/map-ui-utils";
 
 interface AreaActionBarProps {
   statusColor: string;
@@ -11,83 +12,58 @@ interface AreaActionBarProps {
   onViewDetails?: () => void;
 }
 
-export function AreaActionBar({
-  statusColor,
-  onEdit,
-  onDelete,
-  onViewDetails,
-}: AreaActionBarProps) {
+export function AreaActionBar({ statusColor, onEdit, onDelete, onViewDetails }: AreaActionBarProps) {
   return (
-    <View style={{ flexDirection: "row", gap: 10 }}>
+    <View style={styles.row}>
       {onEdit && (
-        <TouchableOpacity
-          onPress={onEdit}
-          style={{
-            flex: 1,
-            backgroundColor: "transparent",
-            paddingVertical: 12,
-            borderRadius: 12,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-            borderWidth: 1,
-            borderColor: "#007AFF",
-          }}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="pencil" size={16} color="#007AFF" />
-          <Text style={{ fontSize: 13, fontWeight: "700", color: "#007AFF" }}>
-            Sửa
-          </Text>
+        <TouchableOpacity onPress={onEdit} style={[styles.btn, styles.outlineBtn]} activeOpacity={0.75}>
+          <Ionicons name="pencil" size={14} color="#3B82F6" />
+          <Text style={styles.outlineText}>Sửa</Text>
         </TouchableOpacity>
       )}
-
       {onDelete && (
-        <TouchableOpacity
-          onPress={onDelete}
-          style={{
-            flex: 1,
-            backgroundColor: "transparent",
-            paddingVertical: 12,
-            borderRadius: 12,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-            borderWidth: 1,
-            borderColor: "#EF4444",
-          }}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="trash" size={16} color="#EF4444" />
-          <Text style={{ fontSize: 13, fontWeight: "700", color: "#EF4444" }}>
-            Xóa
-          </Text>
+        <TouchableOpacity onPress={onDelete} style={[styles.btn, styles.outlineBtn]} activeOpacity={0.75}>
+          <Ionicons name="trash" size={14} color="#EF4444" />
+          <Text style={styles.outlineText}>Xóa</Text>
         </TouchableOpacity>
       )}
-
       {onViewDetails && (
-        <TouchableOpacity
-          onPress={onViewDetails}
-          style={{
-            flex: 2,
-            backgroundColor: statusColor,
-            paddingVertical: 12,
-            borderRadius: 12,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-          }}
-          activeOpacity={0.8}
-        >
-          <Text style={{ fontSize: 13, fontWeight: "700", color: "white" }}>
-            Chi tiết
-          </Text>
-          <Ionicons name="chevron-forward" size={16} color="white" />
+        <TouchableOpacity onPress={onViewDetails} style={[styles.btn, { backgroundColor: statusColor }]} activeOpacity={0.75}>
+          <Text style={styles.fillText}>Chi tiết</Text>
+          <Ionicons name="chevron-forward" size={14} color="white" />
         </TouchableOpacity>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  btn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    borderRadius: RADIUS.button,
+    gap: 5,
+  },
+  outlineBtn: {
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    backgroundColor: "transparent",
+  },
+  outlineText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#64748B",
+  },
+  fillText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "white",
+  },
+});

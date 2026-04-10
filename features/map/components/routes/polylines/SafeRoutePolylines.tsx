@@ -2,8 +2,8 @@
 
 import React from "react";
 import { Polyline } from "react-native-maps";
-import type { DecodedRoute } from "../..//../types/safe-route.types";
-import { SAFETY_STATUS_COLORS } from "../..//../types/safe-route.types";
+import type { DecodedRoute } from "~/features/map/types/safe-route.types";
+import { SAFETY_STATUS_COLORS } from "~/features/map/types/safe-route.types";
 
 interface SafeRoutePolylinesProps {
   routes: DecodedRoute[];

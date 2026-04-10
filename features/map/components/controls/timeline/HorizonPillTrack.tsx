@@ -3,6 +3,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import { useColorScheme } from "~/lib/useColorScheme";
+import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
 import type { ForecastHorizon } from "~/features/prediction/hooks/useDistrictsForecast";
 
 interface HorizonStep {
@@ -32,10 +34,20 @@ export function HorizonPillTrack({
   subtextColor,
   onHorizonChange,
 }: HorizonPillTrackProps) {
+  const { isDarkColorScheme: hookDark } = useColorScheme();
   const TRACK_PADDING = 6;
 
   return (
-    <View style={[styles.track, { padding: TRACK_PADDING }]}>
+    <View
+      style={[
+        styles.track,
+        {
+          padding: TRACK_PADDING,
+          backgroundColor: hookDark ? "#1E293B" : "rgba(241, 245, 249, 0.8)",
+          borderColor: hookDark ? "#334155" : "#E2E8F0",
+        },
+      ]}
+    >
       {/* Active pill background */}
       <MotiView
         animate={{
@@ -92,10 +104,8 @@ export function HorizonPillTrack({
 const styles = {
   track: {
     height: 52,
-    backgroundColor: "rgba(241, 245, 249, 0.8)",
     borderRadius: 26,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
     position: "relative" as const,
     flexDirection: "row" as const,
     alignItems: "center" as const,

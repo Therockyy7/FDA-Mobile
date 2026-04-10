@@ -341,9 +341,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 20,
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 16,
   },
   handleIndicatorContainer: {
     alignItems: "center",

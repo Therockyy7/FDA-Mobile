@@ -3,8 +3,8 @@ import React from "react";
 import { View } from "react-native";
 import { Marker } from "react-native-maps";
 import { Text } from "~/components/ui/text";
-import { Sensor } from "../../../constants/map-data";
-import { getStatusColor } from "../../../lib/map-utils";
+import { Sensor } from "~/features/map/constants/map-data";
+import { getStatusColor } from "~/features/map/lib/map-utils";
 
 interface SensorMarkerProps {
   sensor: Sensor;

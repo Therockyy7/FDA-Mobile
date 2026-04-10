@@ -3,7 +3,7 @@ import polyline from "@mapbox/polyline";
 import React, { useEffect, useState } from "react";
 import { Polyline } from "react-native-maps";
 import type { LatLng } from "~/features/map/types/safe-route.types";
-import { getStatusColor } from "../..//../lib/map-utils";
+import { getStatusColor } from "~/features/map/lib/map-utils";
 
 const OSRM_API_URL = "http://router.project-osrm.org/route/v1/driving";
 

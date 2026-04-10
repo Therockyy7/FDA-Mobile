@@ -2,9 +2,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, TouchableOpacity, View } from "react-native";
-import { MapSearch } from "../MapSearch";
-import { ModeIcon } from "./ModeIcon";
-import type { ViewMode } from "../selectors/ViewModeSelector";
+import { MapSearch } from "~/features/map/components/controls/MapSearch";
+import { ModeIcon } from "~/features/map/components/controls/timeline/ModeIcon";
+import { useColorScheme } from "~/lib/useColorScheme";
+import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
+import type { ViewMode } from "~/features/map/components/controls/selectors/ViewModeSelector";
 
 interface MapTopControlsProps {
   searchQuery: string;
@@ -19,6 +21,8 @@ export function MapTopControls({
   viewMode,
   onViewModeChange,
 }: MapTopControlsProps) {
+  const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
   const [searchOpen, setSearchOpen] = useState(false);
   const widthAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -55,7 +59,7 @@ export function MapTopControls({
   return (
     <View style={styles.container}>
       {/* Search bar */}
-      <Animated.View style={[styles.searchBar, { width: containerWidth }]}>
+      <Animated.View style={[styles.searchBar, { width: containerWidth, backgroundColor: isDark ? "#1E293B" : "white" }]}>
         <TouchableOpacity
           onPress={handleToggleSearch}
           activeOpacity={0.7}
@@ -70,7 +74,7 @@ export function MapTopControls({
               }),
             }}
           >
-            <Ionicons name="search" size={18} color="#4B5563" />
+            <Ionicons name="search" size={18} color={isDark ? "#64748B" : "#4B5563"} />
           </Animated.View>
           <Animated.View
             style={{
@@ -81,7 +85,7 @@ export function MapTopControls({
               }),
             }}
           >
-            <Ionicons name="close" size={18} color="#4B5563" />
+            <Ionicons name="close" size={18} color={isDark ? "#64748B" : "#4B5563"} />
           </Animated.View>
         </TouchableOpacity>
 
@@ -98,7 +102,7 @@ export function MapTopControls({
       </Animated.View>
 
       {/* Mode icons */}
-      <View style={styles.modeBar}>
+      <View style={[styles.modeBar, { backgroundColor: isDark ? "#1E293B" : "white" }]}>
         <ModeIcon
           active={viewMode === "zones"}
           viewMode="zones"
@@ -124,16 +128,13 @@ const styles = {
   searchBar: {
     height: 40,
     borderRadius: 999,
-    backgroundColor: "white",
     flexDirection: "row" as const,
     alignItems: "center" as const,
     paddingHorizontal: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    ...CARD_SHADOW,
     overflow: "hidden" as const,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
   searchIcon: {
     width: 32,
@@ -144,13 +145,8 @@ const styles = {
   },
   modeBar: {
     flexDirection: "row" as const,
-    backgroundColor: "white",
     borderRadius: 999,
     padding: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    ...CARD_SHADOW,
   },
 };

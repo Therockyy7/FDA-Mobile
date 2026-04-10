@@ -1,8 +1,10 @@
 // features/map/components/controls/selectors/ViewModeSelector.tsx
 import React from "react";
 import { View } from "react-native";
-import { ViewModeButton } from "./ViewModeButton";
-import type { ViewMode } from "../../../types/map-display.types";
+import { useColorScheme } from "~/lib/useColorScheme";
+import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { ViewModeButton } from "~/features/map/components/controls/selectors/ViewModeButton";
+import type { ViewMode } from "~/features/map/types/map-display.types";
 export type { ViewMode };
 
 interface ViewModeSelectorProps {
@@ -11,8 +13,19 @@ interface ViewModeSelectorProps {
 }
 
 export function ViewModeSelector({ mode, onModeChange }: ViewModeSelectorProps) {
+  const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: isDark ? "rgba(30,41,59,0.95)" : "rgba(255,255,255,0.95)",
+          borderColor: isDark ? "#334155" : "rgba(255,255,255,0.5)",
+        },
+      ]}
+    >
       <ViewModeButton mode="zones" currentMode={mode} onPress={onModeChange} />
       <ViewModeButton mode="routes" currentMode={mode} onPress={onModeChange} />
     </View>
@@ -22,15 +35,10 @@ export function ViewModeSelector({ mode, onModeChange }: ViewModeSelectorProps) 
 const styles = {
   container: {
     flexDirection: "row" as const,
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
     borderRadius: 20 as const,
     padding: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
+    ...CARD_SHADOW,
     elevation: 8 as const,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.5)",
   },
 };

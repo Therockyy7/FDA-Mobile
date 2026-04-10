@@ -2,6 +2,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useRef } from "react";
 import { Animated, TouchableOpacity } from "react-native";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 interface ModeIconProps {
   active: boolean;
@@ -10,6 +11,8 @@ interface ModeIconProps {
 }
 
 export function ModeIcon({ active, viewMode, onPress }: ModeIconProps) {
+  const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePress = () => {
@@ -42,13 +45,13 @@ export function ModeIcon({ active, viewMode, onPress }: ModeIconProps) {
           <MaterialCommunityIcons
             name="waves"
             size={18}
-            color={active ? "white" : "#4B5563"}
+            color={active ? "white" : isDark ? "#94A3B8" : "#4B5563"}
           />
         ) : (
           <MaterialCommunityIcons
             name="routes"
             size={18}
-            color={active ? "white" : "#4B5563"}
+            color={active ? "white" : isDark ? "#94A3B8" : "#4B5563"}
           />
         )}
       </TouchableOpacity>

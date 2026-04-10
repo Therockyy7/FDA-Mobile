@@ -5,6 +5,8 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { useColorScheme } from "~/lib/useColorScheme";
+import { CARD_SHADOW, OVERLAY_SHADOW } from "~/features/map/lib/map-ui-utils";
 import { Legend, MapControls } from "~/features/map/components/controls";
 
 interface Props {
@@ -66,6 +68,9 @@ export function MapFloatingUI({
   selectedAdminAreaName,
   onClearAdminArea,
 }: Props) {
+  const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
+
   const showControls =
     !selectedRoute &&
     !selectedZone &&
@@ -138,13 +143,27 @@ export function MapFloatingUI({
 
       {/* Selected Admin Area Banner */}
       {selectedAdminAreaName && onClearAdminArea && !isRoutingUIVisible && (
-        <View style={styles.selectedAdminAreaBanner}>
+        <View
+          style={[
+            styles.selectedAdminAreaBanner,
+            {
+              backgroundColor: isDark ? "#1E293B" : "white",
+              borderColor: isDark ? "#334155" : "#E2E8F0",
+            },
+          ]}
+        >
           <Ionicons name="analytics" size={16} color="#8B5CF6" style={{ marginRight: 6 }} />
-          <Text style={styles.selectedAdminAreaText} numberOfLines={1}>
+          <Text
+            style={[
+              styles.selectedAdminAreaText,
+              { color: isDark ? "#F1F5F9" : "#1E293B" },
+            ]}
+            numberOfLines={1}
+          >
             {selectedAdminAreaName}
           </Text>
           <TouchableOpacity onPress={onClearAdminArea} style={styles.clearAdminAreaButton} activeOpacity={0.7}>
-            <Ionicons name="close" size={18} color="#64748B" />
+            <Ionicons name="close" size={18} color={isDark ? "#64748B" : "#64748B"} />
           </TouchableOpacity>
         </View>
       )}
@@ -170,11 +189,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#3B82F6",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 6,
+    ...OVERLAY_SHADOW,
     borderWidth: 2,
     borderColor: "#3B82F6",
     marginTop: 10,
@@ -186,38 +201,27 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 6,
+    ...OVERLAY_SHADOW,
     borderWidth: 2,
     borderColor: "#3B82F6",
   },
   selectedAdminAreaBanner: {
     position: "absolute",
-    top: 100, // Below header
+    top: 100,
     alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "white",
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    ...CARD_SHADOW,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
     zIndex: 20,
     maxWidth: "80%",
   },
   selectedAdminAreaText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#1E293B",
     marginRight: 8,
   },
   clearAdminAreaButton: {

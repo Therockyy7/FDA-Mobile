@@ -10,6 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { PredictionSliderHeader } from "./PredictionSliderHeader";
 import { HorizonPillTrack } from "./HorizonPillTrack";
+import { OVERLAY_SHADOW } from "~/features/map/lib/map-ui-utils";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -84,20 +85,18 @@ export const PredictionTimelineSlider: React.FC<PredictionTimelineSliderProps> =
       style={inline ? { width: "100%", zIndex: 30 } : absoluteStyle}
     >
       <View
-        style={{
-          marginHorizontal: inline ? 0 : SLIDER_PADDING,
-          marginBottom: inline ? 0 : Platform.OS === "ios" ? 32 : 24,
-          backgroundColor: bgColor,
-          borderRadius: 32,
-          paddingVertical: 20,
-          shadowColor: currentStep.color,
-          shadowOffset: { width: 0, height: inline ? 8 : 16 },
-          shadowOpacity: inline ? 0.08 : 0.15,
-          shadowRadius: inline ? 16 : 24,
-          elevation: inline ? 4 : 16,
-          borderWidth: 1,
-          borderColor: isDarkColorScheme ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
-        }}
+        style={[
+          OVERLAY_SHADOW,
+          {
+            marginHorizontal: inline ? 0 : SLIDER_PADDING,
+            marginBottom: inline ? 0 : Platform.OS === "ios" ? 32 : 24,
+            backgroundColor: bgColor,
+            borderRadius: 28,
+            paddingVertical: 20,
+            borderWidth: 1,
+            borderColor: isDarkColorScheme ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+          },
+        ]}
       >
         <PredictionSliderHeader
           currentStep={currentStep}

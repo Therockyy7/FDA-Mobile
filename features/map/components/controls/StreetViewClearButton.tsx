@@ -2,12 +2,17 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { TouchableOpacity } from "react-native";
+import { useColorScheme } from "~/lib/useColorScheme";
+import { OVERLAY_SHADOW } from "~/features/map/lib/map-ui-utils";
 
 interface StreetViewClearButtonProps {
   onPress: () => void;
 }
 
 export function StreetViewClearButton({ onPress }: StreetViewClearButtonProps) {
+  const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -18,11 +23,7 @@ export function StreetViewClearButton({ onPress }: StreetViewClearButtonProps) {
         backgroundColor: "#F59E0B",
         alignItems: "center",
         justifyContent: "center",
-        shadowColor: "#F59E0B",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
-        elevation: 6,
+        ...OVERLAY_SHADOW,
       }}
       activeOpacity={0.8}
     >

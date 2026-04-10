@@ -15,11 +15,12 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
+import { useColorScheme } from "~/lib/useColorScheme";
 import {
   usePlaceSearch,
   type PlacePrediction,
-} from "../..//../hooks/usePlaceSearch";
-import type { LatLng } from "../..//../types/safe-route.types";
+} from "~/features/map/hooks/usePlaceSearch";
+import type { LatLng } from "~/features/map/types/safe-route.types";
 
 interface PlaceSearchSheetProps {
   visible: boolean;
@@ -46,6 +47,8 @@ export function PlaceSearchSheet({
   initialQuery = "",
   onQueryClear,
 }: PlaceSearchSheetProps) {
+  const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
   const {
@@ -108,7 +111,7 @@ export function PlaceSearchSheet({
       <View
         style={{
           flex: 1,
-          backgroundColor: "#FFFFFF",
+          backgroundColor: isDark ? "#1E293B" : "#FFFFFF",
           paddingTop:
             Platform.OS === "android"
               ? (StatusBar.currentHeight ?? 0) + 8
@@ -124,7 +127,7 @@ export function PlaceSearchSheet({
             paddingBottom: 12,
             gap: 8,
             borderBottomWidth: 1,
-            borderBottomColor: "#F1F5F9",
+            borderBottomColor: isDark ? "#334155" : "#F1F5F9",
           }}
         >
           <TouchableOpacity
@@ -132,7 +135,7 @@ export function PlaceSearchSheet({
             style={{ padding: 8 }}
             hitSlop={8}
           >
-            <Ionicons name="arrow-back" size={22} color="#374151" />
+            <Ionicons name="arrow-back" size={22} color={isDark ? "#94A3B8" : "#374151"} />
           </TouchableOpacity>
 
           <View
@@ -140,26 +143,26 @@ export function PlaceSearchSheet({
               flex: 1,
               flexDirection: "row",
               alignItems: "center",
-              backgroundColor: "#F3F4F6",
+              backgroundColor: isDark ? "#334155" : "#F3F4F6",
               borderRadius: 12,
               paddingHorizontal: 12,
               gap: 8,
             }}
           >
-            <Ionicons name="search" size={18} color="#9CA3AF" />
+            <Ionicons name="search" size={18} color={isDark ? "#64748B" : "#9CA3AF"} />
             <TextInput
               ref={inputRef}
               value={query}
               onChangeText={setQuery}
               placeholder={placeholder}
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={isDark ? "#64748B" : "#9CA3AF"}
               returnKeyType="search"
               autoCorrect={false}
               onSubmitEditing={handleSubmitEditing}
               style={{
                 flex: 1,
                 fontSize: 15,
-                color: "#111827",
+                color: isDark ? "#F1F5F9" : "#111827",
                 paddingVertical: 12,
               }}
             />
@@ -181,7 +184,7 @@ export function PlaceSearchSheet({
             paddingVertical: 8,
             gap: 2,
             borderBottomWidth: 1,
-            borderBottomColor: "#F1F5F9",
+            borderBottomColor: isDark ? "#334155" : "#F1F5F9",
           }}
         >
           {showGPSOption && (
@@ -237,7 +240,7 @@ export function PlaceSearchSheet({
             >
               <Ionicons name="map" size={18} color={accentColor} />
             </View>
-            <Text style={{ fontSize: 15, fontWeight: "500", color: "#374151" }}>
+            <Text style={{ fontSize: 15, fontWeight: "500", color: isDark ? "#94A3B8" : "#374151" }}>
               Chọn trên bản đồ
             </Text>
           </TouchableOpacity>
@@ -251,7 +254,7 @@ export function PlaceSearchSheet({
                 style={{
                   fontSize: 12,
                   fontWeight: "600",
-                  color: "#9CA3AF",
+                  color: isDark ? "#64748B" : "#9CA3AF",
                   paddingHorizontal: 16,
                   paddingBottom: 8,
                   letterSpacing: 0.5,
@@ -271,7 +274,7 @@ export function PlaceSearchSheet({
                     paddingVertical: 12,
                     gap: 12,
                     borderBottomWidth: 1,
-                    borderBottomColor: "#F8FAFC",
+                    borderBottomColor: isDark ? "#334155" : "#F8FAFC",
                   }}
                 >
                   <View
@@ -279,19 +282,19 @@ export function PlaceSearchSheet({
                       width: 36,
                       height: 36,
                       borderRadius: 18,
-                      backgroundColor: "#F1F5F9",
+                      backgroundColor: isDark ? "#334155" : "#F1F5F9",
                       alignItems: "center",
                       justifyContent: "center",
                     }}
                   >
-                    <Ionicons name="location" size={18} color="#6B7280" />
+                    <Ionicons name="location" size={18} color={isDark ? "#94A3B8" : "#6B7280"} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text
                       style={{
                         fontSize: 14,
                         fontWeight: "600",
-                        color: "#1F2937",
+                        color: isDark ? "#F1F5F9" : "#1F2937",
                       }}
                       numberOfLines={1}
                     >
@@ -301,7 +304,7 @@ export function PlaceSearchSheet({
                       <Text
                         style={{
                           fontSize: 12,
-                          color: "#9CA3AF",
+                          color: isDark ? "#64748B" : "#9CA3AF",
                           marginTop: 2,
                         }}
                         numberOfLines={1}
@@ -324,11 +327,11 @@ export function PlaceSearchSheet({
                 paddingHorizontal: 32,
               }}
             >
-              <Ionicons name="search" size={40} color="#D1D5DB" />
+              <Ionicons name="search" size={40} color={isDark ? "#334155" : "#D1D5DB"} />
               <Text
                 style={{
                   fontSize: 14,
-                  color: "#9CA3AF",
+                  color: isDark ? "#64748B" : "#9CA3AF",
                   textAlign: "center",
                   marginTop: 12,
                 }}
@@ -347,11 +350,11 @@ export function PlaceSearchSheet({
                 paddingHorizontal: 32,
               }}
             >
-              <Ionicons name="location-outline" size={40} color="#D1D5DB" />
+              <Ionicons name="location-outline" size={40} color={isDark ? "#334155" : "#D1D5DB"} />
               <Text
                 style={{
                   fontSize: 14,
-                  color: "#9CA3AF",
+                  color: isDark ? "#64748B" : "#9CA3AF",
                   textAlign: "center",
                   marginTop: 12,
                   lineHeight: 20,

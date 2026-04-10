@@ -1,8 +1,10 @@
-// features/map/components/Legend.tsx
+// features/map/components/controls/Legend.tsx
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
 import { View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { useColorScheme } from "~/lib/useColorScheme";
+import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
 
 // Severity levels based on water level thresholds
 const SEVERITY_LEVELS = [
@@ -10,7 +12,7 @@ const SEVERITY_LEVELS = [
     key: "safe",
     label: "An toàn",
     range: "< 10 cm",
-    color: "#22C55E",       // Green
+    color: "#22C55E",
     bgColor: "#DCFCE7",
     icon: "checkmark-circle" as const,
   },
@@ -18,7 +20,7 @@ const SEVERITY_LEVELS = [
     key: "caution",
     label: "Chú ý",
     range: "10-20 cm",
-    color: "#EAB308",       // Yellow
+    color: "#EAB308",
     bgColor: "#FEF9C3",
     icon: "information-circle" as const,
   },
@@ -26,7 +28,7 @@ const SEVERITY_LEVELS = [
     key: "warning",
     label: "Cảnh báo",
     range: "20-40 cm",
-    color: "#F97316",       // Orange
+    color: "#F97316",
     bgColor: "#FFEDD5",
     icon: "alert-circle" as const,
   },
@@ -34,30 +36,29 @@ const SEVERITY_LEVELS = [
     key: "critical",
     label: "Nguy hiểm",
     range: "≥ 40 cm",
-    color: "#EF4444",       // Red
+    color: "#EF4444",
     bgColor: "#FEE2E2",
     icon: "warning" as const,
   },
 ];
 
 const Legend = () => {
+  const { isDarkColorScheme } = useColorScheme();
+  const isDark = isDarkColorScheme;
+
   return (
     <View
       style={{
         position: "absolute",
         top: 80,
         left: 16,
-        backgroundColor: "white",
-        borderRadius: 20,
+        backgroundColor: isDark ? "#1E293B" : "white",
+        borderRadius: 16,
         padding: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 16,
-        elevation: 8,
+        ...CARD_SHADOW,
         minWidth: 170,
         borderWidth: 1,
-        borderColor: "#E2E8F0",
+        borderColor: isDark ? "#334155" : "#E2E8F0",
       }}
     >
       {/* Header */}
@@ -81,7 +82,7 @@ const Legend = () => {
           style={{
             fontSize: 13,
             fontWeight: "800",
-            color: "#1E293B",
+            color: isDark ? "#F1F5F9" : "#1E293B",
           }}
         >
           Mức độ ngập
@@ -122,7 +123,7 @@ const Legend = () => {
               <Text
                 style={{
                   fontSize: 10,
-                  color: "#64748B",
+                  color: isDark ? "#94A3B8" : "#64748B",
                 }}
               >
                 {level.range}
@@ -136,7 +137,7 @@ const Legend = () => {
       <View
         style={{
           height: 1,
-          backgroundColor: "#E2E8F0",
+          backgroundColor: isDark ? "#334155" : "#E2E8F0",
           marginVertical: 12,
         }}
       />

@@ -34,59 +34,59 @@ const parseBool = (v: string | undefined | null): boolean | null => {
 
 const COMPARISON_ROWS: FeatureRow[] = [
   {
-    key: "max_areas",
-    label: "Khu vực theo dõi",
+    key: "monitored_areas_max",
+    label: "Số vùng theo dõi",
     getValue: (plan) => {
-      const v = plan.features.find((f) => f.featureKey === "max_areas")?.featureValue;
-      if (!v || v === "0") return "1";
-      if (v === "-1" || v.toLowerCase() === "unlimited") return "Không giới hạn";
-      return v;
+      const v = plan.features?.find((f) => f.featureKey === "monitored_areas_max")?.featureValue;
+      return v || "—";
     },
   },
   {
-    key: "sms_alerts",
-    label: "Cảnh báo SMS",
+    key: "alert_channels",
+    label: "Kênh thông báo",
     getValue: (plan) => {
-      const result = parseBool(plan.features.find((f) => f.featureKey === "sms_alerts")?.featureValue);
-      return result === true ? "✓" : "—";
-    },
-  },
-  {
-    key: "email_alerts",
-    label: "Cảnh báo Email",
-    getValue: (plan) => {
-      const result = parseBool(plan.features.find((f) => f.featureKey === "email_alerts")?.featureValue);
-      return result === true ? "✓" : "—";
-    },
-  },
-  {
-    key: "call_alerts",
-    label: "Gọi điện khẩn cấp",
-    getValue: (plan) => {
-      const result = parseBool(
-        plan.features.find((f) => f.featureKey === "call_alerts" || f.featureKey === "phone_alerts")?.featureValue,
-      );
-      return result === true ? "✓" : "—";
-    },
-  },
-  {
-    key: "priority_level",
-    label: "Ưu tiên xử lý",
-    getValue: (plan) => {
-      const v = plan.features.find((f) => f.featureKey === "priority_level")?.featureValue;
+      const v = plan.features?.find((f) => f.featureKey === "alert_channels")?.featureValue;
       if (!v) return "—";
-      const map: Record<string, string> = { low: "Thấp", medium: "Trung bình", high: "Cao", highest: "Cao nhất" };
-      return map[v.toLowerCase()] ?? v.charAt(0).toUpperCase() + v.slice(1);
+      if (v.includes("Webhook")) return "Tất cả + Webhook";
+      if (v.includes("SMS")) return "Push, Email, SMS";
+      return "Push, Email";
     },
   },
   {
-    key: "api_access",
-    label: "API & Dữ liệu",
+    key: "dispatch_delay",
+    label: "Độ trễ thông báo",
     getValue: (plan) => {
-      const result = parseBool(
-        plan.features.find((f) => f.featureKey === "api_access" || f.featureKey === "data_api")?.featureValue,
-      );
-      return result === true ? "✓" : "—";
+      const v = plan.features?.find((f) => f.featureKey === "dispatch_delay")?.featureValue;
+      return v || "—";
+    },
+  },
+  {
+    key: "ai_predictions",
+    label: "Dự báo AI",
+    getValue: (plan) => {
+      const v = plan.features?.find((f) => f.featureKey === "ai_predictions")?.featureValue;
+      if (!v || v === "Không") return "—";
+      return v === "Có" || v === "Đầy đủ" ? "Có" : v;
+    },
+  },
+  {
+    key: "safe_routes",
+    label: "Tìm đường an toàn",
+    getValue: (plan) => {
+      const v = plan.features?.find((f) => f.featureKey === "safe_routes")?.featureValue;
+      if (!v || v === "Không") return "—";
+      return v === "Có" ? "Có" : v;
+    },
+  },
+  {
+    key: "community_reports",
+    label: "Báo cáo cộng đồng",
+    getValue: (plan) => {
+      const v = plan.features?.find((f) => f.featureKey === "community_reports")?.featureValue;
+      if (!v) return "—";
+      if (v.includes("huy hiệu")) return "Có (Uy tín cao)";
+      if (v.includes("Kiểm duyệt")) return "Kiểm duyệt";
+      return "Có";
     },
   },
 ];

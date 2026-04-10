@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
@@ -49,6 +49,7 @@ const PricingCard: React.FC<Props> = ({
   const isPremium = upperCode === "PREMIUM";
   const isMonitor = upperCode === "MONITOR";
   const isFree = upperCode === "FREE";
+  const isEnterprise = upperCode === "ENTERPRISE" || upperCode === "MONITOR";
 
   const currentRank = currentSubscription
     ? getPlanRank(currentSubscription.tierCode || currentSubscription.tier || "")
@@ -66,6 +67,7 @@ const PricingCard: React.FC<Props> = ({
 
   let buttonLabel = "";
   if (isCurrentPlan) buttonLabel = "Đang dùng";
+  else if (isEnterprise) buttonLabel = "Liên hệ";
   else if (!isAuthenticated) buttonLabel = "Chọn";
   else if (isUpgrade) buttonLabel = "Nâng cấp";
   else if (isDowngrade) buttonLabel = "Hạ cấp";
@@ -163,7 +165,13 @@ const PricingCard: React.FC<Props> = ({
         </Text>
 
         <TouchableOpacity
-          onPress={() => onActionPress?.(plan)}
+          onPress={() => {
+            if (isEnterprise && !isCurrentPlan) {
+              Alert.alert("Liên hệ với nhà phát triển", "Vui lòng liên hệ với chúng tôi để đăng ký Gói Doanh Nghiệp.");
+            } else {
+              onActionPress?.(plan);
+            }
+          }}
           disabled={loading || !!isCurrentPlan}
           activeOpacity={0.7}
           style={[
@@ -178,7 +186,7 @@ const PricingCard: React.FC<Props> = ({
           <Text style={[styles.ctaText, { color: ctaStyle.text }]}>
             {buttonLabel}
           </Text>
-          {(isUpgrade || (!isAuthenticated && !isCurrentPlan)) && (
+          {((isUpgrade && !isEnterprise) || (!isAuthenticated && !isCurrentPlan && !isEnterprise)) && (
             <Ionicons
               name="arrow-forward"
               size={13}

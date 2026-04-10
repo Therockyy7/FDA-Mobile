@@ -4,16 +4,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { RADIUS } from "~/features/map/lib/map-ui-utils";
 import {
   FloodSeverityFeature,
   SEVERITY_COLORS,
   SEVERITY_LABELS,
 } from "~/features/map/types/map-layers.types";
-import { StationStats } from "./StationStats";
-import { StationSensorInfo } from "./StationSensorInfo";
+import { useColorScheme } from "~/lib/useColorScheme";
 import { StationFooter } from "./StationFooter";
-import { RADIUS } from "~/features/map/lib/map-ui-utils";
+import { StationStats } from "./StationStats";
 
 interface FloodStationCardProps {
   station: FloodSeverityFeature;
@@ -28,13 +27,21 @@ function getSeverityIcon(severity: string) {
   return "checkmark-circle" as const;
 }
 
-export function FloodStationCard({ station, onClose, onViewDetails }: FloodStationCardProps) {
+export function FloodStationCard({
+  station,
+  onClose,
+  onViewDetails,
+}: FloodStationCardProps) {
   const { isDarkColorScheme } = useColorScheme();
   const isDark = isDarkColorScheme;
   const { properties } = station;
 
-  const severityColor = properties.markerColor || SEVERITY_COLORS[properties.severity] || SEVERITY_COLORS.unknown;
-  const severityLabel = SEVERITY_LABELS[properties.severity] || SEVERITY_LABELS.unknown;
+  const severityColor =
+    properties.markerColor ||
+    SEVERITY_COLORS[properties.severity] ||
+    SEVERITY_COLORS.unknown;
+  const severityLabel =
+    SEVERITY_LABELS[properties.severity] || SEVERITY_LABELS.unknown;
   const severityIcon = getSeverityIcon(properties.severity);
 
   const colors = {
@@ -55,23 +62,40 @@ export function FloodStationCard({ station, onClose, onViewDetails }: FloodStati
         style={styles.header}
       >
         <View style={styles.headerRow}>
-          <View style={[styles.iconBox, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
+          <View
+            style={[
+              styles.iconBox,
+              { backgroundColor: "rgba(255,255,255,0.2)" },
+            ]}
+          >
             <MaterialCommunityIcons name="water" size={16} color="white" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.name} numberOfLines={1}>{properties.stationName}</Text>
+            <Text style={styles.name} numberOfLines={1}>
+              {properties.stationName}
+            </Text>
             <View style={styles.meta}>
               <Text style={styles.code}>{properties.stationCode}</Text>
               {properties.roadName && (
                 <>
                   <Text style={styles.metaSep}>·</Text>
-                  <Ionicons name="location" size={10} color="rgba(255,255,255,0.65)" />
-                  <Text style={styles.road} numberOfLines={1}>{properties.roadName}</Text>
+                  <Ionicons
+                    name="location"
+                    size={10}
+                    color="rgba(255,255,255,0.65)"
+                  />
+                  <Text style={styles.road} numberOfLines={1}>
+                    {properties.roadName}
+                  </Text>
                 </>
               )}
             </View>
           </View>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeBtn}
+            activeOpacity={0.7}
+          >
             <Ionicons name="close" size={15} color="white" />
           </TouchableOpacity>
         </View>
@@ -89,12 +113,12 @@ export function FloodStationCard({ station, onClose, onViewDetails }: FloodStati
           colors={colors}
         />
 
-        <StationSensorInfo
+        {/* <StationSensorInfo
           sensorHeight={properties.sensorHeight}
           distance={properties.distance}
           unit={properties.unit}
           colors={colors}
-        />
+        /> */}
 
         <StationFooter
           measuredAt={properties.measuredAt}

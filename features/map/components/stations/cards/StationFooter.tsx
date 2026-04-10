@@ -14,24 +14,49 @@ interface StationFooterProps {
   colors: { subtext: string; muted: string };
 }
 
-export function StationFooter({ measuredAt, stationStatus, severityColor, onViewDetails, colors }: StationFooterProps) {
+export function StationFooter({
+  measuredAt,
+  stationStatus,
+  severityColor,
+  onViewDetails,
+  colors,
+}: StationFooterProps) {
   return (
     <View style={styles.row}>
       <View style={styles.meta}>
         <Ionicons name="time-outline" size={11} color={colors.muted} />
-        <Text style={[styles.timeText, { color: colors.muted }]}>{formatTime(measuredAt)}</Text>
+        <Text style={[styles.timeText, { color: colors.muted }]}>
+          {formatTime(measuredAt)}
+        </Text>
         {stationStatus && (
           <>
-            <View style={[styles.dot, { backgroundColor: stationStatus === "active" ? "#22C55E" : "#EF4444" }]} />
-            <Text style={[styles.statusText, { color: stationStatus === "active" ? "#22C55E" : "#EF4444" }]}>
-              {stationStatus === "active" ? "Hoạt động" : "Ngừng"}
+            <View
+              style={[
+                styles.dot,
+                {
+                  backgroundColor:
+                    stationStatus === "online" ? "#22C55E" : "#EF4444",
+                },
+              ]}
+            />
+            <Text
+              style={[
+                styles.statusText,
+                { color: stationStatus === "online" ? "#22C55E" : "#EF4444" },
+              ]}
+            >
+              {stationStatus}
             </Text>
           </>
         )}
       </View>
 
       {onViewDetails && (
-        <TouchableOpacity onPress={onViewDetails} style={[styles.btn, { backgroundColor: severityColor }]} activeOpacity={0.75}>
+        <TouchableOpacity
+          onPress={onViewDetails}
+          style={[styles.btn, { backgroundColor: severityColor }]}
+          activeOpacity={0.75}
+        >
           <Text style={styles.btnText}>Chi tiết</Text>
           <Ionicons name="chevron-forward" size={12} color="white" />
         </TouchableOpacity>

@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { CARD_SHADOW, RADIUS, STATUS_BADGE } from "~/features/map/lib/map-ui-utils";
+import { RADIUS, STATUS_BADGE } from "~/features/map/lib/map-ui-utils";
 
 interface StationStatsProps {
   waterLevel: number | null;
@@ -11,33 +11,60 @@ interface StationStatsProps {
   alertLevel: string | null;
   severityColor: string;
   severityLabel: string;
-  severityConfig: { name: "alert-circle" | "alert" | "information-circle" | "checkmark-circle" };
+  severityConfig: {
+    name: "alert-circle" | "alert" | "information-circle" | "checkmark-circle";
+  };
   colors: { cardBg: string; text: string; subtext: string };
 }
 
-export function StationStats({ waterLevel, unit, alertLevel, severityColor, severityLabel, severityConfig, colors }: StationStatsProps) {
+export function StationStats({
+  waterLevel,
+  unit,
+  alertLevel,
+  severityColor,
+  severityLabel,
+  severityConfig,
+  colors,
+}: StationStatsProps) {
   return (
     <View style={styles.root}>
       {/* Water Level */}
-      <View style={[styles.waterCard, { backgroundColor: colors.cardBg, borderColor: severityColor }]}>
+      <View
+        style={[
+          styles.waterCard,
+          { backgroundColor: colors.cardBg, borderColor: severityColor },
+        ]}
+      >
         {/* Left: value */}
         <View style={styles.leftCol}>
           <View style={styles.labelRow}>
             <Ionicons name="water" size={10} color={severityColor} />
-            <Text style={[styles.label, { color: colors.subtext }]}>MỰC NƯỚC</Text>
+            <Text style={[styles.label, { color: colors.subtext }]}>
+              MỰC NƯỚC
+            </Text>
           </View>
           <View style={styles.valueRow}>
             <Text style={[styles.value, { color: severityColor }]}>
-              {waterLevel !== null ? (typeof waterLevel === "number" ? waterLevel.toFixed(1) : waterLevel) : "—"}
+              {waterLevel !== null
+                ? typeof waterLevel === "number"
+                  ? waterLevel.toFixed(1)
+                  : waterLevel
+                : "—"}
             </Text>
             <Text style={[styles.unit, { color: severityColor }]}>{unit}</Text>
           </View>
         </View>
 
         {/* Right: alert pill */}
-        <View style={[styles.alertPill, { backgroundColor: `${severityColor}18` }]}>
-          <View style={[styles.dot, { backgroundColor: severityColor }]} />
-          <Ionicons name={severityConfig.name} size={10} color={severityColor} />
+        <View
+          style={[styles.alertPill, { backgroundColor: `${severityColor}18` }]}
+        >
+          {/* <View style={[styles.dot, { backgroundColor: severityColor }]} /> */}
+          <Ionicons
+            name={severityConfig.name}
+            size={10}
+            color={severityColor}
+          />
           <Text style={[styles.alertText, { color: severityColor }]}>
             {alertLevel || severityLabel.toUpperCase()}
           </Text>

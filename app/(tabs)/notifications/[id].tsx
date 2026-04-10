@@ -10,6 +10,7 @@ import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import { Text } from "~/components/ui/text";
 import { getPriorityConfig } from "~/features/notifications/lib/notifications-utils";
 import { NotificationItem } from "~/features/notifications/types/notifications-types";
+import { formatAlertTitle } from "~/features/alerts/utils/formatAlertTitle";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function NotificationDetailScreen() {
@@ -212,7 +213,7 @@ export default function NotificationDetailScreen() {
                   marginBottom: 8,
                 }}
               >
-                {notification.title}
+                {formatAlertTitle(notification.title)}
               </Text>
 
               <View

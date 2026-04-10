@@ -9,6 +9,7 @@ import type {
   AlertHistoryItem,
   AlertHistorySeverity,
 } from "../../types/alert-history.types";
+import { formatAlertTitle } from "../../utils/formatAlertTitle";
 
 interface AlertHistoryCardProps {
   item: AlertHistoryItem;
@@ -59,16 +60,6 @@ const SEVERITY_CONFIG: Record<
   },
 };
 
-/* ─── Severity title suffix ─── */
-const severityTitle = (severity: AlertHistorySeverity): string => {
-  const map: Record<AlertHistorySeverity, string> = {
-    critical: "Mực nước nguy hiểm",
-    warning: "Mực nước cảnh báo",
-    caution: "Mực nước cần chú ý",
-  };
-  return map[severity];
-};
-
 export function AlertHistoryCard({
   item,
   onPress,
@@ -87,8 +78,8 @@ export function AlertHistoryCard({
     }
   }, [item.triggeredAt]);
 
-  /* Build display title: "Trạm Abc – Mực nước nguy hiểm" */
-  const title = `${item.stationName} – ${severityTitle(item.severity)}`;
+  /* Display title – strip prefix before ":" from API message */
+  const title = formatAlertTitle(item.message) || item.stationName;
 
   /* Unread highlight bg */
   const cardBg = isUnread
@@ -104,118 +95,64 @@ export function AlertHistoryCard({
       style={{
         flexDirection: "row",
         alignItems: "center",
-        paddingVertical: 12,
+        paddingVertical: 14,
         paddingHorizontal: 14,
         backgroundColor: cardBg,
         borderRadius: 16,
         gap: 12,
       }}
     >
-      {/* ── Severity avatar ── */}
+      {/* ── Severity avatar – vertically centered ── */}
       <View
         style={{
-          width: 52,
-          height: 52,
-          borderRadius: 16,
+          width: 46,
+          height: 46,
+          borderRadius: 14,
           backgroundColor: colors.isDark ? cfg.bgDark : cfg.bgLight,
           alignItems: "center",
           justifyContent: "center",
-          borderWidth: 1.5,
+          borderWidth: 1.2,
           borderColor: cfg.color + "30",
         }}
       >
-        <Ionicons name={cfg.icon} size={24} color={cfg.color} />
+        <Ionicons name={cfg.icon} size={22} color={cfg.color} />
       </View>
 
       {/* ── Content ── */}
-      <View style={{ flex: 1, gap: 3 }}>
+      <View style={{ flex: 1, gap: 4 }}>
         {/* Title */}
         <Text
-          numberOfLines={1}
+          numberOfLines={2}
           style={{
-            fontSize: 15,
-            fontWeight: isUnread ? "800" : "600",
+            fontSize: 14.5,
+            fontWeight: isUnread ? "700" : "600",
             color: colors.text,
             letterSpacing: -0.1,
+            lineHeight: 20,
           }}
         >
           {title}
         </Text>
 
-        {/* Description / message */}
-        <Text
-          numberOfLines={2}
-          style={{
-            fontSize: 13.5,
-            fontWeight: "400",
-            color: isUnread ? colors.text : colors.subtext,
-            lineHeight: 19,
-            opacity: isUnread ? 0.85 : 0.7,
-          }}
-        >
-          {item.message}
-        </Text>
-
-        {/* Metadata row: station code · time · severity badge */}
+        {/* Metadata row: time · station · severity badge */}
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
-            marginTop: 2,
             gap: 6,
             flexWrap: "wrap",
           }}
         >
-          {/* Station code */}
-          <View
-            style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
-          >
-            <Ionicons
-              name="location"
-              size={11}
-              color={colors.subtext}
-            />
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "500",
-                color: colors.subtext,
-              }}
-            >
-              {item.stationCode}
-            </Text>
-          </View>
-
-          {/* Dot separator */}
+          {/* Relative time */}
           <Text
             style={{
-              fontSize: 10,
-              color: colors.subtext,
-              opacity: 0.5,
+              fontSize: 12,
+              fontWeight: "500",
+              color: isUnread ? colors.primary : colors.subtext,
             }}
           >
-            ·
+            {timeAgo}
           </Text>
-
-          {/* Relative time */}
-          <View
-            style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
-          >
-            <Ionicons
-              name="time-outline"
-              size={11}
-              color={colors.subtext}
-            />
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "500",
-                color: isUnread ? colors.primary : colors.subtext,
-              }}
-            >
-              {timeAgo}
-            </Text>
-          </View>
 
           {/* Dot separator */}
           <Text
@@ -255,11 +192,11 @@ export function AlertHistoryCard({
       {isUnread && (
         <View
           style={{
-            width: 10,
-            height: 10,
+            width: 9,
+            height: 9,
             borderRadius: 5,
             backgroundColor: colors.primary,
-            marginLeft: 4,
+            marginLeft: 2,
             shadowColor: colors.primary,
             shadowOffset: { width: 0, height: 0 },
             shadowOpacity: 0.5,

@@ -4,6 +4,7 @@ import { vi } from "date-fns/locale";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { formatAlertTitle } from "~/features/alerts/utils/formatAlertTitle";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { getPriorityConfig } from "../lib/notifications-utils";
 import { NotificationItem } from "../types/notifications-types";
@@ -49,22 +50,28 @@ export function NotificationCard({
       activeOpacity={0.65}
       style={{
         flexDirection: "row",
-        alignItems: "flex-start",
-        paddingVertical: 14,
-        paddingHorizontal: 16,
+        alignItems: "center",
+        paddingVertical: 12,
+        paddingHorizontal: 14,
         backgroundColor: colors.cardBg,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
-        gap: 10,
-        marginBottom: 6,
+        borderRadius: 14,
+        borderWidth: isDarkColorScheme ? 1 : 0,
+        borderColor: colors.border,
+        gap: 12,
+        marginBottom: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: isDarkColorScheme ? 0 : 0.04,
+        shadowRadius: 8,
+        elevation: 2,
       }}
     >
       {/* ── Severity Avatar ── */}
       <View
         style={{
-          width: 56,
-          height: 56,
-          borderRadius: 28, // Circle avatar to match Facebook style somewhat, but let's use squircle to keep FDA spirit
+          width: 44,
+          height: 44,
+          borderRadius: 22,
           backgroundColor: isDarkColorScheme
             ? config.darkBgColor || config.bgColor
             : config.bgColor,
@@ -74,36 +81,47 @@ export function NotificationCard({
           borderColor: config.color + "30",
         }}
       >
-        <Ionicons name={config.icon as any} size={28} color={config.color} />
+        <Ionicons name={config.icon as any} size={22} color={config.color} />
       </View>
 
       {/* ── Content ── */}
-      <View style={{ flex: 1, gap: 2, marginTop: 2 }}>
-        {/* Title */}
-        <Text
-          numberOfLines={2}
-          style={{
-            fontSize: 15,
-            color: colors.text,
-            lineHeight: 22,
-          }}
-        >
-          <Text style={{ fontWeight: "700" }}>{notification.stationName}</Text>
-          <Text style={{ fontWeight: "400" }}>{" đã cảnh báo "}</Text>
-          <Text style={{ fontWeight: "600" }}>
-            {notification.title.toLowerCase()}
+      <View style={{ flex: 1, gap: 1 }}>
+        {/* Title Group */}
+        <View style={{ gap: 0 }}>
+          <Text
+            numberOfLines={1}
+            style={{
+              fontSize: 14.5,
+              fontWeight: "700",
+              color: colors.text,
+              lineHeight: 20,
+            }}
+          >
+            {notification.stationName}
           </Text>
-        </Text>
+          <Text
+            numberOfLines={1}
+            style={{
+              fontSize: 14.5,
+              fontWeight: "600",
+              color: colors.text,
+              lineHeight: 20,
+            }}
+          >
+            {formatAlertTitle(notification.title)}
+          </Text>
+        </View>
 
         {/* Content / Message */}
         <Text
           numberOfLines={2}
           style={{
-            fontSize: 14,
+            fontSize: 13.5,
             fontWeight: "400",
             color: colors.subtext,
-            lineHeight: 20,
-            marginTop: 2,
+            lineHeight: 18,
+            marginTop: 1,
+            opacity: 0.9,
           }}
         >
           {notification.content || notification.alertMessage}
@@ -114,7 +132,7 @@ export function NotificationCard({
           style={{
             flexDirection: "row",
             alignItems: "center",
-            marginTop: 4,
+            marginTop: 3,
             gap: 6,
             flexWrap: "wrap",
           }}
@@ -122,9 +140,9 @@ export function NotificationCard({
           {/* Relative Time */}
           <Text
             style={{
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: "600",
-              color: colors.primary, // Make time colored like Facebook
+              color: colors.primary,
             }}
           >
             {timeAgo}
@@ -133,7 +151,7 @@ export function NotificationCard({
           {/* Dot Separator */}
           <Text
             style={{
-              fontSize: 13,
+              fontSize: 10,
               color: colors.muted,
               opacity: 0.6,
             }}
@@ -144,9 +162,10 @@ export function NotificationCard({
           {/* Severity Label */}
           <Text
             style={{
-              fontSize: 13,
-              fontWeight: "600",
+              fontSize: 11.5,
+              fontWeight: "700",
               color: config.color,
+              letterSpacing: 0.2,
             }}
           >
             {config.label}

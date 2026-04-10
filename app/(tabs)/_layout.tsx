@@ -175,7 +175,7 @@ const TabsLayout = () => {
             tabPress: (e: any) => {
               if (!isAuthenticated) {
                 e.preventDefault();
-                handleProtectedTabPress();
+                router.push("/plans");
               }
             },
           }}

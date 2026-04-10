@@ -22,6 +22,14 @@ interface AreaStatusPayload {
     severityLevel: number;
     summary?: string;
     evaluatedAt?: string;
+    contributingStations?: {
+      stationId: string;
+      stationCode: string;
+      distance: number;
+      waterLevel: number;
+      severity: string;
+      weight: number;
+    }[];
   };
 }
 
@@ -54,6 +62,7 @@ export function useAreaSignalR(areaIds: string[]) {
         severityLevel: d.severityLevel,
         summary: d.summary,
         evaluatedAt: d.evaluatedAt,
+        contributingStations: d.contributingStations,
       });
     } else {
       console.warn(

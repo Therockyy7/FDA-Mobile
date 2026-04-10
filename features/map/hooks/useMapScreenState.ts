@@ -398,6 +398,12 @@ export function useMapScreenState(): MapScreenState {
     );
   }, [selectedStationId, floodSeverity]);
 
+  // Derive selectedArea from realtime-merged areas (so AreaCard reflects realtime updates)
+  const realtimeSelectedArea = useMemo(() => {
+    if (!selectedArea) return null;
+    return areas.find((a) => a.id === selectedArea.id) ?? selectedArea;
+  }, [selectedArea, areas]);
+
   const handleCloseAdminConfirm = () => {
     setShowAdminAreaConfirmModal(false);
   };
@@ -495,7 +501,7 @@ export function useMapScreenState(): MapScreenState {
     toggleLegend,
     stats,
     handleMapTypeChange,
-    selectedArea,
+    selectedArea: realtimeSelectedArea,
     isAdjustingRadius,
     showCreateAreaSheet,
     isCreatingArea,

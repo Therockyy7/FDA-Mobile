@@ -171,8 +171,8 @@ export interface AreaWithStatus extends Area {
   evaluatedAt: string | null;
 }
 
-// Contributing station from area status API (internal)
-interface ContributingStation {
+// Contributing station from area status API
+export interface ContributingStation {
   stationId: string;
   stationCode: string;
   distance: number;

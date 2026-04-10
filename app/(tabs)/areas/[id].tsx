@@ -4,7 +4,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import MapView, { Circle, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import {
   ActivityIndicator,
@@ -27,7 +27,11 @@ import { Text } from "~/components/ui/text";
 import { FloodHistorySection } from "~/features/areas/components/charts";
 import { EditAreaSheet } from "~/features/areas/components/EditAreaSheet";
 import { AreaService } from "~/features/areas/services/area.service";
+import { useAreaSignalR } from "~/features/map/hooks/areas/useAreaSignalR";
 import { LocationService } from "~/features/map/services/location.service";
+import {
+  useAreaRealtimeStore,
+} from "~/features/map/stores/useAreaRealtimeStore";
 import type {
   Area,
   AreaStatusResponse,
@@ -143,6 +147,25 @@ export default function AreaDetailScreen() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [localAddress, setLocalAddress] = useState<string | null>(null);
 
+  // Realtime: subscribe to area status updates via SignalR
+  const realtimeUpdates = useAreaRealtimeStore((s) => s.updates);
+  useAreaSignalR(id ? [id] : []);
+
+  // Merge realtime update into fetched status (realtime wins)
+  const mergedStatus = useMemo(() => {
+    if (!id || !status) return status;
+    const rt = realtimeUpdates[id];
+    if (!rt) return status;
+    return {
+      ...status,
+      status: rt.status,
+      severityLevel: rt.severityLevel,
+      summary: rt.summary ?? status.summary,
+      evaluatedAt: rt.evaluatedAt ?? status.evaluatedAt,
+      contributingStations: rt.contributingStations ?? status.contributingStations,
+    };
+  }, [status, realtimeUpdates, id]);
+
   // Auto geocode if address is missing
   useEffect(() => {
     if (area && !area.addressText) {
@@ -164,11 +187,11 @@ export default function AreaDetailScreen() {
     mutedBg: isDarkColorScheme ? "#0B1A33" : "#F1F5F9",
   };
 
-  const statusConfig = getStatusConfig(status?.status);
+  const statusConfig = getStatusConfig(mergedStatus?.status);
 
   // Calculate max water level
   const maxWaterLevel =
-    status?.contributingStations?.reduce((max, station) => {
+    mergedStatus?.contributingStations?.reduce((max, station) => {
       return station.waterLevel > max ? station.waterLevel : max;
     }, 0) || 0;
 
@@ -671,9 +694,9 @@ export default function AreaDetailScreen() {
               <Text style={{ fontSize: 12, fontWeight: "700", color: "white" }}>
                 {statusConfig.text}
               </Text>
-              {status?.severityLevel !== undefined && (
+              {mergedStatus?.severityLevel !== undefined && (
                 <Text style={{ fontSize: 11, color: "rgba(255,255,255,0.8)" }}>
-                  • Mức {status.severityLevel}/5
+                  • Mức {mergedStatus.severityLevel}/5
                 </Text>
               )}
             </View>
@@ -747,7 +770,7 @@ export default function AreaDetailScreen() {
         )}
 
         {/* Summary Card */}
-        {status?.summary && (
+        {mergedStatus?.summary && (
           <View
             style={{
               backgroundColor: isDarkColorScheme
@@ -790,10 +813,10 @@ export default function AreaDetailScreen() {
                 lineHeight: 20,
               }}
             >
-              {status.summary}
+              {mergedStatus.summary}
             </Text>
             <Text style={{ fontSize: 11, color: colors.subtext, marginTop: 8 }}>
-              Cập nhật {formatRelativeTime(status.evaluatedAt)}
+              Cập nhật {formatRelativeTime(mergedStatus.evaluatedAt)}
             </Text>
           </View>
         )}
@@ -1000,8 +1023,8 @@ export default function AreaDetailScreen() {
         </View>
 
         {/* Contributing Stations */}
-        {status?.contributingStations &&
-          status.contributingStations.length > 0 && (
+        {mergedStatus?.contributingStations &&
+          mergedStatus.contributingStations.length > 0 && (
             <View
               style={{
                 backgroundColor: colors.cardBg,
@@ -1028,11 +1051,11 @@ export default function AreaDetailScreen() {
                     color: colors.text,
                   }}
                 >
-                  Trạm quan trắc ({status.contributingStations.length})
+                  Trạm quan trắc ({mergedStatus.contributingStations.length})
                 </Text>
               </View>
 
-              {status.contributingStations.map((station, index) => {
+              {mergedStatus.contributingStations.map((station, index) => {
                 const cfg = getStatusConfig(station.severity);
                 return (
                   <View
@@ -1111,7 +1134,7 @@ export default function AreaDetailScreen() {
         <FloodHistorySection
           areaId={id}
           stationIds={
-            status?.contributingStations
+            mergedStatus?.contributingStations
               ?.map((s) => s.stationId)
               .filter(Boolean) as string[] | undefined
           }

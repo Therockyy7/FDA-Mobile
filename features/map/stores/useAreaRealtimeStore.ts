@@ -2,7 +2,7 @@
 // Zustand store for SignalR real-time area status updates
 
 import { create } from "zustand";
-import type { AreaStatus } from "../types/map-layers.types";
+import type { AreaStatus, ContributingStation } from "../types/map-layers.types";
 
 export interface AreaStatusUpdate {
   areaId: string;
@@ -10,6 +10,7 @@ export interface AreaStatusUpdate {
   severityLevel: number;
   summary?: string;
   evaluatedAt?: string;
+  contributingStations?: ContributingStation[];
 }
 
 interface AreaRealtimeStore {

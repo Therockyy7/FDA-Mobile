@@ -700,7 +700,7 @@ export function SatelliteVerificationCard({ areaId, areaName }: Props) {
   const renderIdle = () => (
     <View style={{ gap: 16 }}>
       {/* Science blurb */}
-      <View
+      {/* <View
         style={{
           backgroundColor: "rgba(168,85,247,0.08)",
           borderRadius: 14,
@@ -740,7 +740,7 @@ export function SatelliteVerificationCard({ areaId, areaName }: Props) {
             Sentinel-1 (radar, xuyên mây) và Sentinel-2 (quang học).
           </Text>
         </View>
-      </View>
+      </View> */}
 
       {/* Options */}
       <View style={{ gap: 10 }}>
@@ -1182,27 +1182,56 @@ export function SatelliteVerificationCard({ areaId, areaName }: Props) {
           >
             <View
               style={{
-                width: 56, height: 56, borderRadius: 28,
+                width: 56,
+                height: 56,
+                borderRadius: 28,
                 backgroundColor: isDark ? "rgba(16,185,129,0.2)" : "#D1FAE5",
-                alignItems: "center", justifyContent: "center",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
               <Ionicons name="leaf-outline" size={28} color="#10B981" />
             </View>
-            <Text style={{ fontSize: 16, fontWeight: "800", color: text, textAlign: "center" }}>
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: "800",
+                color: text,
+                textAlign: "center",
+              }}
+            >
               An toàn · Không phát hiện ngập lụt
             </Text>
-            <Text style={{ fontSize: 13, color: muted, textAlign: "center", lineHeight: 20 }}>
-              Dữ liệu vệ tinh mới nhất xác nhận không có bất thường về độ ẩm hoặc ngập úng tại khu vực này.
-            </Text>
-            
-            <TouchableOpacity
-              onPress={handleRun}
-              style={{ marginTop: 8 }}
+            <Text
+              style={{
+                fontSize: 13,
+                color: muted,
+                textAlign: "center",
+                lineHeight: 20,
+              }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: isDark ? "rgba(100,116,139,0.15)" : "#E2E8F0", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}>
+              Dữ liệu vệ tinh mới nhất xác nhận không có bất thường về độ ẩm
+              hoặc ngập úng tại khu vực này.
+            </Text>
+
+            <TouchableOpacity onPress={handleRun} style={{ marginTop: 8 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  backgroundColor: isDark
+                    ? "rgba(100,116,139,0.15)"
+                    : "#E2E8F0",
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 8,
+                }}
+              >
                 <Ionicons name="refresh-outline" size={14} color={muted} />
-                <Text style={{ fontSize: 12, fontWeight: "600", color: muted }}>Quét lại</Text>
+                <Text style={{ fontSize: 12, fontWeight: "600", color: muted }}>
+                  Quét lại
+                </Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -1218,188 +1247,196 @@ export function SatelliteVerificationCard({ areaId, areaName }: Props) {
       >
         <View style={{ gap: 14 }}>
           {/* Summary hero */}
-        <LinearGradient
-          colors={["#4C1D95", "#7C3AED", "#9333EA"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            borderRadius: 20,
-            padding: 18,
-            shadowColor: "#7C3AED",
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.35,
-            shadowRadius: 16,
-            elevation: 10,
-          }}
-        >
-          <View
+          <LinearGradient
+            colors={["#4C1D95", "#7C3AED", "#9333EA"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 14,
-              gap: 10,
+              borderRadius: 20,
+              padding: 18,
+              shadowColor: "#7C3AED",
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.35,
+              shadowRadius: 16,
+              elevation: 10,
             }}
           >
             <View
               style={{
-                width: 42,
-                height: 42,
-                borderRadius: 14,
-                backgroundColor: "rgba(255,255,255,0.2)",
+                flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "center",
+                marginBottom: 14,
+                gap: 10,
               }}
             >
-              <Ionicons name="planet" size={22} color="#FFFFFF" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text
-                style={{ fontSize: 14, fontWeight: "900", color: "#FFFFFF" }}
+              <View
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 14,
+                  backgroundColor: "rgba(255,255,255,0.2)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                Kết quả Phân tích Vệ tinh
+                <Ionicons name="planet" size={22} color="#FFFFFF" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{ fontSize: 14, fontWeight: "900", color: "#FFFFFF" }}
+                >
+                  Kết quả Phân tích Vệ tinh
+                </Text>
+                {result.fusion_mode && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 5,
+                      marginTop: 3,
+                    }}
+                  >
+                    <View
+                      style={{
+                        backgroundColor: "rgba(255,255,255,0.25)",
+                        borderRadius: 6,
+                        paddingHorizontal: 7,
+                        paddingVertical: 2,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 9,
+                          fontWeight: "800",
+                          color: "#FFFFFF",
+                        }}
+                      >
+                        FUSION MODE
+                      </Text>
+                    </View>
+                    <Text
+                      style={{ fontSize: 10, color: "rgba(255,255,255,0.8)" }}
+                    >
+                      {result.fusion_method?.split("(")[0].trim()}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+
+            {/* Combined flood area */}
+            <View style={{ alignItems: "center", marginBottom: 14 }}>
+              <Text
+                style={{ fontSize: 48, fontWeight: "900", color: "#FFFFFF" }}
+              >
+                {result.combined_water_area_km2.toFixed(2)}
               </Text>
-              {result.fusion_mode && (
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: "700",
+                  color: "rgba(255,255,255,0.8)",
+                  textTransform: "uppercase",
+                  letterSpacing: 1,
+                }}
+              >
+                km² diện tích ngập lụt phát hiện
+              </Text>
+            </View>
+
+            {/* Source badges */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 8,
+                flexWrap: "wrap",
+              }}
+            >
+              {result.sources_used.map((src) => (
                 <View
+                  key={src}
                   style={{
+                    backgroundColor: "rgba(255,255,255,0.2)",
+                    borderRadius: 8,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
                     flexDirection: "row",
                     alignItems: "center",
                     gap: 5,
-                    marginTop: 3,
                   }}
                 >
-                  <View
+                  <Ionicons
+                    name={
+                      src.includes("Sentinel-1")
+                        ? "radio-outline"
+                        : "eye-outline"
+                    }
+                    size={11}
+                    color="#FFFFFF"
+                  />
+                  <Text
                     style={{
-                      backgroundColor: "rgba(255,255,255,0.25)",
-                      borderRadius: 6,
-                      paddingHorizontal: 7,
-                      paddingVertical: 2,
+                      fontSize: 10,
+                      fontWeight: "700",
+                      color: "#FFFFFF",
                     }}
                   >
-                    <Text
-                      style={{
-                        fontSize: 9,
-                        fontWeight: "800",
-                        color: "#FFFFFF",
-                      }}
-                    >
-                      FUSION MODE
-                    </Text>
-                  </View>
-                  <Text
-                    style={{ fontSize: 10, color: "rgba(255,255,255,0.8)" }}
-                  >
-                    {result.fusion_method?.split("(")[0].trim()}
+                    {src}
                   </Text>
                 </View>
-              )}
+              ))}
+            </View>
+          </LinearGradient>
+
+          {/* BBox info */}
+          <View
+            style={{
+              backgroundColor: sub,
+              borderRadius: 12,
+              padding: 12,
+              borderWidth: 1,
+              borderColor: border,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <Ionicons name="location-outline" size={16} color={muted} />
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: "700",
+                  color: text,
+                  marginBottom: 2,
+                }}
+              >
+                Vùng phân tích · {result.level}
+              </Text>
+              <Text style={{ fontSize: 10, color: muted }}>
+                {result.bbox.min_lon.toFixed(4)}°E–
+                {result.bbox.max_lon.toFixed(4)}°E,{" "}
+                {result.bbox.min_lat.toFixed(4)}°N–
+                {result.bbox.max_lat.toFixed(4)}°N
+              </Text>
+            </View>
+            <View
+              style={{
+                backgroundColor: isDark ? "#1E293B" : "#F1F5F9",
+                borderRadius: 8,
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+              }}
+            >
+              <Text style={{ fontSize: 10, fontWeight: "700", color: muted }}>
+                {result.bbox_source.split("_").join(" ")}
+              </Text>
             </View>
           </View>
 
-          {/* Combined flood area */}
-          <View style={{ alignItems: "center", marginBottom: 14 }}>
-            <Text style={{ fontSize: 48, fontWeight: "900", color: "#FFFFFF" }}>
-              {result.combined_water_area_km2.toFixed(2)}
-            </Text>
-            <Text
-              style={{
-                fontSize: 13,
-                fontWeight: "700",
-                color: "rgba(255,255,255,0.8)",
-                textTransform: "uppercase",
-                letterSpacing: 1,
-              }}
-            >
-              km² diện tích ngập lụt phát hiện
-            </Text>
-          </View>
-
-          {/* Source badges */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              gap: 8,
-              flexWrap: "wrap",
-            }}
-          >
-            {result.sources_used.map((src) => (
-              <View
-                key={src}
-                style={{
-                  backgroundColor: "rgba(255,255,255,0.2)",
-                  borderRadius: 8,
-                  paddingHorizontal: 10,
-                  paddingVertical: 4,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 5,
-                }}
-              >
-                <Ionicons
-                  name={
-                    src.includes("Sentinel-1") ? "radio-outline" : "eye-outline"
-                  }
-                  size={11}
-                  color="#FFFFFF"
-                />
-                <Text
-                  style={{ fontSize: 10, fontWeight: "700", color: "#FFFFFF" }}
-                >
-                  {src}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </LinearGradient>
-
-        {/* BBox info */}
-        <View
-          style={{
-            backgroundColor: sub,
-            borderRadius: 12,
-            padding: 12,
-            borderWidth: 1,
-            borderColor: border,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 10,
-          }}
-        >
-          <Ionicons name="location-outline" size={16} color={muted} />
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                fontSize: 11,
-                fontWeight: "700",
-                color: text,
-                marginBottom: 2,
-              }}
-            >
-              Vùng phân tích · {result.level}
-            </Text>
-            <Text style={{ fontSize: 10, color: muted }}>
-              {result.bbox.min_lon.toFixed(4)}°E–
-              {result.bbox.max_lon.toFixed(4)}°E,{" "}
-              {result.bbox.min_lat.toFixed(4)}°N–
-              {result.bbox.max_lat.toFixed(4)}°N
-            </Text>
-          </View>
-          <View
-            style={{
-              backgroundColor: isDark ? "#1E293B" : "#F1F5F9",
-              borderRadius: 8,
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-            }}
-          >
-            <Text style={{ fontSize: 10, fontWeight: "700", color: muted }}>
-              {result.bbox_source.split("_").join(" ")}
-            </Text>
-          </View>
-        </View>
-
-        {/* 🗺️ View on Map CTA */}
-        {/* <TouchableOpacity
+          {/* 🗺️ View on Map CTA */}
+          {/* <TouchableOpacity
           onPress={() => {
             const layers = result.individual_results
               .filter((item) => item.result?.data?.geojson?.features?.length)
@@ -1475,102 +1512,104 @@ export function SatelliteVerificationCard({ areaId, areaName }: Props) {
           </LinearGradient>
         </TouchableOpacity> */}
 
-        {/* Individual platform results */}
-        <View style={{ gap: 10 }}>
-          <Text
-            style={{
-              fontSize: 11,
-              fontWeight: "700",
-              color: muted,
-              textTransform: "uppercase",
-              letterSpacing: 0.8,
-            }}
-          >
-            Kết quả từng nguồn vệ tinh
-          </Text>
-          {result.individual_results.map((item) => (
-            <PlatformResultCard
-              key={item.platform}
-              item={item}
-              isDark={isDark}
-              bbox={result.bbox}
-              onViewMap={() => {
-                if (item.result?.data?.geojson?.features?.length) {
-                  const layer = {
-                    id: `${item.platform}-${Date.now()}`,
-                    platform: item.platform,
-                    waterAreaKm2: item.result.data.water_area_km2,
-                    geojson: item.result.data.geojson,
-                    timestamp: item.result.data.timestamp,
-                    color:
-                      item.platform === "Sentinel-1" ? "#8B5CF6" : "#0EA5E9",
-                  };
-                  // Stage layers silently — map will commit (make visible) them
-                  // only AFTER animateToRegion finishes to avoid JS thread lag.
-                  useSatelliteFloodStore
-                    .getState()
-                    .setPendingLayers([layer as any], result.bbox);
-                } else {
-                  useSatelliteFloodStore.getState().clear();
-                }
-
-                const b = result.bbox;
-                const bboxStr = `${b.min_lon},${b.min_lat},${b.max_lon},${b.max_lat}`;
-                router.push(
-                  `/(tabs)/map?satelliteBbox=${bboxStr}&returnToPrediction=${areaId}` as any,
-                );
-                if (!mapLayerVisible) toggleVisible();
+          {/* Individual platform results */}
+          <View style={{ gap: 10 }}>
+            <Text
+              style={{
+                fontSize: 11,
+                fontWeight: "700",
+                color: muted,
+                textTransform: "uppercase",
+                letterSpacing: 0.8,
               }}
-            />
-          ))}
-        </View>
+            >
+              Kết quả từng nguồn vệ tinh
+            </Text>
+            {result.individual_results.map((item) => (
+              <PlatformResultCard
+                key={item.platform}
+                item={item}
+                isDark={isDark}
+                bbox={result.bbox}
+                onViewMap={() => {
+                  if (item.result?.data?.geojson?.features?.length) {
+                    const layer = {
+                      id: `${item.platform}-${Date.now()}`,
+                      platform: item.platform,
+                      waterAreaKm2: item.result.data.water_area_km2,
+                      geojson: item.result.data.geojson,
+                      timestamp: item.result.data.timestamp,
+                      color:
+                        item.platform === "Sentinel-1" ? "#8B5CF6" : "#0EA5E9",
+                    };
+                    // Stage layers silently — map will commit (make visible) them
+                    // only AFTER animateToRegion finishes to avoid JS thread lag.
+                    useSatelliteFloodStore
+                      .getState()
+                      .setPendingLayers([layer as any], result.bbox);
+                  } else {
+                    useSatelliteFloodStore.getState().clear();
+                  }
 
-        {/* Reset / Re-run */}
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          <TouchableOpacity
-            onPress={reset}
-            style={{
-              flex: 1,
-              backgroundColor: isDark ? "#1E293B" : "#F1F5F9",
-              borderRadius: 12,
-              paddingVertical: 12,
-              alignItems: "center",
-              flexDirection: "row",
-              justifyContent: "center",
-              gap: 6,
-              borderWidth: 1,
-              borderColor: border,
-            }}
-          >
-            <Ionicons name="arrow-back-outline" size={14} color={muted} />
-            <Text style={{ fontSize: 13, fontWeight: "700", color: muted }}>
-              Cài đặt lại
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleRun}
-            style={{
-              flex: 2,
-              backgroundColor: "rgba(168,85,247,0.12)",
-              borderRadius: 12,
-              paddingVertical: 12,
-              alignItems: "center",
-              flexDirection: "row",
-              justifyContent: "center",
-              gap: 6,
-              borderWidth: 1,
-              borderColor: "#A855F740",
-            }}
-          >
-            <Ionicons name="refresh-outline" size={14} color="#A855F7" />
-            <Text style={{ fontSize: 13, fontWeight: "700", color: "#A855F7" }}>
-              Phân tích lại
-            </Text>
-          </TouchableOpacity>
+                  const b = result.bbox;
+                  const bboxStr = `${b.min_lon},${b.min_lat},${b.max_lon},${b.max_lat}`;
+                  router.push(
+                    `/(tabs)/map?satelliteBbox=${bboxStr}&returnToPrediction=${areaId}` as any,
+                  );
+                  if (!mapLayerVisible) toggleVisible();
+                }}
+              />
+            ))}
+          </View>
+
+          {/* Reset / Re-run */}
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <TouchableOpacity
+              onPress={reset}
+              style={{
+                flex: 1,
+                backgroundColor: isDark ? "#1E293B" : "#F1F5F9",
+                borderRadius: 12,
+                paddingVertical: 12,
+                alignItems: "center",
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 6,
+                borderWidth: 1,
+                borderColor: border,
+              }}
+            >
+              <Ionicons name="arrow-back-outline" size={14} color={muted} />
+              <Text style={{ fontSize: 13, fontWeight: "700", color: muted }}>
+                Cài đặt lại
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleRun}
+              style={{
+                flex: 2,
+                backgroundColor: "rgba(168,85,247,0.12)",
+                borderRadius: 12,
+                paddingVertical: 12,
+                alignItems: "center",
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 6,
+                borderWidth: 1,
+                borderColor: "#A855F740",
+              }}
+            >
+              <Ionicons name="refresh-outline" size={14} color="#A855F7" />
+              <Text
+                style={{ fontSize: 13, fontWeight: "700", color: "#A855F7" }}
+              >
+                Phân tích lại
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </MotiView>
-  );
+      </MotiView>
+    );
   };
 
   // ─── Root card ───────────────────────────────────────────────────────────

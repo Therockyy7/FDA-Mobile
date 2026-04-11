@@ -2,7 +2,7 @@
 // Extracts all event handlers and effects from MapScreen.
 // Receives the full MapScreenState as context.
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import MapView, { Region } from "react-native-maps";
 import type { MapPressEvent } from "react-native-maps";
 import type { NearbyFloodReport } from "~/features/community/services/community.service";
@@ -549,28 +549,35 @@ export function useMapScreen(ctx: MapScreenCtx) {
   }, [setShowCommunityReportSheet]);
 
   // ── Viewport-aware marker fetching ───────────────────────────
-  const fetchMarkersInViewPort = useMemo(
-    () =>
-      debounce((newRegion: Region) => {
-        if (!settings?.overlays?.flood && !settings?.overlays?.communityReports) return;
+  // Keep latest callbacks in refs so the stable debounced fn always calls current version
+  const refreshFloodSeverityRef = useRef(refreshFloodSeverity);
+  refreshFloodSeverityRef.current = refreshFloodSeverity;
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
 
-        const currentZoomMode = getZoomMode(newRegion.latitudeDelta);
-        const zoomModeChanged = currentZoomMode !== lastZoomModeRef.current;
+  // PERF: Create the debounced fn exactly once (stored in a ref) so the same instance
+  // persists across renders. Recreating it on every render via useMemo would reset the
+  // debounce timer and potentially fire multiple simultaneous API calls.
+  const fetchMarkersInViewPort = useRef(
+    debounce((newRegion: Region) => {
+      if (!settingsRef.current?.overlays?.flood && !settingsRef.current?.overlays?.communityReports) return;
 
-        if (!zoomModeChanged && !isViewportOutsideBuffer(newRegion, loadedBoundsRef.current)) return;
+      const currentZoomMode = getZoomMode(newRegion.latitudeDelta);
+      const zoomModeChanged = currentZoomMode !== lastZoomModeRef.current;
 
-        const bufferedBounds = getBufferedBounds(newRegion);
-        loadedBoundsRef.current = bufferedBounds;
-        lastZoomModeRef.current = currentZoomMode;
+      if (!zoomModeChanged && !isViewportOutsideBuffer(newRegion, loadedBoundsRef.current)) return;
 
-        if (settings?.overlays?.flood) {
-          refreshFloodSeverity(bufferedBounds);
-        }
-        // Community reports are now driven by region in useMapData via useMemo(communityParams)
-        // so no manual refresh needed here — React Query will refetch when params change
-      }, 400),
-    [refreshFloodSeverity, settings?.overlays?.flood, settings?.overlays?.communityReports],
-  );
+      const bufferedBounds = getBufferedBounds(newRegion);
+      loadedBoundsRef.current = bufferedBounds;
+      lastZoomModeRef.current = currentZoomMode;
+
+      if (settingsRef.current?.overlays?.flood) {
+        refreshFloodSeverityRef.current(bufferedBounds);
+      }
+      // Community reports are driven by region in useMapData via useMemo(communityParams)
+      // so no manual refresh needed here — React Query refetches when params change
+    }, 400)
+  ).current;
 
   const handleRegionChange = useCallback(
     (newRegion: Region) => {

@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
+  cancelAnimation,
   Easing,
   useAnimatedStyle,
   useSharedValue,
@@ -87,6 +88,11 @@ export function WaterLevelVisualization({
       -1,
       true,
     );
+    // PERF: Cancel infinite animations on unmount to prevent background CPU drain
+    return () => {
+      cancelAnimation(waveOffset1);
+      cancelAnimation(waveOffset2);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

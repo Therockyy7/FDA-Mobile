@@ -137,6 +137,32 @@ export default function CreatePostScreen() {
     if (geo.city) candidates.push(geo.city);
     if (geo.subregion) candidates.push(geo.subregion);
 
+    // Normalize Vietnamese for fuzzy name matching
+    const normalizeVi = (s: string) =>
+      s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\u0111/g, "d").replace(/[^a-z0-9\s]/g, "").trim();
+
+    const scoreMatch = (areaName: string, term: string): number => {
+      const a = normalizeVi(areaName);
+      const t = normalizeVi(term);
+      if (!a || !t) return 0;
+      if (a === t) return 100;
+      if (a.startsWith(t)) return 80;
+      if (t.startsWith(a)) return 60;
+      if (a.includes(t)) return 40;
+      if (t.includes(a)) return 20;
+      return 0;
+    };
+
+    const pickBest = (areas: { id: string; name: string }[], term: string) => {
+      let best: { id: string; name: string } | null = null;
+      let bestScore = 0;
+      for (const area of areas) {
+        const s = scoreMatch(area.name, term);
+        if (s > bestScore) { bestScore = s; best = area; }
+      }
+      return bestScore > 0 ? best : null;
+    };
+
     let foundId: string | null = null;
     let foundName: string | null = null;
 
@@ -145,23 +171,37 @@ export default function CreatePostScreen() {
       try {
         const res = await AreaService.getAdminAreas({ searchTerm: term, pageNumber: 1, pageSize: 20 });
         if (res.administrativeAreas.length > 0) {
-          foundId = res.administrativeAreas[0].id;
-          foundName = res.administrativeAreas[0].name;
-          console.log(`✅ [CreatePost] Area resolved: ${foundName} (${foundId}) via "${term}"`);
+          const best = pickBest(res.administrativeAreas, term);
+          if (best) {
+            foundId = best.id;
+            foundName = best.name;
+            console.log(`✅ [CreatePost] Best match: "${foundName}" (${foundId}) for term "${term}"`);
+          } else {
+            console.log(`⚠️ [CreatePost] No scored match in results for "${term}"`);
+          }
         }
       } catch {
         console.warn(`⚠️ [CreatePost] Admin area search failed for: "${term}"`);
       }
     }
 
-    // Fallback: use first area in list
+    // Fallback: load all and score against all candidate terms
     if (!foundId) {
       try {
         const allRes = await AreaService.getAdminAreas({ pageNumber: 1, pageSize: 100 });
         if (allRes.administrativeAreas.length > 0) {
-          foundId = allRes.administrativeAreas[0].id;
-          foundName = allRes.administrativeAreas[0].name;
-          console.log(`⚠️ [CreatePost] Fallback area: ${foundName} (${foundId})`);
+          let topScore = 0;
+          let topArea: { id: string; name: string } | null = null;
+          for (const area of allRes.administrativeAreas) {
+            for (const term of candidates) {
+              const s = scoreMatch(area.name, term);
+              if (s > topScore) { topScore = s; topArea = area; }
+            }
+          }
+          const chosen = topArea ?? allRes.administrativeAreas[0];
+          foundId = chosen.id;
+          foundName = chosen.name;
+          console.log(`⚠️ [CreatePost] Fallback chose "${foundName}" (score=${topScore})`);
         }
       } catch {
         console.warn("⚠️ [CreatePost] Could not fetch fallback admin areas");
@@ -171,7 +211,6 @@ export default function CreatePostScreen() {
     setCurrentAreaId(foundId);
     setCurrentAreaName(foundName);
   }, []);
-
   /** Fetch the official status for the resolved area */
   const fetchAndCompareAreaStatus = useCallback(
     async (chosenSeverity: Severity, areaId: string): Promise<AreaStatus | null> => {

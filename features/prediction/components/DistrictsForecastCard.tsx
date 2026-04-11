@@ -97,6 +97,56 @@ function formatLocationName(parts: Location.LocationGeocodedAddress): string {
   return ward || cityPart || "Vị trí hiện tại";
 }
 
+/** Normalize Vietnamese string: lowercase + remove diacritics for fuzzy comparison */
+function normalizeVi(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9\s]/g, "")
+    .trim();
+}
+
+/**
+ * Score how well an admin-area name matches a search term.
+ * Higher = better match.
+ *   100 – exact match (normalized)
+ *    80 – area name starts with term
+ *    60 – term starts with area name (area name is a substring prefix of term)
+ *    40 – area name contains term
+ *    20 – term contains area name
+ *     0 – no match
+ */
+function scoreAreaMatch(areaName: string, searchTerm: string): number {
+  const a = normalizeVi(areaName);
+  const t = normalizeVi(searchTerm);
+  if (!a || !t) return 0;
+  if (a === t) return 100;
+  if (a.startsWith(t)) return 80;
+  if (t.startsWith(a)) return 60;
+  if (a.includes(t)) return 40;
+  if (t.includes(a)) return 20;
+  return 0;
+}
+
+/** Given a list of admin areas and a search term, return the best-matching one or null */
+function pickBestArea(
+  areas: { id: string; name: string }[],
+  term: string
+): { id: string; name: string } | null {
+  let best: { id: string; name: string } | null = null;
+  let bestScore = 0;
+  for (const area of areas) {
+    const score = scoreAreaMatch(area.name, term);
+    if (score > bestScore) {
+      bestScore = score;
+      best = area;
+    }
+  }
+  return bestScore > 0 ? best : null;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Main component
 // ─────────────────────────────────────────────────────────────
@@ -109,6 +159,14 @@ interface LocalForecastData {
   locationLabel: string;
   prediction: PredictionResponse;
 }
+
+// ─────────────────────────────────────────────────────────────
+// Module-level cache — persists across tab switches (unlike useState which resets on unmount)
+// ─────────────────────────────────────────────────────────────
+let _cachedForecast: LocalForecastData | null = null;
+let _cacheTimestamp = 0;
+/** Minimum ms before allowing a background re-fetch (5 minutes) */
+const FORECAST_CACHE_TTL_MS = 5 * 60 * 1000;
 
 export function DistrictsForecastCard() {
   const { isDarkColorScheme } = useColorScheme();
@@ -127,8 +185,15 @@ export function DistrictsForecastCard() {
     primary: "#6366F1",
   };
 
-  const fetchForecast = useCallback(async () => {
+  const fetchForecast = useCallback(async (forceRefresh = false) => {
     try {
+      // ── Cache-first: if cached data is fresh and not a forced refresh, use it ──
+      if (!forceRefresh && _cachedForecast && Date.now() - _cacheTimestamp < FORECAST_CACHE_TTL_MS) {
+        setData(_cachedForecast);
+        setLoadState("done");
+        return;
+      }
+
       setErrorMsg(null);
       setData(null);
 
@@ -157,7 +222,8 @@ export function DistrictsForecastCard() {
       let areaId: string | null = null;
       let areaName: string = locationLabel;
 
-      // Build candidate search terms from geocoded address (try most-specific first)
+      // Build candidate search terms from geocoded address (most-specific first)
+      // For Vietnamese addresses: district = ward name, city = district/quan, subregion = city
       const candidateTerms: string[] = [];
       if (geo) {
         if (geo.district) candidateTerms.push(geo.district);
@@ -166,7 +232,8 @@ export function DistrictsForecastCard() {
         if (geo.subregion) candidateTerms.push(geo.subregion);
       }
 
-      // Try each search term until we get a hit
+      // ── Strategy: for each candidate term, fetch up to 20 results and pick the
+      //    BEST-SCORING match (normalized name similarity), not blindly [0] ──
       for (const term of candidateTerms) {
         if (areaId) break;
         try {
@@ -176,27 +243,43 @@ export function DistrictsForecastCard() {
             pageSize: 20,
           });
           if (adminRes.administrativeAreas.length > 0) {
-            const best = adminRes.administrativeAreas[0];
-            areaId = best.id;
-            areaName = best.name;
-            console.log(`✅ Found admin area: ${best.name} (${best.id}) via "${term}"`);
+            const best = pickBestArea(adminRes.administrativeAreas, term);
+            if (best) {
+              areaId = best.id;
+              areaName = best.name;
+              console.log(`✅ [DistrictsForecastCard] Best match: "${best.name}" (${best.id}) for term "${term}"`);
+            } else {
+              // All results scored 0 for this term — skip; next term may be better
+              console.log(`⚠️ [DistrictsForecastCard] No good match in ${adminRes.administrativeAreas.length} results for "${term}"`);
+            }
           }
         } catch {
           console.warn(`⚠️ Admin area search failed for term: "${term}"`);
         }
       }
 
-      // Fallback: load all areas and pick nearest by lat/lng centroid from geometry
+      // ── Fallback: load ALL wards and score against every candidate term ──
       if (!areaId) {
-        console.warn("⚠️ No admin area found by name, loading all areas for proximity match...");
+        console.warn("⚠️ No area found via candidate terms — running full-list scoring fallback...");
         try {
           const allRes = await AreaService.getAdminAreas({ pageNumber: 1, pageSize: 100 });
           if (allRes.administrativeAreas.length > 0) {
-            // Pick the first one as default (can't parse WKB without turf.js)
-            const first = allRes.administrativeAreas[0];
-            areaId = first.id;
-            areaName = first.name;
-            console.log(`⚠️ Fallback: using first admin area "${first.name}" (${first.id})`);
+            // Score each area against ALL candidate terms, take the highest
+            let topScore = 0;
+            let topArea: { id: string; name: string } | null = null;
+            for (const area of allRes.administrativeAreas) {
+              for (const term of candidateTerms) {
+                const s = scoreAreaMatch(area.name, term);
+                if (s > topScore) {
+                  topScore = s;
+                  topArea = area;
+                }
+              }
+            }
+            const chosen = topArea ?? allRes.administrativeAreas[0];
+            areaId = chosen.id;
+            areaName = chosen.name;
+            console.log(`⚠️ [DistrictsForecastCard] Fallback chose "${chosen.name}" (score=${topScore})`);
           }
         } catch {
           console.warn("⚠️ Could not fetch admin areas list");
@@ -213,7 +296,13 @@ export function DistrictsForecastCard() {
       setLoadState("prediction");
       const prediction = await PredictionService.getFloodRiskPrediction(areaId);
 
-      setData({ areaId, areaName, locationLabel, prediction });
+      const newData: LocalForecastData = { areaId, areaName, locationLabel, prediction };
+
+      // Save to module-level cache so tab switches don't re-trigger the full pipeline
+      _cachedForecast = newData;
+      _cacheTimestamp = Date.now();
+
+      setData(newData);
       setLoadState("done");
     } catch (err: any) {
       console.error("❌ DistrictsForecastCard error:", err);
@@ -315,7 +404,7 @@ export function DistrictsForecastCard() {
         </View>
 
         <TouchableOpacity
-          onPress={fetchForecast}
+          onPress={() => fetchForecast(true)}
           activeOpacity={0.6}
           style={{
             flexDirection: "row",

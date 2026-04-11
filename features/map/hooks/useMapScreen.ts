@@ -25,6 +25,7 @@ import { useSafeRoute } from "./routing";
 import type { LatLng } from "../types/safe-route.types";
 import { TransportMode } from "../types";
 import { useSatelliteFloodStore } from "../stores/useSatelliteFloodStore";
+import { useIsAuthenticated } from "~/features/auth/hooks/useAuth";
 
 interface EditAreaParams {
   id: string;
@@ -415,13 +416,15 @@ export function useMapScreen(ctx: MapScreenCtx) {
   ]);
 
   // ── Safe route handlers ──────────────────────────────────────
+  const isAuthenticated = useIsAuthenticated();
+
   const handleFindRoute = useCallback(async () => {
     const start = isUsingGPSOrigin
       ? (userLocation ?? { latitude: DANANG_CENTER.latitude, longitude: DANANG_CENTER.longitude })
       : (startCoord ?? userLocation ?? { latitude: DANANG_CENTER.latitude, longitude: DANANG_CENTER.longitude });
     if (!endCoord) return;
-    await safeRoute.findRoute(start, endCoord, transportMode);
-  }, [isUsingGPSOrigin, startCoord, userLocation, endCoord, transportMode, safeRoute]);
+    await safeRoute.findRoute(start, endCoord, transportMode, 2, isAuthenticated);
+  }, [isUsingGPSOrigin, startCoord, userLocation, endCoord, transportMode, safeRoute, isAuthenticated]);
 
   const handleSelectRoute = useCallback(
     (index: number) => {

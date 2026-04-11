@@ -23,11 +23,13 @@ import { MapSheets } from "~/features/map/components/MapSheets";
 import { useMapScreen } from "~/features/map/hooks/useMapScreen";
 import { useMapScreenState } from "~/features/map/hooks/useMapScreenState";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
+import { useIsAuthenticated } from "~/features/auth/hooks/useAuth";
 
 export default function MapScreen() {
   // Single aggregated state
   const s = useMapScreenState();
   const router = useRouter();
+  const isGuest = !useIsAuthenticated();
 
   // All handlers — useMapScreen now accepts the full MapScreenState
   const {
@@ -444,6 +446,7 @@ export default function MapScreen() {
             onCloseWardSelectionSheet={() => s.setShowWardSelectionSheet(false)}
             onSelectWard={handleSelectWard}
             setDraftAreaRadius={s.setDraftAreaRadius}
+            isGuest={isGuest}
           />
         )}
       </View>

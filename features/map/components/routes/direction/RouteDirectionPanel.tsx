@@ -47,7 +47,9 @@ export function RouteDirectionPanel({
   error,
   user,
   onProfilePress,
-}: RouteDirectionPanelProps & { user: User | null; onProfilePress?: () => void }) {
+  isGuest = false,
+  onLoginPress,
+}: RouteDirectionPanelProps & { user: User | null; onProfilePress?: () => void; isGuest?: boolean; onLoginPress?: () => void }) {
   const insets = useSafeAreaInsets();
   const [phase, setPhase] = useState<Phase>("idle");
   const [searchTarget, setSearchTarget] = useState<"origin" | "dest" | null>(null);
@@ -359,6 +361,34 @@ export function RouteDirectionPanel({
           >
             <Ionicons name="alert-circle" size={16} color="#DC2626" />
             <Text style={{ fontSize: 12, color: "#DC2626", flex: 1 }}>{error}</Text>
+          </View>
+        )}
+
+        {/* Guest login hint */}
+        {isGuest && (
+          <View
+            style={{
+              marginBottom: 8,
+              backgroundColor: "#EFF6FF",
+              borderRadius: 12,
+              padding: 10,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <Ionicons name="lock-closed-outline" size={14} color="#1D4ED8" />
+            <Text style={{ fontSize: 12, color: "#1E40AF", flex: 1 }}>
+              Bạn đang tìm đường dạng khách.{" "}
+            </Text>
+            {onLoginPress && (
+              <TouchableOpacity onPress={onLoginPress}>
+                <Text style={{ fontSize: 12, color: "#1D4ED8", fontWeight: "700" }}>
+                  Đăng nhập
+                </Text>
+              </TouchableOpacity>
+            )}
+            <Text style={{ fontSize: 12, color: "#1E40AF" }}> để tránh ngập tự động.</Text>
           </View>
         )}
 

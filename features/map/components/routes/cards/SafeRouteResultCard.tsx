@@ -1,5 +1,6 @@
 // features/map/components/routes/cards/SafeRouteResultCard.tsx
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
@@ -23,6 +24,8 @@ interface SafeRouteResultCardProps {
   onShowWarnings: () => void;
   onStartNavigation?: () => void;
   isUsingGPSOrigin?: boolean;
+  /** True when the current user is not logged in — shows a login hint banner */
+  isGuest?: boolean;
 }
 
 export function SafeRouteResultCard({
@@ -33,7 +36,9 @@ export function SafeRouteResultCard({
   onShowWarnings,
   onStartNavigation,
   isUsingGPSOrigin = false,
+  isGuest = false,
 }: SafeRouteResultCardProps) {
+  const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
   const isDark = isDarkColorScheme;
 
@@ -124,6 +129,18 @@ export function SafeRouteResultCard({
           </Text>
         )}
       </View>
+
+      {/* Guest login hint — only show to unauthenticated users with flood risk */}
+      {isGuest && route.safetyStatus !== "Safe" && (
+        <TouchableOpacity
+          onPress={() => router.push("/(auth)/sign-in")}
+          style={styles.loginHintPill}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="lock-closed-outline" size={13} color="#1D4ED8" />
+          <Text style={styles.loginHintText}>Đăng nhập để tự động tránh vùng ngập</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Navigation button */}
       {onStartNavigation && isUsingGPSOrigin && (
@@ -248,5 +265,22 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "700",
     fontSize: 15,
+  },
+  loginHintPill: {
+    marginTop: 10,
+    backgroundColor: "#EFF6FF",
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  loginHintText: {
+    fontSize: 12,
+    color: "#1D4ED8",
+    fontWeight: "600",
   },
 });

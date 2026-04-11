@@ -101,6 +101,7 @@ interface Props {
   onCloseWardSelectionSheet: () => void;
   onSelectWard: (area: any) => void;
   setDraftAreaRadius: (r: number) => void;
+  isGuest?: boolean;
 }
 
 export function MapSheets({
@@ -148,6 +149,7 @@ export function MapSheets({
   onSelectRoute,
   onExitRouting,
   onCloseRouteResults,
+  isGuest = false,
   onShowWarnings,
   onStartNavigation,
   onCloseLayerSheet,
@@ -252,6 +254,7 @@ export function MapSheets({
               onShowWarnings={onShowWarnings}
               onStartNavigation={onStartNavigation}
               isUsingGPSOrigin={isUsingGPSOrigin}
+              isGuest={isGuest}
             />
           )}
         </View>

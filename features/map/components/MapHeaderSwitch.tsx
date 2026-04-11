@@ -70,6 +70,7 @@ export function MapHeaderSwitch({
 }: Props) {
   const user = useUser();
   const router = useRouter();
+  const isGuest = user === null;
 
   if (navIsNavigating || safeRouteHasResults) return null;
 
@@ -103,6 +104,8 @@ export function MapHeaderSwitch({
       error={safeRouteError}
       user={user ?? null}
       onProfilePress={() => router.push("/(tabs)/profile")}
+      isGuest={isGuest}
+      onLoginPress={() => router.push("/(auth)/sign-in")}
     />
   );
 }

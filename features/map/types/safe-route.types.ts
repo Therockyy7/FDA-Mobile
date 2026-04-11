@@ -4,7 +4,7 @@ import type { TransportMode } from "./routing.types";
 
 // ==================== ENUMS & CONSTANTS ====================
 
-type RouteProfile = "car" | "motorcycle" | "bike" | "foot";
+export type RouteProfile = "car" | "motorcycle" | "bike" | "foot";
 
 export type RouteSafetyStatus = "Safe" | "Caution" | "Dangerous" | "Blocked";
 
@@ -124,6 +124,17 @@ export interface SafeRouteResponse {
   message: string;
   statusCode: number;
   data: SafeRouteApiResponse;
+}
+
+// ==================== BASIC ROUTE (guest / anonymous) ====================
+
+export interface BasicRouteRequest {
+  startLatitude: number;
+  startLongitude: number;
+  endLatitude: number;
+  endLongitude: number;
+  routeProfile: RouteProfile;
+  maxAlternatives: number; // 0–5, default: 3
 }
 
 // ==================== DECODED (for map rendering) ====================

@@ -321,6 +321,40 @@ export const AreaService = {
       return generateMockFloodStatistics(params);
     }
   },
+  // Feat: Get Administrative Area Status (for severity comparison)
+  getAdministrativeAreaStatus: async (areaId: string): Promise<{
+    administrativeAreaId: string;
+    status: "Safe" | "Warning" | "Critical";
+    severityLevel: number;
+    summary: string;
+    evaluatedAt: string;
+    administrativeArea: {
+      id: string;
+      name: string;
+      level: string;
+      code: string;
+    };
+  }> => {
+    const res = await apiClient.get<{
+      success: boolean;
+      message: string;
+      data: {
+        administrativeAreaId: string;
+        status: "Safe" | "Warning" | "Critical";
+        severityLevel: number;
+        summary: string;
+        evaluatedAt: string;
+        administrativeArea: {
+          id: string;
+          name: string;
+          level: string;
+          code: string;
+        };
+      };
+    }>(`/api/v1/administrative-areas/${areaId}/status`);
+    return res.data.data;
+  },
+
   // Feat: Get Admin Areas
   getAdminAreas: async (
     params: AdminAreaParams = {},

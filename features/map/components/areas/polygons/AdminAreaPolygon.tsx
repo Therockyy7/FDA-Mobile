@@ -126,10 +126,31 @@ export const AdminAreaPolygon = React.memo(
   }: AdminAreaPolygonProps) => {
     const { isDarkColorScheme } = useColorScheme();
 
-    const coordinates = useMemo(
-      () => parseGeometry(area.geometry, area.name),
-      [area.geometry, area.name],
-    );
+    const coordinates = useMemo(() => {
+      const rawCoords = parseGeometry(area.geometry, area.name);
+      
+      // Decimate polygon to prevent OutOfMemoryError on Android Native Maps
+      // 500 points is enough for a visual outline of an administrative area
+      const MAX_POINTS = 500;
+      if (rawCoords.length <= MAX_POINTS) return rawCoords;
+      
+      const skip = Math.ceil(rawCoords.length / MAX_POINTS);
+      const result = [];
+      for (let i = 0; i < rawCoords.length; i += skip) {
+        result.push(rawCoords[i]);
+      }
+      
+      // Ensure polygon is closed
+      if (result.length > 0) {
+        const firstOrig = rawCoords[0];
+        const lastAdded = result[result.length - 1];
+        if (firstOrig.latitude !== lastAdded.latitude || firstOrig.longitude !== lastAdded.longitude) {
+          result.push(firstOrig);
+        }
+      }
+      
+      return result;
+    }, [area.geometry, area.name]);
 
     if (!coordinates.length) return null;
 

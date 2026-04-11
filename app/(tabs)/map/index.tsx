@@ -4,7 +4,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, useRouter } from "expo-router";
 import React from "react";
-import { StatusBar, TouchableOpacity, View } from "react-native";
+import { StatusBar, TouchableOpacity, View, ActivityIndicator } from "react-native";
 
 import {
   MapLoadingOverlay,
@@ -90,7 +90,9 @@ export default function MapScreen() {
     setIsLoading: s.setIsLoading,
     setShowCommunityReportSheet: s.setShowCommunityReportSheet,
     setShowWarningsSheet: s.setShowWarningsSheet,
+    areaDisplayMode: s.areaDisplayMode,
     setAreaDisplayMode: s.setAreaDisplayMode,
+    setIsFindingArea: s.setIsFindingArea,
     adminAreas: s.adminAreas,
     viewMode: s.viewMode,
     params: s.params,
@@ -234,6 +236,32 @@ export default function MapScreen() {
         )}
         {/* Loading Overlay */}
         <MapLoadingOverlay visible={s.isLoading} />
+
+        {/* AI Finding Area Overlay */}
+        {s.isFindingArea && (
+          <View style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: [{ translateX: -70 }, { translateY: -35 }],
+            backgroundColor: "rgba(11, 26, 51, 0.8)",
+            paddingHorizontal: 20,
+            paddingVertical: 12,
+            borderRadius: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+            zIndex: 1000,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 12,
+            elevation: 10,
+          }}>
+            <ActivityIndicator size="small" color="#A855F7" />
+            <Text style={{ color: "white", fontSize: 13, fontWeight: "600" }}>Tìm khu vực...</Text>
+          </View>
+        )}
 
         {/* Navigation HUD */}
         {s.nav.isNavigating && (

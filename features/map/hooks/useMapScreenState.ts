@@ -57,6 +57,8 @@ export interface MapScreenState {
   setSelectedAdminArea: (v: any) => void;
   showWardSelectionSheet: boolean;
   setShowWardSelectionSheet: (v: boolean) => void;
+  isFindingArea: boolean;
+  setIsFindingArea: (v: boolean) => void;
   showResultCard: boolean;
   setShowResultCard: (v: boolean) => void;
   showWarningsSheet: boolean;
@@ -225,6 +227,7 @@ export function useMapScreenState(): MapScreenState {
   const [showCommunityReportSheet, setShowCommunityReportSheet] =
     useState(false);
   const [showWardSelectionSheet, setShowWardSelectionSheet] = useState(false);
+  const [isFindingArea, setIsFindingArea] = useState(false);
 
   // Map camera — needed for communityParams calculation
   const {
@@ -437,6 +440,8 @@ export function useMapScreenState(): MapScreenState {
     setSelectedAdminArea,
     showWardSelectionSheet,
     setShowWardSelectionSheet,
+    isFindingArea,
+    setIsFindingArea,
     showResultCard,
     setShowResultCard,
     showWarningsSheet,

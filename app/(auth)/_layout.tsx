@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import { useAuthLoading, useUser } from "~/features/auth/stores/hooks";
@@ -6,7 +7,20 @@ export default function AuthRoutesLayout() {
   const user = useUser();
   const loading = useAuthLoading();
   const router = useRouter();
-  const segments = useSegments(); // ví dụ: ["(auth)", "phone-otp"]
+  const segments = useSegments();
+
+  const current = segments[1];
+  const authEntryScreens = ["sign-in", "sign-up", "identifier"];
+  const shouldRedirect = user && authEntryScreens.includes(current ?? "");
+
+  useEffect(() => {
+    if (!loading && shouldRedirect) {
+      // Use setTimeout to ensure this pushes on the next tick, avoiding navigation race conditions
+      setTimeout(() => {
+        router.replace("/(tabs)/map");
+      }, 0);
+    }
+  }, [loading, shouldRedirect, router]);
 
   if (loading) {
     return (
@@ -16,13 +30,7 @@ export default function AuthRoutesLayout() {
     );
   }
 
-  const current = segments[1]; // tên screen sau "(auth)"
-
-  //  console.log("AUTH layout segments:", segments, "user?", !!user);
-  // Chỉ redirect nếu đã login và đang ở các màn auth gốc
-  const authEntryScreens = ["sign-in", "sign-up", "identifier"]; // chỉnh theo project
-  if (user && authEntryScreens.includes(current ?? "")) {
-    router.replace("/(tabs)/map");
+  if (shouldRedirect) {
     return null;
   }
 

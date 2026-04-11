@@ -171,14 +171,6 @@ const TabsLayout = () => {
               <Feather name="user" size={size} color={color} />
             ),
           }}
-          listeners={{
-            tabPress: (e: any) => {
-              if (!isAuthenticated) {
-                e.preventDefault();
-                handleProtectedTabPress();
-              }
-            },
-          }}
         />
       </Tabs>
 

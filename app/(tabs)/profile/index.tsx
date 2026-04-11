@@ -29,9 +29,18 @@ import ProfileHeader from "~/features/profile/components/ProfileHeader";
 import ProfileInfoSection from "~/features/profile/components/ProfileInfoSection";
 import SaveButton from "~/features/profile/components/SaveButton";
 import SubscriptionSection from "~/features/profile/components/SubscriptionSection";
+import GuestProfileScreen from "~/features/profile/components/GuestProfileScreen";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function ProfileScreen() {
+  const user = useUser();
+  if (!user) {
+    return <GuestProfileScreen />;
+  }
+  return <ProfileScreenContent />;
+}
+
+function ProfileScreenContent() {
   const dispatch = useAppDispatch();
   const signOut = useSignOut();
   const user = useUser();

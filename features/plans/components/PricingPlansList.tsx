@@ -70,7 +70,7 @@ const PricingPlansList: React.FC<Props> = ({
           { text: "Hủy", style: "cancel" },
           {
             text: "Đăng nhập",
-            onPress: () => router.push("/auth/login" as any),
+            onPress: () => router.push("/(auth)/sign-in" as any),
           },
         ],
       );

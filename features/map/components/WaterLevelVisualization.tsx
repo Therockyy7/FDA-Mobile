@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
+  cancelAnimation,
   Easing,
   useAnimatedStyle,
   useSharedValue,
@@ -20,7 +21,7 @@ interface WaterLevelVisualizationProps {
   unit: string;
   severity: "safe" | "caution" | "warning" | "critical" | "unknown";
   severityColor: string;
-  maxLevel?: number; // Maximum level for scale (default: 500cm for better visualization)
+  maxLevel?: number; // Maximum level for scale (default: 150cm)
 }
 
 const VIS_HEIGHT = 240;
@@ -31,7 +32,7 @@ export function WaterLevelVisualization({
   unit,
   severity,
   severityColor,
-  maxLevel = 300,
+  maxLevel = 150,
 }: WaterLevelVisualizationProps) {
   const { isDarkColorScheme } = useColorScheme();
   const isDark = isDarkColorScheme;
@@ -48,10 +49,10 @@ export function WaterLevelVisualization({
         : waterLevel
       : 0;
 
-  // Use dynamic max level based on actual water level, minimum 300cm
+  // Use dynamic max level based on actual water level, minimum 150cm
   const effectiveMaxLevel = Math.max(
     maxLevel || DEFAULT_MAX_LEVEL,
-    Math.ceil(waterLevelCm / 100) * 150 + 100
+    Math.ceil(waterLevelCm / 100) * 100 + 50
   );
 
   // Calculate water height as percentage of max
@@ -87,6 +88,11 @@ export function WaterLevelVisualization({
       -1,
       true,
     );
+    // PERF: Cancel infinite animations on unmount to prevent background CPU drain
+    return () => {
+      cancelAnimation(waveOffset1);
+      cancelAnimation(waveOffset2);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

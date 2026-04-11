@@ -3,11 +3,13 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
+  cancelAnimation,
   Easing,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withSequence,
+  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
@@ -19,7 +21,7 @@ interface WaterLevelVisualizationProps {
   unit: string;
   severity: "safe" | "caution" | "warning" | "critical" | "unknown";
   severityColor: string;
-  maxLevel?: number; // Maximum level for scale (default: 500cm for better visualization)
+  maxLevel?: number; // Maximum level for scale (default: 150cm)
 }
 
 const VIS_HEIGHT = 240;
@@ -30,7 +32,7 @@ export function WaterLevelVisualization({
   unit,
   severity,
   severityColor,
-  maxLevel = 300,
+  maxLevel = 150,
 }: WaterLevelVisualizationProps) {
   const { isDarkColorScheme } = useColorScheme();
   const prevWaterLevelRef = useRef<number | null>(null);
@@ -46,10 +48,10 @@ export function WaterLevelVisualization({
         : waterLevel
       : 0;
 
-  // Use dynamic max level based on actual water level, minimum 300cm
+  // Use dynamic max level based on actual water level, minimum 150cm
   const effectiveMaxLevel = Math.max(
     maxLevel || DEFAULT_MAX_LEVEL,
-    Math.ceil(waterLevelCm / 100) * 150 + 100
+    Math.ceil(waterLevelCm / 100) * 100 + 50
   );
 
   // Calculate water height as percentage of max
@@ -85,12 +87,18 @@ export function WaterLevelVisualization({
       -1,
       true,
     );
+
+    // PERF: Cancel infinite animations on unmount to prevent background CPU drain
+    return () => {
+      cancelAnimation(waveOffset1);
+      cancelAnimation(waveOffset2);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Water level animation - runs on waterHeightPx changes
   useEffect(() => {
-    // Only animate water level changes after initial render
+    // Snap to value on initial render (no animation)
     if (isFirstRender.current) {
       waterFillHeight.value = waterHeightPx;
       isFirstRender.current = false;
@@ -98,10 +106,13 @@ export function WaterLevelVisualization({
       return;
     }
 
-    // Animate water level change smoothly
-    waterFillHeight.value = withTiming(waterHeightPx, {
-      duration: 800,
-      easing: Easing.out(Easing.cubic),
+    // Spring animation: natural water rise/fall with inertia
+    // overshootClamping=true prevents bouncing past the target level
+    waterFillHeight.value = withSpring(waterHeightPx, {
+      damping: 18,      // higher = less oscillation
+      stiffness: 55,    // lower = slower, more fluid movement
+      mass: 1.2,        // heavier mass = more inertia (water-like)
+      overshootClamping: true, // no bounce past target
     });
 
     prevWaterLevelRef.current = waterLevel;

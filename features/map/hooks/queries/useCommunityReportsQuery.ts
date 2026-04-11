@@ -19,8 +19,8 @@ export function useCommunityReportsQuery(
       return res.reports;
     },
     enabled: enabled && params !== null,
-    staleTime: 0,           // Always consider data stale → refetch on focus
-    refetchInterval: 60_000, // Auto-refresh every 60s while map is open
-    refetchOnWindowFocus: true,
+    staleTime: 30_000,          // Don't refetch within 30s — community data is near-realtime via SignalR anyway
+    refetchInterval: 120_000,   // Background refresh every 2 min (was 60s — halved to reduce load)
+    refetchOnWindowFocus: false, // Don't refetch on app focus — prevents burst on tab switch
   });
 }

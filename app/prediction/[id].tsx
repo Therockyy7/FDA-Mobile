@@ -8,15 +8,15 @@ import {
   View,
 } from "react-native";
 import Animated, {
+  runOnUI,
+  scrollTo,
   useAnimatedRef,
   useAnimatedScrollHandler,
   useSharedValue,
-  scrollTo,
-  runOnUI,
 } from "react-native-reanimated";
-import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
+import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
 import { AiFactorsCard } from "~/features/prediction/components/AiFactorsCard";
 import { CommunityReportsCard } from "~/features/prediction/components/CommunityReportsCard";
 import { ForecastWindowsCard } from "~/features/prediction/components/ForecastWindowsCard";
@@ -99,7 +99,11 @@ export default function PredictionScreen() {
 
   // ── Auto-scroll to SatelliteVerificationCard when coming from pill ─────────
   useEffect(() => {
-    if (scrollToParam === "satellite" && !loading && !didScrollToSatellite.current) {
+    if (
+      scrollToParam === "satellite" &&
+      !loading &&
+      !didScrollToSatellite.current
+    ) {
       const t = setTimeout(() => {
         if (satelliteCardY.current > 0) {
           runOnUI(() => {
@@ -148,50 +152,71 @@ export default function PredictionScreen() {
         >
           {error ? (
             /* ── Error ── */
-            <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24 }}>
-              <View style={{
-                width: 72, height: 72, borderRadius: 24,
-                backgroundColor: isDarkColorScheme ? "#1E293B" : "#FEE2E2",
-                alignItems: "center", justifyContent: "center",
-                marginBottom: 16,
-              }}>
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                padding: 24,
+              }}
+            >
+              <View
+                style={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: 24,
+                  backgroundColor: isDarkColorScheme ? "#1E293B" : "#FEE2E2",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 16,
+                }}
+              >
                 <Ionicons name="alert-circle" size={36} color="#EF4444" />
               </View>
-              <Text style={{ fontSize: 16, fontWeight: "800", color: isDarkColorScheme ? "#F1F5F9" : "#1F2937", marginBottom: 8 }}>
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "800",
+                  color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
+                  marginBottom: 8,
+                }}
+              >
                 Không thể tải dự báo
               </Text>
-              <Text style={{ fontSize: 13, color: "#EF4444", textAlign: "center", marginBottom: 24, lineHeight: 20 }}>
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: "#EF4444",
+                  textAlign: "center",
+                  marginBottom: 24,
+                  lineHeight: 20,
+                }}
+              >
                 {error}
               </Text>
               <TouchableOpacity
                 onPress={onRefresh}
                 style={{
                   backgroundColor: "#6366F1",
-                  paddingHorizontal: 28, paddingVertical: 12,
+                  paddingHorizontal: 28,
+                  paddingVertical: 12,
                   borderRadius: 14,
-                  flexDirection: "row", alignItems: "center", gap: 8,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 8,
                 }}
               >
                 <Ionicons name="refresh" size={16} color="#fff" />
-                <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>Thử lại</Text>
+                <Text
+                  style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}
+                >
+                  Thử lại
+                </Text>
               </TouchableOpacity>
             </View>
           ) : prediction ? (
             /* ── Content ── */
             <View style={{ paddingHorizontal: 16, paddingTop: 24, gap: 16 }}>
-              {/* Summary banner */}
-              <View style={{
-                backgroundColor: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-                borderRadius: 16, padding: 14,
-                flexDirection: "row", alignItems: "flex-start", gap: 10,
-                shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
-              }}>
-                <Ionicons name="document-text-outline" size={16} color={isDarkColorScheme ? "#94A3B8" : "#64748B"} style={{ marginTop: 1 }} />
-                <Text style={{ fontSize: 12, color: isDarkColorScheme ? "#CBD5E1" : "#475569", lineHeight: 19, flex: 1 }}>
-                  {prediction.summary}
-                </Text>
-              </View>
 
               <ForecastWindowsCard
                 windows={prediction.forecast.windows}
@@ -205,7 +230,8 @@ export default function PredictionScreen() {
               {/* 🛰️ Satellite card — capture Y for pill auto-scroll */}
               <View
                 onLayout={(e) => {
-                  const y = PREDICTION_HEADER_MAX_HEIGHT + 24 + e.nativeEvent.layout.y;
+                  const y =
+                    PREDICTION_HEADER_MAX_HEIGHT + 24 + e.nativeEvent.layout.y;
                   satelliteCardY.current = y;
                   if (
                     scrollToParam === "satellite" &&
@@ -233,10 +259,28 @@ export default function PredictionScreen() {
                 <NewAiConsultantCard aiConsultant={prediction.aiConsultant} />
               ) : null}
 
-              <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 6, paddingTop: 4 }}>
-                <Ionicons name="time-outline" size={12} color={isDarkColorScheme ? "#475569" : "#94A3B8"} />
-                <Text style={{ fontSize: 11, color: isDarkColorScheme ? "#475569" : "#94A3B8" }}>
-                  Đánh giá lúc {new Date(prediction.evaluatedAt).toLocaleString("vi-VN")}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: 6,
+                  paddingTop: 4,
+                }}
+              >
+                <Ionicons
+                  name="time-outline"
+                  size={12}
+                  color={isDarkColorScheme ? "#475569" : "#94A3B8"}
+                />
+                <Text
+                  style={{
+                    fontSize: 11,
+                    color: isDarkColorScheme ? "#475569" : "#94A3B8",
+                  }}
+                >
+                  Đánh giá lúc{" "}
+                  {new Date(prediction.evaluatedAt).toLocaleString("vi-VN")}
                 </Text>
               </View>
             </View>
@@ -253,24 +297,45 @@ export default function PredictionScreen() {
           <View
             style={{
               position: "absolute",
-              top: 0, left: 0, right: 0, bottom: 0,
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
               justifyContent: "center",
               alignItems: "center",
               backgroundColor: bgColor,
             }}
           >
-            <View style={{
-              width: 72, height: 72, borderRadius: 24,
-              backgroundColor: isDarkColorScheme ? "#1E293B" : "#EEF2FF",
-              alignItems: "center", justifyContent: "center",
-              marginBottom: 16,
-            }}>
+            <View
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: 24,
+                backgroundColor: isDarkColorScheme ? "#1E293B" : "#EEF2FF",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 16,
+              }}
+            >
               <ActivityIndicator size="large" color="#6366F1" />
             </View>
-            <Text style={{ fontSize: 15, fontWeight: "700", color: isDarkColorScheme ? "#E2E8F0" : "#1E293B", marginBottom: 4 }}>
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: "700",
+                color: isDarkColorScheme ? "#E2E8F0" : "#1E293B",
+                marginBottom: 4,
+              }}
+            >
               Đang phân tích AI...
             </Text>
-            <Text style={{ fontSize: 12, color: isDarkColorScheme ? "#94A3B8" : "#64748B", textAlign: "center" }}>
+            <Text
+              style={{
+                fontSize: 12,
+                color: isDarkColorScheme ? "#94A3B8" : "#64748B",
+                textAlign: "center",
+              }}
+            >
               Tổng hợp dữ liệu từ vệ tinh, cảm biến và mô hình thời tiết
             </Text>
           </View>
@@ -279,5 +344,3 @@ export default function PredictionScreen() {
     </>
   );
 }
-
-

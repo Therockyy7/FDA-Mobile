@@ -46,16 +46,16 @@ export function useAreaSignalR(areaIds: string[]) {
 
   // Stable handler ref — same function object across renders so .off() removes the right one
   const handleUpdate = useCallback((...args: unknown[]) => {
-    console.log(
-      "📡 [AreaSignalR] ReceiveAreaStatusUpdate received:",
-      JSON.stringify(args[0]),
-    );
+    // console.log(
+    //   // "📡 [AreaSignalR] ReceiveAreaStatusUpdate received:",
+    //   JSON.stringify(args[0]),
+    // );
     const payload = args[0] as AreaStatusPayload;
     const d = payload?.data;
     if (d?.areaId) {
-      console.log(
-        `🔄 [AreaSignalR] Applying update: areaId=${d.areaId} status=${d.status} level=${d.severityLevel}`,
-      );
+      // console.log(
+      //   `🔄 [AreaSignalR] Applying update: areaId=${d.areaId} status=${d.status} level=${d.severityLevel}`,
+      // );
       applyUpdateRef.current({
         areaId: d.areaId,
         status: d.status as AreaStatusUpdate["status"],
@@ -85,7 +85,9 @@ export function useAreaSignalR(areaIds: string[]) {
     // which was causing the connection to be torn down before SubscribeToArea could invoke.
     // retainFloodHub increments consumer count (prevents premature stop) and starts hub.
     // startFloodHub returns the live HubConnection — use it directly to avoid stale ref.
-    retainFloodHub().then(() => startFloodHub()).then((conn) => {
+    retainFloodHub()
+      .then(() => startFloodHub())
+      .then((conn) => {
         if (cleaned) return;
 
         conn.off("ReceiveAreaStatusUpdate", handleUpdate);

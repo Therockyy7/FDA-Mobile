@@ -241,17 +241,27 @@ export function useMapScreenState(): MapScreenState {
     focusOnRoute,
   } = useMapCamera();
 
-  // Derive community params from current map region so markers load for current viewport
+  // Derive community params from current map region so markers load for current viewport.
+  // PERF: Snap lat/lng to a 0.005° grid (~500m) so tiny map movements don't create a new
+  // object and flood React Query with redundant API calls.
+  const GRID = 0.005;
+  const gridLat = Math.round((region?.latitude ?? 0) / GRID);
+  const gridLng = Math.round((region?.longitude ?? 0) / GRID);
+  const gridZoom = Math.round((region?.latitudeDelta ?? 0.1) * 100);
+
   const communityParams = useMemo<NearbyFloodReportsParams | undefined>(() => {
     if (!region) return undefined;
+    const snappedLat = gridLat * GRID;
+    const snappedLng = gridLng * GRID;
     const radiusMeters = Math.round((region.latitudeDelta / 2) * 111320 * 1.5);
     return {
-      latitude: region.latitude,
-      longitude: region.longitude,
+      latitude: snappedLat,
+      longitude: snappedLng,
       radiusMeters: Math.min(radiusMeters, 50000), // cap at 50km
       hours: 720,
     };
-  }, [region]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gridLat, gridLng, gridZoom]); // only update when grid cell or zoom tier changes
 
   // Data hooks — pass dynamic params so community markers load for current viewport
   const {

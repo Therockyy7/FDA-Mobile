@@ -46,6 +46,41 @@ function centroid(
   return { latitude: lat, longitude: lng };
 }
 
+// ── OPTIMIZATIONS ──
+// Reduce points in complex vector rings (radial distance thinning)
+function simplifyRadialDist(
+  points: { latitude: number; longitude: number }[],
+  sqTolerance: number
+) {
+  if (points.length <= 4) return points;
+  let prevPoint = points[0];
+  const newPoints = [prevPoint];
+  for (let i = 1; i < points.length - 1; i++) {
+    const pt = points[i];
+    const dx = prevPoint.longitude - pt.longitude;
+    const dy = prevPoint.latitude - pt.latitude;
+    if (dx * dx + dy * dy > sqTolerance) {
+      newPoints.push(pt);
+      prevPoint = pt;
+    }
+  }
+  newPoints.push(points[points.length - 1]);
+  return newPoints;
+}
+
+// Calculate rough bounding box area
+function getBoundingBoxArea(ring: { latitude: number; longitude: number }[]) {
+  let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+  for (let i = 0; i < ring.length; i++) {
+    const pt = ring[i];
+    if (pt.latitude < minLat) minLat = pt.latitude;
+    if (pt.latitude > maxLat) maxLat = pt.latitude;
+    if (pt.longitude < minLng) minLng = pt.longitude;
+    if (pt.longitude > maxLng) maxLng = pt.longitude;
+  }
+  return (maxLat - minLat) * (maxLng - minLng);
+}
+
 export function SatelliteFloodOverlay() {
   const { layers, visible } = useSatelliteFloodStore();
 
@@ -65,10 +100,19 @@ export function SatelliteFloodOverlay() {
       features.forEach((feature, fi) => {
         const rings = extractRings(feature);
         rings.forEach((ring, ri) => {
-          if (ring.length < 3) return;
+          // OPTIMIZATION 1: Ignore extremely small noise polygons (~ < 25mx25m)
+          // 5e-9 deg^2 is roughly 600 square meters at equator. This drops hundreds of tiny "puddles" that lag the map.
+          if (getBoundingBoxArea(ring) < 5e-9) return;
+
+          // OPTIMIZATION 2: Simplify point density to drastically reduce JS-Native bridge payload
+          // 8e-9 tolerance = points closer than ~3 meters are skipped
+          const simplifiedRing = simplifyRadialDist(ring, 8e-9);
+
+          // Re-check after simplification
+          if (simplifiedRing.length < 3) return;
           result.push({
             key: `${layer.id}-${fi}-${ri}`,
-            coords: ring,
+            coords: simplifiedRing,
             fillColor:
               ri === 0
                 ? layer.color + "55" // outer ring — semi-transparent fill

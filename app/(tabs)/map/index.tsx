@@ -2,7 +2,7 @@
 // Thin orchestrator: wires hooks into a single state object, renders components.
 
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import React from "react";
 import { StatusBar, TouchableOpacity, View } from "react-native";
 
@@ -113,6 +113,11 @@ export default function MapScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: "#0B1A33" }}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <Tabs.Screen 
+        options={{ 
+          tabBarStyle: (s.isAdjustingRadius && !s.nav.isNavigating) ? { display: "none" } : undefined 
+        }} 
+      />
 
       {/* Header — hide when community report sheet is open or viewing AI Prediction Map */}
       {!s.showCommunityReportSheet && !s.params.returnToPrediction && (
@@ -185,17 +190,22 @@ export default function MapScreen() {
               const dest = s.params.returnToPrediction;
               if (!dest) return;
               
-              // Clear Map view states so that pressing the back button in Prediction screen
-              // shows the original clean Map without the AI layers
+              // Clear Map view states
               s.setSelectedAdminArea(null);
               s.setAreaDisplayMode("user");
-              useSatelliteFloodStore.getState().clear();
               
-              // Move forward to the prediction screen
+              // Move forward to the prediction screen immediately for a snappy UX
               router.push(`/prediction/${dest}` as any);
               
               // Clear URL search params visually and state-wise
               router.setParams({ returnToPrediction: "", satelliteBbox: "" });
+              
+              // PERF: Delay destroying the heavy Native Map Polygons until AFTER 
+              // the screen transition animation is fully complete (~600ms).
+              // Doing this synchronously freezes the UI thread and crashes the app.
+              setTimeout(() => {
+                useSatelliteFloodStore.getState().clear();
+              }, 600);
             }}
             style={{
               position: "absolute",

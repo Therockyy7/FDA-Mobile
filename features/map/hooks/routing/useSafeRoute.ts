@@ -3,13 +3,16 @@ import { useCallback, useState } from "react";
 import type { TransportMode } from "../../types/routing.types";
 import { FloodRoute, FloodZone } from "../../constants/map-data";
 import { parseRouteResponse } from "../../lib/polyline-utils";
+import { BasicRouteService } from "../../services/basic-route.service";
 import { SafeRouteService } from "../../services/safe-route.service";
 import type {
+  BasicRouteRequest,
   DecodedRoute,
   FloodWarningDto,
   LatLng,
   RouteMetadata,
   RouteSafetyStatus,
+  SafeRouteRequest,
 } from "../../types/safe-route.types";
 import { TRANSPORT_MODE_TO_PROFILE } from "../../types/safe-route.types";
 
@@ -37,20 +40,39 @@ export function useSafeRoute() {
       end: LatLng,
       transportMode: TransportMode,
       maxAlternatives: number = 2,
+      isAuthenticated: boolean = false,
     ) => {
       setIsLoading(true);
       setError(null);
 
       try {
-        const response = await SafeRouteService.getSafeRoute({
-          startLatitude: start.latitude,
-          startLongitude: start.longitude,
-          endLatitude: end.latitude,
-          endLongitude: end.longitude,
-          routeProfile: TRANSPORT_MODE_TO_PROFILE[transportMode],
-          maxAlternatives,
-          avoidFloodedAreas: true,
-        });
+        const profile = TRANSPORT_MODE_TO_PROFILE[transportMode];
+        let response;
+
+        if (isAuthenticated) {
+          // Authenticated user → safe route (avoids flood zones)
+          const safeReq: SafeRouteRequest = {
+            startLatitude: start.latitude,
+            startLongitude: start.longitude,
+            endLatitude: end.latitude,
+            endLongitude: end.longitude,
+            routeProfile: profile,
+            maxAlternatives,
+            avoidFloodedAreas: true,
+          };
+          response = await SafeRouteService.getSafeRoute(safeReq);
+        } else {
+          // Guest → basic route (informational flood warnings only)
+          const basicReq: BasicRouteRequest = {
+            startLatitude: start.latitude,
+            startLongitude: start.longitude,
+            endLatitude: end.latitude,
+            endLongitude: end.longitude,
+            routeProfile: profile,
+            maxAlternatives,
+          };
+          response = await BasicRouteService.getBasicRoute(basicReq);
+        }
 
         if (!response.success) {
           setError(response.message || "Không tìm được tuyến đường");
@@ -77,7 +99,14 @@ export function useSafeRoute() {
         setFloodWarnings(parsed.floodWarnings);
         setMetadata(parsed.metadata);
       } catch (err: any) {
-        setError(err?.message || "Lỗi kết nối. Vui lòng thử lại.");
+        const status = err?.status;
+        if (status === 422) {
+          setError("Không tìm được đường. Khu vực có thể bị chặn.");
+        } else if (status === 503) {
+          setError("Dịch vụ tìm đường tạm thời không khả dụng.");
+        } else {
+          setError(err?.message || "Lỗi kết nối. Vui lòng thử lại.");
+        }
       } finally {
         setIsLoading(false);
       }

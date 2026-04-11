@@ -52,7 +52,10 @@ export function parseRouteResponse(response: SafeRouteApiResponse): {
   for (const feature of response.features) {
     const props = feature.properties;
 
-    if (props.name === "safeRoute" && feature.geometry.type === "LineString") {
+    if (
+      (props.name === "safeRoute" || props.name === "primaryRoute") &&
+      feature.geometry.type === "LineString"
+    ) {
       const routeProps = props as RouteFeatureProperties;
       primaryRoute = {
         coordinates: geoJsonCoordsToLatLng(

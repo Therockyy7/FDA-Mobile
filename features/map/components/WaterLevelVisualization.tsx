@@ -20,7 +20,7 @@ interface WaterLevelVisualizationProps {
   unit: string;
   severity: "safe" | "caution" | "warning" | "critical" | "unknown";
   severityColor: string;
-  maxLevel?: number; // Maximum level for scale (default: 500cm for better visualization)
+  maxLevel?: number; // Maximum level for scale (default: 150cm)
 }
 
 const VIS_HEIGHT = 240;
@@ -31,7 +31,7 @@ export function WaterLevelVisualization({
   unit,
   severity,
   severityColor,
-  maxLevel = 300,
+  maxLevel = 150,
 }: WaterLevelVisualizationProps) {
   const { isDarkColorScheme } = useColorScheme();
   const isDark = isDarkColorScheme;
@@ -48,10 +48,10 @@ export function WaterLevelVisualization({
         : waterLevel
       : 0;
 
-  // Use dynamic max level based on actual water level, minimum 300cm
+  // Use dynamic max level based on actual water level, minimum 150cm
   const effectiveMaxLevel = Math.max(
     maxLevel || DEFAULT_MAX_LEVEL,
-    Math.ceil(waterLevelCm / 100) * 150 + 100
+    Math.ceil(waterLevelCm / 100) * 100 + 50
   );
 
   // Calculate water height as percentage of max

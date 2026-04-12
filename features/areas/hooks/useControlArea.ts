@@ -100,35 +100,39 @@ export function useControlArea({
     setSelectedArea(null);
   }, []);
 
-  // Delete area
+  // Delete Confirmation State
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Trigger delete modal
   const handleDeleteArea = useCallback(() => {
     if (!selectedArea) return;
+    setDeleteModalVisible(true);
+  }, [selectedArea]);
 
-    Alert.alert(
-      "Xóa vùng theo dõi",
-      `Bạn có chắc chắn muốn xóa "${selectedArea.name}" không?`,
-      [
-        { text: "Hủy", style: "cancel" },
-        {
-          text: "Xóa",
-          style: "destructive",
-          onPress: async () => {
-            const areaId = selectedArea.id;
-            setSelectedArea(null);
+  const handleCancelDelete = useCallback(() => {
+    setDeleteModalVisible(false);
+  }, []);
 
-            try {
-              onAreaUnsubscribe?.(areaId);
-              await AreaService.deleteArea(areaId);
-              await refreshAreas();
-            } catch (error: any) {
-              console.error("Failed to delete area:", error);
-              Alert.alert("Lỗi", "Không thể xóa vùng này.");
-            }
-          },
-        },
-      ],
-    );
-  }, [selectedArea, refreshAreas]);
+  const handleConfirmDelete = useCallback(async () => {
+    if (!selectedArea) return;
+    
+    setIsDeleting(true);
+    const areaId = selectedArea.id;
+    
+    try {
+      onAreaUnsubscribe?.(areaId);
+      await AreaService.deleteArea(areaId);
+      await refreshAreas();
+      setSelectedArea(null);
+      setDeleteModalVisible(false);
+    } catch (error: any) {
+      console.error("Failed to delete area:", error);
+      Alert.alert("Lỗi", "Không thể xóa vùng này.");
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [selectedArea, refreshAreas, onAreaUnsubscribe]);
 
   // NEW: Start creating area - check premium limit first, then show option selection sheet
   const handleStartCreateArea = useCallback(async () => {
@@ -588,5 +592,10 @@ export function useControlArea({
     handleUpgradePremium,
     // Error handlers
     handleCloseErrorModal,
+    // Delete Confirmation
+    deleteModalVisible,
+    isDeletingArea: isDeleting,
+    handleCancelDelete,
+    handleConfirmDelete,
   };
 }

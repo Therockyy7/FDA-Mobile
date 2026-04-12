@@ -166,7 +166,7 @@ export function AreaCard({ area, onClose, onViewDetails, onEdit, onDelete }: Are
             <TouchableOpacity onPress={onDelete} style={[styles.actionBtn, styles.actionOutline, styles.actionSmall]} activeOpacity={0.75}>
               <Ionicons name="trash" size={13} color="#EF4444" />
               <Text style={styles.actionOutlineText}>Xóa</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> 
           )}
           {onViewDetails && (
             <TouchableOpacity onPress={onViewDetails} style={[styles.actionBtn, { backgroundColor: color }, styles.actionPrimary]} activeOpacity={0.75}>

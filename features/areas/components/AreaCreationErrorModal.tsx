@@ -3,7 +3,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect } from "react";
+import React from "react";
 import {
   Dimensions,
   Modal,
@@ -12,20 +12,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Animated, {
-  Easing,
-  FadeIn,
-  FadeOut,
-  SlideInDown,
-  SlideOutDown,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withRepeat,
-  withSequence,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
 import { Text } from "~/components/ui/text";
 import type { AreaError } from "~/features/areas/hooks/useControlArea";
 import { useColorScheme } from "~/lib/useColorScheme";
@@ -46,13 +32,6 @@ export function AreaCreationErrorModal({
   onChangeLocation,
 }: AreaCreationErrorModalProps) {
   const { isDarkColorScheme } = useColorScheme();
-
-  // Animations
-  const iconScale = useSharedValue(0);
-  const iconRotate = useSharedValue(0);
-  const pulseScale = useSharedValue(1);
-  const pulseOpacity = useSharedValue(0.6);
-  const glowOpacity = useSharedValue(0.3);
 
   const colors = {
     cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
@@ -90,86 +69,6 @@ export function AreaCreationErrorModal({
     ? colors.duplicateBorder
     : colors.errorBorder;
 
-  useEffect(() => {
-    if (visible) {
-      // Icon entrance with bounce
-      iconScale.value = withSequence(
-        withDelay(100, withSpring(1.2, { damping: 8 })),
-        withSpring(1, { damping: 10 }),
-      );
-
-      // Subtle rotation shake for attention
-      iconRotate.value = withSequence(
-        withDelay(200, withTiming(-10, { duration: 60 })),
-        withTiming(10, { duration: 60 }),
-        withTiming(-8, { duration: 50 }),
-        withTiming(8, { duration: 50 }),
-        withTiming(-4, { duration: 40 }),
-        withTiming(0, { duration: 40 }),
-      );
-
-      // Pulse animation
-      pulseScale.value = withRepeat(
-        withSequence(
-          withTiming(1.15, {
-            duration: 1200,
-            easing: Easing.inOut(Easing.ease),
-          }),
-          withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
-        ),
-        -1,
-        true,
-      );
-
-      pulseOpacity.value = withRepeat(
-        withSequence(
-          withTiming(0.3, {
-            duration: 1200,
-            easing: Easing.inOut(Easing.ease),
-          }),
-          withTiming(0.6, {
-            duration: 1200,
-            easing: Easing.inOut(Easing.ease),
-          }),
-        ),
-        -1,
-        true,
-      );
-
-      // Glow animation
-      glowOpacity.value = withRepeat(
-        withSequence(
-          withTiming(0.5, { duration: 800, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0.2, { duration: 800, easing: Easing.inOut(Easing.ease) }),
-        ),
-        -1,
-        true,
-      );
-    } else {
-      iconScale.value = 0;
-      iconRotate.value = 0;
-      pulseScale.value = 1;
-      pulseOpacity.value = 0.6;
-      glowOpacity.value = 0.3;
-    }
-  }, [visible, iconScale, iconRotate, pulseScale, pulseOpacity, glowOpacity]);
-
-  const iconAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: iconScale.value },
-      { rotate: `${iconRotate.value}deg` },
-    ] as any,
-  }));
-
-  const pulseAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulseScale.value }],
-    opacity: pulseOpacity.value,
-  }));
-
-  const glowAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: glowOpacity.value,
-  }));
-
   if (!error) return null;
 
   return (
@@ -181,10 +80,8 @@ export function AreaCreationErrorModal({
       onRequestClose={onClose}
     >
       <View style={styles.container}>
-        {/* Animated Overlay */}
-        <Animated.View
-          entering={FadeIn.duration(200)}
-          exiting={FadeOut.duration(200)}
+        {/* Static Overlay */}
+        <View
           style={StyleSheet.absoluteFill}
         >
           {Platform.OS === "ios" ? (
@@ -198,7 +95,7 @@ export function AreaCreationErrorModal({
               style={[styles.overlay, { backgroundColor: colors.overlay }]}
             />
           )}
-        </Animated.View>
+        </View>
 
         {/* Touchable overlay to close */}
         <TouchableOpacity
@@ -208,9 +105,7 @@ export function AreaCreationErrorModal({
         />
 
         {/* Modal Content */}
-        <Animated.View
-          entering={SlideInDown.springify().damping(15).stiffness(150)}
-          exiting={SlideOutDown.duration(200)}
+        <View
           style={[
             styles.modalContent,
             {
@@ -219,12 +114,10 @@ export function AreaCreationErrorModal({
             },
           ]}
         >
-          {/* Background glow effect */}
-          <Animated.View
+          <View
             style={[
               styles.glowEffect,
               { backgroundColor: accentColor },
-              glowAnimatedStyle,
             ]}
           />
 
@@ -240,19 +133,18 @@ export function AreaCreationErrorModal({
             <Ionicons name="close" size={18} color={colors.subtext} />
           </TouchableOpacity>
 
-          {/* Icon Container with Animations */}
+          {/* Icon Container without Animations */}
           <View style={styles.iconWrapper}>
             {/* Pulse Ring */}
-            <Animated.View
+            <View
               style={[
                 styles.pulseRing,
                 { borderColor: accentColor },
-                pulseAnimatedStyle,
               ]}
             />
 
             {/* Main Icon */}
-            <Animated.View style={iconAnimatedStyle}>
+            <View>
               <LinearGradient
                 colors={
                   isDuplicateError
@@ -276,7 +168,7 @@ export function AreaCreationErrorModal({
                   />
                 </LinearGradient>
               </LinearGradient>
-            </Animated.View>
+            </View>
           </View>
 
           {/* Title */}
@@ -388,7 +280,7 @@ export function AreaCreationErrorModal({
               </View>
             </View>
           )}
-        </Animated.View>
+        </View>
       </View>
     </Modal>
   );

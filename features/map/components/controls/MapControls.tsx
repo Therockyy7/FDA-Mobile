@@ -116,13 +116,6 @@ export function MapControls({
     <View style={styles.container}>
       {visible && (
         <View style={styles.expandedGroup} pointerEvents={expanded ? "auto" : "none"}>
-          {streetViewLocation && onClearStreetView && (
-            <Animated.View style={streetViewAnim.animatedStyle}>
-              <TouchableOpacity onPress={onClearStreetView} style={styles.fabAmber} activeOpacity={0.8}>
-                <Ionicons name="eye-off" size={22} color="white" />
-              </TouchableOpacity>
-            </Animated.View>
-          )}
 
           {onShowLayers && (
             <Animated.View style={layersAnim.animatedStyle}>

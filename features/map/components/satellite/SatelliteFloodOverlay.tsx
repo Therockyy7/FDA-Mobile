@@ -3,14 +3,17 @@
 // Reads from the global useSatelliteFloodStore — zero prop drilling required.
 
 import React, { useMemo } from "react";
-import { Polygon, Marker } from "react-native-maps";
 import { View } from "react-native";
+import { Marker, Polygon } from "react-native-maps";
 import { Text } from "~/components/ui/text";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
 import type { GeoJsonFeature } from "~/features/prediction/types/satellite.types";
 
 // GeoJSON [lng, lat] → react-native-maps { latitude, longitude }
-function lngLatToLatLng(coord: number[]): { latitude: number; longitude: number } {
+function lngLatToLatLng(coord: number[]): {
+  latitude: number;
+  longitude: number;
+} {
   return { longitude: coord[0], latitude: coord[1] };
 }
 
@@ -38,9 +41,10 @@ function extractRings(
 }
 
 // Pick a centroid for label placement
-function centroid(
-  coords: { latitude: number; longitude: number }[],
-): { latitude: number; longitude: number } {
+function centroid(coords: { latitude: number; longitude: number }[]): {
+  latitude: number;
+  longitude: number;
+} {
   const lat = coords.reduce((s, c) => s + c.latitude, 0) / coords.length;
   const lng = coords.reduce((s, c) => s + c.longitude, 0) / coords.length;
   return { latitude: lat, longitude: lng };
@@ -50,7 +54,7 @@ function centroid(
 // Reduce points in complex vector rings (radial distance thinning)
 function simplifyRadialDist(
   points: { latitude: number; longitude: number }[],
-  sqTolerance: number
+  sqTolerance: number,
 ) {
   if (points.length <= 4) return points;
   let prevPoint = points[0];
@@ -70,7 +74,10 @@ function simplifyRadialDist(
 
 // Calculate rough bounding box area
 function getBoundingBoxArea(ring: { latitude: number; longitude: number }[]) {
-  let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+  let minLat = 90,
+    maxLat = -90,
+    minLng = 180,
+    maxLng = -180;
   for (let i = 0; i < ring.length; i++) {
     const pt = ring[i];
     if (pt.latitude < minLat) minLat = pt.latitude;
@@ -139,7 +146,11 @@ export function SatelliteFloodOverlay() {
         const center = centroid(rings[0]);
         return { key: layer.id, center, layer };
       })
-      .filter(Boolean) as { key: string; center: { latitude: number; longitude: number }; layer: (typeof layers)[0] }[];
+      .filter(Boolean) as {
+      key: string;
+      center: { latitude: number; longitude: number };
+      layer: (typeof layers)[0];
+    }[];
   }, [layers, visible]);
 
   if (!visible || !polygons.length) return null;

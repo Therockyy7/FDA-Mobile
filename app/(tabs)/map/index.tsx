@@ -20,10 +20,12 @@ import { MapContent } from "~/features/map/components/MapContent";
 import { MapFloatingUI } from "~/features/map/components/MapFloatingUI";
 import { MapHeaderSwitch } from "~/features/map/components/MapHeaderSwitch";
 import { MapSheets } from "~/features/map/components/MapSheets";
+import { ConfirmDeleteModal } from "~/features/areas/components/ConfirmDeleteModal";
 import { useMapScreen } from "~/features/map/hooks/useMapScreen";
 import { useMapScreenState } from "~/features/map/hooks/useMapScreenState";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
 import { useIsAuthenticated } from "~/features/auth/hooks/useAuth";
+import { StaticAreaTarget } from "~/features/map/components/areas/overlays/StaticAreaTarget";
 
 export default function MapScreen() {
   // Single aggregated state
@@ -344,6 +346,14 @@ export default function MapScreen() {
           onDraftAreaCenterChange={s.setDraftAreaCenter}
         />
 
+        {/* Static center crosshair and radius overlay used while adjusting radius */}
+        {s.isAdjustingRadius && (
+          <StaticAreaTarget 
+            radiusMeters={s.draftAreaRadius} 
+            region={s.region} 
+          />
+        )}
+
         {/* Floating UI — hide when sheet open, ward selection, or viewing AI Prediction Map */}
         {!s.showWardSelectionSheet && !s.showCommunityReportSheet && !s.params.returnToPrediction && (
           <MapFloatingUI
@@ -355,7 +365,7 @@ export default function MapScreen() {
             safeRouteHasResults={s.safeRoute.hasResults}
             isAdjustingRadius={s.isAdjustingRadius}
             showCreateAreaSheet={s.showCreateAreaSheet}
-            showCreateAreaButton={s.viewMode === "zones" && !s.isRoutingUIVisible && !s.selectedArea && !s.isAdjustingRadius && !s.showCreateAreaSheet}
+            showCreateAreaButton={!isGuest && s.viewMode === "zones" && !s.isRoutingUIVisible && !s.selectedArea && !s.isAdjustingRadius && !s.showCreateAreaSheet}
             onCreateArea={s.handleStartCreateArea}
             onZoomIn={s.zoomIn}
             onZoomOut={s.zoomOut}
@@ -369,7 +379,7 @@ export default function MapScreen() {
             streetViewLocation={s.streetViewLocation}
             onClearStreetView={() => s.setStreetViewLocation(null)}
             onShowLayers={() => s.setShowLayerSheet(true)}
-            showAiSelectButton={s.areaDisplayMode === "admin" && !s.isRoutingUIVisible}
+            showAiSelectButton={!isGuest && s.areaDisplayMode === "admin" && !s.isRoutingUIVisible}
             onShowWardSelection={() => s.setShowWardSelectionSheet(true)}
             selectedAdminAreaName={s.selectedAdminArea ? (s.selectedAdminArea as any).name : null}
             onClearAdminArea={() => {
@@ -487,6 +497,15 @@ export default function MapScreen() {
             isGuest={isGuest}
           />
         )}
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmDeleteModal
+          visible={!!s.deleteModalVisible}
+          areaName={s.selectedArea?.name || ""}
+          isDeleting={s.isDeletingArea}
+          onConfirm={s.handleConfirmDelete}
+          onCancel={s.handleCancelDelete}
+        />
       </View>
     </View>
   );

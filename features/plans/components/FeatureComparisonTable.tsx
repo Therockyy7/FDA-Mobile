@@ -18,19 +18,21 @@ const PLAN_LABELS: Record<string, string> = {
   MONITOR: "Monitor",
 };
 
+/** Same tiers as enterprise column in PricingCard — hide from comparison table. */
+const PLAN_CODES_HIDDEN_FROM_COMPARISON = new Set(["MONITOR", "ENTERPRISE"]);
+
+function isPlanHiddenFromComparison(p: PricingPlan): boolean {
+  const code = (p.code || "").toUpperCase();
+  if (PLAN_CODES_HIDDEN_FROM_COMPARISON.has(code)) return true;
+  if (/\benterprise\b/i.test(p.name || "")) return true;
+  return false;
+}
+
 interface FeatureRow {
   key: string;
   label: string;
   getValue: (plan: PricingPlan) => string | null;
 }
-
-const parseBool = (v: string | undefined | null): boolean | null => {
-  if (!v) return null;
-  const lower = v.toLowerCase();
-  if (lower === "true" || lower === "1" || lower === "yes" || lower === "enabled") return true;
-  if (lower === "false" || lower === "0" || lower === "no" || lower === "disabled") return false;
-  return null;
-};
 
 const COMPARISON_ROWS: FeatureRow[] = [
   {
@@ -50,14 +52,6 @@ const COMPARISON_ROWS: FeatureRow[] = [
       if (v.includes("Webhook")) return "Tất cả + Webhook";
       if (v.includes("SMS")) return "Push, Email, SMS";
       return "Push, Email";
-    },
-  },
-  {
-    key: "dispatch_delay",
-    label: "Độ trễ thông báo",
-    getValue: (plan) => {
-      const v = plan.features?.find((f) => f.featureKey === "dispatch_delay")?.featureValue;
-      return v || "—";
     },
   },
   {
@@ -138,6 +132,8 @@ const FeatureComparisonTable: React.FC<Props> = ({ plans }) => {
     return aIdx - bIdx;
   });
 
+  const tablePlans = sortedPlans.filter((p) => !isPlanHiddenFromComparison(p));
+
   const colors = {
     surface: isDark ? "#1E293B" : "#FFFFFF",
     border: isDark ? "rgba(255,255,255,0.06)" : "#F1F5F6",
@@ -159,13 +155,17 @@ const FeatureComparisonTable: React.FC<Props> = ({ plans }) => {
       <View style={[styles.table, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         {/* Column Headers */}
         <View style={[styles.headerRow, { borderBottomColor: colors.border }]}>
-          <View style={styles.labelCol} />
-          {sortedPlans.map((plan) => {
+          <View style={[styles.labelCol, styles.labelCell]} />
+          {tablePlans.map((plan) => {
             const isHighlight = plan.code !== "FREE";
             return (
               <View
                 key={plan.code}
-                style={[styles.planCol, isHighlight && { backgroundColor: colors.colHighlight }]}
+                style={[
+                  styles.planCol,
+                  styles.valueCell,
+                  isHighlight && { backgroundColor: colors.colHighlight },
+                ]}
               >
                 <Text
                   style={[
@@ -198,7 +198,7 @@ const FeatureComparisonTable: React.FC<Props> = ({ plans }) => {
             </View>
 
             {/* Plan values */}
-            {sortedPlans.map((plan) => {
+            {tablePlans.map((plan) => {
               const isHighlight = plan.code !== "FREE";
               return (
                 <View
@@ -234,8 +234,6 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     flexDirection: "row",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
     borderBottomWidth: 1,
   },
   row: {

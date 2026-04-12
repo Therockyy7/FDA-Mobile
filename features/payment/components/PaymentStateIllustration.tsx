@@ -5,7 +5,7 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 
-type Variant = "processing" | "error" | "cancel";
+type Variant = "processing" | "error" | "cancel" | "returned";
 
 type Props = {
   variant: Variant;
@@ -31,6 +31,11 @@ const VARIANT_CONFIG: Record<
     icon: "close-circle-outline",
     color: "#F59E0B",
     bgOpacity: "rgba(245, 158, 11, 0.1)",
+  },
+  returned: {
+    icon: "checkmark-done-outline",
+    color: "#10B981",
+    bgOpacity: "rgba(16, 185, 129, 0.12)",
   },
 };
 

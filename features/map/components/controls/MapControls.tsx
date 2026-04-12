@@ -33,13 +33,14 @@ const SPRING = { stiffness: 260, damping: 22, mass: 0.8 };
 function useItemAnim(delay = 0) {
   const progress = useSharedValue(0);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: progress.value,
     transform: [
       { scale: interpolate(progress.value, [0, 1], [0.7, 1]) },
       { translateY: interpolate(progress.value, [0, 1], [14, 0]) },
-    ],
-  }));
+    ] as any,
+  })) as any;
 
   const show = useCallback(() => {
     progress.value = withDelay(delay, withTiming(1, TIMING));
@@ -77,12 +78,13 @@ export function MapControls({
   const controlsAnim = useItemAnim(80);
   const rotationAnim = useItemAnim(120);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fabStyle = useAnimatedStyle(() => ({
     transform: [
       { rotate: `${fabRotate.value * 180}deg` },
       { scale: fabScale.value },
-    ],
-  }));
+    ] as any,
+  })) as any;
 
   const open = useCallback(() => {
     setVisible(true);

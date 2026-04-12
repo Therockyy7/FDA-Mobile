@@ -3,30 +3,40 @@
 // No business logic — all data/callbacks passed as props.
 
 import { Ionicons } from "@expo/vector-icons";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { useColorScheme } from "~/lib/useColorScheme";
-import { AreaCircleOverlay, AreaPreviewCircle, AdminAreaPolygon } from "~/features/map/components/areas";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import {
+  AdminAreaPolygon,
+  AreaCircleOverlay,
+  AreaPreviewCircle,
+} from "~/features/map/components/areas";
+import { CommunityReportMarker } from "~/features/map/components/reports";
 import {
   FloodWarningMarkers,
   RouteMarkers,
   SafeRoutePolylines,
   WaterFlowRoute,
 } from "~/features/map/components/routes";
-import { FloodSeverityMarkers, FloodZonePolygons } from "~/features/map/components/stations";
-import { CommunityReportMarker } from "~/features/map/components/reports";
 import { SatelliteFloodOverlay } from "~/features/map/components/satellite/SatelliteFloodOverlay";
-import { FLOOD_ROUTES, DANANG_CENTER } from "~/features/map/constants/map-data";
+import {
+  FloodSeverityMarkers,
+  FloodZonePolygons,
+} from "~/features/map/components/stations";
+import { DANANG_CENTER, FLOOD_ROUTES } from "~/features/map/constants/map-data";
 import { STANDARD_MAP_STYLE } from "~/features/map/constants/map-style";
 import type { FloodSeverityFeature } from "~/features/map/types/map-layers.types";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 interface Props {
   mapRef: React.RefObject<MapView>;
   is3DEnabled: boolean;
   camera: any;
   locationPermission: boolean;
-  settings: { baseMap: string; overlays: { flood: boolean; traffic: boolean; communityReports: boolean } };
+  settings: {
+    baseMap: string;
+    overlays: { flood: boolean; traffic: boolean; communityReports: boolean };
+  };
   mapType: "standard" | "satellite" | "hybrid";
   viewMode: string;
   areaDisplayMode: string;
@@ -39,7 +49,12 @@ interface Props {
   isAdjustingRadius: boolean;
   showCreateAreaSheet: boolean;
   selectedRoute: any;
-  safeRoute: { hasResults: boolean; getAllRoutes: () => any[]; selectedRouteIndex: number; floodWarnings: any[] };
+  safeRoute: {
+    hasResults: boolean;
+    getAllRoutes: () => any[];
+    selectedRouteIndex: number;
+    floodWarnings: any[];
+  };
   userLocation: any;
   isRoutingUIVisible: boolean;
   isUsingGPSOrigin: boolean;
@@ -66,15 +81,47 @@ interface Props {
 }
 
 export function MapContent({
-  mapRef, is3DEnabled, camera, locationPermission,
-  settings, mapType, viewMode, areaDisplayMode,
-  areas, adminAreas, selectedArea, selectedAdminArea,
-  draftAreaCenter, draftAreaRadius, isAdjustingRadius, showCreateAreaSheet,
-  selectedRoute, safeRoute, userLocation,
-  isRoutingUIVisible, isUsingGPSOrigin, startCoord, originText, endCoord, destinationText,
-  streetViewLocation, floodSeverity, communityReports, selectedCommunityReport,
-  onRegionChangeComplete, onLongPress, onPress, onPanDrag,
-  onAreaPress, onRoutePress, onSafeRoutePress, onCommunityReportPress, onFloodMarkerPress, openStreetView, onAdminAreaPress, onDraftAreaCenterChange,
+  mapRef,
+  is3DEnabled,
+  camera,
+  locationPermission,
+  settings,
+  mapType,
+  viewMode,
+  areaDisplayMode,
+  areas,
+  adminAreas,
+  selectedArea,
+  selectedAdminArea,
+  draftAreaCenter,
+  draftAreaRadius,
+  isAdjustingRadius,
+  showCreateAreaSheet,
+  selectedRoute,
+  safeRoute,
+  userLocation,
+  isRoutingUIVisible,
+  isUsingGPSOrigin,
+  startCoord,
+  originText,
+  endCoord,
+  destinationText,
+  streetViewLocation,
+  floodSeverity,
+  communityReports,
+  selectedCommunityReport,
+  onRegionChangeComplete,
+  onLongPress,
+  onPress,
+  onPanDrag,
+  onAreaPress,
+  onRoutePress,
+  onSafeRoutePress,
+  onCommunityReportPress,
+  onFloodMarkerPress,
+  openStreetView,
+  onAdminAreaPress,
+  onDraftAreaCenterChange,
 }: Props) {
   const { isDarkColorScheme } = useColorScheme();
   const isDark = isDarkColorScheme;
@@ -98,17 +145,34 @@ export function MapContent({
       pitchEnabled={true}
       rotateEnabled={true}
       mapType={settings?.baseMap === "satellite" ? "satellite" : mapType}
-      customMapStyle={mapType === "standard" && !settings?.overlays?.traffic ? STANDARD_MAP_STYLE : undefined}
+      customMapStyle={
+        mapType === "standard" && !settings?.overlays?.traffic
+          ? STANDARD_MAP_STYLE
+          : undefined
+      }
     >
       {/* User Areas */}
-      {viewMode === "zones" && areaDisplayMode === "user" && areas.map((area) => (
-        <AreaCircleOverlay key={`${area.id}-${area.status}-${area.severityLevel}`} area={area} isSelected={selectedArea?.id === area.id} onPress={() => onAreaPress(area)} />
-      ))}
+      {viewMode === "zones" &&
+        areaDisplayMode === "user" &&
+        areas.map((area) => (
+          <AreaCircleOverlay
+            key={`${area.id}-${area.status}-${area.severityLevel}`}
+            area={area}
+            isSelected={selectedArea?.id === area.id}
+            onPress={() => onAreaPress(area)}
+          />
+        ))}
 
       {/* Admin Areas (Only Selected) */}
-      {viewMode === "zones" && areaDisplayMode === "admin" && selectedAdminArea && (
-        <AdminAreaPolygon key={selectedAdminArea.id} area={selectedAdminArea} onPress={onAdminAreaPress} />
-      )}
+      {viewMode === "zones" &&
+        areaDisplayMode === "admin" &&
+        selectedAdminArea && (
+          <AdminAreaPolygon
+            key={selectedAdminArea.id}
+            area={selectedAdminArea}
+            onPress={onAdminAreaPress}
+          />
+        )}
 
       {/* Draft Area */}
       {draftAreaCenter && (
@@ -116,20 +180,34 @@ export function MapContent({
           center={draftAreaCenter}
           radiusMeters={draftAreaRadius}
           visible={isAdjustingRadius || showCreateAreaSheet}
-          onCenterChange={isAdjustingRadius ? onDraftAreaCenterChange : undefined}
+          onCenterChange={
+            isAdjustingRadius ? onDraftAreaCenterChange : undefined
+          }
         />
       )}
 
       {/* Routes */}
-      {viewMode === "routes" && FLOOD_ROUTES.map((route) => (
-        <WaterFlowRoute key={route.id} route={route} isSelected={selectedRoute?.id === route.id} onPress={() => onRoutePress(route)} />
-      ))}
+      {viewMode === "routes" &&
+        FLOOD_ROUTES.map((route) => (
+          <WaterFlowRoute
+            key={route.id}
+            route={route}
+            isSelected={selectedRoute?.id === route.id}
+            onPress={() => onRoutePress(route)}
+          />
+        ))}
 
       {/* Safe Route */}
       {safeRoute.hasResults && (
-        <SafeRoutePolylines routes={safeRoute.getAllRoutes()} selectedIndex={safeRoute.selectedRouteIndex} onRoutePress={onSafeRoutePress} />
+        <SafeRoutePolylines
+          routes={safeRoute.getAllRoutes()}
+          selectedIndex={safeRoute.selectedRouteIndex}
+          onRoutePress={onSafeRoutePress}
+        />
       )}
-      {safeRoute.hasResults && <FloodWarningMarkers warnings={safeRoute.floodWarnings} />}
+      {safeRoute.hasResults && (
+        <FloodWarningMarkers warnings={safeRoute.floodWarnings} />
+      )}
 
       {/* Route Markers */}
       <RouteMarkers
@@ -144,7 +222,15 @@ export function MapContent({
 
       {/* Street View Marker */}
       {streetViewLocation && (
-        <Marker coordinate={streetViewLocation} onPress={() => openStreetView(streetViewLocation.latitude, streetViewLocation.longitude)}>
+        <Marker
+          coordinate={streetViewLocation}
+          onPress={() =>
+            openStreetView(
+              streetViewLocation.latitude,
+              streetViewLocation.longitude,
+            )
+          }
+        >
           <View style={styles.streetViewMarker}>
             <Ionicons name="eye" size={20} color="white" />
           </View>
@@ -155,28 +241,33 @@ export function MapContent({
       <FloodZonePolygons floodSeverity={floodSeverity} />
 
       {/* Community Reports */}
-      {settings?.overlays?.communityReports && communityReports.map((report) => (
-        <CommunityReportMarker
-          key={`community-report-${report.id}`}
-          report={report}
-          mapRef={mapRef}
-          onPress={onCommunityReportPress}
-          isSelected={selectedCommunityReport?.id === report.id}
-        />
-      ))}
+      {settings?.overlays?.communityReports &&
+        communityReports.map((report) => (
+          <CommunityReportMarker
+            key={`community-report-${report.id}`}
+            report={report}
+            mapRef={mapRef}
+            onPress={onCommunityReportPress}
+            isSelected={selectedCommunityReport?.id === report.id}
+          />
+        ))}
       {/* Render selected marker even if not in communityReports list (e.g. from navigation params) */}
-      {selectedCommunityReport && !communityReports.some((r) => r.id === selectedCommunityReport.id) && (
-        <CommunityReportMarker
-          key={`selected-community-report-${selectedCommunityReport.id}`}
-          report={selectedCommunityReport}
-          mapRef={mapRef}
-          onPress={onCommunityReportPress}
-          isSelected
-        />
-      )}
+      {selectedCommunityReport &&
+        !communityReports.some((r) => r.id === selectedCommunityReport.id) && (
+          <CommunityReportMarker
+            key={`selected-community-report-${selectedCommunityReport.id}`}
+            report={selectedCommunityReport}
+            mapRef={mapRef}
+            onPress={onCommunityReportPress}
+            isSelected
+          />
+        )}
 
       {/* Flood Severity */}
-      <FloodSeverityMarkers floodSeverity={floodSeverity} onMarkerPress={onFloodMarkerPress} />
+      <FloodSeverityMarkers
+        floodSeverity={floodSeverity}
+        onMarkerPress={onFloodMarkerPress}
+      />
       {/* 🛰️ AI Satellite Flood Polygons (Prithvi) */}
       <SatelliteFloodOverlay />
     </MapView>

@@ -16,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useQueryClient } from "@tanstack/react-query";
 import { Text } from "~/components/ui/text";
+import { plansSubscriptionCurrentQueryKey } from "~/features/plans/constants/queryKeys";
 import { useCurrentSubscription } from "~/features/plans/hooks/useCurrentSubscription";
 import CancelSubscriptionDialog from "~/features/plans/components/CancelSubscriptionDialog";
 import { planService } from "~/features/plans/services/plan.service";
@@ -92,7 +93,9 @@ export default function CurrentPlanScreen() {
       const resp = await planService.cancelSubscription({ cancelReason: reason });
       setCancelDialogVisible(false);
       if (resp.success) {
-        await queryClient.invalidateQueries({ queryKey: ["plans", "subscription", "current"] });
+        await queryClient.invalidateQueries({
+          queryKey: plansSubscriptionCurrentQueryKey,
+        });
         Alert.alert("Hủy thành công", "Gói dịch vụ của bạn đã được chuyển về Miễn phí.", [
           { text: "OK", onPress: () => router.replace("/plans" as any) }
         ]);

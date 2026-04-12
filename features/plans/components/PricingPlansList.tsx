@@ -12,6 +12,7 @@ import PricingCard from "./PricingCard";
 import DurationSelectionModal from "~/features/payment/components/DurationSelectionModal";
 import DowngradeConfirmDialog from "~/features/payment/components/DowngradeConfirmDialog";
 import { paymentService } from "~/features/payment/services/payment.service";
+import { plansSubscriptionCurrentQueryKey } from "~/features/plans/constants/queryKeys";
 import { DurationMonths } from "~/features/payment/types/payment-types";
 import {
   PAYMENT_CANCEL_URL,
@@ -136,7 +137,7 @@ const PricingPlansList: React.FC<Props> = ({
       setDowngradeDialogVisible(false);
       if (response.success) {
         await queryClient.invalidateQueries({
-          queryKey: ["plans", "subscription", "current"],
+          queryKey: plansSubscriptionCurrentQueryKey,
         });
         Alert.alert("Hạ cấp thành công", "Gói dịch vụ đã về Miễn phí.");
       } else {

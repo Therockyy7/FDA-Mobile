@@ -4,7 +4,6 @@ import * as WebBrowser from "expo-web-browser";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Alert,
   Linking,
   StyleSheet,
   TouchableOpacity,
@@ -15,14 +14,16 @@ import { Text } from "~/components/ui/text";
 import PaymentStateIllustration from "~/features/payment/components/PaymentStateIllustration";
 import { useColorScheme } from "~/lib/useColorScheme";
 
+type FlowPhase = "opening" | "returned" | "error";
+
 /**
- * Processing screen – shows a loading state while we attempt to open
- * the PayOS checkout URL in the system browser. If the open fails
- * within 5 seconds we show a retry / go-back UI.
+ * Processing screen – opens PayOS in an in-app / custom tab browser.
+ * After the browser session ends, we show a "returned" state so the user
+ * is not stuck on an endless spinner (common when paying on the same device).
  *
- * Navigation params expected:
- *   paymentUrl – the PayOS checkout URL
- *   orderCode  – (optional) saved for reference
+ * Params:
+ *   paymentUrl – PayOS checkout URL
+ *   orderCode  – passed through to /payment/success for status polling
  */
 export default function PaymentProcessingScreen() {
   const router = useRouter();
@@ -32,79 +33,74 @@ export default function PaymentProcessingScreen() {
     orderCode?: string;
   }>();
 
-  const [error, setError] = useState(false);
+  const [flowPhase, setFlowPhase] = useState<FlowPhase>("opening");
   const openedRef = useRef(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const colors = {
     background: isDarkColorScheme ? "#0F172A" : "#F0F4F8",
-    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
     text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
     subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
     border: isDarkColorScheme ? "#334155" : "#E2E8F0",
     accent: "#0077BE",
   };
 
-  // Attempt to open payment URL
+  const clearOpenTimeout = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  };
+
   const openPayment = useCallback(async () => {
     const url = params.paymentUrl;
     if (!url) {
-      setError(true);
+      setFlowPhase("error");
       return;
     }
 
-    setError(false);
+    setFlowPhase("opening");
     openedRef.current = false;
+    clearOpenTimeout();
 
-    // Set a 5-second timeout for failure detection
     timeoutRef.current = setTimeout(() => {
       if (!openedRef.current) {
-        setError(true);
+        setFlowPhase("error");
       }
     }, 5000);
 
     try {
-      // Try expo-web-browser first (opens an in-app browser on iOS,
-      // Chrome Custom Tab on Android)
-      const result = await WebBrowser.openBrowserAsync(url, {
+      await WebBrowser.openBrowserAsync(url, {
         dismissButtonStyle: "close",
         showTitle: true,
         enableBarCollapsing: true,
       });
       openedRef.current = true;
-
-      // When the browser closes, the user returns here.
-      // If the user completed payment, PayOS would have deep-linked
-      // to /payment/success. If they just closed the browser, we stay here.
-      if (result.type === "cancel" || result.type === "dismiss") {
-        // User closed the browser without completing
-        // Stay on this screen – they can retry or go back
-      }
+      clearOpenTimeout();
+      setFlowPhase("returned");
     } catch {
-      // Fallback to Linking.openURL
       try {
         const canOpen = await Linking.canOpenURL(url);
         if (canOpen) {
           await Linking.openURL(url);
           openedRef.current = true;
+          clearOpenTimeout();
+          setFlowPhase("returned");
         } else {
-          setError(true);
+          clearOpenTimeout();
+          setFlowPhase("error");
         }
       } catch {
-        setError(true);
+        clearOpenTimeout();
+        setFlowPhase("error");
       }
-    }
-
-    // Clear timeout if we got here without error
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
     }
   }, [params.paymentUrl]);
 
   useEffect(() => {
     openPayment();
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      clearOpenTimeout();
     };
   }, [openPayment]);
 
@@ -116,21 +112,87 @@ export default function PaymentProcessingScreen() {
     }
   };
 
+  const handleCheckPaymentResult = () => {
+    const oc = params.orderCode;
+    router.replace({
+      pathname: "/payment/success",
+      params:
+        oc != null && String(oc).length > 0
+          ? { orderCode: String(oc) }
+          : {},
+    } as any);
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
-        {!error ? (
+        {flowPhase === "opening" && (
+          <PaymentStateIllustration
+            variant="processing"
+            title="Đang chuyển đến cổng thanh toán..."
+            subtitle="Vui lòng không đóng ứng dụng. Bạn sẽ được chuyển đến PayOS để hoàn tất thanh toán."
+          />
+        )}
+
+        {flowPhase === "returned" && (
           <>
-            {/* Processing state */}
             <PaymentStateIllustration
-              variant="processing"
-              title="Đang chuyển đến cổng thanh toán..."
-              subtitle="Vui lòng không đóng ứng dụng. Bạn sẽ được chuyển đến PayOS để hoàn tất thanh toán."
+              variant="returned"
+              title="Bạn đã quay lại ứng dụng"
+              subtitle="Nếu bạn đã chuyển khoản hoặc hoàn tất trên PayOS, hãy kiểm tra kết quả thanh toán. Bạn cũng có thể mở lại trang PayOS nếu cần."
             />
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity
+                style={[styles.primaryBtn, { backgroundColor: colors.accent }]}
+                onPress={handleCheckPaymentResult}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="checkmark-circle-outline"
+                  size={18}
+                  color="#FFFFFF"
+                  style={{ marginRight: 6 }}
+                />
+                <Text style={styles.primaryBtnText}>Kiểm tra kết quả thanh toán</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.secondaryBtn, { borderColor: colors.border }]}
+                onPress={openPayment}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="open-outline"
+                  size={18}
+                  color={colors.subtext}
+                  style={{ marginRight: 6 }}
+                />
+                <Text style={[styles.secondaryBtnText, { color: colors.subtext }]}>
+                  Mở lại trang thanh toán
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.secondaryBtn, { borderColor: colors.border }]}
+                onPress={handleGoBack}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="arrow-back-outline"
+                  size={18}
+                  color={colors.subtext}
+                  style={{ marginRight: 6 }}
+                />
+                <Text style={[styles.secondaryBtnText, { color: colors.subtext }]}>
+                  Quay lại chọn gói
+                </Text>
+              </TouchableOpacity>
+            </View>
           </>
-        ) : (
+        )}
+
+        {flowPhase === "error" && (
           <>
-            {/* Error state */}
             <PaymentStateIllustration
               variant="error"
               title="Không thể mở cổng thanh toán"
@@ -153,10 +215,7 @@ export default function PaymentProcessingScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[
-                  styles.secondaryBtn,
-                  { borderColor: colors.border },
-                ]}
+                style={[styles.secondaryBtn, { borderColor: colors.border }]}
                 onPress={handleGoBack}
                 activeOpacity={0.7}
               >

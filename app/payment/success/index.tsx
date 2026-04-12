@@ -1,6 +1,7 @@
 // app/payment/success/index.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
+import * as WebBrowser from "expo-web-browser";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
@@ -39,6 +40,10 @@ export default function PaymentSuccessScreen() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mountedRef = useRef(true);
   const subscriptionInvalidatedRef = useRef(false);
+
+  useEffect(() => {
+    WebBrowser.maybeCompleteAuthSession();
+  }, []);
 
   const colors = {
     background: isDarkColorScheme ? "#0F172A" : "#F0F4F8",

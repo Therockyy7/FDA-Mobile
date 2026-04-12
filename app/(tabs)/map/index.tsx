@@ -99,12 +99,13 @@ export default function MapScreen() {
 
 
   // Reset station card khi user rời khỏi tab map
+  const { setSelectedStationId } = s;
   useFocusEffect(
     useCallback(() => {
       return () => {
-        s.setSelectedStationId(null);
+        setSelectedStationId(null);
       };
-    }, [s.setSelectedStationId]),
+    }, [setSelectedStationId]),
   );
 
   const handleSelectWard = (area: any) => {

@@ -4,7 +4,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback } from "react";
-import { StatusBar, TouchableOpacity, View, ActivityIndicator } from "react-native";
+import { StatusBar, TouchableOpacity, View, ActivityIndicator, InteractionManager } from "react-native";
 
 import {
   MapLoadingOverlay,
@@ -203,23 +203,21 @@ export default function MapScreen() {
             onPress={() => {
               const dest = s.params.returnToPrediction;
               if (!dest) return;
-              
               // Clear Map view states
               s.setSelectedAdminArea(null);
               s.setAreaDisplayMode("user");
               
-              // Move forward to the prediction screen immediately for a snappy UX
-              router.push(`/prediction/${dest}` as any);
-              
+              // PERF: Release all satellite polygons immediately to free up RAM.
+              // This is crucial to reduce the heavy memory footprint of thousands of Polygons
+              useSatelliteFloodStore.getState().clear();
+
               // Clear URL search params visually and state-wise
               router.setParams({ returnToPrediction: "", satelliteBbox: "" });
-              
-              // PERF: Delay destroying the heavy Native Map Polygons until AFTER 
-              // the screen transition animation is fully complete (~600ms).
-              // Doing this synchronously freezes the UI thread and crashes the app.
-              setTimeout(() => {
-                useSatelliteFloodStore.getState().clear();
-              }, 600);
+
+              // Move forward to the prediction screen on next tick for a snappy UX
+              InteractionManager.runAfterInteractions(() => {
+                router.push(`/prediction/${dest}` as any);
+              });
             }}
             style={{
               position: "absolute",

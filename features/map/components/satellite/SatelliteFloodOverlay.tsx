@@ -1,11 +1,14 @@
 // features/map/components/satellite/SatelliteFloodOverlay.tsx
 // Renders AI Prithvi satellite flood polygons on the MapView.
 // Reads from the global useSatelliteFloodStore — zero prop drilling required.
+// When clipBoundary is set (EWKB hex from admin area), only flood polygons
+// whose centroid falls inside the admin area boundary are rendered.
 
 import React, { useMemo } from "react";
 import { View } from "react-native";
 import { Marker, Polygon } from "react-native-maps";
 import { Text } from "~/components/ui/text";
+import { ewkbToMultiLatLngArrays, pointInPolygon } from "~/features/map/lib/ewkb-parser";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
 import type { GeoJsonFeature } from "~/features/prediction/types/satellite.types";
 
@@ -88,8 +91,33 @@ function getBoundingBoxArea(ring: { latitude: number; longitude: number }[]) {
   return (maxLat - minLat) * (maxLng - minLng);
 }
 
+// ── CLIP: Check if a ring's centroid falls inside ANY of the clip boundary polygons ──
+function isRingInsideBoundary(
+  ring: { latitude: number; longitude: number }[],
+  boundaryPolygons: { latitude: number; longitude: number }[][],
+): boolean {
+  const center = centroid(ring);
+  for (const poly of boundaryPolygons) {
+    if (pointInPolygon(center, poly)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function SatelliteFloodOverlay() {
-  const { layers, visible } = useSatelliteFloodStore();
+  const { layers, visible, clipBoundary } = useSatelliteFloodStore();
+
+  // Parse the clip boundary once (EWKB hex → array of polygons)
+  const boundaryPolygons = useMemo(() => {
+    if (!clipBoundary) return null;
+    try {
+      const polys = ewkbToMultiLatLngArrays(clipBoundary);
+      return polys.length > 0 ? polys : null;
+    } catch {
+      return null;
+    }
+  }, [clipBoundary]);
 
   const polygons = useMemo(() => {
     if (!visible || !layers.length) return [];
@@ -117,6 +145,15 @@ export function SatelliteFloodOverlay() {
 
           // Re-check after simplification
           if (simplifiedRing.length < 3) return;
+
+          // ── CLIP: Skip flood polygons outside the admin area boundary ──
+          // Only check outer rings (ri === 0); holes (ri > 0) are kept if their parent was kept.
+          if (boundaryPolygons && ri === 0) {
+            if (!isRingInsideBoundary(simplifiedRing, boundaryPolygons)) {
+              return; // Centroid is outside admin area → skip this polygon
+            }
+          }
+
           result.push({
             key: `${layer.id}-${fi}-${ri}`,
             coords: simplifiedRing,
@@ -132,7 +169,7 @@ export function SatelliteFloodOverlay() {
     });
 
     return result;
-  }, [layers, visible]);
+  }, [layers, visible, boundaryPolygons]);
 
   // Build one label marker per layer (at bbox center)
   const labels = useMemo(() => {
@@ -208,3 +245,4 @@ export function SatelliteFloodOverlay() {
     </>
   );
 }
+

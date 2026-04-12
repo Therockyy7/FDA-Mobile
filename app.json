@@ -84,7 +84,8 @@
       ],
       "expo-video",
       "@react-native-firebase/app",
-      "@react-native-firebase/messaging"
+      "@react-native-firebase/messaging",
+      "./plugins/withAndroidLargeHeap.js"
     ],
     "experiments": {
       "typedRoutes": true

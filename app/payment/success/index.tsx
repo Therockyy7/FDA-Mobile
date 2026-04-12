@@ -1,5 +1,6 @@
 // app/payment/success/index.tsx
 import { Ionicons } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
@@ -16,6 +17,7 @@ import {
   mapApiStatusToResultState,
   parseOrderCode,
 } from "~/features/payment/utils/payment-utils";
+import { plansSubscriptionCurrentQueryKey } from "~/features/plans/constants/queryKeys";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 const POLL_INTERVAL_MS = 3000;
@@ -23,6 +25,7 @@ const MAX_POLL_ATTEMPTS = 60; // 60 × 3s = 3 minutes
 
 export default function PaymentSuccessScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { isDarkColorScheme } = useColorScheme();
   const params = useLocalSearchParams();
 
@@ -35,6 +38,7 @@ export default function PaymentSuccessScreen() {
   const pollCountRef = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mountedRef = useRef(true);
+  const subscriptionInvalidatedRef = useRef(false);
 
   const colors = {
     background: isDarkColorScheme ? "#0F172A" : "#F0F4F8",
@@ -116,8 +120,15 @@ export default function PaymentSuccessScreen() {
     };
   }, [orderCode, pollStatus]);
 
+  // Sync React Query subscription cache when payment is confirmed (avoids stale UI on Plans/Profile).
+  useEffect(() => {
+    if (resultState !== "paid" || subscriptionInvalidatedRef.current) return;
+    subscriptionInvalidatedRef.current = true;
+    queryClient.invalidateQueries({ queryKey: plansSubscriptionCurrentQueryKey });
+  }, [resultState, queryClient]);
+
   const handleViewPlans = () => {
-    router.replace("/plans" as any);
+    router.replace("/plans/current" as any);
   };
 
   const handleGoBack = () => {

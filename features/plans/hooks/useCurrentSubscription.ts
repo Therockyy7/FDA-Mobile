@@ -1,12 +1,13 @@
 // features/plans/hooks/useCurrentSubscription.ts
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { plansSubscriptionCurrentQueryKey } from "../constants/queryKeys";
 import { planService } from "../services/plan.service";
 import { CurrentSubscriptionResponse } from "../types/plans-types";
 
 export const useCurrentSubscription = () => {
   return useQuery<CurrentSubscriptionResponse, Error>({
-    queryKey: ["plans", "subscription", "current"],
+    queryKey: plansSubscriptionCurrentQueryKey,
     queryFn: () => planService.getCurrentSubscription(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     // 401 means user is not logged in - treat as no subscription

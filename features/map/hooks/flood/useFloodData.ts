@@ -1,7 +1,7 @@
 // features/map/hooks/flood/useFloodData.ts
 // Merges REST flood data (React Query) with SignalR real-time updates (Zustand)
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useFloodRealtimeStore } from "../../stores/useFloodRealtimeStore";
 import type {
   FloodSeverityFeature,
@@ -143,6 +143,28 @@ export function useFloodData(
     refetch,
   } = useFloodSeverityQuery(params ?? null, enabled);
   const realtimeUpdates = useFloodRealtimeStore((s) => s.updates);
+
+  // Khi station lên warning/critical qua realtime nhưng chưa có Polygon trong REST cache
+  // → trigger refetch để server trả về polygon geometry mới
+  useEffect(() => {
+    if (!restData || Object.keys(realtimeUpdates).length === 0) return;
+
+    const knownPolygonIds = new Set(
+      restData.features
+        .filter((f): f is FloodZoneFeature => f.geometry.type === "Polygon")
+        .map((f) => f.properties.stationId),
+    );
+
+    const hasNewFloodZone = Object.values(realtimeUpdates).some(
+      (u) =>
+        (u.severity === "warning" || u.severity === "critical") &&
+        !knownPolygonIds.has(u.stationId),
+    );
+
+    if (hasNewFloodZone) {
+      refetch();
+    }
+  }, [realtimeUpdates, restData, refetch]);
 
   const floodSeverity = useMemo(
     () => mergeRealtimeIntoGeoJSON(restData, realtimeUpdates),

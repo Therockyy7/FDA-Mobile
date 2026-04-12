@@ -406,12 +406,15 @@ export function useMapScreen(ctx: MapScreenCtx) {
     setSelectedRoute(null);
     setSelectedZone(null);
     setShowDetailPanels(false);
-    setShowResultCard(false);
     const currentRoute = safeRoute.getSelectedRoute();
     if (currentRoute) {
       const bounds = getRouteBounds(currentRoute.coordinates);
       mapRef.current?.animateToRegion(bounds, 600);
     }
+    // Re-show result card nếu còn routes (cho phép user close/xem lại kết quả)
+    // Với SafeRouteAlternatives (>1 tuyến) không cần vì card đó luôn hiện khi hasResults=true
+    const hasAlternatives = safeRoute.alternativeRoutes.length > 0;
+    setShowResultCard(!hasAlternatives);
   }, [
     nav, safeRoute, mapRef,
     setSelectedArea, setSelectedStationId, setSelectedCommunityReport, setShowCommunityReportSheet,

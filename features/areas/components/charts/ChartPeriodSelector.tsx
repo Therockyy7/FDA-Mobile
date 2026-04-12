@@ -2,7 +2,7 @@
 // Time range selector tabs for flood charts with custom option
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { TouchableOpacity, View } from "react-native";
+import { ScrollView, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import {
   CHART_PERIODS,
@@ -43,12 +43,15 @@ export function ChartPeriodSelector({
 
   return (
     <View style={{ gap: 8 }}>
-      <View
-        style={{
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
           flexDirection: "row",
           backgroundColor: colors.background,
           borderRadius: 12,
           padding: 4,
+          gap: 4,
         }}
       >
         {/* Period buttons */}
@@ -59,7 +62,7 @@ export function ChartPeriodSelector({
               key={period.value}
               onPress={() => onSelectPeriod(period.value)}
               style={{
-                width: 68,
+                paddingHorizontal: 14,
                 height: 32,
                 justifyContent: "center",
                 alignItems: "center",
@@ -91,7 +94,7 @@ export function ChartPeriodSelector({
           <TouchableOpacity
             onPress={handleCustomPress}
             style={{
-              width: 90,
+              paddingHorizontal: 14,
               height: 32,
               flexDirection: "row",
               justifyContent: "center",
@@ -114,7 +117,7 @@ export function ChartPeriodSelector({
               size={14}
               color={isCustomSelected ? colors.selectedText : colors.normalText}
             />
-            <Text
+            {/* <Text
               style={{
                 fontSize: 12,
                 fontWeight: isCustomSelected ? "700" : "500",
@@ -124,10 +127,10 @@ export function ChartPeriodSelector({
               }}
             >
               Tùy chọn
-            </Text>
+            </Text> */}
           </TouchableOpacity>
         )}
-      </View>
+      </ScrollView>
 
       {/* Show custom date range badge when selected */}
       {showCustomButton && isCustomSelected && customDateLabel && (

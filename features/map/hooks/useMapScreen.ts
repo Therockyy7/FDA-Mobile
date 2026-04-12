@@ -511,30 +511,34 @@ export function useMapScreen(ctx: MapScreenCtx) {
 
         setIsFindingArea(true);
 
-        // Run heavy calculation off the immediate UI tap thread to ensure smoothness
-        InteractionManager.runAfterInteractions(() => {
-          const clickedArea = adminAreas.find(
-            (area) => area.geometry && isPointInAdminArea(coordinate, area.geometry)
-          );
+        // Đẩy tác vụ nặng xuống cuối Event Loop (bằng setTimeout)
+        // Mục đích: Cho phép React render cái Loading Popup lên UI Thread TRƯỚC!
+        // Nếu không có setTimeout, Javascript sẽ nghẽn ở vòng lặp đo đạc đa giác và làm popup không kịp hiện.
+        setTimeout(() => {
+          InteractionManager.runAfterInteractions(() => {
+            const clickedArea = adminAreas.find(
+              (area) => area.geometry && isPointInAdminArea(coordinate, area.geometry)
+            );
 
-          if (clickedArea) {
-            setSelectedAdminArea(clickedArea);
-            // Optionally, zoom to selected area
-            if (clickedArea.geometry) {
-              const coords = ewkbToLatLngArray(clickedArea.geometry);
-              const bounds = getBoundsFromCoords(coords);
-              if (bounds && mapRef.current) {
-                mapRef.current.animateToRegion(bounds, 800);
+            if (clickedArea) {
+              setSelectedAdminArea(clickedArea);
+              // Optionally, zoom to selected area
+              if (clickedArea.geometry) {
+                const coords = ewkbToLatLngArray(clickedArea.geometry);
+                const bounds = getBoundsFromCoords(coords);
+                if (bounds && mapRef.current) {
+                  mapRef.current.animateToRegion(bounds, 800);
+                }
               }
+            } else {
+              // Optional: Deselect if user taps outside any known admin area
+              // setSelectedAdminArea(null);
             }
-          } else {
-            // Optional: Deselect if user taps outside any known admin area
-            // setSelectedAdminArea(null);
-          }
-          
-          // Clear finding area state
-          setIsFindingArea(false);
-        });
+            
+            // Clear finding area state
+            setIsFindingArea(false);
+          });
+        }, 50);
 
         // Skip user area handlers when in admin mode
         return;

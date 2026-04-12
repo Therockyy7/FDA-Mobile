@@ -1,4 +1,5 @@
 // features/alerts/fcm/getFCMToken.ts
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
     AuthorizationStatus,
     getMessaging,
@@ -7,7 +8,6 @@ import {
     requestPermission,
 } from "@react-native-firebase/messaging";
 import { PermissionsAndroid, Platform } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ProfileService } from "~/features/profile/services/profile.service";
 
 /**
@@ -16,26 +16,26 @@ import { ProfileService } from "~/features/profile/services/profile.service";
  * @returns true if permission was granted, false otherwise
  */
 export const requestNotificationPermission = async (): Promise<boolean> => {
-    // 1. Android 13+ requires explicit POST_NOTIFICATIONS runtime permission
-    if (Platform.OS === "android" && Platform.Version >= 33) {
-        const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
-        );
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-            console.log("[FCM] Android 13+ Notification permission denied");
-            return false;
-        }
+  // 1. Android 13+ requires explicit POST_NOTIFICATIONS runtime permission
+  if (Platform.OS === "android" && Platform.Version >= 33) {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+    );
+    if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+      console.log("[FCM] Android 13+ Notification permission denied");
+      return false;
     }
+  }
 
-    // 2. Dùng hàm của Firebase để xin quyền cho iOS (và đăng ký trên Android)
-    const authStatus = await requestPermission(getMessaging());
-    
-    const enabled =
-        authStatus === AuthorizationStatus.AUTHORIZED ||
-        authStatus === AuthorizationStatus.PROVISIONAL;
+  // 2. Dùng hàm của Firebase để xin quyền cho iOS (và đăng ký trên Android)
+  const authStatus = await requestPermission(getMessaging());
 
-    console.log("[FCM] Permission status:", authStatus, "| Enabled:", enabled);
-    return enabled;
+  const enabled =
+    authStatus === AuthorizationStatus.AUTHORIZED ||
+    authStatus === AuthorizationStatus.PROVISIONAL;
+
+  console.log("[FCM] Permission status:", authStatus, "| Enabled:", enabled);
+  return enabled;
 };
 
 /**
@@ -44,20 +44,22 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
  * @returns FCM token string or null if unavailable
  */
 export const getFCMToken = async (): Promise<string | null> => {
-    try {
-        const hasPermission = await requestNotificationPermission();
-        if (!hasPermission) {
-            console.log("[FCM] Notification permission denied — skipping token fetch");
-            return null;
-        }
-
-        const token = await getToken(getMessaging());
-        console.log("[FCM] Token:", token);
-        return token;
-    } catch (error) {
-        console.error("[FCM] Error getting token:", error);
-        return null;
+  try {
+    const hasPermission = await requestNotificationPermission();
+    if (!hasPermission) {
+      console.log(
+        "[FCM] Notification permission denied — skipping token fetch",
+      );
+      return null;
     }
+
+    const token = await getToken(getMessaging());
+    console.log("[FCM] Token:", token);
+    return token;
+  } catch (error) {
+    console.error("[FCM] Error getting token:", error);
+    return null;
+  }
 };
 
 /**
@@ -68,26 +70,28 @@ export const getFCMToken = async (): Promise<string | null> => {
  * @returns FCM token string hoặc null
  */
 export const registerFCMToken = async (): Promise<string | null> => {
-    try {
-        const token = await getFCMToken();
-        if (token) {
-            const refreshToken = await AsyncStorage.getItem("refresh_token");
-            if (refreshToken) {
-                await ProfileService.updateFcmToken(token);
-                console.log("[FCM] Token registered to backend successfully");
-            } else {
-                console.log("[FCM] Token fetched but user is not logged in, skipping backend registration");
-            }
-        }
-        return token;
-    } catch (error: any) {
-        console.error(
-            "[FCM] Error registering token to backend:", 
-            error.message, 
-            error.response?.data || "No response data"
+  try {
+    const token = await getFCMToken();
+    if (token) {
+      const refreshToken = await AsyncStorage.getItem("refresh_token");
+      if (refreshToken) {
+        await ProfileService.updateFcmToken(token);
+        console.log("[FCM] Token registered to backend successfully");
+      } else {
+        console.log(
+          "[FCM] Token fetched but user is not logged in, skipping backend registration",
         );
-        return null;
+      }
     }
+    return token;
+  } catch (error: any) {
+    console.error(
+      "[FCM] Error registering token to backend:",
+      error.message,
+      error.response?.data || "No response data",
+    );
+    return null;
+  }
 };
 
 /**
@@ -96,23 +100,25 @@ export const registerFCMToken = async (): Promise<string | null> => {
  * @returns unsubscribe function
  */
 export const onFCMTokenRefresh = (callback?: (token: string) => void) => {
-    return onTokenRefresh(getMessaging(), async (token) => {
-        console.log("[FCM] Token refreshed:", token);
+  return onTokenRefresh(getMessaging(), async (token) => {
+    console.log("[FCM] Token refreshed:", token);
 
-        // Tự động gửi token mới lên backend
-        try {
-            const refreshToken = await AsyncStorage.getItem("refresh_token");
-            if (refreshToken) {
-                await ProfileService.updateFcmToken(token);
-                console.log("[FCM] Refreshed token sent to backend successfully");
-            } else {
-                console.log("[FCM] Refreshed token fetched but user is not logged in, skipping backend registration");
-            }
-        } catch (error) {
-            console.error("[FCM] Error sending refreshed token to backend:", error);
-        }
+    // Tự động gửi token mới lên backend
+    try {
+      const refreshToken = await AsyncStorage.getItem("refresh_token");
+      if (refreshToken) {
+        await ProfileService.updateFcmToken(token);
+        console.log("[FCM] Refreshed token sent to backend successfully");
+      } else {
+        console.log(
+          "[FCM] Refreshed token fetched but user is not logged in, skipping backend registration",
+        );
+      }
+    } catch (error) {
+      console.error("[FCM] Error sending refreshed token to backend:", error);
+    }
 
-        // Gọi callback bổ sung nếu có
-        callback?.(token);
-    });
+    // Gọi callback bổ sung nếu có
+    callback?.(token);
+  });
 };

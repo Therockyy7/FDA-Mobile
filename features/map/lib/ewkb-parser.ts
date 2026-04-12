@@ -354,3 +354,51 @@ export function getBoundsFromCoords(
     longitudeDelta: Math.max(lngDelta, 0.002),
   };
 }
+
+/**
+ * Thuật toán Ray-casting (Point in Polygon)
+ * Kiểm tra xem một điểm có nằm trong đa giác hay không.
+ */
+export function pointInPolygon(
+  point: { latitude: number; longitude: number },
+  polygon: { latitude: number; longitude: number }[]
+): boolean {
+  let isInside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i].longitude,
+      yi = polygon[i].latitude;
+    const xj = polygon[j].longitude,
+      yj = polygon[j].latitude;
+
+    const intersect =
+      yi > point.latitude !== yj > point.latitude &&
+      point.longitude < ((xj - xi) * (point.latitude - yi)) / (yj - yi) + xi;
+    if (intersect) isInside = !isInside;
+  }
+  return isInside;
+}
+
+/**
+ * Hàm kiểm tra nhanh tọa độ với chuỗi EWKB Geometry
+ * Giải mã nhanh sau đó áp dụng Point-in-Polygon.
+ * Sẽ kết thúc sớm (early exit) ngay khi phát hiện point nằm trong bất kỳ polygon nào (với kiểu dữ liệu MultiPolygon).
+ */
+export function isPointInAdminArea(
+  point: { latitude: number; longitude: number },
+  ewkbHex: string
+): boolean {
+  if (!hexIsNotEmpty(ewkbHex)) return false;
+  
+  const multiPolygons = ewkbToMultiLatLngArrays(ewkbHex);
+  for (const polygon of multiPolygons) {
+    if (pointInPolygon(point, polygon)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Cố gắng tối ưu logic kiểm tra empty bằng cách kiểm tra sơ
+function hexIsNotEmpty(str: string): boolean {
+  return str && str.trim().length > 0;
+}

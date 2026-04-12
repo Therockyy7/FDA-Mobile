@@ -255,7 +255,7 @@ export function AreaCard({
             >
               <Ionicons name="trash" size={13} color="#EF4444" />
               <Text style={styles.actionOutlineText}>Xóa</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> 
           )}
           {onViewDetails && (
             <TouchableOpacity

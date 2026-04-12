@@ -3,12 +3,14 @@
 // Receives the full MapScreenState as context.
 
 import { useCallback, useEffect, useRef } from "react";
+import { InteractionManager } from "react-native";
 import { useRouter } from "expo-router";
 import MapView, { Region } from "react-native-maps";
 import type { MapPressEvent } from "react-native-maps";
 import type { NearbyFloodReport } from "~/features/community/services/community.service";
 import type { FloodRoute, FloodZone } from "../constants/map-data";
 import { DANANG_CENTER } from "../constants/map-data";
+import { ewkbToLatLngArray, getBoundsFromCoords, isPointInAdminArea } from "../lib/ewkb-parser";
 import {
   debounce,
   getBufferedBounds,
@@ -97,7 +99,9 @@ interface MapScreenCtx {
   setIsLoading: (v: boolean) => void;
   setShowCommunityReportSheet: (v: boolean) => void;
   setShowWarningsSheet: (v: boolean) => void;
+  areaDisplayMode: "user" | "admin";
   setAreaDisplayMode: (v: "user" | "admin") => void;
+  setIsFindingArea: (v: boolean) => void;
   viewMode: string;
   adminAreas: any[];
 
@@ -164,7 +168,9 @@ export function useMapScreen(ctx: MapScreenCtx) {
     setShowNavSearch,
     setIsLoading,
     setShowWarningsSheet,
+    areaDisplayMode,
     setAreaDisplayMode,
+    setIsFindingArea,
     adminAreas,
     viewMode,
     params,
@@ -504,10 +510,58 @@ export function useMapScreen(ctx: MapScreenCtx) {
   const handleMapPress = useCallback(
     (event: MapPressEvent) => {
       if (isPickingOnMap) return;
+
+      // Tap-to-select logic for AI Prediction Mode (admin mode)
+      if (areaDisplayMode === "admin" && adminAreas && adminAreas.length > 0) {
+        const coordinate = event.nativeEvent.coordinate;
+
+        setIsFindingArea(true);
+
+        // Đẩy tác vụ nặng xuống cuối Event Loop (bằng setTimeout)
+        // Mục đích: Cho phép React render cái Loading Popup lên UI Thread TRƯỚC!
+        // Nếu không có setTimeout, Javascript sẽ nghẽn ở vòng lặp đo đạc đa giác và làm popup không kịp hiện.
+        setTimeout(() => {
+          InteractionManager.runAfterInteractions(() => {
+            const clickedArea = adminAreas.find(
+              (area) => area.geometry && isPointInAdminArea(coordinate, area.geometry)
+            );
+
+            if (clickedArea) {
+              setSelectedAdminArea(clickedArea);
+              // Optionally, zoom to selected area
+              if (clickedArea.geometry) {
+                const coords = ewkbToLatLngArray(clickedArea.geometry);
+                const bounds = getBoundsFromCoords(coords);
+                if (bounds && mapRef.current) {
+                  mapRef.current.animateToRegion(bounds, 800);
+                }
+              }
+            } else {
+              // Optional: Deselect if user taps outside any known admin area
+              // setSelectedAdminArea(null);
+            }
+            
+            // Clear finding area state
+            setIsFindingArea(false);
+          });
+        }, 50);
+
+        // Skip user area handlers when in admin mode
+        return;
+      }
+
       handleAreaMapPress(event);
       setSelectedAdminArea(null);
     },
-    [isPickingOnMap, handleAreaMapPress, setSelectedAdminArea],
+    [
+      isPickingOnMap,
+      areaDisplayMode,
+      adminAreas,
+      mapRef,
+      handleAreaMapPress,
+      setSelectedAdminArea,
+      setIsFindingArea,
+    ],
   );
 
   // ── Route + station handlers ─────────────────────────────────

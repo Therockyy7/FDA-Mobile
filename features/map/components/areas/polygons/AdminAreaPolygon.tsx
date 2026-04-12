@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Polygon } from "react-native-maps";
 import { AdminArea } from "~/features/areas/types/admin-area.types";
-import { isEwkbHex, ewkbToLatLngArray } from "~/features/map/lib/ewkb-parser";
+import { ewkbToLatLngArray, isEwkbHex } from "~/features/map/lib/ewkb-parser";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 interface AdminAreaPolygonProps {
@@ -11,8 +11,6 @@ interface AdminAreaPolygonProps {
   fillColorOverride?: string;
   strokeColorOverride?: string;
 }
-
-
 
 /**
  * Parse geometry data from various formats:
@@ -46,7 +44,9 @@ function parseGeometry(
       return coords;
     }
     // If EWKB parsing returned empty, log for debugging
-    console.warn(`[AdminAreaPolygon] EWKB parsing returned empty for "${areaName}"`);
+    console.warn(
+      `[AdminAreaPolygon] EWKB parsing returned empty for "${areaName}"`,
+    );
     return [];
   }
 
@@ -58,9 +58,7 @@ function parseGeometry(
     } catch {
       // Try cleaning double-escaped strings
       try {
-        const cleaned = trimmed
-          .replace(/\\"/g, '"')
-          .replace(/\\\\/g, "\\");
+        const cleaned = trimmed.replace(/\\"/g, '"').replace(/\\\\/g, "\\");
         const geoJson = JSON.parse(cleaned);
         return extractCoordsFromGeoJson(geoJson, areaName);
       } catch {
@@ -92,10 +90,7 @@ function extractCoordsFromGeoJson(
   ) {
     // Take the first polygon's outer ring
     coords = geoJson.coordinates[0]?.[0] || [];
-  } else if (
-    geoJson.type === "Feature" &&
-    geoJson.geometry
-  ) {
+  } else if (geoJson.type === "Feature" && geoJson.geometry) {
     // GeoJSON Feature wrapper
     return extractCoordsFromGeoJson(geoJson.geometry, _areaName);
   } else if (
@@ -126,24 +121,48 @@ export const AdminAreaPolygon = React.memo(
   }: AdminAreaPolygonProps) => {
     const { isDarkColorScheme } = useColorScheme();
 
-    const coordinates = useMemo(
-      () => parseGeometry(area.geometry, area.name),
-      [area.geometry, area.name],
-    );
+    const coordinates = useMemo(() => {
+      const rawCoords = parseGeometry(area.geometry, area.name);
+
+      // Decimate polygon to prevent OutOfMemoryError on Android Native Maps
+      // 500 points is enough for a visual outline of an administrative area
+      const MAX_POINTS = 500;
+      if (rawCoords.length <= MAX_POINTS) return rawCoords;
+
+      const skip = Math.ceil(rawCoords.length / MAX_POINTS);
+      const result = [];
+      for (let i = 0; i < rawCoords.length; i += skip) {
+        result.push(rawCoords[i]);
+      }
+
+      // Ensure polygon is closed
+      if (result.length > 0) {
+        const firstOrig = rawCoords[0];
+        const lastAdded = result[result.length - 1];
+        if (
+          firstOrig.latitude !== lastAdded.latitude ||
+          firstOrig.longitude !== lastAdded.longitude
+        ) {
+          result.push(firstOrig);
+        }
+      }
+
+      return result;
+    }, [area.geometry, area.name]);
 
     if (!coordinates.length) return null;
 
-    const strokeColor = strokeColorOverride || (isSelected
-      ? "#007AFF"
-      : isDarkColorScheme
-        ? "#38BDF8"
-        : "#2563EB");
+    const strokeColor =
+      strokeColorOverride ||
+      (isSelected ? "#007AFF" : isDarkColorScheme ? "#38BDF8" : "#2563EB");
 
-    const fillColor = fillColorOverride || (isSelected
-      ? "rgba(59, 130, 246, 0.3)"
-      : isDarkColorScheme
-        ? "rgba(96, 165, 250, 0.15)"
-        : "rgba(37, 99, 235, 0.1)");
+    const fillColor =
+      fillColorOverride ||
+      (isSelected
+        ? "rgba(59, 130, 246, 0.3)"
+        : isDarkColorScheme
+          ? "rgba(96, 165, 250, 0.15)"
+          : "rgba(37, 99, 235, 0.1)");
 
     return (
       <Polygon
@@ -160,8 +179,7 @@ export const AdminAreaPolygon = React.memo(
         zIndex={isSelected ? 10 : 1}
       />
     );
-  }
+  },
 );
 
 AdminAreaPolygon.displayName = "AdminAreaPolygon";
-

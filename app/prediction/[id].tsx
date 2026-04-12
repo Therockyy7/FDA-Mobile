@@ -17,6 +17,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
+import { useAdminAreasQuery } from "~/features/map/hooks/queries/useAdminAreasQuery";
 import { AiFactorsCard } from "~/features/prediction/components/AiFactorsCard";
 import { CommunityReportsCard } from "~/features/prediction/components/CommunityReportsCard";
 import { ForecastWindowsCard } from "~/features/prediction/components/ForecastWindowsCard";
@@ -45,6 +46,16 @@ export default function PredictionScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  // ── Look up admin area geometry for satellite flood clipping ─────────────
+  const adminAreasQuery = useAdminAreasQuery();
+  const areaGeometry = React.useMemo(() => {
+    if (!prediction?.administrativeAreaId || !adminAreasQuery.data) return null;
+    const match = adminAreasQuery.data.find(
+      (a: any) => a.id === prediction.administrativeAreaId,
+    );
+    return match?.geometry ?? null;
+  }, [prediction?.administrativeAreaId, adminAreasQuery.data]);
 
   // ── Reanimated scroll — same pattern as Profile screen ────────────────────
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
@@ -248,6 +259,7 @@ export default function PredictionScreen() {
                 <SatelliteVerificationCard
                   areaId={prediction.administrativeAreaId}
                   areaName={prediction.administrativeArea?.name}
+                  areaGeometry={areaGeometry}
                 />
               </View>
 

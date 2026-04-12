@@ -11,13 +11,6 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withDelay,
-    withSequence,
-    withSpring,
-} from "react-native-reanimated";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 
@@ -40,12 +33,6 @@ export function ConfirmDeleteModal({
 }: ConfirmDeleteModalProps) {
   const { isDarkColorScheme } = useColorScheme();
 
-  // Animations
-  const iconScale = useSharedValue(0);
-  const iconRotation = useSharedValue(0);
-  const contentScale = useSharedValue(0.8);
-  const contentOpacity = useSharedValue(0);
-
   const colors = {
     cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
     text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
@@ -58,36 +45,6 @@ export function ConfirmDeleteModal({
       : "rgba(239, 68, 68, 0.1)",
     cancelBg: isDarkColorScheme ? "#334155" : "#F3F4F6",
   };
-
-  useEffect(() => {
-    if (visible) {
-      contentScale.value = withSpring(1, { damping: 12, stiffness: 200 });
-      contentOpacity.value = withSpring(1);
-      iconScale.value = withSequence(
-        withDelay(100, withSpring(1.2, { damping: 8 })),
-        withSpring(1, { damping: 10 }),
-      );
-      iconRotation.value = withSequence(
-        withDelay(100, withSpring(-10)),
-        withSpring(10),
-        withSpring(0),
-      );
-    } else {
-      contentScale.value = 0.8;
-      contentOpacity.value = 0;
-      iconScale.value = 0;
-      iconRotation.value = 0;
-    }
-  }, [visible, contentScale, contentOpacity, iconScale, iconRotation]);
-
-  const iconAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: iconScale.value }],
-  }));
-
-  const contentAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: contentScale.value }],
-    opacity: contentOpacity.value,
-  }));
 
   return (
     <Modal
@@ -106,15 +63,14 @@ export function ConfirmDeleteModal({
         />
 
         {/* Modal Content */}
-        <Animated.View
+        <View
           style={[
             styles.modalContent,
             { backgroundColor: colors.cardBg },
-            contentAnimatedStyle,
           ]}
         >
-          {/* Warning Icon with Animation */}
-          <Animated.View style={iconAnimatedStyle}>
+          {/* Warning Icon without Animation */}
+          <View>
             <LinearGradient
               colors={["#FEE2E2", "#FECACA", "#FCA5A5"]}
               style={styles.iconContainer}
@@ -123,7 +79,7 @@ export function ConfirmDeleteModal({
                 <Ionicons name="trash" size={32} color={colors.danger} />
               </View>
             </LinearGradient>
-          </Animated.View>
+          </View>
 
           {/* Title */}
           <Text style={[styles.title, { color: colors.text }]}>
@@ -192,7 +148,7 @@ export function ConfirmDeleteModal({
               </LinearGradient>
             </TouchableOpacity>
           </View>
-        </Animated.View>
+        </View>
       </View>
     </Modal>
   );

@@ -19,10 +19,13 @@ import type {
   SatelliteAnalysisResponse,
   SatelliteBbox,
 } from "../types/satellite.types";
+import { ewkbToMultiLatLngArrays, pointInPolygon } from "~/features/map/lib/ewkb-parser";
 
 interface Props {
   areaId: string;
   areaName?: string;
+  /** EWKB hex geometry of the admin area — used to clip satellite flood polygons */
+  areaGeometry?: string | null;
 }
 
 // ─── Helper: format acquisition date ─────────────────────────────────────────
@@ -83,11 +86,13 @@ function PlatformResultCard({
   isDark,
   bbox,
   onViewMap,
+  areaGeometry,
 }: {
   item: IndividualSatelliteResult;
   isDark: boolean;
   bbox: SatelliteBbox | undefined;
   onViewMap: () => void;
+  areaGeometry?: string | null;
 }) {
   const [expanded, setExpanded] = useState(false);
   const bg = isDark ? "#0F172A" : "#F8FAFC";
@@ -103,6 +108,17 @@ function PlatformResultCard({
     : "Sentinel-2 (Optical)";
   const data = item.result?.data;
 
+  // Parse clip boundary for mini map
+  const boundaryPolygons = useMemo(() => {
+    if (!areaGeometry) return null;
+    try {
+      const polys = ewkbToMultiLatLngArrays(areaGeometry);
+      return polys.length > 0 ? polys : null;
+    } catch {
+      return null;
+    }
+  }, [areaGeometry]);
+
   const polygons = useMemo(() => {
     if (!data?.geojson?.features) return [];
     const result: {
@@ -114,6 +130,23 @@ function PlatformResultCard({
       const rings = extractRings(feature);
       rings.forEach((ring, ri) => {
         if (ring.length < 3) return;
+
+        // ── CLIP: Skip flood polygons outside the admin area boundary ──
+        if (boundaryPolygons && ri === 0) {
+          const center = {
+            latitude: ring.reduce((s, c) => s + c.latitude, 0) / ring.length,
+            longitude: ring.reduce((s, c) => s + c.longitude, 0) / ring.length,
+          };
+          let inside = false;
+          for (const poly of boundaryPolygons) {
+            if (pointInPolygon(center, poly)) {
+              inside = true;
+              break;
+            }
+          }
+          if (!inside) return;
+        }
+
         result.push({
           key: `${fi}-${ri}`,
           coords: ring,
@@ -122,7 +155,7 @@ function PlatformResultCard({
       });
     });
     return result;
-  }, [data]);
+  }, [data, boundaryPolygons]);
 
   const region = useMemo(() => {
     if (polygons.length > 0) {
@@ -671,7 +704,7 @@ function PlatformResultCard({
 }
 
 // ─── Main exported component ──────────────────────────────────────────────────
-export function SatelliteVerificationCard({ areaId, areaName }: Props) {
+export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Props) {
   const { isDarkColorScheme: isDark } = useColorScheme();
   const router = useRouter();
   const { data, state, error, elapsedSeconds, runAnalysis, reset } =
@@ -1531,6 +1564,7 @@ export function SatelliteVerificationCard({ areaId, areaName }: Props) {
                 item={item}
                 isDark={isDark}
                 bbox={result.bbox}
+                areaGeometry={areaGeometry}
                 onViewMap={() => {
                   if (item.result?.data?.geojson?.features?.length) {
                     const layer = {
@@ -1546,7 +1580,7 @@ export function SatelliteVerificationCard({ areaId, areaName }: Props) {
                     // only AFTER animateToRegion finishes to avoid JS thread lag.
                     useSatelliteFloodStore
                       .getState()
-                      .setPendingLayers([layer as any], result.bbox);
+                      .setPendingLayers([layer as any], result.bbox, areaGeometry ?? null);
                   } else {
                     useSatelliteFloodStore.getState().clear();
                   }

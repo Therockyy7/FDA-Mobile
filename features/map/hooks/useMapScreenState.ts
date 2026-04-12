@@ -57,6 +57,8 @@ export interface MapScreenState {
   setSelectedAdminArea: (v: any) => void;
   showWardSelectionSheet: boolean;
   setShowWardSelectionSheet: (v: boolean) => void;
+  isFindingArea: boolean;
+  setIsFindingArea: (v: boolean) => void;
   showResultCard: boolean;
   setShowResultCard: (v: boolean) => void;
   showWarningsSheet: boolean;
@@ -183,6 +185,10 @@ export interface MapScreenState {
   selectedStation: FloodSeverityFeature | null;
   // Admin confirm
   handleCloseAdminConfirm: () => void;
+  deleteModalVisible: boolean;
+  isDeletingArea: boolean;
+  handleCancelDelete: () => void;
+  handleConfirmDelete: () => void;
 }
 
 export function useMapScreenState(): MapScreenState {
@@ -225,6 +231,7 @@ export function useMapScreenState(): MapScreenState {
   const [showCommunityReportSheet, setShowCommunityReportSheet] =
     useState(false);
   const [showWardSelectionSheet, setShowWardSelectionSheet] = useState(false);
+  const [isFindingArea, setIsFindingArea] = useState(false);
 
   // Map camera — needed for communityParams calculation
   const {
@@ -384,6 +391,10 @@ export function useMapScreenState(): MapScreenState {
     areaError,
     handleCloseErrorModal,
     updateDraftAreaFromMapCenter,
+    deleteModalVisible,
+    isDeletingArea,
+    handleCancelDelete,
+    handleConfirmDelete,
   } = useControlArea({
     mapRef,
     region,
@@ -437,6 +448,8 @@ export function useMapScreenState(): MapScreenState {
     setSelectedAdminArea,
     showWardSelectionSheet,
     setShowWardSelectionSheet,
+    isFindingArea,
+    setIsFindingArea,
     showResultCard,
     setShowResultCard,
     showWarningsSheet,
@@ -552,5 +565,9 @@ export function useMapScreenState(): MapScreenState {
     updateDraftAreaFromMapCenter,
     selectedStation,
     handleCloseAdminConfirm,
+    deleteModalVisible,
+    isDeletingArea,
+    handleCancelDelete,
+    handleConfirmDelete,
   };
 }

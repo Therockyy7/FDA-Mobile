@@ -146,7 +146,7 @@ export function FloodTrendChart({
         {/* Summary stats */}
         <View style={{ alignItems: "flex-end" }}>
           <Text style={{ fontSize: 18, fontWeight: "800", color: colors.text }}>
-            {Math.round(data.summary.maxWaterLevel * 100)}cm
+            {Number(data.summary.maxWaterLevel).toLocaleString("vi-VN", { maximumFractionDigits: 2 })} cm
           </Text>
           <Text style={{ fontSize: 10, color: colors.subtext }}>Cao nhất</Text>
         </View>
@@ -279,7 +279,7 @@ export function FloodTrendChart({
           showGradient
           gradientColor="rgba(59, 130, 246, 0.2)"
           frontColor="#007AFF"
-          yAxisLabelSuffix="m"
+          yAxisLabelSuffix=" Cm"
           yAxisLabelWidth={35}
           renderTooltip={(item: { value: number }, index: number) => {
             const point =
@@ -308,7 +308,7 @@ export function FloodTrendChart({
                     color: colors.text,
                   }}
                 >
-                  {Math.round(item.value * 100)}cm
+                  {Number(item.value).toLocaleString("vi-VN", { maximumFractionDigits: 2 })} cm
                 </Text>
                 {point && (
                   <Text style={{ fontSize: 9, color: colors.subtext }}>

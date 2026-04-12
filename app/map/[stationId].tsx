@@ -9,12 +9,19 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  ViewStyle,
 } from "react-native";
 import Animated, {
   FadeIn,
   FadeInDown,
   FadeInUp,
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  interpolate,
+  Extrapolation,
 } from "react-native-reanimated";
+import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import { FloodHistorySection } from "~/features/areas/components/charts";
@@ -92,6 +99,48 @@ export default function StationDetailScreen() {
     border: isDarkColorScheme ? "#334155" : "#E2E8F0",
   };
 
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+  });
+
+  const HEADER_MAX_HEIGHT = 280 + insets.top;
+  const HEADER_MIN_HEIGHT = 60 + insets.top;
+  const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
+
+  const headerAnimatedStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(scrollY.value, [0, HEADER_SCROLL_DISTANCE], [0, -HEADER_SCROLL_DISTANCE], Extrapolation.CLAMP);
+    return {
+      transform: [{ translateY }],
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      height: HEADER_MAX_HEIGHT,
+      zIndex: 100,
+      overflow: "hidden",
+    };
+  });
+
+  const topNavAnimatedStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(scrollY.value, [0, HEADER_SCROLL_DISTANCE], [0, HEADER_SCROLL_DISTANCE], Extrapolation.CLAMP);
+    return {
+      transform: [{ translateY }],
+    };
+  });
+
+  const fullInfoAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(scrollY.value, [0, HEADER_SCROLL_DISTANCE * 0.4], [1, 0], Extrapolation.CLAMP);
+    const translateY = interpolate(scrollY.value, [0, HEADER_SCROLL_DISTANCE * 0.4], [0, -10], Extrapolation.CLAMP);
+    const scale = interpolate(scrollY.value, [0, HEADER_SCROLL_DISTANCE * 0.4], [1, 0.95], Extrapolation.CLAMP);
+    return { opacity, transform: [{ translateY }, { scale }] } as ViewStyle;
+  });
+
+  const collapsedTitleAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(scrollY.value, [HEADER_SCROLL_DISTANCE * 0.6, HEADER_SCROLL_DISTANCE], [0, 1], Extrapolation.CLAMP);
+    return { opacity };
+  });
+
   if (!station) {
     return (
       <View
@@ -141,48 +190,63 @@ export default function StationDetailScreen() {
       <StatusBar barStyle="light-content" />
 
       {/* Header with gradient */}
-      <Animated.View entering={FadeIn.duration(400)}>
+      <Animated.View style={headerAnimatedStyle} entering={FadeIn.duration(400)}>
         <LinearGradient
           colors={[severityColor, `${severityColor}CC`, `${severityColor}66`]}
-          style={[styles.header, { paddingTop: insets.top + 8 }]}
+          style={[styles.header, { flex: 1, paddingTop: insets.top + 8, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 }]}
         >
-          {/* Back button */}
-          <TouchableOpacity
-            style={styles.headerBackBtn}
-            onPress={() => router.back()}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
+          {/* Top Nav (Pined to screen) */}
+          <Animated.View style={[{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", zIndex: 10, height: 40 }, topNavAnimatedStyle]}>
+            <TouchableOpacity
+              style={[styles.headerBackBtn, { marginBottom: 0 }]}
+              onPress={() => router.back()}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="arrow-back" size={24} color="white" />
+            </TouchableOpacity>
 
-          {/* Station Info */}
-          <View style={styles.headerContent}>
-            <View style={styles.headerBadge}>
-              <Text style={styles.headerBadgeText}>
-                {properties.alertLevel}
+            {/* Collapsed Title */}
+            <Animated.View style={[{ flex: 1, alignItems: "center", marginHorizontal: 12 }, collapsedTitleAnimatedStyle]}>
+              <Text style={{ fontSize: 18, fontWeight: "700", color: "white" }} numberOfLines={1}>
+                {properties.stationName}
+              </Text>
+              <Text style={{ fontSize: 13, color: "rgba(255,255,255,0.8)" }}>{properties.waterLevel !== null ? `${properties.waterLevel} ${properties.unit}` : "N/A"}</Text>
+            </Animated.View>
+            
+            <View style={{ width: 40 }} />
+          </Animated.View>
+
+          {/* Fading info block */}
+          <Animated.View style={[fullInfoAnimatedStyle, { flex: 1, justifyContent: "flex-end" }]}>
+            <View style={styles.headerContent}>
+              <View style={styles.headerBadge}>
+                <Text style={styles.headerBadgeText}>
+                  {properties.alertLevel}
+                </Text>
+              </View>
+              <Text style={styles.headerTitle} numberOfLines={2}>
+                {properties.stationName}
+              </Text>
+              <Text style={styles.headerSubtitle}>{properties.stationCode}</Text>
+            </View>
+
+            <View style={styles.waterLevelBadge}>
+              <MaterialCommunityIcons name="water" size={24} color="white" />
+              <Text style={styles.waterLevelText}>
+                {properties.waterLevel !== null
+                  ? `${properties.waterLevel} ${properties.unit}`
+                  : "N/A"}
               </Text>
             </View>
-            <Text style={styles.headerTitle} numberOfLines={2}>
-              {properties.stationName}
-            </Text>
-            <Text style={styles.headerSubtitle}>{properties.stationCode}</Text>
-          </View>
-
-          {/* Water Level Display */}
-          <View style={styles.waterLevelBadge}>
-            <MaterialCommunityIcons name="water" size={24} color="white" />
-            <Text style={styles.waterLevelText}>
-              {properties.waterLevel !== null
-                ? `${properties.waterLevel} ${properties.unit}`
-                : "N/A"}
-            </Text>
-          </View>
+          </Animated.View>
         </LinearGradient>
       </Animated.View>
 
-      <ScrollView
+      <Animated.ScrollView
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: HEADER_MAX_HEIGHT + 16 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Water Level Visualization */}
@@ -379,7 +443,7 @@ export default function StationDetailScreen() {
 
         {/* Bottom Spacing */}
         <View style={{ height: insets.bottom + 20 }} />
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }

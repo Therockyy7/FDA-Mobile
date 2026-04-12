@@ -4,7 +4,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback } from "react";
-import { StatusBar, TouchableOpacity, View } from "react-native";
+import { StatusBar, TouchableOpacity, View, ActivityIndicator, InteractionManager } from "react-native";
 
 import {
   MapLoadingOverlay,
@@ -20,10 +20,12 @@ import { MapContent } from "~/features/map/components/MapContent";
 import { MapFloatingUI } from "~/features/map/components/MapFloatingUI";
 import { MapHeaderSwitch } from "~/features/map/components/MapHeaderSwitch";
 import { MapSheets } from "~/features/map/components/MapSheets";
+import { ConfirmDeleteModal } from "~/features/areas/components/ConfirmDeleteModal";
 import { useMapScreen } from "~/features/map/hooks/useMapScreen";
 import { useMapScreenState } from "~/features/map/hooks/useMapScreenState";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
 import { useIsAuthenticated } from "~/features/auth/hooks/useAuth";
+import { StaticAreaTarget } from "~/features/map/components/areas/overlays/StaticAreaTarget";
 
 export default function MapScreen() {
   // Single aggregated state
@@ -90,7 +92,9 @@ export default function MapScreen() {
     setIsLoading: s.setIsLoading,
     setShowCommunityReportSheet: s.setShowCommunityReportSheet,
     setShowWarningsSheet: s.setShowWarningsSheet,
+    areaDisplayMode: s.areaDisplayMode,
     setAreaDisplayMode: s.setAreaDisplayMode,
+    setIsFindingArea: s.setIsFindingArea,
     adminAreas: s.adminAreas,
     viewMode: s.viewMode,
     params: s.params,
@@ -199,23 +203,21 @@ export default function MapScreen() {
             onPress={() => {
               const dest = s.params.returnToPrediction;
               if (!dest) return;
-              
               // Clear Map view states
               s.setSelectedAdminArea(null);
               s.setAreaDisplayMode("user");
               
-              // Move forward to the prediction screen immediately for a snappy UX
-              router.push(`/prediction/${dest}` as any);
-              
+              // PERF: Release all satellite polygons immediately to free up RAM.
+              // This is crucial to reduce the heavy memory footprint of thousands of Polygons
+              useSatelliteFloodStore.getState().clear();
+
               // Clear URL search params visually and state-wise
               router.setParams({ returnToPrediction: "", satelliteBbox: "" });
-              
-              // PERF: Delay destroying the heavy Native Map Polygons until AFTER 
-              // the screen transition animation is fully complete (~600ms).
-              // Doing this synchronously freezes the UI thread and crashes the app.
-              setTimeout(() => {
-                useSatelliteFloodStore.getState().clear();
-              }, 600);
+
+              // Move forward to the prediction screen on next tick for a snappy UX
+              InteractionManager.runAfterInteractions(() => {
+                router.push(`/prediction/${dest}` as any);
+              });
             }}
             style={{
               position: "absolute",
@@ -244,6 +246,32 @@ export default function MapScreen() {
         )}
         {/* Loading Overlay */}
         <MapLoadingOverlay visible={s.isLoading} />
+
+        {/* AI Finding Area Overlay */}
+        {s.isFindingArea && (
+          <View style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: [{ translateX: -70 }, { translateY: -35 }],
+            backgroundColor: "rgba(11, 26, 51, 0.8)",
+            paddingHorizontal: 20,
+            paddingVertical: 12,
+            borderRadius: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+            zIndex: 1000,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 12,
+            elevation: 10,
+          }}>
+            <ActivityIndicator size="small" color="#A855F7" />
+            <Text style={{ color: "white", fontSize: 13, fontWeight: "600" }}>Tìm khu vực...</Text>
+          </View>
+        )}
 
         {/* Navigation HUD */}
         {s.nav.isNavigating && (
@@ -316,6 +344,14 @@ export default function MapScreen() {
           onDraftAreaCenterChange={s.setDraftAreaCenter}
         />
 
+        {/* Static center crosshair and radius overlay used while adjusting radius */}
+        {s.isAdjustingRadius && (
+          <StaticAreaTarget 
+            radiusMeters={s.draftAreaRadius} 
+            region={s.region} 
+          />
+        )}
+
         {/* Floating UI — hide when sheet open, ward selection, or viewing AI Prediction Map */}
         {!s.showWardSelectionSheet && !s.showCommunityReportSheet && !s.params.returnToPrediction && (
           <MapFloatingUI
@@ -327,7 +363,7 @@ export default function MapScreen() {
             safeRouteHasResults={s.safeRoute.hasResults}
             isAdjustingRadius={s.isAdjustingRadius}
             showCreateAreaSheet={s.showCreateAreaSheet}
-            showCreateAreaButton={s.viewMode === "zones" && !s.isRoutingUIVisible && !s.selectedArea && !s.isAdjustingRadius && !s.showCreateAreaSheet}
+            showCreateAreaButton={!isGuest && s.viewMode === "zones" && !s.isRoutingUIVisible && !s.selectedArea && !s.isAdjustingRadius && !s.showCreateAreaSheet}
             onCreateArea={s.handleStartCreateArea}
             onZoomIn={s.zoomIn}
             onZoomOut={s.zoomOut}
@@ -341,7 +377,7 @@ export default function MapScreen() {
             streetViewLocation={s.streetViewLocation}
             onClearStreetView={() => s.setStreetViewLocation(null)}
             onShowLayers={() => s.setShowLayerSheet(true)}
-            showAiSelectButton={s.areaDisplayMode === "admin" && !s.isRoutingUIVisible}
+            showAiSelectButton={!isGuest && s.areaDisplayMode === "admin" && !s.isRoutingUIVisible}
             onShowWardSelection={() => s.setShowWardSelectionSheet(true)}
             selectedAdminAreaName={s.selectedAdminArea ? (s.selectedAdminArea as any).name : null}
             onClearAdminArea={() => {
@@ -459,6 +495,15 @@ export default function MapScreen() {
             isGuest={isGuest}
           />
         )}
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmDeleteModal
+          visible={!!s.deleteModalVisible}
+          areaName={s.selectedArea?.name || ""}
+          isDeleting={s.isDeletingArea}
+          onConfirm={s.handleConfirmDelete}
+          onCancel={s.handleCancelDelete}
+        />
       </View>
     </View>
   );

@@ -1,16 +1,22 @@
 // features/map/components/satellite/SatelliteFloodOverlay.tsx
 // Renders AI Prithvi satellite flood polygons on the MapView.
 // Reads from the global useSatelliteFloodStore — zero prop drilling required.
+// When clipBoundary is set (EWKB hex from admin area), only flood polygons
+// whose centroid falls inside the admin area boundary are rendered.
 
 import React, { useMemo } from "react";
-import { Polygon, Marker } from "react-native-maps";
 import { View } from "react-native";
+import { Marker, Polygon } from "react-native-maps";
 import { Text } from "~/components/ui/text";
+import { ewkbToMultiLatLngArrays, pointInPolygon } from "~/features/map/lib/ewkb-parser";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
 import type { GeoJsonFeature } from "~/features/prediction/types/satellite.types";
 
 // GeoJSON [lng, lat] → react-native-maps { latitude, longitude }
-function lngLatToLatLng(coord: number[]): { latitude: number; longitude: number } {
+function lngLatToLatLng(coord: number[]): {
+  latitude: number;
+  longitude: number;
+} {
   return { longitude: coord[0], latitude: coord[1] };
 }
 
@@ -38,9 +44,10 @@ function extractRings(
 }
 
 // Pick a centroid for label placement
-function centroid(
-  coords: { latitude: number; longitude: number }[],
-): { latitude: number; longitude: number } {
+function centroid(coords: { latitude: number; longitude: number }[]): {
+  latitude: number;
+  longitude: number;
+} {
   const lat = coords.reduce((s, c) => s + c.latitude, 0) / coords.length;
   const lng = coords.reduce((s, c) => s + c.longitude, 0) / coords.length;
   return { latitude: lat, longitude: lng };
@@ -50,7 +57,7 @@ function centroid(
 // Reduce points in complex vector rings (radial distance thinning)
 function simplifyRadialDist(
   points: { latitude: number; longitude: number }[],
-  sqTolerance: number
+  sqTolerance: number,
 ) {
   if (points.length <= 4) return points;
   let prevPoint = points[0];
@@ -70,7 +77,10 @@ function simplifyRadialDist(
 
 // Calculate rough bounding box area
 function getBoundingBoxArea(ring: { latitude: number; longitude: number }[]) {
-  let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+  let minLat = 90,
+    maxLat = -90,
+    minLng = 180,
+    maxLng = -180;
   for (let i = 0; i < ring.length; i++) {
     const pt = ring[i];
     if (pt.latitude < minLat) minLat = pt.latitude;
@@ -81,8 +91,33 @@ function getBoundingBoxArea(ring: { latitude: number; longitude: number }[]) {
   return (maxLat - minLat) * (maxLng - minLng);
 }
 
+// ── CLIP: Check if a ring's centroid falls inside ANY of the clip boundary polygons ──
+function isRingInsideBoundary(
+  ring: { latitude: number; longitude: number }[],
+  boundaryPolygons: { latitude: number; longitude: number }[][],
+): boolean {
+  const center = centroid(ring);
+  for (const poly of boundaryPolygons) {
+    if (pointInPolygon(center, poly)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function SatelliteFloodOverlay() {
-  const { layers, visible } = useSatelliteFloodStore();
+  const { layers, visible, clipBoundary } = useSatelliteFloodStore();
+
+  // Parse the clip boundary once (EWKB hex → array of polygons)
+  const boundaryPolygons = useMemo(() => {
+    if (!clipBoundary) return null;
+    try {
+      const polys = ewkbToMultiLatLngArrays(clipBoundary);
+      return polys.length > 0 ? polys : null;
+    } catch {
+      return null;
+    }
+  }, [clipBoundary]);
 
   const polygons = useMemo(() => {
     if (!visible || !layers.length) return [];
@@ -110,6 +145,15 @@ export function SatelliteFloodOverlay() {
 
           // Re-check after simplification
           if (simplifiedRing.length < 3) return;
+
+          // ── CLIP: Skip flood polygons outside the admin area boundary ──
+          // Only check outer rings (ri === 0); holes (ri > 0) are kept if their parent was kept.
+          if (boundaryPolygons && ri === 0) {
+            if (!isRingInsideBoundary(simplifiedRing, boundaryPolygons)) {
+              return; // Centroid is outside admin area → skip this polygon
+            }
+          }
+
           result.push({
             key: `${layer.id}-${fi}-${ri}`,
             coords: simplifiedRing,
@@ -125,7 +169,7 @@ export function SatelliteFloodOverlay() {
     });
 
     return result;
-  }, [layers, visible]);
+  }, [layers, visible, boundaryPolygons]);
 
   // Build one label marker per layer (at bbox center)
   const labels = useMemo(() => {
@@ -139,7 +183,11 @@ export function SatelliteFloodOverlay() {
         const center = centroid(rings[0]);
         return { key: layer.id, center, layer };
       })
-      .filter(Boolean) as { key: string; center: { latitude: number; longitude: number }; layer: (typeof layers)[0] }[];
+      .filter(Boolean) as {
+      key: string;
+      center: { latitude: number; longitude: number };
+      layer: (typeof layers)[0];
+    }[];
   }, [layers, visible]);
 
   if (!visible || !polygons.length) return null;
@@ -197,3 +245,4 @@ export function SatelliteFloodOverlay() {
     </>
   );
 }
+

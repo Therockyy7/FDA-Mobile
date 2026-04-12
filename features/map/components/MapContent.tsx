@@ -175,7 +175,7 @@ export function MapContent({
         )}
 
       {/* Draft Area */}
-      {draftAreaCenter && (
+      {draftAreaCenter && !isAdjustingRadius && (
         <AreaPreviewCircle
           center={draftAreaCenter}
           radiusMeters={draftAreaRadius}

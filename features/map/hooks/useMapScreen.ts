@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { InteractionManager } from "react-native";
+import { useRouter } from "expo-router";
 import MapView, { Region } from "react-native-maps";
 import type { MapPressEvent } from "react-native-maps";
 import type { NearbyFloodReport } from "~/features/community/services/community.service";
@@ -128,6 +129,7 @@ interface MapScreenCtx {
 }
 
 export function useMapScreen(ctx: MapScreenCtx) {
+  const router = useRouter();
   const {
     settings,
     refreshFloodSeverity,
@@ -320,6 +322,7 @@ export function useMapScreen(ctx: MapScreenCtx) {
       );
       if (feature) {
         handleFloodMarkerPress(feature);
+        router.setParams({ stationId: undefined });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -409,12 +412,15 @@ export function useMapScreen(ctx: MapScreenCtx) {
     setSelectedRoute(null);
     setSelectedZone(null);
     setShowDetailPanels(false);
-    setShowResultCard(false);
     const currentRoute = safeRoute.getSelectedRoute();
     if (currentRoute) {
       const bounds = getRouteBounds(currentRoute.coordinates);
       mapRef.current?.animateToRegion(bounds, 600);
     }
+    // Re-show result card nếu còn routes (cho phép user close/xem lại kết quả)
+    // Với SafeRouteAlternatives (>1 tuyến) không cần vì card đó luôn hiện khi hasResults=true
+    const hasAlternatives = safeRoute.alternativeRoutes.length > 0;
+    setShowResultCard(!hasAlternatives);
   }, [
     nav, safeRoute, mapRef,
     setSelectedArea, setSelectedStationId, setSelectedCommunityReport, setShowCommunityReportSheet,

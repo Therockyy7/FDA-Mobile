@@ -324,7 +324,7 @@ export function DistrictsForecastCard() {
     return (
       <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
         <TouchableOpacity
-          onPress={fetchForecast}
+          onPress={() => fetchForecast()}
           style={{
             backgroundColor: themeConfig.cardBg,
             borderRadius: 16,

@@ -46,19 +46,14 @@ export function useFloodSignalR(enabled: boolean) {
 
     const connection = getFloodHubConnection();
 
-    // PERF: Use named handler so connection.off() removes ONLY this specific handler.
-    // Calling connection.off(event) with no handler arg removes ALL listeners on that event,
-    // which can break other consumers (e.g. React Strict Mode double-effect) and cause
-    // SignalR to lose updates or duplicate-register handlers on the next mount.
-    const sensorUpdateHandler = (...args: unknown[]) => {
+    connection.on("ReceiveSensorUpdate", (...args: unknown[]) => {
+      // console.log("📡 [FloodSignalR] ReceiveSensorUpdate received:", JSON.stringify(args[0]));
       handleSensorUpdate(args[0] as SensorUpdatePayload | SensorUpdateData);
-    };
-    const stationUpdateHandler = (...args: unknown[]) => {
+    });
+    connection.on("ReceiveStationUpdate", (...args: unknown[]) => {
+      // console.log("📡 [FloodSignalR] ReceiveStationUpdate received:", JSON.stringify(args[0]));
       handleSensorUpdate(args[0] as SensorUpdatePayload | SensorUpdateData);
-    };
-
-    connection.on("ReceiveSensorUpdate", sensorUpdateHandler);
-    connection.on("ReceiveStationUpdate", stationUpdateHandler);
+    });
 
     connection.onreconnecting(() => {
       console.log("🔄 [FloodSignalR] Reconnecting...");
@@ -77,9 +72,8 @@ export function useFloodSignalR(enabled: boolean) {
       .catch(() => {});
 
     return () => {
-      // Remove only the handlers registered in THIS effect invocation
-      connection.off("ReceiveSensorUpdate", sensorUpdateHandler);
-      connection.off("ReceiveStationUpdate", stationUpdateHandler);
+      connection.off("ReceiveSensorUpdate");
+      connection.off("ReceiveStationUpdate");
       console.log("🔌 [FloodSignalR] Releasing hub");
       releaseFloodHub().catch(() => {});
     };

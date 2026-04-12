@@ -1,12 +1,17 @@
 // features/map/components/controls/MapControls.tsx
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  withDelay,
+  Easing,
+  interpolate,
+} from "react-native-reanimated";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { OVERLAY_SHADOW, RADIUS } from "~/features/map/lib/map-ui-utils";
-import { RotationControls } from "./RotationControls";
-import { StreetViewClearButton } from "./StreetViewClearButton";
-import { ZoomControls } from "./ZoomControls";
 
 interface MapControlsProps {
   onZoomIn: () => void;
@@ -22,128 +27,254 @@ interface MapControlsProps {
   onShowLayers?: () => void;
 }
 
+const TIMING = { duration: 180, easing: Easing.out(Easing.cubic) };
+const SPRING = { stiffness: 260, damping: 22, mass: 0.8 };
+
+function useItemAnim(delay = 0) {
+  const progress = useSharedValue(0);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [
+      { scale: interpolate(progress.value, [0, 1], [0.7, 1]) },
+      { translateY: interpolate(progress.value, [0, 1], [14, 0]) },
+    ] as any,
+  })) as any;
+
+  const show = useCallback(() => {
+    progress.value = withDelay(delay, withTiming(1, TIMING));
+  }, [delay, progress]);
+
+  const hide = useCallback((onDone?: () => void) => {
+    progress.value = withTiming(0, { duration: 120, easing: Easing.in(Easing.cubic) });
+    if (onDone) setTimeout(onDone, 120);
+  }, [progress]);
+
+  return { animatedStyle, show, hide, progress };
+}
+
 export function MapControls({
   onZoomIn, onZoomOut, is3DEnabled = false, showLegend = true,
   onShowLegend, onToggle3D, onRotateLeft, onRotateRight,
   streetViewLocation, onClearStreetView, onShowLayers,
 }: MapControlsProps) {
   const [expanded, setExpanded] = useState(false);
+  const [visible, setVisible] = useState(false);
   const { isDarkColorScheme } = useColorScheme();
   const isDark = isDarkColorScheme;
 
-  const panelBg = isDark ? "rgba(15,23,42,0.95)" : "rgba(255,255,255,0.97)";
+  const panelBg = isDark ? "rgba(15,23,42,0.95)" : "white";
   const divider = isDark ? "#334155" : "#F1F5F9";
-  const primary = "#3B82F6";
-  const fabColor = expanded ? "#EF4444" : primary;
+  const iconColor = isDark ? "#94A3B8" : "#1F2937";
+
+  // FAB rotation + scale
+  const fabRotate = useSharedValue(0);
+  const fabScale = useSharedValue(1);
+
+  // Per-item animations with stagger
+  const streetViewAnim = useItemAnim(0);
+  const layersAnim = useItemAnim(40);
+  const controlsAnim = useItemAnim(80);
+  const rotationAnim = useItemAnim(120);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fabStyle = useAnimatedStyle(() => ({
+    transform: [
+      { rotate: `${fabRotate.value * 180}deg` },
+      { scale: fabScale.value },
+    ] as any,
+  })) as any;
+
+  const open = useCallback(() => {
+    setVisible(true);
+    setExpanded(true);
+    fabRotate.value = withSpring(1, SPRING);
+    fabScale.value = withSpring(0.92, SPRING);
+    streetViewAnim.show();
+    layersAnim.show();
+    controlsAnim.show();
+    rotationAnim.show();
+  }, [fabRotate, fabScale, streetViewAnim, layersAnim, controlsAnim, rotationAnim]);
+
+  const close = useCallback(() => {
+    setExpanded(false);
+    fabRotate.value = withSpring(0, SPRING);
+    fabScale.value = withSpring(1, SPRING);
+    // hide all, unmount after last one done
+    streetViewAnim.hide();
+    layersAnim.hide();
+    controlsAnim.hide();
+    rotationAnim.hide(() => setVisible(false));
+  }, [fabRotate, fabScale, streetViewAnim, layersAnim, controlsAnim, rotationAnim]);
+
+  const toggle = useCallback(() => {
+    expanded ? close() : open();
+  }, [expanded, open, close]);
 
   return (
     <View style={styles.container}>
-      {expanded && (
-        <View style={[styles.panel, OVERLAY_SHADOW, { backgroundColor: panelBg, borderColor: divider }]}>
+      {visible && (
+        <View style={styles.expandedGroup} pointerEvents={expanded ? "auto" : "none"}>
           {streetViewLocation && onClearStreetView && (
-            <>
-              <StreetViewClearButton onPress={onClearStreetView} />
-              <View style={[styles.divider, { backgroundColor: divider }]} />
-            </>
+            <Animated.View style={streetViewAnim.animatedStyle}>
+              <TouchableOpacity onPress={onClearStreetView} style={styles.fabAmber} activeOpacity={0.8}>
+                <Ionicons name="eye-off" size={22} color="white" />
+              </TouchableOpacity>
+            </Animated.View>
           )}
 
           {onShowLayers && (
-            <TouchableOpacity onPress={onShowLayers} style={styles.iconBtn} activeOpacity={0.75}>
-              <Ionicons name="layers" size={18} color={primary} />
-            </TouchableOpacity>
-          )}
-
-          {onToggle3D && (
-            <>
-              <View style={[styles.divider, { backgroundColor: divider }]} />
-              <TouchableOpacity
-                onPress={onToggle3D}
-                style={[styles.iconBtn, is3DEnabled && { backgroundColor: primary }]}
-                activeOpacity={0.75}
-              >
-                <MaterialCommunityIcons
-                  name="rotate-3d-variant"
-                  size={18}
-                  color={is3DEnabled ? "white" : isDark ? "#94A3B8" : "#4B5563"}
-                />
+            <Animated.View style={layersAnim.animatedStyle}>
+              <TouchableOpacity onPress={onShowLayers} style={styles.fabBlue} activeOpacity={0.8}>
+                <Ionicons name="layers" size={22} color="white" />
               </TouchableOpacity>
-            </>
+            </Animated.View>
           )}
 
-          <View style={[styles.divider, { backgroundColor: divider }]} />
+          <Animated.View style={[controlsAnim.animatedStyle, styles.panel, { backgroundColor: panelBg, borderColor: divider }]}>
+            {onToggle3D && (
+              <>
+                <TouchableOpacity
+                  onPress={onToggle3D}
+                  style={[styles.iconBtn, is3DEnabled && styles.iconBtnActive]}
+                  activeOpacity={0.7}
+                >
+                  <MaterialCommunityIcons
+                    name="rotate-3d-variant"
+                    size={22}
+                    color={is3DEnabled ? "white" : iconColor}
+                  />
+                </TouchableOpacity>
+                <View style={[styles.divider, { backgroundColor: divider }]} />
+              </>
+            )}
 
-          <TouchableOpacity
-            onPress={onShowLegend!}
-            style={[styles.iconBtn, showLegend && { backgroundColor: "#EFF6FF" }]}
-            activeOpacity={0.75}
-          >
-            <Ionicons
-              name="information-circle"
-              size={18}
-              color={showLegend ? primary : isDark ? "#94A3B8" : "#64748B"}
-            />
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={onShowLegend}
+              style={[styles.iconBtn, showLegend && styles.iconBtnLegend]}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="information-circle"
+                size={22}
+                color={showLegend ? "#3B82F6" : isDark ? "#94A3B8" : "#64748B"}
+              />
+            </TouchableOpacity>
 
-          <View style={[styles.divider, { backgroundColor: divider }]} />
+            <View style={[styles.divider, { backgroundColor: divider }]} />
 
-          <ZoomControls onZoomIn={onZoomIn} onZoomOut={onZoomOut} />
+            <TouchableOpacity onPress={onZoomIn} style={styles.iconBtn} activeOpacity={0.7}>
+              <Ionicons name="add" size={24} color={iconColor} />
+            </TouchableOpacity>
+
+            <View style={[styles.divider, { backgroundColor: divider }]} />
+
+            <TouchableOpacity onPress={onZoomOut} style={styles.iconBtn} activeOpacity={0.7}>
+              <Ionicons name="remove" size={24} color={iconColor} />
+            </TouchableOpacity>
+          </Animated.View>
+
+          {is3DEnabled && onRotateLeft && onRotateRight && (
+            <Animated.View style={[rotationAnim.animatedStyle, styles.panel, { backgroundColor: panelBg, borderColor: divider }]}>
+              <TouchableOpacity onPress={onRotateLeft} style={styles.iconBtn} activeOpacity={0.7}>
+                <Ionicons name="return-up-back" size={20} color="#3B82F6" />
+              </TouchableOpacity>
+              <View style={[styles.divider, { backgroundColor: divider }]} />
+              <TouchableOpacity onPress={onRotateRight} style={styles.iconBtn} activeOpacity={0.7}>
+                <Ionicons name="return-up-forward" size={20} color="#3B82F6" />
+              </TouchableOpacity>
+            </Animated.View>
+          )}
         </View>
       )}
 
-      {/* FAB */}
+      {/* FAB toggle */}
       <TouchableOpacity
-        onPress={() => setExpanded(!expanded)}
-        style={[styles.fab, { backgroundColor: fabColor }]}
-        activeOpacity={0.8}
+        onPress={toggle}
+        style={[styles.fab, { backgroundColor: expanded ? "#EF4444" : "#3B82F6", shadowColor: expanded ? "#EF4444" : "#3B82F6" }]}
+        activeOpacity={0.85}
       >
-        <Ionicons name={expanded ? "close" : "add"} size={22} color="white" />
+        <Animated.View style={fabStyle}>
+          <Ionicons name={expanded ? "close" : "layers"} size={26} color="white" />
+        </Animated.View>
       </TouchableOpacity>
-
-      {expanded && is3DEnabled && onRotateLeft && onRotateRight && (
-        <View style={[styles.rotationWrap, OVERLAY_SHADOW, { backgroundColor: panelBg, borderColor: divider }]}>
-          <RotationControls onRotateLeft={onRotateLeft} onRotateRight={onRotateRight} />
-        </View>
-      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: "center" },
-  panel: {
-    borderRadius: RADIUS.sheet,
-    padding: 6,
-    gap: 0,
-    borderWidth: 1,
+  container: {
     alignItems: "center",
-    marginBottom: 8,
+    gap: 10,
   },
-  divider: { width: 28, height: StyleSheet.hairlineWidth, marginVertical: 3 },
+  expandedGroup: {
+    gap: 10,
+    alignItems: "center",
+  },
+  panel: {
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  divider: {
+    height: 1,
+    width: 50,
+  },
   iconBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
+    width: 50,
+    height: 50,
     alignItems: "center",
     justifyContent: "center",
+  },
+  iconBtnActive: {
+    backgroundColor: "#3B82F6",
+  },
+  iconBtnLegend: {
+    backgroundColor: "#EFF6FF",
   },
   fab: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 5,
-    borderWidth: 2.5,
-    borderColor: "rgba(255,255,255,0.2)",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 2,
+    borderColor: "white",
   },
-  rotationWrap: {
-    borderRadius: RADIUS.sheet,
-    padding: 6,
-    borderWidth: 1,
-    marginTop: 6,
+  fabBlue: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#3B82F6",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#3B82F6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  fabAmber: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#F59E0B",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#F59E0B",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
   },
 });

@@ -3,6 +3,7 @@
 // Receives the full MapScreenState as context.
 
 import { useCallback, useEffect, useRef } from "react";
+import { useRouter } from "expo-router";
 import MapView, { Region } from "react-native-maps";
 import type { MapPressEvent } from "react-native-maps";
 import type { NearbyFloodReport } from "~/features/community/services/community.service";
@@ -124,6 +125,7 @@ interface MapScreenCtx {
 }
 
 export function useMapScreen(ctx: MapScreenCtx) {
+  const router = useRouter();
   const {
     settings,
     refreshFloodSeverity,
@@ -314,6 +316,7 @@ export function useMapScreen(ctx: MapScreenCtx) {
       );
       if (feature) {
         handleFloodMarkerPress(feature);
+        router.setParams({ stationId: undefined });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

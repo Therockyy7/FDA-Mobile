@@ -2,8 +2,8 @@
 // Thin orchestrator: wires hooks into a single state object, renders components.
 
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs, useRouter } from "expo-router";
-import React from "react";
+import { Tabs, useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback } from "react";
 import { StatusBar, TouchableOpacity, View } from "react-native";
 
 import {
@@ -97,6 +97,15 @@ export default function MapScreen() {
     floodSeverity: s.floodSeverity,
   });
 
+
+  // Reset station card khi user rời khỏi tab map
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        s.setSelectedStationId(null);
+      };
+    }, [s.setSelectedStationId]),
+  );
 
   const handleSelectWard = (area: any) => {
     s.setShowWardSelectionSheet(false);

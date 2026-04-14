@@ -172,8 +172,18 @@ export function DistrictsForecastCard() {
   const { isDarkColorScheme } = useColorScheme();
   const router = useRouter();
 
-  const [loadState, setLoadState] = useState<LoadState>("idle");
-  const [data, setData] = useState<LocalForecastData | null>(null);
+  const [loadState, setLoadState] = useState<LoadState>(() => {
+    if (_cachedForecast && Date.now() - _cacheTimestamp < FORECAST_CACHE_TTL_MS) {
+      return "done";
+    }
+    return "idle";
+  });
+  const [data, setData] = useState<LocalForecastData | null>(() => {
+    if (_cachedForecast && Date.now() - _cacheTimestamp < FORECAST_CACHE_TTL_MS) {
+      return _cachedForecast;
+    }
+    return null;
+  });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const themeConfig = {

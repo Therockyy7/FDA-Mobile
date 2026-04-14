@@ -50,12 +50,12 @@ export function NotificationCard({
       activeOpacity={0.65}
       style={{
         flexDirection: "row",
-        alignItems: "center",
-        paddingVertical: 12,
-        paddingHorizontal: 14,
+        alignItems: "flex-start",
+        paddingVertical: 14,
+        paddingHorizontal: 16,
         backgroundColor: colors.cardBg,
-        borderRadius: 14,
-        borderWidth: isDarkColorScheme ? 1 : 0,
+        borderRadius: 16,
+        borderWidth: 1,
         borderColor: colors.border,
         gap: 12,
         marginBottom: 8,
@@ -69,32 +69,33 @@ export function NotificationCard({
       {/* ── Severity Avatar ── */}
       <View
         style={{
-          width: 44,
-          height: 44,
-          borderRadius: 22,
+          width: 38,
+          height: 38,
+          borderRadius: 10,
           backgroundColor: isDarkColorScheme
             ? config.darkBgColor || config.bgColor
             : config.bgColor,
           alignItems: "center",
           justifyContent: "center",
-          borderWidth: 1.5,
+          borderWidth: 1,
           borderColor: config.color + "30",
+          marginTop: 2,
         }}
       >
-        <Ionicons name={config.icon as any} size={22} color={config.color} />
+        <Ionicons name={config.icon as any} size={18} color={config.color} />
       </View>
 
       {/* ── Content ── */}
-      <View style={{ flex: 1, gap: 1 }}>
+      <View style={{ flex: 1, gap: 2 }}>
         {/* Title Group */}
-        <View style={{ gap: 0 }}>
+        <View style={{ gap: 2 }}>
           <Text
             numberOfLines={1}
             style={{
-              fontSize: 14.5,
-              fontWeight: "700",
+              fontSize: 15,
+              fontWeight: "800",
               color: colors.text,
-              lineHeight: 20,
+              letterSpacing: -0.3,
             }}
           >
             {notification.stationName}
@@ -102,10 +103,9 @@ export function NotificationCard({
           <Text
             numberOfLines={1}
             style={{
-              fontSize: 14.5,
+              fontSize: 13,
               fontWeight: "600",
-              color: colors.text,
-              lineHeight: 20,
+              color: config.color,
             }}
           >
             {formatAlertTitle(notification.title)}
@@ -116,12 +116,11 @@ export function NotificationCard({
         <Text
           numberOfLines={2}
           style={{
-            fontSize: 13.5,
-            fontWeight: "400",
+            fontSize: 12,
+            fontWeight: "500",
             color: colors.subtext,
             lineHeight: 18,
-            marginTop: 1,
-            opacity: 0.9,
+            marginTop: 2,
           }}
         >
           {notification.content || notification.alertMessage}
@@ -132,7 +131,7 @@ export function NotificationCard({
           style={{
             flexDirection: "row",
             alignItems: "center",
-            marginTop: 3,
+            marginTop: 6,
             gap: 6,
             flexWrap: "wrap",
           }}
@@ -140,9 +139,9 @@ export function NotificationCard({
           {/* Relative Time */}
           <Text
             style={{
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: "600",
-              color: colors.primary,
+              color: colors.muted,
             }}
           >
             {timeAgo}
@@ -162,7 +161,7 @@ export function NotificationCard({
           {/* Severity Label */}
           <Text
             style={{
-              fontSize: 11.5,
+              fontSize: 11,
               fontWeight: "700",
               color: config.color,
               letterSpacing: 0.2,

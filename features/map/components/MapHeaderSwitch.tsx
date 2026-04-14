@@ -42,6 +42,7 @@ interface Props {
 export function MapHeaderSwitch({
   navIsNavigating,
   safeRouteHasResults,
+  isRoutingUIVisible,
   originText,
   onOriginChange,
   onOriginClear,
@@ -67,7 +68,8 @@ export function MapHeaderSwitch({
   onCloseRouting,
   userLocation,
   selectGPSAsDestination,
-}: Props) {
+  openRouting,
+}: Props & { isRoutingUIVisible: boolean; openRouting: () => void }) {
   const user = useUser();
   const router = useRouter();
   const isGuest = user === null;
@@ -77,25 +79,43 @@ export function MapHeaderSwitch({
   return (
     <RouteDirectionPanel
       visible={true}
+      isExpanded={isRoutingUIVisible}
+      onExpand={openRouting}
       onClose={onCloseRouting}
       originText={isUsingGPSOrigin ? "" : originText}
       onOriginChange={onOriginChange}
       onOriginClear={onOriginClear}
       isUsingGPSOrigin={isUsingGPSOrigin}
-      onUseGPSAsOrigin={onUseGPSAsOrigin}
-      onPickOriginOnMap={onPickOriginOnMap}
+      onUseGPSAsOrigin={() => {
+        openRouting();
+        onUseGPSAsOrigin();
+      }}
+      onPickOriginOnMap={() => {
+        openRouting();
+        onPickOriginOnMap();
+      }}
       hasOriginCoord={hasOriginCoord}
-      onOriginPlaceSelected={onOriginPlaceSelected}
+      onOriginPlaceSelected={(coord) => {
+        openRouting();
+        onOriginPlaceSelected(coord);
+      }}
       destinationText={destinationText}
       onDestinationChange={onDestinationChange}
       onDestinationClear={onDestinationClear}
       isUsingGPSDest={isUsingGPSDest}
       onUseGPSAsDest={() => {
+        openRouting();
         if (userLocation) selectGPSAsDestination(userLocation);
       }}
-      onPickDestinationOnMap={onPickDestinationOnMap}
+      onPickDestinationOnMap={() => {
+        openRouting();
+        onPickDestinationOnMap();
+      }}
       hasDestinationCoord={hasDestinationCoord}
-      onDestinationPlaceSelected={onDestinationPlaceSelected}
+      onDestinationPlaceSelected={(coord) => {
+        openRouting();
+        onDestinationPlaceSelected(coord);
+      }}
       onSwap={onSwap}
       transportMode={transportMode}
       onModeChange={onModeChange}

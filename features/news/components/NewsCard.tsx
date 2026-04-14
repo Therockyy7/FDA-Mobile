@@ -58,8 +58,8 @@ export function NewsCard({ item, onPress }: NewsCardProps) {
         backgroundColor: colors.cardBg,
         borderWidth: 1,
         borderColor: colors.border,
-        borderRadius: 12,
-        padding: 16,
+        borderRadius: 16,
+        padding: 14,
         marginBottom: 12,
       }}
     >
@@ -68,12 +68,12 @@ export function NewsCard({ item, onPress }: NewsCardProps) {
         <View
           style={{
             backgroundColor: priorityConfig.color,
-            paddingHorizontal: 8,
+            paddingHorizontal: 6,
             paddingVertical: 3,
-            borderRadius: 4,
+            borderRadius: 6,
           }}
         >
-          <Text style={{ color: "white", fontSize: 10, fontWeight: "700" }}>
+          <Text style={{ color: "white", fontSize: 9, fontWeight: "800", letterSpacing: 0.5 }}>
             {priorityConfig.label}
           </Text>
         </View>
@@ -82,12 +82,12 @@ export function NewsCard({ item, onPress }: NewsCardProps) {
           <View
             style={{
               backgroundColor: "#EF4444",
-              paddingHorizontal: 8,
+              paddingHorizontal: 6,
               paddingVertical: 3,
-              borderRadius: 4,
+              borderRadius: 6,
             }}
           >
-            <Text style={{ color: "white", fontSize: 10, fontWeight: "700" }}>
+            <Text style={{ color: "white", fontSize: 9, fontWeight: "800", letterSpacing: 0.5 }}>
               CHƯA ĐỌC
             </Text>
           </View>
@@ -98,7 +98,7 @@ export function NewsCard({ item, onPress }: NewsCardProps) {
       {!!item.imageUrl && (
         <Image
           source={item.imageUrl}
-          style={{ width: "100%", height: 160, borderRadius: 8, marginBottom: 12 }}
+          style={{ width: "100%", height: 160, borderRadius: 10, marginBottom: 12 }}
           contentFit="cover"
           transition={200}
         />
@@ -106,10 +106,11 @@ export function NewsCard({ item, onPress }: NewsCardProps) {
 
       <Text
         style={{
-          fontSize: 16,
-          fontWeight: "700",
+          fontSize: 15,
+          fontWeight: "800",
           color: colors.text,
-          marginBottom: 8,
+          letterSpacing: -0.3,
+          marginBottom: 6,
         }}
         numberOfLines={2}
       >
@@ -118,27 +119,28 @@ export function NewsCard({ item, onPress }: NewsCardProps) {
 
       <Text
         style={{
-          fontSize: 14,
+          fontSize: 13,
+          fontWeight: "500",
           color: colors.subtext,
-          lineHeight: 20,
+          lineHeight: 18,
           marginBottom: 12,
         }}
-        numberOfLines={3}
+        numberOfLines={2}
       >
         {item.summary}
       </Text>
 
       {/* Meta row */}
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-          <Ionicons name="eye-outline" size={14} color={colors.subtext} />
-          <Text style={{ fontSize: 12, color: colors.subtext }}>
+          <Ionicons name="eye-outline" size={13} color={colors.subtext} />
+          <Text style={{ fontSize: 11, fontWeight: "600", color: colors.subtext }}>
             {item.viewCount} lượt xem
           </Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-          <Ionicons name="time-outline" size={14} color={colors.subtext} />
-          <Text style={{ fontSize: 12, color: colors.subtext }}>
+          <Ionicons name="time-outline" size={13} color={colors.subtext} />
+          <Text style={{ fontSize: 11, fontWeight: "600", color: colors.subtext }}>
             {timeAgo}
           </Text>
         </View>

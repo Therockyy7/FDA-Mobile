@@ -64,10 +64,8 @@ export function AddressSearchSheet({
   const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) return;
 
-    Keyboard.dismiss();
     setIsSearching(true);
     setError(null);
-    setSearchResults([]);
 
     try {
       // Add "Đà Nẵng" or "Vietnam" to improve geocoding results
@@ -80,6 +78,7 @@ export function AddressSearchSheet({
 
       if (results.length === 0) {
         setError("Không tìm thấy địa chỉ. Vui lòng thử lại với địa chỉ khác.");
+        setSearchResults([]);
         return;
       }
 
@@ -101,8 +100,24 @@ export function AddressSearchSheet({
     }
   }, [searchQuery]);
 
+  // Debounced real-time auto search
+  React.useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setError(null);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      handleSearch();
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, handleSearch]);
+
   const handleSelectResult = useCallback(
     (result: SearchResult) => {
+      Keyboard.dismiss();
       onSelectLocation({
         latitude: result.latitude,
         longitude: result.longitude,

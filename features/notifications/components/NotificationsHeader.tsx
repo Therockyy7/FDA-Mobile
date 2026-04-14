@@ -1,7 +1,7 @@
-
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Platform, StatusBar, TouchableOpacity, View } from "react-native";
+import { Platform, StatusBar, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 
@@ -16,23 +16,23 @@ export function NotificationsHeader({
 }: NotificationsHeaderProps) {
   const { isDarkColorScheme } = useColorScheme();
 
-  // Theme colors
+  // Theme colors synchronized with HomeHeader
   const colors = {
     background: isDarkColorScheme ? "#0B1A33" : "#FFFFFF",
-    border: isDarkColorScheme ? "#1E293B" : "#E5E7EB",
+    cardBg: isDarkColorScheme ? "#1E293B" : "#F8FAFC",
     text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-    buttonBg: isDarkColorScheme ? "#1E293B" : "#F3F4F6",
-    buttonIcon: isDarkColorScheme ? "#E2E8F0" : "#1F2937",
+    subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
+    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
   };
 
   return (
     <View
       style={{
-        paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 8 : 54,
-        paddingBottom: 16,
-        paddingHorizontal: 16,
         backgroundColor: colors.background,
+        paddingTop:
+          Platform.OS === "ios" ? 50 : (StatusBar.currentHeight || 0) + 12,
+        paddingBottom: 14,
+        paddingHorizontal: 20,
         borderBottomWidth: 1,
         borderBottomColor: colors.border,
       }}
@@ -42,63 +42,83 @@ export function NotificationsHeader({
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          marginBottom: 12,
         }}
       >
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
+        {/* Left: Logo + Texts */}
+        <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+          <LinearGradient
+            colors={["#007AFF", "#1D4ED8"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 14,
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 12,
+              shadowColor: "#007AFF",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 8,
+              elevation: 6,
+            }}
+          >
+            <Ionicons name="notifications" size={22} color="white" />
+          </LinearGradient>
+
+          <View style={{ flex: 1 }}>
             <View
               style={{
-                width: 36,
-                height: 36,
-                borderRadius: 10,
-                backgroundColor: isDarkColorScheme ? "#1E3A8A" : "#EFF6FF",
+                flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "center",
-                marginRight: 10,
+                marginBottom: 2,
               }}
             >
-              <Ionicons name="notifications" size={20} color="#007AFF" />
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: unreadCount > 0 ? "#EF4444" : colors.subtext,
+                  fontWeight: unreadCount > 0 ? "700" : "500",
+                }}
+              >
+                {unreadCount > 0
+                  ? `${unreadCount} thông báo mới`
+                  : `Cập nhật hệ thống`}
+              </Text>
             </View>
             <Text
               style={{
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: "800",
                 color: colors.text,
+                letterSpacing: -0.5,
               }}
             >
               Thông báo
             </Text>
           </View>
-          {unreadCount > 0 && (
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "600",
-                color: colors.subtext,
-                marginTop: 4,
-                marginLeft: 46,
-              }}
-            >
-              {unreadCount} thông báo chưa đọc
-            </Text>
-          )}
         </View>
 
-        <TouchableOpacity
-          onPress={onFilterPress}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 12,
-            backgroundColor: colors.buttonBg,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="filter" size={20} color={colors.buttonIcon} />
-        </TouchableOpacity>
+        {/* Right: Actions */}
+        {/* <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <TouchableOpacity
+            onPress={onFilterPress}
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: 14,
+              backgroundColor: colors.cardBg,
+              alignItems: "center",
+              justifyContent: "center",
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="filter" size={20} color={colors.subtext} />
+          </TouchableOpacity>
+        </View> */}
       </View>
     </View>
   );

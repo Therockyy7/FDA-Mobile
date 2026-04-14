@@ -137,16 +137,30 @@ function predictionToRiskSummary(pred: PredictionResponse): AiRiskSummary {
 
 /* ────────── hook ────────── */
 
+let _cachedHomeWeather: HomeWeatherState | null = null;
+let _homeWeatherTimestamp = 0;
+const HOME_WEATHER_CACHE_TTL_MS = 5 * 60 * 1000;
+
 export function useHomeWeatherData() {
-  const [state, setState] = useState<HomeWeatherState>({
-    meteo: null,
-    rainfallForecast: [],
-    aiRisk: null,
-    loading: true,
-    error: null,
+  const [state, setState] = useState<HomeWeatherState>(() => {
+    if (_cachedHomeWeather && Date.now() - _homeWeatherTimestamp < HOME_WEATHER_CACHE_TTL_MS) {
+      return _cachedHomeWeather;
+    }
+    return {
+      meteo: null,
+      rainfallForecast: [],
+      aiRisk: null,
+      loading: true,
+      error: null,
+    };
   });
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (forceRefresh = false) => {
+    if (!forceRefresh && _cachedHomeWeather && Date.now() - _homeWeatherTimestamp < HOME_WEATHER_CACHE_TTL_MS) {
+      setState(_cachedHomeWeather);
+      return;
+    }
+
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
@@ -242,13 +256,16 @@ export function useHomeWeatherData() {
         }
       }
 
-      setState({
+      const newState = {
         meteo,
         rainfallForecast,
         aiRisk,
         loading: false,
         error: null,
-      });
+      };
+      _cachedHomeWeather = newState;
+      _homeWeatherTimestamp = Date.now();
+      setState(newState);
     } catch (err: any) {
       console.error("❌ Home weather data fetch failed:", err);
       setState((prev) => ({

@@ -129,13 +129,21 @@ export default function MapScreen() {
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       <Tabs.Screen 
         options={{ 
-          tabBarStyle: (s.isAdjustingRadius && !s.nav.isNavigating) ? { display: "none" } : undefined 
+          tabBarStyle: (
+            (s.isAdjustingRadius && !s.nav.isNavigating) ||
+            s.isRoutingUIVisible ||
+            s.safeRoute.hasResults ||
+            s.showResultCard ||
+            s.nav.isNavigating
+          ) ? { display: "none" } : undefined 
         }} 
       />
 
       {/* Header — hide when community report sheet is open or viewing AI Prediction Map */}
       {!s.showCommunityReportSheet && !s.params.returnToPrediction && (
         <MapHeaderSwitch
+        isRoutingUIVisible={s.isRoutingUIVisible}
+        openRouting={s.openRouting}
         navIsNavigating={s.nav.isNavigating}
         safeRouteHasResults={s.safeRoute.hasResults}
         originText={s.originText}

@@ -37,7 +37,7 @@ export default function HomeScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     await Promise.all([
-      refreshWeather(),
+      refreshWeather(true),
       new Promise((resolve) => setTimeout(resolve, 1000)),
     ]);
     setRefreshing(false);

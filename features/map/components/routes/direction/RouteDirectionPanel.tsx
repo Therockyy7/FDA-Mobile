@@ -22,6 +22,8 @@ type Phase = "idle" | "ready";
 
 export function RouteDirectionPanel({
   visible,
+  isExpanded,
+  onExpand,
   onClose,
   originText,
   onOriginChange,
@@ -49,20 +51,18 @@ export function RouteDirectionPanel({
   onProfilePress,
   isGuest = false,
   onLoginPress,
-}: RouteDirectionPanelProps & { user: User | null; onProfilePress?: () => void; isGuest?: boolean; onLoginPress?: () => void }) {
+}: RouteDirectionPanelProps & { user: User | null; onProfilePress?: () => void; isGuest?: boolean; onLoginPress?: () => void; isExpanded?: boolean; onExpand?: () => void }) {
   const insets = useSafeAreaInsets();
-  const [phase, setPhase] = useState<Phase>("idle");
   const [searchTarget, setSearchTarget] = useState<"origin" | "dest" | null>(null);
 
   if (!visible) return null;
 
   const hasDestination = isUsingGPSDest || hasDestinationCoord || destinationText.trim().length > 0;
   const isDisabled = isLoading || !hasDestination;
-  const isReady = phase === "ready";
+  const isReady = isExpanded;
 
   const handleBack = () => {
     onClose();
-    setPhase("idle");
   };
 
   const handleSearchSelect = (coord: LatLng, label: string) => {
@@ -72,7 +72,6 @@ export function RouteDirectionPanel({
     } else if (searchTarget === "dest") {
       onDestinationChange(label);
       onDestinationPlaceSelected?.(coord, label);
-      setPhase("ready");
     }
     setSearchTarget(null);
   };
@@ -82,7 +81,6 @@ export function RouteDirectionPanel({
       onPickOriginOnMap();
     } else {
       onPickDestinationOnMap();
-      setPhase("ready");
     }
     setSearchTarget(null);
   };
@@ -92,7 +90,6 @@ export function RouteDirectionPanel({
       onUseGPSAsOrigin();
     } else {
       onUseGPSAsDest();
-      setPhase("ready");
     }
     setSearchTarget(null);
   };
@@ -142,7 +139,10 @@ export function RouteDirectionPanel({
 
             {/* Destination input */}
             <TouchableOpacity
-              onPress={() => setSearchTarget("dest")}
+              onPress={() => {
+                onExpand?.();
+                setSearchTarget("dest");
+              }}
               disabled={!!isLoading}
               activeOpacity={0.7}
               style={{ flex: 1, justifyContent: "center", paddingVertical: 8 }}

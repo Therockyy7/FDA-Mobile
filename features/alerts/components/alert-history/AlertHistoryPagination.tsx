@@ -28,35 +28,19 @@ export function AlertHistoryPagination({
 }: AlertHistoryPaginationProps) {
   return (
     <View
-      style={{
-        marginTop: 10,
-        marginHorizontal: 16,
-        paddingVertical: 6,
-        paddingHorizontal: 8,
-        borderRadius: 12,
-        backgroundColor: "transparent",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 6,
-        flexWrap: "wrap",
-      }}
+      testID="alerts-history-pagination"
+      className="mt-2.5 mx-4 py-1.5 px-2 rounded-2xl flex-row items-center justify-center gap-1.5 flex-wrap"
     >
       <TouchableOpacity
+        testID="alerts-history-pagination-prev"
         activeOpacity={0.85}
         onPress={() => onChangePage(Math.max(1, pageNumber - 1))}
         disabled={pageNumber <= 1}
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: 10,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: pageNumber <= 1 ? "transparent" : colors.primary,
-          borderWidth: 1,
-          borderColor: colors.border,
-          opacity: pageNumber <= 1 ? 0.4 : 1,
-        }}
+        className={`w-8 h-8 rounded-2 items-center justify-center border border-slate-300 dark:border-slate-600 ${
+          pageNumber <= 1
+            ? "bg-slate-100 dark:bg-slate-800 opacity-40"
+            : "bg-primary"
+        }`}
       >
         <Ionicons
           name="chevron-back"
@@ -69,38 +53,28 @@ export function AlertHistoryPagination({
         item === "ellipsis" ? (
           <View
             key={`ellipsis-${index}`}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 10,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-8 h-8 rounded-2 items-center justify-center"
           >
-            <Text style={{ color: colors.subtext, fontWeight: "700" }}>...</Text>
+            <Text className="text-slate-600 dark:text-slate-400 font-bold">...</Text>
           </View>
         ) : (
           <TouchableOpacity
             key={item}
+            testID={`alerts-history-pagination-page-${item}`}
             activeOpacity={0.85}
             onPress={() => onChangePage(item)}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 10,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: item === pageNumber ? colors.primary : "transparent",
-              borderWidth: 1,
-              borderColor: colors.border,
-            }}
+            className={`w-8 h-8 rounded-2 items-center justify-center border border-slate-300 dark:border-slate-600 ${
+              item === pageNumber
+                ? "bg-primary"
+                : "bg-slate-50 dark:bg-slate-900"
+            }`}
           >
             <Text
-              style={{
-                color: item === pageNumber ? "#fff" : colors.text,
-                fontWeight: "700",
-                fontSize: 12,
-              }}
+              className={`font-bold text-body-sm ${
+                item === pageNumber
+                  ? "text-white"
+                  : "text-slate-900 dark:text-slate-50"
+              }`}
             >
               {item}
             </Text>
@@ -109,20 +83,15 @@ export function AlertHistoryPagination({
       )}
 
       <TouchableOpacity
+        testID="alerts-history-pagination-next"
         activeOpacity={0.85}
         onPress={() => onChangePage(Math.min(totalPages, pageNumber + 1))}
         disabled={pageNumber >= totalPages}
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: 10,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: pageNumber >= totalPages ? "transparent" : colors.primary,
-          borderWidth: 1,
-          borderColor: colors.border,
-          opacity: pageNumber >= totalPages ? 0.4 : 1,
-        }}
+        className={`w-8 h-8 rounded-2 items-center justify-center border border-slate-300 dark:border-slate-600 ${
+          pageNumber >= totalPages
+            ? "bg-slate-100 dark:bg-slate-800 opacity-40"
+            : "bg-primary"
+        }`}
       >
         <Ionicons
           name="chevron-forward"

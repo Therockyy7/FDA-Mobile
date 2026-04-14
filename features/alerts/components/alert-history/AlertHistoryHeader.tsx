@@ -26,51 +26,32 @@ export function AlertHistoryHeader({
 }: AlertHistoryHeaderProps) {
   return (
     <View
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 10,
-        paddingHorizontal: 16,
-        paddingTop: topInset + 8,
-        paddingBottom: 12,
-        backgroundColor: colors.backgroundOverlay,
-      }}
+      testID="alerts-history-header"
+      className="absolute top-0 left-0 right-0 z-10 px-4 bg-slate-50 dark:bg-slate-950"
+      style={{ paddingTop: topInset + 8, paddingBottom: 12 }}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+      <View className="flex-row items-center justify-between">
+        <View className="flex-row items-center gap-2.5">
           <TouchableOpacity
+            testID="alerts-history-header-back"
             activeOpacity={0.8}
             onPress={onBack}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-9 h-9 rounded-full items-center justify-center"
           >
             <Ionicons name="chevron-back" size={18} color={colors.primary} />
           </TouchableOpacity>
 
-          <Text style={{ fontSize: 20, fontWeight: "800", color: colors.text }}>
+          <Text testID="alerts-history-header-title" className="text-xl font-bold text-slate-900 dark:text-slate-50">
             {title}
           </Text>
         </View>
 
         {onFilter && (
           <TouchableOpacity
+            testID="alerts-history-header-filter"
             activeOpacity={0.8}
             onPress={onFilter}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 14,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "rgba(19,127,236,0.10)",
-            }}
+            className="w-10 h-10 rounded-lg items-center justify-center bg-primary/10 dark:bg-primary/20"
           >
             <Ionicons name="options-outline" size={18} color={colors.primary} />
           </TouchableOpacity>

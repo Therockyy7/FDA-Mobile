@@ -178,13 +178,16 @@ export default function AlertHistoryScreen() {
   const renderItem = ({ item }: { item: ListRow }) => {
     if (item.kind === "section") {
       return (
-        <View style={{ paddingHorizontal: 8, paddingTop: 6, paddingBottom: 4 }}>
+        <View
+          testID="alerts-history-section-row"
+          className="px-2 py-1.5 pb-1"
+        >
           <AlertHistorySectionTitle title={item.title} color={colors.subtext} />
         </View>
       );
     }
     return (
-      <View style={{ paddingHorizontal: 8 }}>
+      <View testID="alerts-history-item-row" className="px-2">
         <AlertHistoryCard
           item={item.item}
           onPress={() => router.push(`/alerts/history/${item.item.alertId}` as any)}
@@ -206,20 +209,23 @@ export default function AlertHistoryScreen() {
   const ListEmpty = () => {
     if (isLoading) {
       return (
-        <View style={{ paddingVertical: 24, alignItems: "center" }}>
+        <View testID="alerts-history-loading" className="py-6 items-center">
           <AlertHistorySectionTitle title="Đang tải..." color={colors.subtext} />
         </View>
       );
     }
     return (
-      <View style={{ paddingVertical: 24, alignItems: "center" }}>
+      <View testID="alerts-history-empty" className="py-6 items-center">
         <AlertHistorySectionTitle title="Không có cảnh báo nào" color={colors.subtext} />
       </View>
     );
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView
+      testID="alerts-history-screen"
+      className={`flex-1 ${isDarkColorScheme ? "bg-slate-950" : "bg-slate-50"}`}
+    >
       <StatusBar
         barStyle={isDarkColorScheme ? "light-content" : "dark-content"}
         backgroundColor={colors.background}
@@ -238,17 +244,13 @@ export default function AlertHistoryScreen() {
       />
 
       <View
-        style={{
-          position: "absolute",
-          top: floatingTop,
-          left: 0,
-          right: 0,
-          paddingHorizontal: 16,
-          zIndex: 9,
-          backgroundColor: colors.background,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border,
-        }}
+        testID="alerts-history-search-chips-container"
+        className={`absolute z-9 left-0 right-0 px-4 border-b ${
+          isDarkColorScheme
+            ? "bg-slate-950 border-b-slate-800"
+            : "bg-slate-50 border-b-slate-200"
+        }`}
+        style={{ top: floatingTop }}
       >
         <AlertHistorySearchBar
           value={query}
@@ -291,6 +293,7 @@ export default function AlertHistoryScreen() {
       </View>
 
       <FlatList
+        testID="alerts-history-list"
         data={listData}
         keyExtractor={(item, index) =>
           item.kind === "section" ? `section-${item.title}-${index}` : item.item.alertId

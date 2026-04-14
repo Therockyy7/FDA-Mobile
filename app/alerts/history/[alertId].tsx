@@ -29,7 +29,10 @@ export default function AlertHistoryDetailScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView
+      testID="alerts-history-detail-screen"
+      className={`flex-1 ${isDarkColorScheme ? "bg-slate-950" : "bg-slate-50"}`}
+    >
       <StatusBar
         barStyle={isDarkColorScheme ? "light-content" : "dark-content"}
         backgroundColor={colors.background}
@@ -37,40 +40,29 @@ export default function AlertHistoryDetailScreen() {
 
       {/* Header */}
       <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          gap: 12,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border,
-        }}
+        testID="alerts-history-detail-header"
+        className={`flex-row items-center px-4 py-3 gap-3 border-b ${
+          isDarkColorScheme
+            ? "bg-slate-950 border-b-slate-800"
+            : "bg-slate-50 border-b-slate-200"
+        }`}
       >
         <TouchableOpacity
+          testID="alerts-history-detail-back"
           onPress={() => router.back()}
           activeOpacity={0.7}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 12,
-            backgroundColor: isDarkColorScheme
-              ? "rgba(148,163,184,0.15)"
-              : "rgba(15,23,42,0.06)",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className={`w-9 h-9 rounded-3 items-center justify-center ${
+            isDarkColorScheme
+              ? "bg-slate-700/15"
+              : "bg-slate-900/6"
+          }`}
         >
           <Ionicons name="chevron-back" size={20} color={colors.text} />
         </TouchableOpacity>
 
         <Text
-          style={{
-            fontSize: 18,
-            fontWeight: "700",
-            color: colors.text,
-            flex: 1,
-          }}
+          testID="alerts-history-detail-title"
+          className="text-lg font-bold text-slate-900 dark:text-slate-50 flex-1"
         >
           Chi tiết cảnh báo
         </Text>
@@ -78,47 +70,28 @@ export default function AlertHistoryDetailScreen() {
 
       {/* Placeholder content */}
       <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          paddingHorizontal: 32,
-          gap: 16,
-        }}
+        testID="alerts-history-detail-content"
+        className="flex-1 items-center justify-center px-8 gap-4"
       >
         <View
-          style={{
-            width: 72,
-            height: 72,
-            borderRadius: 20,
-            backgroundColor: isDarkColorScheme
-              ? "rgba(19,127,236,0.15)"
-              : "rgba(19,127,236,0.08)",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className={`w-18 h-18 rounded-5 items-center justify-center ${
+            isDarkColorScheme
+              ? "bg-primary/15"
+              : "bg-primary/8"
+          }`}
         >
           <Ionicons name="document-text-outline" size={32} color={colors.primary} />
         </View>
 
         <Text
-          style={{
-            fontSize: 16,
-            fontWeight: "700",
-            color: colors.text,
-            textAlign: "center",
-          }}
+          testID="alerts-history-detail-alert-id"
+          className="text-lg font-bold text-slate-900 dark:text-slate-50 text-center"
         >
           Alert #{alertId}
         </Text>
         <Text
-          style={{
-            fontSize: 14,
-            fontWeight: "400",
-            color: colors.subtext,
-            textAlign: "center",
-            lineHeight: 20,
-          }}
+          testID="alerts-history-detail-description"
+          className="text-body-sm font-normal text-slate-600 dark:text-slate-400 text-center leading-relaxed"
         >
           Chi tiết cảnh báo sẽ được hiển thị đầy đủ tại đây bao gồm mực nước,
           kênh thông báo, và timeline xử lý.

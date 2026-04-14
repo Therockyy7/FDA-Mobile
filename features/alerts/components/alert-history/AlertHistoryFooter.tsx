@@ -26,15 +26,11 @@ export function AlertHistoryFooter({
 }: AlertHistoryFooterProps) {
   return (
     <View
-      style={{
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        alignItems: "center",
-        gap: 12,
-      }}
+      testID="alerts-history-footer"
+      className="py-3 px-4 items-center gap-3"
     >
       {/* Page indicator */}
-      <Text style={{ fontSize: 13, color: textColor }}>
+      <Text testID="alerts-history-footer-page-info" style={{ color: textColor }} className="text-body-sm">
         Trang {currentPage} / {totalPages}
       </Text>
 
@@ -43,28 +39,23 @@ export function AlertHistoryFooter({
         <ActivityIndicator size="small" color={textColor} />
       ) : hasNextPage ? (
         <TouchableOpacity
+          testID="alerts-history-footer-load-more"
           onPress={onLoadMore}
+          className="w-full py-3.5 rounded-xl items-center flex-row gap-1.5 border"
           style={{
-            width: "100%",
-            paddingVertical: 14,
             backgroundColor: inactiveBg,
-            borderRadius: 8,
-            alignItems: "center",
-            borderWidth: 1,
             borderColor: inactiveBorder,
-            flexDirection: "row",
-            gap: 6,
           }}
         >
-          <Text style={{ fontSize: 14, fontWeight: "600", color: textColor }}>
+          <Text testID="alerts-history-footer-load-more-text" style={{ color: textColor }} className="text-body-sm font-semibold">
             Xem thêm cảnh báo
           </Text>
           <Ionicons name="chevron-down" size={14} color={textColor} />
         </TouchableOpacity>
       ) : (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+        <View testID="alerts-history-footer-end" className="flex-row items-center gap-1">
           <Ionicons name="checkmark-circle" size={14} color={textColor} />
-          <Text style={{ fontSize: 13, color: textColor }}>
+          <Text style={{ color: textColor }} className="text-body-sm">
             Không còn cảnh báo cũ hơn.
           </Text>
         </View>

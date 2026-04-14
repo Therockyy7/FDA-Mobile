@@ -27,38 +27,32 @@ export function AlertHistoryValueCard({
 }: AlertHistoryValueCardProps) {
   return (
     <View
-      style={{
-        flex: 1,
-        backgroundColor: colors.mutedBg,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: colors.border,
-        padding: 12,
-      }}
+      testID="alerts-history-value-card"
+      className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-slate-100 dark:bg-slate-800"
     >
       <Text
-        style={{
-          fontSize: 10,
-          letterSpacing: 0.8,
-          color: colors.subtext,
-          marginBottom: 6,
-          textTransform: "uppercase",
-          fontWeight: "700",
-        }}
+        testID="alerts-history-value-card-label"
+        className="text-caption text-slate-600 dark:text-slate-400 mb-1.5 uppercase font-bold tracking-wider"
       >
         {label}
       </Text>
 
-      <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 6 }}>
-        <Text style={{ fontSize: 22, color: accent, fontWeight: "800" }}>{value}</Text>
+      <View className="flex-row items-end gap-1.5">
+        <Text
+          testID="alerts-history-value-card-value"
+          style={{ color: accent }}
+          className="text-2xl font-bold"
+        >
+          {value}
+        </Text>
         {unit ? (
-          <Text style={{ fontSize: 12, color: colors.subtext, marginBottom: 2 }}>
+          <Text testID="alerts-history-value-card-unit" className="text-body-sm text-slate-600 dark:text-slate-400 mb-0.5">
             {unit}
           </Text>
         ) : null}
       </View>
       {secondary ? (
-        <Text style={{ fontSize: 10, color: colors.subtext, marginTop: 2 }}>
+        <Text testID="alerts-history-value-card-secondary" className="text-caption text-slate-600 dark:text-slate-400 mt-0.5">
           {secondary}
         </Text>
       ) : null}

@@ -21,21 +21,13 @@ export function AlertHistorySearchBar({
   colors,
 }: AlertHistorySearchBarProps) {
   return (
-    <View style={{ position: "relative", marginBottom: 12 }}>
-      <View
-        style={{
-          position: "absolute",
-          left: 12,
-          top: 0,
-          bottom: 0,
-          justifyContent: "center",
-          zIndex: 1,
-        }}
-      >
+    <View testID="alerts-history-search-bar" className="relative mb-3">
+      <View className="absolute left-3 top-0 bottom-0 justify-center z-10">
         <Ionicons name="search" size={16} color={colors.subtext} />
       </View>
 
       <TextInput
+        testID="alerts-history-search-input"
         value={value}
         onChangeText={onChange}
         placeholder={placeholder}
@@ -46,7 +38,7 @@ export function AlertHistorySearchBar({
         returnKeyType="search"
         style={{
           backgroundColor: colors.inputBg,
-          borderRadius: 14,
+          borderRadius: 12,
           paddingVertical: 10,
           paddingLeft: 38,
           paddingRight: 12,

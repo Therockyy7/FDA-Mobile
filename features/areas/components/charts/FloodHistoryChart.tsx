@@ -5,6 +5,7 @@ import React, { useMemo } from "react";
 import { Dimensions, View } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import { Text } from "~/components/ui/text";
+import { MAP_COLORS, SEVERITY_PALETTE, SHADOW } from "~/lib/design-tokens";
 import type { FloodHistoryData } from "~/features/areas/types/flood-history.types";
 import { LoadingChart } from "./LoadingChart";
 
@@ -26,10 +27,10 @@ const SEVERITY_THRESHOLDS = {
 };
 
 const SEVERITY_COLORS = {
-  safe: "#10B981",
-  caution: "#FBBF24",
-  warning: "#F97316",
-  critical: "#EF4444",
+  safe:     SEVERITY_PALETTE.safe.primary,
+  caution:  SEVERITY_PALETTE.caution.primary,
+  warning:  SEVERITY_PALETTE.warning.primary,
+  critical: SEVERITY_PALETTE.critical.primary,
 };
 
 function getSeverityColor(valueMeters: number): string {
@@ -46,14 +47,16 @@ export function FloodHistoryChart({
   data,
   isLoading = false,
   isDark = false,
+  // JS-only exception: isDark prop for non-NativeWind contexts (chart library, dynamic styles)
   height = 220,
 }: FloodHistoryChartProps) {
+  const theme = isDark ? MAP_COLORS.dark : MAP_COLORS.light;
   const colors = {
-    background: isDark ? "#1E293B" : "#FFFFFF",
-    text: isDark ? "#F1F5F9" : "#1F2937",
-    subtext: isDark ? "#94A3B8" : "#6B7280",
-    border: isDark ? "#334155" : "#E2E8F0",
-    grid: isDark ? "#334155" : "#E5E7EB",
+    background: theme.card,
+    text: theme.text,
+    subtext: theme.subtext,
+    border: theme.border,
+    grid: isDark ? MAP_COLORS.dark.border : MAP_COLORS.light.border,
   };
 
   // Transform data for gifted-charts
@@ -105,12 +108,7 @@ export function FloodHistoryChart({
       <View
         style={{
           height,
-          backgroundColor: colors.background,
-          borderRadius: 16,
-          justifyContent: "center",
-          alignItems: "center",
-          borderWidth: 1,
-          borderColor: colors.border,
+          
         }}
       >
         <Ionicons name="analytics-outline" size={40} color={colors.subtext} />
@@ -122,7 +120,7 @@ export function FloodHistoryChart({
   }
 
   return (
-    <View
+    <View testID="areas-chart-history-root"
       style={{
         backgroundColor: colors.background,
         borderRadius: 16,
@@ -193,8 +191,8 @@ export function FloodHistoryChart({
           initialSpacing={15}
           endSpacing={15}
           thickness={2.5}
-          color="#007AFF"
-          dataPointsColor="#007AFF"
+          color={theme.accent}
+          dataPointsColor={theme.accent}
           dataPointsRadius={4}
           dataPointsHeight={8}
           dataPointsWidth={8}
@@ -219,9 +217,9 @@ export function FloodHistoryChart({
           yAxisLabelWidth={35}
           pointerConfig={{
             pointerStripHeight: height - 120,
-            pointerStripColor: "#007AFF",
+            pointerStripColor: theme.accent,
             pointerStripWidth: 2,
-            pointerColor: "#007AFF",
+            pointerColor: theme.accent,
             radius: 6,
             pointerLabelWidth: 100,
             pointerLabelHeight: 50,
@@ -231,16 +229,12 @@ export function FloodHistoryChart({
               return (
                 <View
                   style={{
-                    backgroundColor: isDark ? "#1E293B" : "#FFFFFF",
+                    backgroundColor: isDark ? theme.card : theme.card,
                     padding: 8,
                     borderRadius: 8,
                     borderWidth: 1,
                     borderColor: colors.border,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.15,
-                    shadowRadius: 4,
-                    elevation: 4,
+                    ...SHADOW.sm,
                   }}
                 >
                   <Text

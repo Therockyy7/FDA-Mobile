@@ -1,59 +1,8 @@
 // features/alerts/components/alert-history/AlertHistoryChips.tsx
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { TouchableOpacity, View } from "react-native";
-import { Text } from "~/components/ui/text";
-
-interface ChipProps {
-  active: boolean;
-  label: string;
-  rightIcon?: string;
-  colors: {
-    primary: string;
-    subtext: string;
-    chipBg: string;
-    border: string;
-  };
-  onPress: () => void;
-}
-
-function Chip({ active, label, rightIcon, colors, onPress }: ChipProps) {
-  return (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      onPress={onPress}
-      style={{
-        height: 36,
-        paddingHorizontal: 14,
-        borderRadius: 999,
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "row",
-        gap: 8,
-        backgroundColor: active ? colors.primary : colors.chipBg,
-        borderWidth: active ? 0 : 1,
-        borderColor: colors.border,
-      }}
-    >
-      <Text
-        style={{
-          fontSize: 12,
-          fontWeight: "800",
-          color: active ? "#fff" : colors.subtext,
-        }}
-      >
-        {label}
-      </Text>
-      {rightIcon ? (
-        <Ionicons
-          name={rightIcon as any}
-          size={14}
-          color={active ? "#fff" : colors.subtext}
-        />
-      ) : null}
-    </TouchableOpacity>
-  );
-}
+import { ScrollView, TouchableOpacity, View } from "react-native";
+import { Pill } from "~/components/ui/Pill";
 
 export type AlertHistorySeverityFilter =
   | "all"
@@ -90,7 +39,7 @@ export function AlertHistoryChips({
   colors,
 }: AlertHistoryChipsProps) {
   const labelMap: Record<AlertHistorySeverityFilter, string> = {
-    all: "Tất cả ",
+    all: "Tất cả",
     critical: "Nguy hiểm",
     warning: "Cảnh báo",
     caution: "Chú ý",
@@ -102,47 +51,67 @@ export function AlertHistoryChips({
       : `${labelMap[activeSeverity]} (${severityCounts[activeSeverity]})`;
 
   return (
-    <View style={{ gap: 8, paddingBottom: 8 }}>
-      <View style={{ flexDirection: "row", gap: 10 }}>
-        <Chip
-          active={activeSeverity !== "all"}
-          label={activeLabel}
-          rightIcon={dropdownOpen ? "chevron-up" : "chevron-down"}
-          colors={colors}
+    <View testID="alerts-history-chips" className="gap-2 pb-2">
+      <View className="flex-row gap-2.5">
+        <TouchableOpacity
+          testID="alerts-history-chips-severity-toggle"
           onPress={onToggleDropdown}
-        />
+          activeOpacity={0.7}
+        >
+          <Pill
+            label={activeLabel}
+            leftIcon={
+              dropdownOpen ? (
+                <Ionicons name="chevron-up" size={12} color="#fff" />
+              ) : (
+                <Ionicons name="chevron-down" size={12} color="#fff" />
+              )
+            }
+            variant={activeSeverity !== "all" ? "filled" : "outline"}
+            className="h-9"
+          />
+        </TouchableOpacity>
 
-        <Chip
-          active={false}
-          label="30 ngày"
-          rightIcon="calendar-outline"
-          colors={colors}
+        <TouchableOpacity
+          testID="alerts-history-chips-30days"
           onPress={onSelectLast30Days}
-        />
+          activeOpacity={0.7}
+        >
+          <Pill
+            label="30 ngày"
+            leftIcon={<Ionicons name="calendar-outline" size={12} color="#fff" />}
+            variant="outline"
+            className="h-9"
+          />
+        </TouchableOpacity>
       </View>
 
       {dropdownOpen ? (
-        <View
-          style={{
-            flexDirection: "row",
-            gap: 8,
-            flexWrap: "wrap",
-          }}
-        >
-          <Chip
-            active={activeSeverity === "all"}
-            label={`${labelMap.all} (${totalCount})`}
-            colors={colors}
+        <View className="flex-row gap-2 flex-wrap">
+          <TouchableOpacity
+            testID="alerts-history-chips-all"
             onPress={onSelectAll}
-          />
-          {(["critical", "warning", "caution"] as const).map((severity) => (
-            <Chip
-              key={severity}
-              active={activeSeverity === severity}
-              label={`${labelMap[severity]} (${severityCounts[severity]})`}
-              colors={colors}
-              onPress={() => onSelectSeverity(severity)}
+            activeOpacity={0.7}
+          >
+            <Pill
+              label={`${labelMap.all} (${totalCount})`}
+              variant={activeSeverity === "all" ? "filled" : "outline"}
+              className="h-9"
             />
+          </TouchableOpacity>
+          {(["critical", "warning", "caution"] as const).map((severity) => (
+            <TouchableOpacity
+              key={severity}
+              testID={`alerts-history-chips-${severity}`}
+              onPress={() => onSelectSeverity(severity)}
+              activeOpacity={0.7}
+            >
+              <Pill
+                label={`${labelMap[severity]} (${severityCounts[severity]})`}
+                variant={activeSeverity === severity ? "filled" : "outline"}
+                className="h-9"
+              />
+            </TouchableOpacity>
           ))}
         </View>
       ) : null}

@@ -1,10 +1,10 @@
 // features/alerts/components/alert-history/AlertHistorySectionTitle.tsx
 import React from "react";
-import { Text } from "~/components/ui/text";
+import { SectionHeader } from "~/components/ui/SectionHeader";
 
 interface AlertHistorySectionTitleProps {
   title: string;
-  color: string;
+  color?: string;
 }
 
 export function AlertHistorySectionTitle({
@@ -12,18 +12,11 @@ export function AlertHistorySectionTitle({
   color,
 }: AlertHistorySectionTitleProps) {
   return (
-    <Text
-      style={{
-        fontSize: 12,
-        letterSpacing: 2,
-        color,
-        textTransform: "uppercase",
-        paddingLeft: 4,
-        fontWeight: "800",
-      }}
-    >
-      {title}
-    </Text>
+    <SectionHeader
+      testID="alerts-history-section-title"
+      title={title}
+      className={color ? `text-[${color}]` : ""}
+    />
   );
 }
 

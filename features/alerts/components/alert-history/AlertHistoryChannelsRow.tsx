@@ -15,20 +15,21 @@ export function AlertHistoryChannelsRow({
   subtext,
 }: AlertHistoryChannelsRowProps) {
   return (
-    <View style={{ flexDirection: "row", gap: 16, flexWrap: "wrap" }}>
+    <View testID="alerts-history-channels-row" className="flex-row gap-4 flex-wrap">
       {channels.map((channel) => {
         const ok = channel.statusName === "sent";
         return (
           <View
             key={channel.notificationId}
-            style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+            testID={`alerts-history-channel-${channel.channelName}`}
+            className="flex-row items-center gap-1.5"
           >
             <Ionicons
               name={ok ? "checkmark-circle" : "alert-circle"}
               size={14}
               color={ok ? "#22C55E" : "#EF4444"}
             />
-            <Text style={{ fontSize: 11, color: subtext }}>
+            <Text className="text-caption text-slate-600 dark:text-slate-400">
               {channel.channelName} {ok ? "Sent" : channel.statusName}
             </Text>
           </View>

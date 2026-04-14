@@ -1,9 +1,11 @@
 // features/areas/components/charts/ChartPeriodSelector.tsx
 // Time range selector tabs for flood charts with custom option
+import { SHADOW } from "~/lib/design-tokens";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { ScrollView, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { MAP_COLORS } from "~/lib/design-tokens";
 import {
   CHART_PERIODS,
   type ChartPeriod,
@@ -28,12 +30,14 @@ export function ChartPeriodSelector({
 }: ChartPeriodSelectorProps) {
   const isCustomSelected = selectedPeriod === "custom";
 
+  // JS-only exception: isDark for non-NativeWind chart context
+  const theme = isDark ? MAP_COLORS.dark : MAP_COLORS.light;
   const colors = {
-    background: isDark ? "#1E293B" : "#F1F5F9",
-    selectedBg: isDark ? "#007AFF" : "#FFFFFF",
-    selectedText: isDark ? "#FFFFFF" : "#007AFF",
-    normalText: isDark ? "#94A3B8" : "#64748B",
-    customBg: isDark ? "#0B1A33" : "#E2E8F0",
+    background: isDark ? MAP_COLORS.dark.card : MAP_COLORS.light.divider,
+    selectedBg: isDark ? MAP_COLORS.dark.accent : MAP_COLORS.light.card,
+    selectedText: isDark ? "white" : MAP_COLORS.light.accent,
+    normalText: isDark ? MAP_COLORS.dark.subtext : MAP_COLORS.light.subtext,
+    customBg: isDark ? MAP_COLORS.dark.background : MAP_COLORS.light.border,
   };
 
   const handleCustomPress = () => {
@@ -42,7 +46,7 @@ export function ChartPeriodSelector({
   };
 
   return (
-    <View style={{ gap: 8 }}>
+    <View testID="areas-chart-period-selector" style={{ gap: 8 }}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -68,11 +72,7 @@ export function ChartPeriodSelector({
                 alignItems: "center",
                 borderRadius: 10,
                 backgroundColor: isSelected ? colors.selectedBg : "transparent",
-                shadowColor: isSelected ? "#000" : "transparent",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: isSelected ? (isDark ? 0.3 : 0.1) : 0,
-                shadowRadius: 4,
-                elevation: isSelected ? 3 : 0,
+                                ...(isSelected ? SHADOW.sm : {}),
               }}
               activeOpacity={0.7}
             >
@@ -104,11 +104,7 @@ export function ChartPeriodSelector({
               backgroundColor: isCustomSelected
                 ? colors.selectedBg
                 : "transparent",
-              shadowColor: isCustomSelected ? "#000" : "transparent",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: isCustomSelected ? (isDark ? 0.3 : 0.1) : 0,
-              shadowRadius: 4,
-              elevation: isCustomSelected ? 3 : 0,
+                            ...(isCustomSelected ? SHADOW.sm : {}),
             }}
             activeOpacity={0.7}
           >
@@ -147,11 +143,11 @@ export function ChartPeriodSelector({
             borderRadius: 8,
           }}
         >
-          <Ionicons name="calendar" size={14} color="#007AFF" />
-          <Text style={{ fontSize: 12, fontWeight: "600", color: "#007AFF" }}>
+          <Ionicons name="calendar" size={14} color={theme.accent} />
+          <Text style={{ fontSize: 12, fontWeight: "600", color: theme.accent }}>
             {customDateLabel}
           </Text>
-          <Ionicons name="chevron-down" size={14} color="#007AFF" />
+          <Ionicons name="chevron-down" size={14} color={theme.accent} />
         </TouchableOpacity>
       )}
     </View>

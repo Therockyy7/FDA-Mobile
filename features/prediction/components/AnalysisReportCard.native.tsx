@@ -1,6 +1,6 @@
 /**
  * AnalysisReportCard - Native Version (No Tamagui)
- * 
+ *
  * Version này không dùng Tamagui, chỉ dùng React Native core components
  * Sử dụng khi gặp issue với Tamagui config
  */
@@ -18,7 +18,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text as RNText } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { clsx } from "clsx";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW } from "~/lib/design-tokens";
 
 // ==================== TYPES ====================
 interface ParsedFloodData {
@@ -226,12 +226,11 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
 export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
   advice,
 }) => {
-  const { isDarkColorScheme } = useColorScheme();
   const parsedData = parseFloodData(advice);
   const riskConfig = getRiskConfig(parsedData.level);
 
   return (
-    <View style={{ gap: 16, marginBottom: 16 }}>
+    <View testID="prediction-report-card" style={{ gap: 16, marginBottom: 16 }}>
       {/* Hero Section */}
       <MotiView
         from={{ opacity: 0, scale: 0.95 }}
@@ -239,22 +238,11 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
         transition={{ type: "timing", duration: 500 }}
       >
         <View
-          style={{
-            borderRadius: 24,
-            overflow: "hidden",
-            shadowColor: riskConfig.glowColor,
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.3,
-            shadowRadius: 20,
-            elevation: 10,
-          }}
+          testID="prediction-report-risk-overview"
+          style={{ borderRadius: 24, overflow: "hidden", ...SHADOW.md }}
         >
           <LinearGradient
-            colors={
-              isDarkColorScheme
-                ? ["rgba(30, 41, 59, 0.95)", "rgba(15, 23, 42, 0.95)"]
-                : ["rgba(255, 255, 255, 0.95)", "rgba(241, 245, 249, 0.95)"]
-            }
+            colors={["rgba(255, 255, 255, 0.95)", "rgba(241, 245, 249, 0.95)"]}
             style={{ padding: 24 }}
           >
             <View style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
@@ -272,12 +260,8 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
                   transition={{ type: "timing", delay: 400 }}
                 >
                   <RNText
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "700",
-                      color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-                      letterSpacing: 1.5,
-                    }}
+                    style={{ fontSize: 12, fontWeight: "700", letterSpacing: 1.5 }}
+                    className="text-slate-500 dark:text-slate-400"
                   >
                     MỨC ĐỘ RỦI RO
                   </RNText>
@@ -299,13 +283,9 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
                       alignSelf: "flex-start",
                     }}
                   >
-                    <RNText
-                      style={{
-                        fontSize: 24,
-                        fontWeight: "900",
-                        color: "#FFFFFF",
-                        letterSpacing: 1,
-                      }}
+                  <RNText
+                    testID="prediction-report-risk-label"
+                    style={{ fontSize: 24, fontWeight: "900", color: "#FFFFFF", letterSpacing: 1 }}
                     >
                       {riskConfig.label}
                     </RNText>
@@ -318,11 +298,8 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
                   transition={{ type: "timing", delay: 600 }}
                 >
                   <RNText
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "600",
-                      color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-                    }}
+                    style={{ fontSize: 12, fontWeight: "600" }}
+                    className="text-slate-500 dark:text-slate-400"
                   >
                     Phân tích dựa trên {parsedData.recommendations.length} yếu tố
                   </RNText>
@@ -335,17 +312,12 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
 
       {/* Metrics Grid */}
       <View
+        testID="prediction-report-metrics"
         className={clsx(
           "rounded-3xl p-4",
-          isDarkColorScheme ? "bg-slate-800/50" : "bg-white/80"
+          "bg-white/80"
         )}
-        style={{
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.08,
-          shadowRadius: 12,
-          elevation: 4,
-        }}
+        style={SHADOW.md}
       >
         <View style={{ gap: 12 }}>
           <MotiView
@@ -357,18 +329,18 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
               <View
                 className={clsx(
                   "w-8 h-8 rounded-lg items-center justify-center",
-                  isDarkColorScheme ? "bg-[#007AFF]/20" : "bg-blue-400/20"
+                  "bg-blue-400/20"
                 )}
               >
                 <TrendingUp
                   size={16}
-                  color={isDarkColorScheme ? "#38BDF8" : "#007AFF"}
+                  color={"#007AFF"}
                 />
               </View>
               <RNText
                 className={clsx(
                   "text-base font-bold",
-                  isDarkColorScheme ? "text-white" : "text-gray-900"
+                  "text-gray-900"
                 )}
               >
                 Thông số phân tích
@@ -408,27 +380,28 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
                 style={{ flex: 1 }}
               >
                 <View
+                  testID={`prediction-report-metric-${metric.label}`}
                   className={clsx(
                     "rounded-2xl p-4",
-                    isDarkColorScheme ? "bg-white/5" : "bg-white/10"
+                    "bg-white/10"
                   )}
                 >
                   <View style={{ gap: 8, alignItems: "center" }}>
                     <View
                       className={clsx(
                         "w-10 h-10 rounded-xl items-center justify-center",
-                        isDarkColorScheme ? "bg-[#007AFF]/20" : "bg-blue-400/30"
+                        "bg-blue-400/30"
                       )}
                     >
                       <metric.icon
                         size={20}
-                        color={isDarkColorScheme ? "#38BDF8" : "#007AFF"}
+                        color={"#007AFF"}
                       />
                     </View>
                     <RNText
                       className={clsx(
                         "text-xs font-semibold uppercase tracking-wider",
-                        isDarkColorScheme ? "text-gray-400" : "text-gray-600"
+                        "text-gray-600"
                       )}
                     >
                       {metric.label}
@@ -436,7 +409,7 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
                     <RNText
                       className={clsx(
                         "text-2xl font-black",
-                        isDarkColorScheme ? "text-white" : "text-gray-900"
+                        "text-gray-900"
                       )}
                     >
                       {metric.value}%
@@ -452,17 +425,12 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
       {/* Recommendations */}
       {parsedData.recommendations.length > 0 && (
         <View
+          testID="prediction-report-recommendations"
           className={clsx(
             "rounded-3xl p-5",
-            isDarkColorScheme ? "bg-slate-800/50" : "bg-white/80"
+            "bg-white/80"
           )}
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.08,
-            shadowRadius: 12,
-            elevation: 4,
-          }}
+          style={SHADOW.md}
         >
           <View style={{ gap: 12 }}>
             <MotiView
@@ -486,7 +454,7 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
                 <RNText
                   className={clsx(
                     "text-base font-bold",
-                    isDarkColorScheme ? "text-white" : "text-gray-900"
+                    "text-gray-900"
                   )}
                 >
                   Khuyến nghị hành động
@@ -506,9 +474,10 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
                   }}
                 >
                   <View
+                    testID={`prediction-report-rec-${index}`}
                     className={clsx(
                       "rounded-xl p-3",
-                      isDarkColorScheme ? "bg-white/5" : "bg-white/20"
+                      "bg-white/20"
                     )}
                     style={{ flexDirection: "row", gap: 12, alignItems: "flex-start" }}
                   >
@@ -518,7 +487,7 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
                     <RNText
                       className={clsx(
                         "flex-1 text-sm font-medium leading-5",
-                        isDarkColorScheme ? "text-gray-200" : "text-gray-800"
+                        "text-gray-800"
                       )}
                     >
                       {rec}

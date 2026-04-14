@@ -24,6 +24,7 @@ export function AlertSettingsHeader({
 }: AlertSettingsHeaderProps) {
   return (
     <View
+      testID="alerts-settings-header"
       style={{
         backgroundColor: colors.background,
         paddingTop: topInset + 8,
@@ -35,37 +36,22 @@ export function AlertSettingsHeader({
     >
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <TouchableOpacity
+          testID="alerts-settings-back-button"
           onPress={onBack}
           activeOpacity={0.8}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 12,
-            backgroundColor: "#334155",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="w-9 h-9 rounded-xl bg-slate-700 items-center justify-center"
         >
           <Ionicons name="arrow-back" size={18} color="white" />
         </TouchableOpacity>
 
         <TouchableOpacity
+          testID="alerts-settings-threshold-button"
           onPress={onThresholdPress}
           activeOpacity={0.85}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 6,
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            borderRadius: 12,
-            backgroundColor: "#1E293B",
-            borderWidth: 1,
-            borderColor: "#334155",
-          }}
+          className="flex-row items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700"
         >
           <Ionicons name="options" size={16} color="#F59E0B" />
-          <Text style={{ fontSize: 12, fontWeight: "700", color: "#F8FAFC" }}>
+          <Text className="text-xs font-bold text-slate-50">
             Ngưỡng cảnh báo
           </Text>
         </TouchableOpacity>
@@ -73,6 +59,7 @@ export function AlertSettingsHeader({
 
       <View style={{ marginTop: 14 }}>
         <Text
+          testID="alerts-settings-area-name"
           style={{
             fontSize: 24,
             fontWeight: "700",
@@ -83,8 +70,9 @@ export function AlertSettingsHeader({
           {areaName}
         </Text>
         <Text
+          testID="alerts-settings-description"
           style={{
-            fontSize: 13,
+            fontSize: 14,
             color: colors.subtext,
             marginTop: 4,
           }}

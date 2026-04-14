@@ -9,12 +9,11 @@ import { Text } from "~/components/ui/text";
 import { FloodRoute } from "~/features/map/constants/map-data";
 import { getStatusColor } from "~/features/map/lib/map-utils";
 import {
-  CARD_SHADOW,
   PULSE_ANIM,
-  RADIUS,
   STATUS_BADGE,
   useMapColors,
 } from "~/features/map/lib/map-ui-utils";
+import { RADIUS, SHADOW } from "~/lib/design-tokens";
 
 interface RouteDetailCardProps {
   route: FloodRoute;
@@ -32,17 +31,21 @@ const LIGHT_BG_GRID = "#F9FAFB";
 
 function getDirectionIcon(direction: string) {
   switch (direction) {
-    case "north": return "arrow-up";
-    case "south": return "arrow-down";
-    case "east": return "arrow-forward";
-    case "west": return "arrow-back";
-    default: return "arrow-up";
+    case "north":
+      return "arrow-up";
+    case "south":
+      return "arrow-down";
+    case "east":
+      return "arrow-forward";
+    case "west":
+      return "arrow-back";
+    default:
+      return "arrow-up";
   }
 }
 
 function GridItem({
   icon,
-  iconColor,
   label,
   value,
   bgColor,
@@ -64,7 +67,14 @@ function GridItem({
         borderRadius: RADIUS.chip,
       }}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6, gap: 6 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          marginBottom: 6,
+          gap: 6,
+        }}
+      >
         {icon}
         <Text style={{ fontSize: 11, color: colors.muted }}>{label}</Text>
       </View>
@@ -75,7 +85,10 @@ function GridItem({
   );
 }
 
-export function RouteDetailCard({ route, onClose }: RouteDetailCardProps) {
+export const RouteDetailCard = React.memo(function RouteDetailCard({
+  route,
+  onClose,
+}: RouteDetailCardProps) {
   const colors = useMapColors();
   const status = getStatusColor(route.status);
   const statusCfg = STATUS_CONFIG[route.status] ?? STATUS_CONFIG.safe;
@@ -109,7 +122,10 @@ export function RouteDetailCard({ route, onClose }: RouteDetailCardProps) {
   }, [route.status, pulseAnim]);
 
   return (
-    <Animated.View style={{ flex: 1, transform: [{ scale: pulseAnim }] }}>
+    <Animated.View
+      style={{ flex: 1, transform: [{ scale: pulseAnim }] }}
+      testID="map-route-card"
+    >
       {/* Gradient Header */}
       <LinearGradient
         colors={[status.main, status.text]}
@@ -143,13 +159,30 @@ export function RouteDetailCard({ route, onClose }: RouteDetailCardProps) {
           }}
         >
           <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6, gap: 8 }}>
-              <MaterialCommunityIcons name="road-variant" size={24} color="white" />
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 6,
+                gap: 8,
+              }}
+            >
+              <MaterialCommunityIcons
+                name="road-variant"
+                size={24}
+                color="white"
+              />
               <Text style={{ fontSize: 20, fontWeight: "800", color: "white" }}>
                 {route.name}
               </Text>
             </View>
-            <Text style={{ fontSize: 13, fontWeight: "600", color: "rgba(255,255,255,0.9)" }}>
+            <Text
+              style={{
+                fontSize: 13,
+                fontWeight: "600",
+                color: "rgba(255,255,255,0.9)",
+              }}
+            >
               {route.description}
             </Text>
           </View>
@@ -199,10 +232,24 @@ export function RouteDetailCard({ route, onClose }: RouteDetailCardProps) {
               justifyContent: "center",
             }}
           >
-            <Text style={{ fontSize: 48, fontWeight: "900", color: "white", lineHeight: 52 }}>
+            <Text
+              style={{
+                fontSize: 48,
+                fontWeight: "900",
+                color: "white",
+                lineHeight: 52,
+              }}
+            >
               {route.waterLevel}
             </Text>
-            <Text style={{ fontSize: 20, fontWeight: "700", color: "white", marginLeft: 6 }}>
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: "700",
+                color: "white",
+                marginLeft: 6,
+              }}
+            >
               cm
             </Text>
           </View>
@@ -230,7 +277,13 @@ export function RouteDetailCard({ route, onClose }: RouteDetailCardProps) {
       </LinearGradient>
 
       {/* Content */}
-      <View style={[{ padding: 20 }, CARD_SHADOW, { backgroundColor: colors.card, borderRadius: RADIUS.card }]}>
+      <View
+        style={[
+          { padding: 20 },
+          SHADOW.md,
+          { backgroundColor: colors.card, borderRadius: RADIUS.card },
+        ]}
+      >
         {/* Status Badge — standard pattern */}
         <View
           style={{
@@ -273,30 +326,53 @@ export function RouteDetailCard({ route, onClose }: RouteDetailCardProps) {
         {/* Info Grid */}
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
           <GridItem
-            icon={<Ionicons name="resize-outline" size={18} color={colors.subtext} />}
+            icon={
+              <Ionicons
+                name="resize-outline"
+                size={18}
+                color={colors.subtext}
+              />
+            }
             label="Chiều dài"
             value={`${route.length} km`}
             bgColor={gridBg}
           />
           <GridItem
-            icon={<MaterialCommunityIcons name="waves" size={18} color={colors.subtext} />}
+            icon={
+              <MaterialCommunityIcons
+                name="waves"
+                size={18}
+                color={colors.subtext}
+              />
+            }
             label="Tốc độ dòng"
             value={`${route.flowSpeed} m/s`}
             bgColor={gridBg}
           />
           <GridItem
-            icon={<Ionicons name={getDirectionIcon(route.direction) as any} size={18} color={colors.subtext} />}
+            icon={
+              <Ionicons
+                name={getDirectionIcon(route.direction) as any}
+                size={18}
+                color={colors.subtext}
+              />
+            }
             label="Hướng chảy"
             value={
-              route.direction === "north" ? "Bắc"
-              : route.direction === "south" ? "Nam"
-              : route.direction === "east" ? "Đông"
-              : "Tây"
+              route.direction === "north"
+                ? "Bắc"
+                : route.direction === "south"
+                  ? "Nam"
+                  : route.direction === "east"
+                    ? "Đông"
+                    : "Tây"
             }
             bgColor={gridBg}
           />
           <GridItem
-            icon={<Ionicons name="time-outline" size={18} color={colors.subtext} />}
+            icon={
+              <Ionicons name="time-outline" size={18} color={colors.subtext} />
+            }
             label="Cập nhật"
             value="2 phút trước"
             bgColor={gridBg}
@@ -305,4 +381,4 @@ export function RouteDetailCard({ route, onClose }: RouteDetailCardProps) {
       </View>
     </Animated.View>
   );
-}
+});

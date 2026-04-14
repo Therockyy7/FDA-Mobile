@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import type { CreationOption } from "~/features/map/types/area.types";
-import { RADIUS } from "~/features/map/lib/map-ui-utils";
+import { RADIUS, SHADOW } from "~/lib/design-tokens";
 
 export type { CreationOption };
 const { height: _SCREEN_HEIGHT } = Dimensions.get("window");
@@ -168,11 +168,7 @@ const styles = StyleSheet.create({
     right: 0,
     borderTopLeftRadius: RADIUS.sheet,
     borderTopRightRadius: RADIUS.sheet,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 18,
+    ...SHADOW.lg,
     paddingHorizontal: 16,
   },
   handleArea: { alignItems: "center", paddingTop: 12, paddingBottom: 6 },

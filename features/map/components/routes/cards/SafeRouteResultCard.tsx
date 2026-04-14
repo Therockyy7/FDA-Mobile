@@ -6,7 +6,8 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { formatDistance, formatDuration } from "~/features/map/lib/polyline-utils";
-import { CARD_SHADOW, STATUS_BADGE, RADIUS } from "~/features/map/lib/map-ui-utils";
+import { SHADOW, FLOOD_COLORS, RADIUS } from "~/lib/design-tokens";
+import { STATUS_BADGE } from "~/features/map/lib/map-ui-utils";
 import type { DecodedRoute, FloodWarningDto, RouteMetadata } from "~/features/map/types/safe-route.types";
 import {
   SAFETY_STATUS_COLORS,
@@ -28,7 +29,7 @@ interface SafeRouteResultCardProps {
   isGuest?: boolean;
 }
 
-export function SafeRouteResultCard({
+export const SafeRouteResultCard = React.memo(function SafeRouteResultCard({
   route,
   floodWarnings,
   metadata,
@@ -47,17 +48,21 @@ export function SafeRouteResultCard({
   const statusIcon = SAFETY_STATUS_ICONS[route.safetyStatus] as any;
 
   const riskColor =
-    route.floodRiskScore > 60 ? "#EF4444"
-    : route.floodRiskScore > 30 ? "#F59E0B"
-    : "#10B981";
+    route.floodRiskScore > 60 ? FLOOD_COLORS.danger
+    : route.floodRiskScore > 30 ? FLOOD_COLORS.warning
+    : FLOOD_COLORS.safe;
 
   const bg = isDark ? "rgba(30,41,59,0.95)" : "rgba(255,255,255,0.97)";
   const text = isDark ? "#F1F5F9" : "#1E293B";
   const muted = isDark ? "#64748B" : "#94A3B8";
   const border = isDark ? "#334155" : "#F1F5F9";
+  const statBg = isDark ? "#334155" : "#F8FAFC";
 
   return (
-    <View style={[styles.card, CARD_SHADOW, { backgroundColor: bg, borderColor: border }]}>
+    <View
+      style={[styles.card, SHADOW.md, { backgroundColor: bg, borderColor: border }]}
+      testID="map-route-result-card"
+    >
       {/* Header row */}
       <View style={styles.headerRow}>
         {/* Status badge */}
@@ -77,17 +82,17 @@ export function SafeRouteResultCard({
 
       {/* Stats row */}
       <View style={styles.statsRow}>
-        <View style={[styles.statItem, { backgroundColor: isDark ? "#334155" : "#F8FAFC" }]}>
+        <View style={[styles.statItem, { backgroundColor: statBg }]}>
           <Ionicons name="speedometer-outline" size={16} color={muted} />
           <Text style={[styles.statValue, { color: text }]}>{formatDistance(route.distance)}</Text>
           <Text style={[styles.statLabel, { color: muted }]}>Khoảng cách</Text>
         </View>
-        <View style={[styles.statItem, { backgroundColor: isDark ? "#334155" : "#F8FAFC" }]}>
+        <View style={[styles.statItem, { backgroundColor: statBg }]}>
           <Ionicons name="time-outline" size={16} color={muted} />
           <Text style={[styles.statValue, { color: text }]}>{formatDuration(route.time)}</Text>
           <Text style={[styles.statLabel, { color: muted }]}>Thời gian</Text>
         </View>
-        <View style={[styles.statItem, { backgroundColor: isDark ? "#334155" : "#F8FAFC" }]}>
+        <View style={[styles.statItem, { backgroundColor: statBg }]}>
           <Ionicons name="shield-outline" size={16} color={muted} />
           <Text style={[styles.statValue, { color: riskColor }]}>{route.floodRiskScore}</Text>
           <Text style={[styles.statLabel, { color: muted }]}>Rủi ro</Text>
@@ -118,7 +123,7 @@ export function SafeRouteResultCard({
           </TouchableOpacity>
         ) : (
           <View style={styles.safePill}>
-            <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+            <Ionicons name="checkmark-circle" size={14} color={FLOOD_COLORS.safe} />
             <Text style={styles.safeText}>Không có cảnh báo</Text>
           </View>
         )}
@@ -147,7 +152,7 @@ export function SafeRouteResultCard({
         <TouchableOpacity
           onPress={onStartNavigation}
           activeOpacity={0.85}
-          style={styles.navBtn}
+          style={[styles.navBtn, SHADOW.md]}
         >
           <Ionicons name="navigate" size={17} color="white" />
           <Text style={styles.navBtnText}>Bắt đầu dẫn đường</Text>
@@ -155,7 +160,7 @@ export function SafeRouteResultCard({
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {
@@ -211,7 +216,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   statLabel: {
-    fontSize: 10,
+    fontSize: 11,
   },
   footer: {
     flexDirection: "row",
@@ -255,11 +260,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    shadowColor: "#2563EB",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
   },
   navBtnText: {
     color: "white",

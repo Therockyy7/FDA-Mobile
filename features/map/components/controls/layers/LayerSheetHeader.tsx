@@ -7,42 +7,21 @@ import { Text } from "~/components/ui/text";
 
 interface LayerSheetHeaderProps {
   onClose: () => void;
-  accentColor: string;
-  textColor: string;
-  subtextColor: string;
-  cardBg: string;
-  borderColor: string;
 }
 
-export function LayerSheetHeader({
-  onClose,
-  accentColor,
-  textColor,
-  subtextColor,
-  cardBg,
-}: LayerSheetHeaderProps) {
+export function LayerSheetHeader({ onClose }: LayerSheetHeaderProps) {
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={[styles.header, { borderBottomColor: subtextColor }]}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              backgroundColor: `${accentColor}20`,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <MaterialIcons name="layers" size={22} color={accentColor} />
+    <View className="px-5 py-4">
+      <View className="flex-row items-center justify-between border-b border-border">
+        <View className="flex-row items-center gap-3">
+          <View className="w-10 h-10 rounded-xl bg-primary/20 items-center justify-center">
+            <MaterialIcons name="layers" size={22} color="#007AFF" />
           </View>
           <View>
-            <Text style={{ fontSize: 18, fontWeight: "700", color: textColor }}>
+            <Text className="text-lg font-bold text-foreground" testID="map-layer-header-title">
               Lớp bản đồ
             </Text>
-            <Text style={{ fontSize: 12, color: subtextColor }}>
+            <Text className="text-xs text-muted-foreground">
               Tùy chỉnh hiển thị
             </Text>
           </View>
@@ -50,31 +29,12 @@ export function LayerSheetHeader({
 
         <TouchableOpacity
           onPress={onClose}
-          style={[styles.closeBtn, { backgroundColor: cardBg }]}
+          className="w-9 h-9 rounded-full bg-muted items-center justify-center"
+          testID="map-layer-sheet-close-btn"
         >
-          <Ionicons name="close" size={20} color={subtextColor} />
+          <Ionicons name="close" size={20} className="text-muted-foreground" color="#64748B" />
         </TouchableOpacity>
       </View>
     </View>
   );
 }
-
-const styles = {
-  container: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  header: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-    borderBottomWidth: 1,
-  },
-  closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-};

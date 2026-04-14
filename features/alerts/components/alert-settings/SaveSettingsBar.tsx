@@ -19,6 +19,7 @@ export function SaveSettingsBar({
 }: SaveSettingsBarProps) {
   return (
     <View
+      testID="alerts-settings-save-bar"
       style={{
         position: "absolute",
         bottom: 0,
@@ -28,10 +29,11 @@ export function SaveSettingsBar({
         borderTopWidth: 1,
         borderTopColor: colors.border,
         padding: 20,
-        paddingBottom: Math.max(bottomInset, 20),
+        paddingBottom: Math.max(Math.max(bottomInset, 0), 20),
       }}
     >
       <TouchableOpacity
+        testID="alerts-settings-save-button"
         onPress={onSave}
         disabled={isSaving}
         activeOpacity={0.8}

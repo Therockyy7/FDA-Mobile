@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { formatRadius } from "~/features/map/lib/formatters";
+import { SHADOW } from "~/lib/design-tokens";
 
 interface RadiusAdjustBarProps {
   visible: boolean;
@@ -67,11 +68,7 @@ export function RadiusAdjustBar({
         backgroundColor: colors.background,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
-        elevation: 16,
+        ...SHADOW.lg,
       }}
     >
       {/* Header with instructions */}

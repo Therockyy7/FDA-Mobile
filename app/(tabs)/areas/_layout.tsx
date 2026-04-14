@@ -1,12 +1,16 @@
-// app/(tabs)/notifications/_layout.tsx
+// app/(tabs)/areas/_layout.tsx
 import { Stack } from "expo-router";
+import { MAP_COLORS } from "~/lib/design-tokens";
+
+// JS-only exception: expo-router Stack screenOptions require JS color values
+const BG = MAP_COLORS.light.background;
 
 export default function AreasLayout() {
   return (
     <Stack
       screenOptions={{
         headerStyle: {
-          backgroundColor: "#F9FAFB",
+          backgroundColor: BG,
         },
         headerShadowVisible: false,
         headerLargeTitle: true,
@@ -15,7 +19,7 @@ export default function AreasLayout() {
           fontSize: 32,
         },
         headerLargeStyle: {
-          backgroundColor: "#F9FAFB",
+          backgroundColor: BG,
         },
       }}
     >

@@ -4,7 +4,7 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { formatTime } from "~/features/map/lib/formatters";
-import { RADIUS } from "~/features/map/lib/map-ui-utils";
+import { RADIUS } from "~/lib/design-tokens";
 
 interface AreaStatsProps {
   radiusMeters: number;
@@ -15,7 +15,7 @@ interface AreaStatsProps {
 
 export function AreaStats({ radiusMeters, stationCount, evaluatedAt, colors }: AreaStatsProps) {
   return (
-    <View style={styles.row}>
+    <View testID="map-area-stats" style={styles.row}>
       {/* Radius */}
       <View style={[styles.pill, { backgroundColor: colors.cardBg }]}>
         <MaterialCommunityIcons name="radius-outline" size={14} color={colors.subtext} />
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   pillLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "500",
     marginBottom: 1,
   },

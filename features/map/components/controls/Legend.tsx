@@ -4,7 +4,7 @@ import React from "react";
 import { View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { SHADOW } from "~/lib/design-tokens";
 
 // Severity levels based on water level thresholds
 const SEVERITY_LEVELS = [
@@ -44,22 +44,22 @@ const SEVERITY_LEVELS = [
 
 const Legend = () => {
   const { isDarkColorScheme } = useColorScheme();
-  const isDark = isDarkColorScheme;
 
   return (
     <View
-      style={{
-        position: "absolute",
-        top: 80,
-        left: 16,
-        backgroundColor: isDark ? "#1E293B" : "white",
-        borderRadius: 16,
-        padding: 16,
-        ...CARD_SHADOW,
-        minWidth: 170,
-        borderWidth: 1,
-        borderColor: isDark ? "#334155" : "#E2E8F0",
-      }}
+      className="bg-white dark:bg-[#1E293B] border border-[#E2E8F0] dark:border-[#334155]"
+      style={[
+        SHADOW.sm,
+        {
+          position: "absolute",
+          top: 80,
+          left: 16,
+          borderRadius: 16,
+          padding: 16,
+          minWidth: 170,
+        },
+      ]}
+      testID="map-legend"
     >
       {/* Header */}
       <View
@@ -79,11 +79,8 @@ const Legend = () => {
           <MaterialCommunityIcons name="water" size={16} color="#007AFF" />
         </View>
         <Text
-          style={{
-            fontSize: 13,
-            fontWeight: "800",
-            color: isDark ? "#F1F5F9" : "#1E293B",
-          }}
+          className="text-[#1E293B] dark:text-[#F1F5F9] font-extrabold"
+          style={{ fontSize: 13 }}
         >
           Mức độ ngập
         </Text>
@@ -93,6 +90,7 @@ const Legend = () => {
         {SEVERITY_LEVELS.map((level) => (
           <View
             key={level.key}
+            testID={`map-legend-item-${level.key}`}
             style={{ flexDirection: "row", alignItems: "center" }}
           >
             <View
@@ -121,10 +119,8 @@ const Legend = () => {
                 {level.label}
               </Text>
               <Text
-                style={{
-                  fontSize: 10,
-                  color: isDark ? "#94A3B8" : "#64748B",
-                }}
+                className="text-[#64748B] dark:text-[#94A3B8]"
+                style={{ fontSize: 11 }}
               >
                 {level.range}
               </Text>
@@ -135,11 +131,8 @@ const Legend = () => {
 
       {/* Divider */}
       <View
-        style={{
-          height: 1,
-          backgroundColor: isDark ? "#334155" : "#E2E8F0",
-          marginVertical: 12,
-        }}
+        className="bg-[#E2E8F0] dark:bg-[#334155]"
+        style={{ height: 1, marginVertical: 12 }}
       />
 
       {/* Tips */}
@@ -147,7 +140,7 @@ const Legend = () => {
         <Ionicons name="finger-print-outline" size={12} color="#94A3B8" />
         <Text
           style={{
-            fontSize: 10,
+            fontSize: 11,
             color: "#94A3B8",
             marginLeft: 6,
           }}

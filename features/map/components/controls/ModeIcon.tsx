@@ -21,6 +21,7 @@ export function ModeIcon({ active, viewMode, onPress }: ModeIconProps) {
   return (
     <TouchableOpacity
       onPress={onPress}
+      testID={`map-controls-mode-${viewMode}-btn`}
       activeOpacity={0.7}
       style={{
         width: 36,

@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { SHADOW } from "~/lib/design-tokens";
 import { QuickAction } from "../types/home-types";
 
 interface QuickActionsGridProps {
@@ -14,7 +15,7 @@ export function QuickActionsGrid({ actions }: QuickActionsGridProps) {
   const router = useRouter();
 
   return (
-    <View className="px-4 pb-4">
+    <View className="px-4 pb-4" testID="home-actions-section">
       <View className="flex-row gap-3">
         {actions.map((action, index) => (
           <TouchableOpacity
@@ -22,15 +23,13 @@ export function QuickActionsGrid({ actions }: QuickActionsGridProps) {
             onPress={() => router.push(action.route as any)}
             className="flex-1"
             activeOpacity={0.7}
+            testID={`home-actions-item-${index}`}
           >
             <View
               className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 p-3 items-center gap-2"
               style={{
+                ...SHADOW.sm,
                 shadowColor: action.color,
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.15,
-                shadowRadius: 8,
-                elevation: 3,
               }}
             >
               <View
@@ -43,7 +42,7 @@ export function QuickActionsGrid({ actions }: QuickActionsGridProps) {
                   color={action.color}
                 />
               </View>
-              <Text className="text-slate-800 dark:text-slate-200 text-[11px] font-semibold text-center leading-tight">
+              <Text className="text-slate-800 dark:text-slate-200 text-xs font-semibold text-center leading-tight">
                 {action.label}
               </Text>
             </View>

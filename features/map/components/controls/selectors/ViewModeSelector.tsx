@@ -2,7 +2,7 @@
 import React from "react";
 import { View } from "react-native";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { SHADOW } from "~/lib/design-tokens";
 import { ViewModeButton } from "~/features/map/components/controls/selectors/ViewModeButton";
 import type { ViewMode } from "~/features/map/types/map-display.types";
 export type { ViewMode };
@@ -18,7 +18,9 @@ export function ViewModeSelector({ mode, onModeChange }: ViewModeSelectorProps) 
 
   return (
     <View
+      testID="map-selector-viewmode"
       style={[
+        SHADOW.sm,
         styles.container,
         {
           backgroundColor: isDark ? "rgba(30,41,59,0.95)" : "rgba(255,255,255,0.95)",
@@ -37,8 +39,6 @@ const styles = {
     flexDirection: "row" as const,
     borderRadius: 20 as const,
     padding: 5,
-    ...CARD_SHADOW,
-    elevation: 8 as const,
     borderWidth: 1,
   },
 };

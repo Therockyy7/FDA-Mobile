@@ -4,9 +4,9 @@ import React, { useMemo } from "react";
 import { View } from "react-native";
 import { Marker } from "react-native-maps";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
 import { FloodRoute, MOCK_SENSORS } from "~/features/map/constants/map-data";
 import { getStatusColor } from "~/features/map/lib/map-utils";
+import { SHADOW } from "~/lib/design-tokens";
 import { FloodedRoutePolyline } from "./FloodedRoutePolyline";
 
 interface WaterFlowRouteProps {
@@ -15,13 +15,11 @@ interface WaterFlowRouteProps {
   onPress: () => void;
 }
 
-export function WaterFlowRoute({
+export const WaterFlowRoute = React.memo(function WaterFlowRoute({
   route,
   isSelected,
   onPress,
 }: WaterFlowRouteProps) {
-  const { isDarkColorScheme } = useColorScheme();
-  const isDark = isDarkColorScheme;
   const startPoint = route.coordinates[0];
   const endPoint = route.coordinates[route.coordinates.length - 1];
 
@@ -55,30 +53,29 @@ export function WaterFlowRoute({
             anchor={{ x: 0.5, y: 0.5 }}
             zIndex={20}
           >
+            {/* Marker child view — borderColor uses sensorColors.main (MAP_COLORS exception) */}
             <View
-              style={{
-                backgroundColor: "white",
-                borderRadius: 10,
-                paddingHorizontal: 3,
-                paddingVertical: 2,
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 1,
-                borderWidth: 1,
-                borderColor: sensorColors.main,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.15,
-                shadowRadius: 3,
-                elevation: 3,
-              }}
+              style={[
+                SHADOW.sm,
+                {
+                  backgroundColor: "white",
+                  borderRadius: 10,
+                  paddingHorizontal: 3,
+                  paddingVertical: 2,
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 1,
+                  borderWidth: 1,
+                  borderColor: sensorColors.main,
+                },
+              ]}
             >
               <MaterialCommunityIcons
                 name="waves"
                 size={10}
                 color={sensorColors.main}
               />
-              <Text style={{ fontSize: 10, fontWeight: "800", color: isDark ? "#F1F5F9" : "#1F2937" }}>
+              <Text className="text-[11px] font-extrabold text-slate-800 dark:text-slate-100">
                 {sensor.waterLevel}cm
               </Text>
             </View>
@@ -87,4 +84,4 @@ export function WaterFlowRoute({
       })}
     </>
   );
-}
+});

@@ -18,7 +18,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
 import { PredictionResponse } from "../types/prediction.types";
 
 export const PREDICTION_HEADER_MAX_HEIGHT = 260;
@@ -67,7 +66,6 @@ interface Props {
 export function PredictionHeroHeader({ prediction, scrollY }: Props) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { isDarkColorScheme } = useColorScheme();
 
   const cfg = STATUS_CONFIG[prediction.status] ?? STATUS_CONFIG.Normal;
   const prob = Math.round(
@@ -238,6 +236,7 @@ export function PredictionHeroHeader({ prediction, scrollY }: Props) {
           ]}
         >
           <TouchableOpacity
+            testID="prediction-hero-back-button"
             onPress={() => router.back()}
             style={{
               flexDirection: "row",
@@ -324,7 +323,7 @@ export function PredictionHeroHeader({ prediction, scrollY }: Props) {
             <View style={{ flex: 1 }}>
               <Text
                 style={{
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: "700",
                   color: "rgba(255,255,255,0.7)",
                   letterSpacing: 1.1,
@@ -337,6 +336,7 @@ export function PredictionHeroHeader({ prediction, scrollY }: Props) {
                   : "Khu vực"}
               </Text>
               <Text
+                testID="prediction-hero-area-name"
                 style={{
                   fontSize: 20,
                   fontWeight: "900",
@@ -378,12 +378,12 @@ export function PredictionHeroHeader({ prediction, scrollY }: Props) {
                 justifyContent: "center",
               }}
             >
-              <Text style={{ fontSize: 20, fontWeight: "900", color: "#fff" }}>
+              <Text testID="prediction-hero-probability" style={{ fontSize: 20, fontWeight: "900", color: "#fff" }}>
                 {prob}%
               </Text>
               <Text
                 style={{
-                  fontSize: 8,
+                  fontSize: 11,
                   fontWeight: "600",
                   color: "rgba(255,255,255,0.75)",
                   letterSpacing: 0.5,
@@ -451,7 +451,7 @@ function StatChip({
       <View>
         <Text
           style={{
-            fontSize: 8,
+            fontSize: 11,
             color: "rgba(255,255,255,0.65)",
             fontWeight: "600",
             letterSpacing: 0.3,

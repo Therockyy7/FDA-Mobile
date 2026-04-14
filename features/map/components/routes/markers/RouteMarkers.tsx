@@ -26,7 +26,7 @@ const PinDot = () => (
   />
 );
 
-export function RouteMarkers({
+export const RouteMarkers = React.memo(function RouteMarkers({
   isRoutingUIVisible,
   isUsingGPSOrigin,
   userLocation,
@@ -48,6 +48,7 @@ export function RouteMarkers({
           title="Điểm đi"
           description={isUsingGPSOrigin ? "Vị trí hiện tại" : originText}
           anchor={{ x: 0.5, y: 1 }}
+          testID="map-route-origin-marker"
         >
           <View style={{ alignItems: "center" }}>
             <Ionicons name="location-sharp" size={40} color="#16A34A" />
@@ -63,6 +64,7 @@ export function RouteMarkers({
           title="Điểm đến"
           description={destinationText}
           anchor={{ x: 0.5, y: 1 }}
+          testID="map-route-dest-marker"
         >
           <View style={{ alignItems: "center" }}>
             <Ionicons name="location-sharp" size={40} color="#4F46E5" />
@@ -72,4 +74,4 @@ export function RouteMarkers({
       )}
     </>
   );
-}
+});

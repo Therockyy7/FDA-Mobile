@@ -65,6 +65,7 @@ export function ChartPeriodSelector({
             <TouchableOpacity
               key={period.value}
               onPress={() => onSelectPeriod(period.value)}
+              testID={`areas-chart-period-btn-${period.value}`}
               style={{
                 paddingHorizontal: 14,
                 height: 32,
@@ -72,7 +73,7 @@ export function ChartPeriodSelector({
                 alignItems: "center",
                 borderRadius: 10,
                 backgroundColor: isSelected ? colors.selectedBg : "transparent",
-                                ...(isSelected ? SHADOW.sm : {}),
+                ...(isSelected ? SHADOW.sm : {}),
               }}
               activeOpacity={0.7}
             >
@@ -93,6 +94,7 @@ export function ChartPeriodSelector({
         {showCustomButton && (
           <TouchableOpacity
             onPress={handleCustomPress}
+            testID="areas-chart-period-btn-custom"
             style={{
               paddingHorizontal: 14,
               height: 32,
@@ -104,7 +106,7 @@ export function ChartPeriodSelector({
               backgroundColor: isCustomSelected
                 ? colors.selectedBg
                 : "transparent",
-                            ...(isCustomSelected ? SHADOW.sm : {}),
+              ...(isCustomSelected ? SHADOW.sm : {}),
             }}
             activeOpacity={0.7}
           >
@@ -129,7 +131,7 @@ export function ChartPeriodSelector({
       </ScrollView>
 
       {/* Show custom date range badge when selected */}
-      {showCustomButton && isCustomSelected && customDateLabel && (
+      {showCustomButton && isCustomSelected && (customDateLabel?.length ?? 0) > 0 && (
         <TouchableOpacity
           onPress={onCustomPress}
           style={{

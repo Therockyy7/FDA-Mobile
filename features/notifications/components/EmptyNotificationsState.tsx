@@ -1,4 +1,3 @@
-
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
@@ -11,69 +10,50 @@ interface EmptyNotificationsStateProps {
 export function EmptyNotificationsState({
   onRefresh,
 }: EmptyNotificationsStateProps) {
+  const handleRefresh = React.useCallback(() => {
+    try {
+      onRefresh?.();
+    } catch (error) {
+      console.error("Refresh error:", error);
+    }
+  }, [onRefresh]);
+
   return (
     <View
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        paddingVertical: 80,
-      }}
+      testID="notifications-empty-container"
+      className="flex-1 items-center justify-center py-20"
     >
       <View
+        testID="notifications-empty-icon-wrapper"
+        className="w-24 h-24 rounded-full items-center justify-center mb-5"
         style={{
-          width: 100,
-          height: 100,
-          borderRadius: 50,
-          backgroundColor: "#ECFDF5",
-          alignItems: "center",
-          justifyContent: "center",
-          marginBottom: 20,
+          backgroundColor: "rgba(16, 185, 129, 0.2)",
         }}
       >
         <Ionicons name="shield-checkmark" size={48} color="#10B981" />
       </View>
       <Text
-        style={{
-          fontSize: 20,
-          fontWeight: "800",
-          color: "#1F2937",
-          marginBottom: 8,
-          textAlign: "center",
-        }}
+        testID="notifications-empty-title"
+        className="text-xl font-extrabold text-slate-800 dark:text-slate-100 mb-2 text-center"
       >
         Khu vực của bạn an toàn
       </Text>
       <Text
-        style={{
-          fontSize: 14,
-          fontWeight: "500",
-          color: "#6B7280",
-          textAlign: "center",
-          paddingHorizontal: 40,
-          lineHeight: 20,
-        }}
+        testID="notifications-empty-subtitle"
+        className="text-sm font-medium text-slate-500 dark:text-slate-400 text-center px-10 leading-5"
       >
         Hiện tại không có cảnh báo nào. Chúng tôi sẽ thông báo cho bạn khi có
         thông tin mới.
       </Text>
       <TouchableOpacity
-        onPress={onRefresh}
-        style={{
-          marginTop: 24,
-          paddingHorizontal: 24,
-          paddingVertical: 12,
-          borderRadius: 12,
-          backgroundColor: "#F3F4F6",
-        }}
+        testID="notifications-empty-refresh"
+        onPress={handleRefresh}
+        className="mt-6 px-6 py-3 rounded-xl bg-slate-100 dark:bg-slate-800"
         activeOpacity={0.7}
       >
         <Text
-          style={{
-            fontSize: 14,
-            fontWeight: "700",
-            color: "#1F2937",
-          }}
+          testID="notifications-empty-refresh-label"
+          className="text-sm font-bold text-slate-800 dark:text-slate-100"
         >
           Tải lại
         </Text>

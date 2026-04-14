@@ -14,26 +14,18 @@ const MESSAGES = {
   end: "Điểm đến đang nằm trong vùng ngập. Hãy cẩn thận khi đến nơi.",
 };
 
-export function FloodZoneBanner({ type }: FloodZoneBannerProps) {
+export const FloodZoneBanner = React.memo(function FloodZoneBanner({ type }: FloodZoneBannerProps) {
   const { isDarkColorScheme } = useColorScheme();
-  const isDark = isDarkColorScheme;
 
   return (
     <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        backgroundColor: isDark ? "rgba(254,243,199,0.15)" : "#FEF3C7",
-        borderRadius: 8,
-        paddingHorizontal: 10,
-        paddingVertical: 8,
-      }}
+      className="flex-row items-center gap-2 bg-amber-100 dark:bg-amber-900/20 rounded-lg px-2.5 py-2"
+      testID="map-route-floodzone-banner"
     >
-      <Ionicons name="warning" size={14} color={isDark ? "#FBBF24" : "#D97706"} />
-      <Text style={{ fontSize: 12, color: isDark ? "#FCD34D" : "#92400E", flex: 1 }}>
+      <Ionicons name="warning" size={14} color={isDarkColorScheme ? "#FBBF24" : "#D97706"} />
+      <Text className="text-xs text-amber-800 dark:text-amber-300 flex-1">
         {MESSAGES[type]}
       </Text>
     </View>
   );
-}
+});

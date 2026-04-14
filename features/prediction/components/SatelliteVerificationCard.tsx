@@ -11,8 +11,8 @@ import {
 } from "react-native";
 import MapView, { Polygon, PROVIDER_GOOGLE } from "react-native-maps";
 import { Text } from "~/components/ui/text";
+import { SHADOW } from "~/lib/design-tokens";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
-import { useColorScheme } from "~/lib/useColorScheme";
 import { useSatelliteAnalysis } from "../hooks/useSatelliteAnalysis";
 import type {
   IndividualSatelliteResult,
@@ -83,22 +83,20 @@ function extractRings(
 // ─── Individual platform result sub-card ─────────────────────────────────────
 function PlatformResultCard({
   item,
-  isDark,
   bbox,
   onViewMap,
   areaGeometry,
 }: {
   item: IndividualSatelliteResult;
-  isDark: boolean;
   bbox: SatelliteBbox | undefined;
   onViewMap: () => void;
   areaGeometry?: string | null;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const bg = isDark ? "#0F172A" : "#F8FAFC";
-  const border = isDark ? "#1E293B" : "#E2E8F0";
-  const text = isDark ? "#F1F5F9" : "#0F172A";
-  const muted = isDark ? "#94A3B8" : "#64748B";
+  const bg = "#F8FAFC";
+  const border = "#E2E8F0";
+  const text = "#0F172A";
+  const muted = "#64748B";
 
   const isSAR = item.platform === "Sentinel-1";
   const accent = isSAR ? "#8B5CF6" : "#0EA5E9";
@@ -312,7 +310,7 @@ function PlatformResultCard({
                 size={10}
                 color={accent}
               />
-              <Text style={{ fontSize: 9, fontWeight: "800", color: accent }}>
+              <Text style={{ fontSize: 11, fontWeight: "800", color: accent }}>
                 {isSAR ? "SAR RADAR" : "OPTICAL"}
               </Text>
             </View>
@@ -372,7 +370,7 @@ function PlatformResultCard({
               <Text style={{ fontSize: 16, fontWeight: "900", color: accent }}>
                 {data.water_area_km2.toFixed(2)}
               </Text>
-              <Text style={{ fontSize: 9, fontWeight: "700", color: accent }}>
+              <Text style={{ fontSize: 11, fontWeight: "700", color: accent }}>
                 km² FLOOD
               </Text>
             </View>
@@ -394,7 +392,7 @@ function PlatformResultCard({
                   flexDirection: "row",
                   alignItems: "center",
                   gap: 4,
-                  backgroundColor: isDark ? "#1E293B" : "#F1F5F9",
+                  backgroundColor: "#F1F5F9",
                   paddingHorizontal: 8,
                   paddingVertical: 4,
                   borderRadius: 8,
@@ -423,7 +421,7 @@ function PlatformResultCard({
                   flexDirection: "row",
                   alignItems: "center",
                   gap: 4,
-                  backgroundColor: isDark ? "#1E293B" : "#F1F5F9",
+                  backgroundColor: "#F1F5F9",
                   paddingHorizontal: 8,
                   paddingVertical: 4,
                   borderRadius: 8,
@@ -443,7 +441,7 @@ function PlatformResultCard({
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 4,
-                backgroundColor: isDark ? "#1E293B" : "#F1F5F9",
+                backgroundColor: "#F1F5F9",
                 paddingHorizontal: 8,
                 paddingVertical: 4,
                 borderRadius: 8,
@@ -454,7 +452,7 @@ function PlatformResultCard({
                 style={{
                   fontSize: 10,
                   fontWeight: "700",
-                  color: isDark ? "#CBD5E1" : "#334155",
+                  color: "#334155",
                 }}
               >
                 {stats.permanent_water_km2.toFixed(2)} km² nước thường trú
@@ -466,7 +464,7 @@ function PlatformResultCard({
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 4,
-                backgroundColor: isDark ? "#1E293B" : "#F1F5F9",
+                backgroundColor: "#F1F5F9",
                 paddingHorizontal: 8,
                 paddingVertical: 4,
                 borderRadius: 8,
@@ -477,7 +475,7 @@ function PlatformResultCard({
                 style={{
                   fontSize: 10,
                   fontWeight: "700",
-                  color: isDark ? "#CBD5E1" : "#334155",
+                  color: "#334155",
                 }}
               >
                 {stats.slope_removed_pixels} px dốc loại bỏ
@@ -511,7 +509,7 @@ function PlatformResultCard({
             <TouchableOpacity
               onPress={() => setExpanded(!expanded)}
               style={{
-                backgroundColor: isDark ? "#1E293B" : "#F1F5F9",
+                backgroundColor: "#F1F5F9",
                 borderRadius: 10,
                 paddingHorizontal: 12,
                 flexDirection: "row",
@@ -569,7 +567,7 @@ function PlatformResultCard({
                       key={s.label}
                       style={{
                         flex: 1,
-                        backgroundColor: isDark ? "#1E293B" : "#F1F5F9",
+                        backgroundColor: "#F1F5F9",
                         borderRadius: 8,
                         padding: 8,
                         alignItems: "center",
@@ -589,7 +587,7 @@ function PlatformResultCard({
                       </Text>
                       <Text
                         style={{
-                          fontSize: 8,
+                          fontSize: 11,
                           fontWeight: "600",
                           color: muted,
                           textAlign: "center",
@@ -605,13 +603,13 @@ function PlatformResultCard({
                 {meta.system_index && meta.system_index !== "unknown" && (
                   <View
                     style={{
-                      backgroundColor: isDark ? "#1E293B" : "#F1F5F9",
+                      backgroundColor: "#F1F5F9",
                       borderRadius: 8,
                       padding: 8,
                     }}
                   >
                     <Text
-                      style={{ fontSize: 9, color: muted, marginBottom: 2 }}
+                      style={{ fontSize: 11, color: muted, marginBottom: 2 }}
                     >
                       SCENE ID
                     </Text>
@@ -666,7 +664,7 @@ function PlatformResultCard({
                       }
                       style={{
                         flex: 1,
-                        backgroundColor: isDark ? "#1E293B" : "#F1F5F9",
+                        backgroundColor: "#F1F5F9",
                         borderRadius: 10,
                         paddingVertical: 8,
                         alignItems: "center",
@@ -705,7 +703,6 @@ function PlatformResultCard({
 
 // ─── Main exported component ──────────────────────────────────────────────────
 export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Props) {
-  const { isDarkColorScheme: isDark } = useColorScheme();
   const router = useRouter();
   const { data, state, error, elapsedSeconds, runAnalysis, reset } =
     useSatelliteAnalysis(areaId);
@@ -714,11 +711,11 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
   const [useFusion, setUseFusion] = useState(true);
   const [useBbox, setUseBbox] = useState(true);
 
-  const bg = isDark ? "#1E293B" : "#FFFFFF";
-  const border = isDark ? "#334155" : "#E2E8F0";
-  const text = isDark ? "#F1F5F9" : "#0F172A";
-  const muted = isDark ? "#94A3B8" : "#64748B";
-  const sub = isDark ? "#0F172A" : "#F8FAFC";
+  const bg = "#FFFFFF";
+  const border = "#E2E8F0";
+  const text = "#0F172A";
+  const muted = "#64748B";
+  const sub = "#F8FAFC";
 
   const isIdle = state === "idle";
   const isLoading = state === "loading";
@@ -755,7 +752,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
             style={{
               fontSize: 12,
               fontWeight: "800",
-              color: isDark ? "#D8B4FE" : "#7C3AED",
+              color: "#7C3AED",
               marginBottom: 4,
             }}
           >
@@ -764,7 +761,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
           <Text
             style={{
               fontSize: 11,
-              color: isDark ? "#C4B5FD" : "#6D28D9",
+              color: "#6D28D9",
               lineHeight: 17,
             }}
           >
@@ -811,9 +808,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
               borderRadius: 10,
               backgroundColor: useFusion
                 ? "rgba(168,85,247,0.15)"
-                : isDark
-                  ? "#1E293B"
-                  : "#F1F5F9",
+                : "#F1F5F9",
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -829,7 +824,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
               style={{
                 fontSize: 13,
                 fontWeight: "700",
-                color: useFusion ? (isDark ? "#D8B4FE" : "#7C3AED") : text,
+                color: useFusion ? ("#7C3AED") : text,
                 marginBottom: 2,
               }}
             >
@@ -877,9 +872,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
               borderRadius: 10,
               backgroundColor: useBbox
                 ? "rgba(14,165,233,0.15)"
-                : isDark
-                  ? "#1E293B"
-                  : "#F1F5F9",
+                : "#F1F5F9",
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -895,7 +888,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
               style={{
                 fontSize: 13,
                 fontWeight: "700",
-                color: useBbox ? (isDark ? "#7DD3FC" : "#0284C7") : text,
+                color: useBbox ? ("#0284C7") : text,
                 marginBottom: 2,
               }}
             >
@@ -1020,7 +1013,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
             style={{
               fontSize: 16,
               fontWeight: "800",
-              color: isDark ? "#D8B4FE" : "#7C3AED",
+              color: "#7C3AED",
             }}
           >
             Đang xử lý ảnh vệ tinh
@@ -1041,7 +1034,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
         {/* Elapsed time */}
         <View
           style={{
-            backgroundColor: isDark ? "#1E293B" : "#F3E8FF",
+            backgroundColor: "#F3E8FF",
             borderRadius: 12,
             paddingHorizontal: 16,
             paddingVertical: 8,
@@ -1055,7 +1048,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
             style={{
               fontSize: 13,
               fontWeight: "700",
-              color: isDark ? "#D8B4FE" : "#7C3AED",
+              color: "#7C3AED",
             }}
           >
             {elapsedSeconds}s đã trôi qua
@@ -1091,9 +1084,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
                   borderRadius: 10,
                   backgroundColor: step.done
                     ? "#A855F7"
-                    : isDark
-                      ? "#334155"
-                      : "#E9D5FF",
+                    : "#E9D5FF",
                   alignItems: "center",
                   justifyContent: "center",
                 }}
@@ -1108,7 +1099,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
                 style={{
                   fontSize: 12,
                   fontWeight: step.done ? "700" : "500",
-                  color: step.done ? (isDark ? "#D8B4FE" : "#7C3AED") : muted,
+                  color: step.done ? ("#7C3AED") : muted,
                   flex: 1,
                 }}
               >
@@ -1130,7 +1121,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
     >
       <View
         style={{
-          backgroundColor: isDark ? "#1E0A0A" : "#FFF1F2",
+          backgroundColor: "#FFF1F2",
           borderRadius: 16,
           padding: 20,
           alignItems: "center",
@@ -1144,7 +1135,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
             width: 56,
             height: 56,
             borderRadius: 20,
-            backgroundColor: isDark ? "#450a0a" : "#FEE2E2",
+            backgroundColor: "#FEE2E2",
             alignItems: "center",
             justifyContent: "center",
           }}
@@ -1164,7 +1155,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
         <Text
           style={{
             fontSize: 12,
-            color: isDark ? "#FCA5A5" : "#B91C1C",
+            color: "#B91C1C",
             textAlign: "center",
             lineHeight: 18,
           }}
@@ -1203,13 +1194,13 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
         >
           <View
             style={{
-              backgroundColor: isDark ? "rgba(16,185,129,0.1)" : "#ECFDF5",
+              backgroundColor: "#ECFDF5",
               borderRadius: 16,
               padding: 24,
               alignItems: "center",
               justifyContent: "center",
               borderWidth: 1,
-              borderColor: isDark ? "rgba(16,185,129,0.2)" : "#D1FAE5",
+              borderColor: "#D1FAE5",
               gap: 12,
             }}
           >
@@ -1218,7 +1209,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
                 width: 56,
                 height: 56,
                 borderRadius: 28,
-                backgroundColor: isDark ? "rgba(16,185,129,0.2)" : "#D1FAE5",
+                backgroundColor: "#D1FAE5",
                 alignItems: "center",
                 justifyContent: "center",
               }}
@@ -1253,9 +1244,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
                   flexDirection: "row",
                   alignItems: "center",
                   gap: 6,
-                  backgroundColor: isDark
-                    ? "rgba(100,116,139,0.15)"
-                    : "#E2E8F0",
+                  backgroundColor: "#E2E8F0",
                   paddingHorizontal: 12,
                   paddingVertical: 6,
                   borderRadius: 8,
@@ -1339,7 +1328,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
                     >
                       <Text
                         style={{
-                          fontSize: 9,
+                          fontSize: 11,
                           fontWeight: "800",
                           color: "#FFFFFF",
                         }}
@@ -1456,7 +1445,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
             </View>
             <View
               style={{
-                backgroundColor: isDark ? "#1E293B" : "#F1F5F9",
+                backgroundColor: "#F1F5F9",
                 borderRadius: 8,
                 paddingHorizontal: 8,
                 paddingVertical: 4,
@@ -1538,7 +1527,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
                 borderColor: "rgba(16,185,129,0.3)",
               }}
             >
-              <Text style={{ fontSize: 9, fontWeight: "800", color: "#10B981" }}>
+              <Text style={{ fontSize: 11, fontWeight: "800", color: "#10B981" }}>
                 LIVE
               </Text>
             </View>
@@ -1562,7 +1551,6 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
               <PlatformResultCard
                 key={item.platform}
                 item={item}
-                isDark={isDark}
                 bbox={result.bbox}
                 areaGeometry={areaGeometry}
                 onViewMap={() => {
@@ -1602,7 +1590,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
               onPress={reset}
               style={{
                 flex: 1,
-                backgroundColor: isDark ? "#1E293B" : "#F1F5F9",
+                backgroundColor: "#F1F5F9",
                 borderRadius: 12,
                 paddingVertical: 12,
                 alignItems: "center",
@@ -1649,19 +1637,13 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
   // ─── Root card ───────────────────────────────────────────────────────────
   return (
     <View
-      style={{
-        backgroundColor: bg,
-        borderRadius: 20,
-        padding: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 4,
-      }}
+      testID="prediction-satellite-card"
+      className="bg-white dark:bg-slate-800 rounded-[20px]"
+      style={{ padding: 16, ...SHADOW.md }}
     >
       {/* Header */}
       <View
+        testID="prediction-satellite-header"
         style={{
           flexDirection: "row",
           alignItems: "center",
@@ -1736,10 +1718,12 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
       </View>
 
       {/* Dynamic content */}
-      {isIdle && renderIdle()}
-      {isLoading && renderLoading()}
-      {isError && renderError()}
-      {isSuccess && data && renderSuccess(data)}
+      <View testID={`prediction-satellite-content-${state}`}>
+        {isIdle && renderIdle()}
+        {isLoading && renderLoading()}
+        {isError && renderError()}
+        {isSuccess && data && renderSuccess(data)}
+      </View>
     </View>
   );
 }

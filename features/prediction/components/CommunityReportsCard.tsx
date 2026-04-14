@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { View, TouchableOpacity } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { CommunityReport } from "../types/prediction.types";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SectionHeader } from "~/components/ui/SectionHeader";
+import { SHADOW } from "~/lib/design-tokens";
 import { useRouter } from "expo-router";
+import type { CommunityReport } from "../types/prediction.types";
 
 interface Props {
   reports: CommunityReport[];
@@ -18,98 +19,75 @@ const SEVERITY_CONFIG: Record<string, { color: string; label: string }> = {
 };
 
 export function CommunityReportsCard({ reports }: Props) {
-  const { isDarkColorScheme } = useColorScheme();
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(true);
-  
-  const bg   = isDarkColorScheme ? "#1E293B" : "#FFFFFF";
-  const muted = isDarkColorScheme ? "#94A3B8" : "#64748B";
-  const text  = isDarkColorScheme ? "#F1F5F9" : "#0F172A";
-  const divider = isDarkColorScheme ? "#334155" : "#E2E8F0";
 
   if (!reports || reports.length === 0) return null;
 
-  const maxTrust = Math.max(1, ...reports.map(r => r.trustScore));
+  const maxTrust = Math.max(1, ...reports.map((r) => r.trustScore));
 
   return (
-    <View style={{
-      backgroundColor: bg, borderRadius: 20,
-      padding: 16,
-      shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.08, shadowRadius: 12, elevation: 4,
-    }}>
-      <TouchableOpacity 
-        activeOpacity={0.7} 
-        onPress={() => setIsExpanded(!isExpanded)}
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: isExpanded ? 14 : 0, gap: 8 }}
-      >
-        <View style={{
-          width: 32, height: 32, borderRadius: 10,
-          backgroundColor: isDarkColorScheme ? "#0F172A" : "#FDF4FF",
-          alignItems: "center", justifyContent: "center",
-        }}>
-          <Ionicons name="people-outline" size={16} color="#A855F7" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 13, fontWeight: "800", color: text }}>Báo cáo cộng đồng</Text>
-          <Text style={{ fontSize: 11, color: muted }}>{reports.length} báo cáo mới nhất</Text>
-        </View>
-        <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={20} color={muted} />
+    <View className="bg-white dark:bg-slate-800 rounded-2xl p-4" style={SHADOW.md} testID="prediction-forecast-community-reports-card">
+      <TouchableOpacity activeOpacity={0.7} onPress={() => setIsExpanded(!isExpanded)} testID="prediction-forecast-community-reports-toggle">
+        <SectionHeader
+          title="Báo cáo cộng đồng"
+          subtitle={`${reports.length} báo cáo mới nhất`}
+          testID="prediction-forecast-community-reports-header"
+          className={isExpanded ? "mb-3.5" : ""}
+          rightAction={
+            <View className="flex-row items-center gap-2">
+              <View className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-slate-900 items-center justify-center">
+                <Ionicons name="people-outline" size={16} color="#A855F7" />
+              </View>
+              <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={20} color="#64748B" />
+            </View>
+          }
+        />
       </TouchableOpacity>
 
       {isExpanded && (
-        <View style={{ gap: 8 }}>
+        <View className="gap-2">
           {reports.map((rep, idx) => {
             const sev = SEVERITY_CONFIG[rep.severity] ?? SEVERITY_CONFIG.low;
-            const date = new Date(rep.createdAt);
-            const dateStr = date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-
+            const dateStr = new Date(rep.createdAt).toLocaleDateString("vi-VN", {
+              day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+            });
             return (
               <React.Fragment key={rep.id}>
-                {idx > 0 && <View style={{ height: 1, backgroundColor: divider, marginBottom: 8 }} />}
-                <TouchableOpacity 
+                {idx > 0 && <View className="h-px bg-slate-200 dark:bg-slate-700" />}
+                <TouchableOpacity
                   activeOpacity={0.7}
-                  onPress={() => {
+                  onPress={() =>
                     router.push({
-                      pathname: '/(tabs)/map',
+                      pathname: "/(tabs)/map",
                       params: {
                         reportId: rep.id,
                         reportLat: rep.latitude.toString(),
                         reportLng: rep.longitude.toString(),
                         reportSeverity: rep.severity,
                         reportCreatedAt: rep.createdAt,
-                      }
-                    });
-                  }}
-                  style={{ flexDirection: "row", gap: 10 }}
+                      },
+                    })
+                  }
+                  className="flex-row gap-2.5 py-1"
+                  testID={`prediction-forecast-community-report-${rep.id}`}
                 >
-                  {/* Severity dot */}
-                  <View style={{
-                    width: 8, height: 8, borderRadius: 4,
-                    backgroundColor: sev.color, marginTop: 5,
-                  }} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 12, fontWeight: "600", color: text, marginBottom: 4 }} numberOfLines={2}>
+                  <View className="w-2 h-2 rounded-full mt-1.5" style={{ backgroundColor: sev.color }} />
+                  <View className="flex-1">
+                    <Text className="text-xs font-semibold text-slate-800 dark:text-slate-100 mb-1" numberOfLines={2}>
                       {rep.description || "Không có mô tả"}
                     </Text>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                      {/* Severity pill */}
-                      <View style={{
-                        backgroundColor: `${sev.color}18`,
-                        paddingHorizontal: 7, paddingVertical: 2,
-                        borderRadius: 6,
-                      }}>
-                        <Text style={{ fontSize: 10, fontWeight: "700", color: sev.color }}>{sev.label}</Text>
+                    <View className="flex-row items-center gap-2.5 flex-wrap">
+                      <View className="px-1.5 py-0.5 rounded-md" style={{ backgroundColor: `${sev.color}18` }}>
+                        <Text className="text-[10px] font-bold" style={{ color: sev.color }}>{sev.label}</Text>
                       </View>
-                      {/* Trust score */}
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                      <View className="flex-row items-center gap-1">
                         <Ionicons name="shield-checkmark-outline" size={10} color="#10B981" />
-                        <Text style={{ fontSize: 10, color: muted }}>Trust {rep.trustScore}/{maxTrust}</Text>
+                        <Text className="text-[10px] text-slate-500 dark:text-slate-400">Trust {rep.trustScore}/{maxTrust}</Text>
                       </View>
-                      {/* Time */}
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 3, flex: 1 }}>
-                        <Ionicons name="time-outline" size={10} color={muted} />
-                        <Text style={{ fontSize: 10, color: muted }} numberOfLines={1}>{dateStr}</Text>
+                      <View className="flex-row items-center gap-0.5 flex-1">
+                        <Ionicons name="time-outline" size={10} color="#64748B" />
+                        <Text className="text-[10px] text-slate-500 dark:text-slate-400" numberOfLines={1}>{dateStr}</Text>
                       </View>
                     </View>
                   </View>

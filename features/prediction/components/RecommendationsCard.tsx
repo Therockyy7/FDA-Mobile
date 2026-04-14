@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
 import React from "react";
-import { View, Text } from "react-native";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { View } from "react-native";
+import { Text } from "~/components/ui/text";
+import { SectionHeader } from "~/components/ui/SectionHeader";
+import { SHADOW } from "~/lib/design-tokens";
 
 interface Recommendation {
   icon: string;
@@ -15,167 +17,58 @@ interface RecommendationsCardProps {
   recommendations: Recommendation[];
 }
 
-export function RecommendationsCard({
-  recommendations,
-}: RecommendationsCardProps) {
-  const { isDarkColorScheme } = useColorScheme();
-
+export function RecommendationsCard({ recommendations }: RecommendationsCardProps) {
   return (
     <MotiView
       from={{ opacity: 0, translateY: 20 }}
       animate={{ opacity: 1, translateY: 0 }}
       transition={{ type: "timing", delay: 400, duration: 500 }}
+      testID="prediction-impact-recommendations-card"
     >
-      <View
-        style={{
-          backgroundColor: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-          borderRadius: 24,
-          padding: 20,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.1,
-          shadowRadius: 16,
-          elevation: 8,
-        }}
-      >
-        {/* Header */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 20,
-          }}
-        >
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              backgroundColor: "#10B98120",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 12,
-            }}
-          >
-            <Ionicons name="checkmark-done" size={20} color="#10B981" />
-          </View>
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "800",
-              color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-            }}
-          >
-            Khuyến Nghị Hành Động
-          </Text>
-        </View>
+      <View className="bg-white dark:bg-slate-800 rounded-3xl p-5" style={SHADOW.lg}>
+        <SectionHeader
+          title="Khuyến Nghị Hành Động"
+          testID="prediction-impact-recommendations-header"
+          className="mb-5"
+          rightAction={
+            <View className="w-10 h-10 rounded-xl bg-emerald-500/10 items-center justify-center">
+              <Ionicons name="checkmark-done" size={20} color="#10B981" />
+            </View>
+          }
+        />
 
-        {/* Recommendations */}
         {recommendations.map((rec, recIndex) => (
-          <View key={recIndex} style={{ marginBottom: 20 }}>
-            {/* Recommendation Title */}
+          <View key={recIndex} className="mb-5">
             <MotiView
               from={{ opacity: 0, translateX: -20 }}
               animate={{ opacity: 1, translateX: 0 }}
-              transition={{
-                type: "timing",
-                delay: 500 + recIndex * 100,
-                duration: 400,
-              }}
+              transition={{ type: "timing", delay: 500 + recIndex * 100, duration: 400 }}
+              testID={`prediction-impact-rec-title-${recIndex}`}
             >
-              <View
-                style={{
-                  backgroundColor: "#10B98110",
-                  borderRadius: 16,
-                  padding: 16,
-                  marginBottom: 12,
-                  borderLeftWidth: 4,
-                  borderLeftColor: "#10B981",
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginBottom: 8,
-                  }}
-                >
-                  <Text style={{ fontSize: 24, marginRight: 8 }}>
-                    {rec.icon}
-                  </Text>
-                  <Text
-                    style={{
-                      flex: 1,
-                      fontSize: 16,
-                      fontWeight: "800",
-                      color: "#10B981",
-                    }}
-                  >
-                    {rec.title}
-                  </Text>
+              <View className="rounded-2xl p-4 mb-3" style={{ backgroundColor: "#10B98110", borderLeftWidth: 4, borderLeftColor: "#10B981" }}>
+                <View className="flex-row items-center mb-2">
+                  <Text className="text-2xl mr-2">{rec.icon}</Text>
+                  <Text className="flex-1 text-base font-black text-emerald-500">{rec.title}</Text>
                 </View>
                 {rec.description && (
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "500",
-                      color: isDarkColorScheme ? "#CBD5E1" : "#475569",
-                      lineHeight: 22,
-                    }}
-                  >
-                    {rec.description}
-                  </Text>
+                  <Text className="text-sm font-medium text-slate-600 dark:text-slate-300 leading-snug">{rec.description}</Text>
                 )}
               </View>
             </MotiView>
 
-            {/* Action Items */}
             {rec.items.length > 0 && (
-              <View style={{ gap: 10 }}>
+              <View className="gap-2.5">
                 {rec.items.map((item, itemIndex) => (
                   <MotiView
                     key={itemIndex}
                     from={{ opacity: 0, translateX: -15 }}
                     animate={{ opacity: 1, translateX: 0 }}
-                    transition={{
-                      type: "timing",
-                      delay: 600 + recIndex * 100 + itemIndex * 80,
-                      duration: 400,
-                    }}
+                    transition={{ type: "timing", delay: 600 + recIndex * 100 + itemIndex * 80, duration: 400 }}
+                    testID={`prediction-impact-rec-item-${recIndex}-${itemIndex}`}
                   >
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "flex-start",
-                        backgroundColor: isDarkColorScheme
-                          ? "#334155"
-                          : "#F8FAFC",
-                        borderRadius: 12,
-                        padding: 14,
-                        paddingLeft: 16,
-                      }}
-                    >
-                      <View
-                        style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: 3,
-                          backgroundColor: "#10B981",
-                          marginTop: 7,
-                          marginRight: 12,
-                        }}
-                      />
-                      <Text
-                        style={{
-                          flex: 1,
-                          fontSize: 14,
-                          fontWeight: "500",
-                          color: isDarkColorScheme ? "#E2E8F0" : "#334155",
-                          lineHeight: 22,
-                        }}
-                      >
-                        {item}
-                      </Text>
+                    <View className="flex-row items-start bg-slate-50 dark:bg-slate-700 rounded-xl p-3.5 pl-4">
+                      <View className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 mr-3" />
+                      <Text className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-200 leading-snug">{item}</Text>
                     </View>
                   </MotiView>
                 ))}

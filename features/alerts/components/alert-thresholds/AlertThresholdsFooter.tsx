@@ -1,3 +1,4 @@
+// features/alerts/components/alert-thresholds/AlertThresholdsFooter.tsx
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
@@ -21,8 +22,11 @@ export function AlertThresholdsFooter({
   onReset,
   onSave,
 }: AlertThresholdsFooterProps) {
+  const safeBottomInset = Math.max(Math.max(bottomInset, 0), 35);
+  const isEnabled = canSave === true;
   return (
     <View
+      testID="alerts-thresholds-footer"
       style={{
         position: "absolute",
         left: 0,
@@ -34,11 +38,12 @@ export function AlertThresholdsFooter({
         borderTopColor: colors.borderSoft,
         paddingHorizontal: 16,
         paddingTop: 12,
-        paddingBottom: Math.max(bottomInset, 35),
+        paddingBottom: safeBottomInset,
       }}
     >
       <View style={{ flexDirection: "row", gap: 12 }}>
         <TouchableOpacity
+          testID="alerts-thresholds-reset-button"
           activeOpacity={0.85}
           onPress={onReset}
           style={{
@@ -59,9 +64,10 @@ export function AlertThresholdsFooter({
         </TouchableOpacity>
 
         <TouchableOpacity
+          testID="alerts-thresholds-save-button"
           activeOpacity={0.85}
           onPress={onSave}
-          disabled={!canSave}
+          disabled={!isEnabled}
           style={{
             flex: 1,
             paddingVertical: 12,
@@ -71,7 +77,7 @@ export function AlertThresholdsFooter({
             justifyContent: "center",
           }}
         >
-          <Text style={{ color: "#fff", fontWeight: "800", fontSize: 14 }}>
+          <Text className="text-white font-extrabold text-sm">
             Lưu thay đổi
           </Text>
         </TouchableOpacity>

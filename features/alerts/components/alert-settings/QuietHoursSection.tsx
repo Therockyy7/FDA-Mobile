@@ -20,10 +20,14 @@ export function QuietHoursSection({
   onEndPress,
   colors,
 }: QuietHoursSectionProps) {
-  const displayTime = (time: string) => time.split(":").slice(0, 2).join(":");
+  const displayTime = (time?: string) => {
+    if (!time) return "--:--";
+    const parts = time.split(":");
+    return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : time;
+  };
 
   return (
-    <View style={{ marginTop: 32, paddingHorizontal: 20 }}>
+    <View testID="alerts-settings-quiet-hours-section" style={{ marginTop: 32, paddingHorizontal: 20 }}>
       <View
         style={{
           flexDirection: "row",
@@ -34,6 +38,7 @@ export function QuietHoursSection({
         }}
       >
         <Text
+          testID="alerts-settings-quiet-hours-label"
           style={{
             fontSize: 12,
             fontWeight: "700",
@@ -65,6 +70,7 @@ export function QuietHoursSection({
         >
           <Text style={{ fontSize: 14, color: colors.subtext }}>Bắt Đầu</Text>
           <TouchableOpacity
+            testID="alerts-settings-quiet-hours-start"
             onPress={onStartPress}
             activeOpacity={0.8}
             style={{
@@ -106,6 +112,7 @@ export function QuietHoursSection({
         >
           <Text style={{ fontSize: 14, color: colors.subtext }}>Kết Thúc</Text>
           <TouchableOpacity
+            testID="alerts-settings-quiet-hours-end"
             onPress={onEndPress}
             activeOpacity={0.8}
             style={{
@@ -131,6 +138,7 @@ export function QuietHoursSection({
         </View>
 
         <Text
+          testID="alerts-settings-quiet-hours-hint"
           style={{
             fontSize: 11,
             color: colors.subtext,
@@ -139,7 +147,7 @@ export function QuietHoursSection({
           }}
         >
           Cảnh báo nghiêm trọng sẽ không bị giới hạn bởi giờ yên lặng nếu mức độ
-          ngập vượt ngưỡng “Critical”.
+          ngập vượt ngưỡng "Critical".
         </Text>
       </View>
     </View>

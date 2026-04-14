@@ -26,17 +26,13 @@ import { useColorScheme } from "~/lib/useColorScheme";
 export default function NotificationsScreen() {
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
-  
-  // Tab state: "alerts" | "news"
-  const [activeTab, setActiveTab] = useState<"alerts" | "news">("alerts");
 
+  const [activeTab, setActiveTab] = useState<"alerts" | "news">("alerts");
   const alertsListRef = useRef<FlatList>(null);
   const newsListRef = useRef<FlatList>(null);
-
   const [alertsPage, setAlertsPage] = useState(1);
   const [newsPage, setNewsPage] = useState(1);
 
-  // --- ALERTS/NOTIFICATIONS DATA ---
   const {
     data: alertsData,
     isLoading: isLoadingAlerts,
@@ -44,10 +40,7 @@ export default function NotificationsScreen() {
     isRefetching: isRefetchingAlerts,
   } = useNotificationHistory({ pageNumber: alertsPage, pageSize: 10 });
 
-  const notifications = useMemo(() => {
-    return alertsData?.notifications || [];
-  }, [alertsData]);
-
+  const notifications = useMemo(() => alertsData?.notifications || [], [alertsData]);
   const alertsTotalPages = alertsData?.totalPages || 1;
 
   const handleAlertsPageChange = (page: number) => {
@@ -55,7 +48,6 @@ export default function NotificationsScreen() {
     alertsListRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
-  // --- NEWS DATA ---
   const {
     data: newsData,
     isLoading: isLoadingNews,
@@ -63,10 +55,7 @@ export default function NotificationsScreen() {
     isRefetching: isRefetchingNews,
   } = useNewsfeed({ page: newsPage, pageSize: 10 });
 
-  const news = useMemo(() => {
-    return newsData?.data || [];
-  }, [newsData]);
-
+  const news = useMemo(() => newsData?.data || [], [newsData]);
   const newsTotalPages = newsData?.totalPages || 1;
 
   const handleNewsPageChange = (page: number) => {
@@ -74,9 +63,7 @@ export default function NotificationsScreen() {
     newsListRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
-  const hasUnreadNews = useMemo(() => {
-    return news.some((item) => item.isRead === false);
-  }, [news]);
+  const hasUnreadNews = useMemo(() => news.some((item) => item.isRead === false), [news]);
 
   const markAllMutation = useMarkAllNewsRead();
   const handleMarkAllRead = () => {
@@ -86,76 +73,59 @@ export default function NotificationsScreen() {
     });
   };
 
-  // Theme colors
-  const colors = {
-    background: isDarkColorScheme ? "#0B1A33" : "#F9FAFB",
-    statusBarStyle: isDarkColorScheme ? "light-content" : "dark-content",
-    tabBg: isDarkColorScheme ? "#1E293B" : "#E5E7EB",
-    activeTabBg: "#007AFF",
-    inactiveText: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-    text: isDarkColorScheme ? "#FFFFFF" : "#111827",
-  };
+  const handleAlertPress = useCallback(
+    (notificationId: string) => {
+      router.push({ pathname: "/notifications/[id]", params: { id: notificationId } });
+    },
+    [router],
+  );
 
-  const handleAlertPress = useCallback((notificationId: string) => {
-    router.push({
-      pathname: '/notifications/[id]',
-      params: { id: notificationId },
-    });
-  }, [router]);
-
-  const handleNewsPress = useCallback((newsId: string) => {
-    router.push({
-        pathname: '/notifications/news/[id]',
-        params: { id: newsId }
-    });
-  }, [router]);
+  const handleNewsPress = useCallback(
+    (newsId: string) => {
+      router.push({ pathname: "/notifications/news/[id]", params: { id: newsId } });
+    },
+    [router],
+  );
 
   const renderAlertItem = ({ item }: { item: NotificationItem }) => (
-    <NotificationCard
-      notification={item}
-      onPress={() => handleAlertPress(item.notificationId)}
-    />
+    <NotificationCard notification={item} onPress={() => handleAlertPress(item.notificationId)} />
   );
 
   const renderNewsItem = ({ item }: { item: AnnouncementItem }) => (
-    <NewsCard
-      item={item}
-      onPress={() => handleNewsPress(item.id)}
-    />
+    <NewsCard item={item} onPress={() => handleNewsPress(item.id)} />
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View testID="notifications-screen-container" className="flex-1 bg-slate-50 dark:bg-[#0B1A33]">
       <StatusBar
-        barStyle={colors.statusBarStyle as any}
+        barStyle={isDarkColorScheme ? "light-content" : "dark-content"}
         backgroundColor="transparent"
         translucent
       />
 
       <NotificationsHeader
-        unreadCount={activeTab === 'news' ? (hasUnreadNews ? 1 : 0) : 0} 
+        unreadCount={activeTab === "news" ? (hasUnreadNews ? 1 : 0) : 0}
         onFilterPress={() => {}}
       />
 
-      {/* Sliding Segmented Toggle */}
-      <NotificationTabToggle 
-          activeTab={activeTab} 
-          onChange={setActiveTab} 
-      />
+      <NotificationTabToggle activeTab={activeTab} onChange={setActiveTab} />
 
-      {/* Mark All Read Button for News */}
       {activeTab === "news" && hasUnreadNews && (
-        <View style={{ paddingHorizontal: 16, paddingBottom: 8, alignItems: "flex-end" }}>
-          <TouchableOpacity 
+        <View
+          testID="notifications-screen-mark-all-read-bar"
+          style={{ paddingHorizontal: 16, paddingBottom: 8, alignItems: "flex-end" }}
+        >
+          <TouchableOpacity
+            testID="notifications-screen-mark-all-read-button"
             onPress={handleMarkAllRead}
             disabled={markAllMutation.isPending}
             style={{
               paddingVertical: 6,
               paddingHorizontal: 12,
-              backgroundColor: isDarkColorScheme ? "#334155" : "#E2E8F0",
               borderRadius: 8,
               opacity: markAllMutation.isPending ? 0.6 : 1,
             }}
+            className="bg-slate-200 dark:bg-slate-700"
           >
             <Text style={{ fontSize: 13, fontWeight: "600", color: "#007AFF" }}>
               {markAllMutation.isPending ? "Đang xử lý..." : "✓ Đánh dấu tất cả đã đọc"}
@@ -164,7 +134,6 @@ export default function NotificationsScreen() {
         </View>
       )}
 
-      {/* Main Content Area */}
       {activeTab === "news" ? (
         <FlatList
           ref={newsListRef}
@@ -191,9 +160,9 @@ export default function NotificationsScreen() {
           ListFooterComponent={
             news.length > 0 ? (
               <NotificationPaginationInfo
-                  currentPage={newsPage}
-                  totalPages={newsTotalPages}
-                  onChangePage={handleNewsPageChange}
+                currentPage={newsPage}
+                totalPages={newsTotalPages}
+                onChangePage={handleNewsPageChange}
               />
             ) : null
           }

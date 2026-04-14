@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View } from "react-native";
 import { Circle, Marker } from "react-native-maps";
-import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { SHADOW } from "~/lib/design-tokens";
 import {
   AREA_STATUS_COLORS,
   AREA_STATUS_ICONS,
@@ -60,7 +60,7 @@ export function AreaCircleOverlay({
           {/* Badge */}
           <View
             style={[
-              CARD_SHADOW,
+              SHADOW.sm,
               {
                 backgroundColor: "white",
                 borderRadius: 12,

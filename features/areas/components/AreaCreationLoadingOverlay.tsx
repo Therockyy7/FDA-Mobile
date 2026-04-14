@@ -22,7 +22,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW, RADIUS } from "~/lib/design-tokens";
 
 interface AreaCreationLoadingOverlayProps {
   visible: boolean;
@@ -37,24 +37,12 @@ export function AreaCreationLoadingOverlay({
   message = "Đang tải...",
   subMessage = "Vui lòng chờ trong giây lát",
 }: AreaCreationLoadingOverlayProps) {
-  const { isDarkColorScheme } = useColorScheme();
-
-  // Animations
   const iconScale = useSharedValue(1);
   const iconRotate = useSharedValue(0);
   const pulseOpacity = useSharedValue(0.3);
 
-  const colors = {
-    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
-    overlay: isDarkColorScheme ? "rgba(0, 0, 0, 0.7)" : "rgba(0, 0, 0, 0.5)",
-  };
-
   useEffect(() => {
     if (visible) {
-      // Pulse scale animation
       iconScale.value = withRepeat(
         withSequence(
           withTiming(1.1, { duration: 600, easing: Easing.inOut(Easing.ease) }),
@@ -64,14 +52,12 @@ export function AreaCreationLoadingOverlay({
         true,
       );
 
-      // Subtle rotation
       iconRotate.value = withRepeat(
         withTiming(360, { duration: 3000, easing: Easing.linear }),
         -1,
         false,
       );
 
-      // Pulse opacity
       pulseOpacity.value = withRepeat(
         withSequence(
           withTiming(0.6, { duration: 800, easing: Easing.inOut(Easing.ease) }),
@@ -106,8 +92,8 @@ export function AreaCreationLoadingOverlay({
       entering={FadeIn.duration(200)}
       exiting={FadeOut.duration(200)}
       style={styles.container}
+      testID="areas-loading-overlay-container"
     >
-      {/* Blur/Overlay Background */}
       {Platform.OS === "ios" ? (
         <BlurView
           intensity={30}
@@ -115,17 +101,16 @@ export function AreaCreationLoadingOverlay({
           style={[styles.overlay, { backgroundColor: "rgba(0,0,0,0.3)" }]}
         />
       ) : (
-        <View style={[styles.overlay, { backgroundColor: colors.overlay }]} />
+        <View style={[styles.overlay, { backgroundColor: "rgba(0,0,0,0.5)" }]} />
       )}
 
-      {/* Loading Card */}
       <Animated.View
         entering={FadeIn.delay(100).duration(300)}
-        style={[styles.loadingCard, { backgroundColor: colors.cardBg }]}
+        style={styles.loadingCard}
+        className="bg-white dark:bg-slate-800"
+        testID="areas-loading-overlay-card"
       >
-        {/* Animated Icon Container */}
         <View style={styles.iconWrapper}>
-          {/* Rotating Ring */}
           <Animated.View style={[styles.rotatingRing, ringAnimatedStyle]}>
             <LinearGradient
               colors={["#10B981", "#007AFF", "#8B5CF6", "#10B981"]}
@@ -135,16 +120,10 @@ export function AreaCreationLoadingOverlay({
             />
           </Animated.View>
 
-          {/* Pulse Effect */}
           <Animated.View
-            style={[
-              styles.pulseCircle,
-              { backgroundColor: "#10B981" },
-              pulseAnimatedStyle,
-            ]}
+            style={[styles.pulseCircle, { backgroundColor: "#10B981" }, pulseAnimatedStyle]}
           />
 
-          {/* Icon */}
           <Animated.View style={[styles.iconContainer, iconAnimatedStyle]}>
             <LinearGradient
               colors={["#10B981", "#059669"]}
@@ -155,31 +134,32 @@ export function AreaCreationLoadingOverlay({
           </Animated.View>
         </View>
 
-        {/* Loading Indicator */}
         <ActivityIndicator
           size="small"
           color="#10B981"
           style={styles.spinner}
         />
 
-        {/* Text */}
-        <Text style={[styles.message, { color: colors.text }]}>{message}</Text>
-        <Text style={[styles.subMessage, { color: colors.subtext }]}>
+        <Text
+          className="text-lg font-bold text-slate-900 dark:text-slate-50 text-center mb-1.5"
+          testID="areas-loading-overlay-message"
+        >
+          {message}
+        </Text>
+        <Text
+          className="text-sm text-center text-slate-500 dark:text-slate-400 leading-5"
+          testID="areas-loading-overlay-submessage"
+        >
           {subMessage}
         </Text>
 
-        {/* Progress Dots */}
         <View style={styles.dotsContainer}>
           {[0, 1, 2].map((index) => (
             <Animated.View
               key={index}
               entering={FadeIn.delay(100 * index).duration(300)}
-              style={[
-                styles.dot,
-                {
-                  backgroundColor: colors.border,
-                },
-              ]}
+              style={styles.dot}
+              className="bg-slate-200 dark:bg-slate-600"
             />
           ))}
         </View>
@@ -201,14 +181,10 @@ const styles = StyleSheet.create({
   loadingCard: {
     width: SCREEN_WIDTH - 80,
     maxWidth: 300,
-    borderRadius: 24,
+    borderRadius: RADIUS.sheet,
     padding: 32,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 15 },
-    shadowOpacity: 0.3,
-    shadowRadius: 25,
-    elevation: 25,
+    ...SHADOW.lg,
   },
   iconWrapper: {
     position: "relative",
@@ -252,17 +228,6 @@ const styles = StyleSheet.create({
   },
   spinner: {
     marginBottom: 12,
-  },
-  message: {
-    fontSize: 18,
-    fontWeight: "700",
-    textAlign: "center",
-    marginBottom: 6,
-  },
-  subMessage: {
-    fontSize: 13,
-    textAlign: "center",
-    lineHeight: 18,
   },
   dotsContainer: {
     flexDirection: "row",

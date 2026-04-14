@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { usePathname, useRouter } from "expo-router";
 import { MotiView } from "moti";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   TouchableOpacity,
@@ -10,8 +10,14 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { FLOOD_COLORS, SHADOW } from "~/lib/design-tokens";
 import { useSatelliteAnalysisStore } from "../stores/useSatelliteAnalysisStore";
+
+// Gradient sets — kept as JS values because LinearGradient requires them
+const GRADIENT_LOADING_LIGHT = ["#5B21B6", "#7C3AED"] as const;
+const GRADIENT_LOADING_DARK = ["#2E1065", "#4C1D95"] as const;
+const GRADIENT_DONE = ["#064E3B", "#065F46", "#047857"] as const;
+const GRADIENT_ERROR = ["#7F1D1D", "#991B1B"] as const;
 
 /**
  * Global floating pill that appears at the bottom of any screen when a
@@ -22,7 +28,6 @@ import { useSatelliteAnalysisStore } from "../stores/useSatelliteAnalysisStore";
  * by the Zustand store.
  */
 export function SatelliteLoadingPill() {
-  const { isDarkColorScheme: isDark } = useColorScheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const pathname = usePathname();
@@ -51,7 +56,7 @@ export function SatelliteLoadingPill() {
     !isOnPredictionScreen;
 
   // Auto-dismiss after 8s when done, or immediately on error
-  const dismissTimerRef = useRef<any>(null);
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
@@ -91,6 +96,7 @@ export function SatelliteLoadingPill() {
 
   return (
     <MotiView
+      testID="prediction-satellite-pill"
       animate={{
         translateY: pillVisible ? 0 : 120,
         opacity: pillVisible ? 1 : 0,
@@ -113,12 +119,10 @@ export function SatelliteLoadingPill() {
         <LinearGradient
           colors={
             isDone
-              ? ["#064E3B", "#065F46", "#047857"]
+              ? GRADIENT_DONE
               : isError
-                ? ["#7F1D1D", "#991B1B"]
-                : isDark
-                  ? ["#2E1065", "#4C1D95"]
-                  : ["#5B21B6", "#7C3AED"]
+                ? GRADIENT_ERROR
+                : GRADIENT_LOADING_LIGHT
           }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
@@ -129,16 +133,17 @@ export function SatelliteLoadingPill() {
             flexDirection: "row",
             alignItems: "center",
             gap: 10,
-            shadowColor: isDone ? "#10B981" : "#7C3AED",
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.45,
-            shadowRadius: 14,
-            elevation: 10,
+            ...SHADOW.lg,
+            shadowColor: isDone ? FLOOD_COLORS.safe : "#7C3AED",
           }}
         >
           {/* Left icon / spinner */}
           {isLoading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator
+              testID="prediction-satellite-spinner"
+              size="small"
+              color="#FFFFFF"
+            />
           ) : isDone ? (
             <View
               style={{
@@ -159,6 +164,7 @@ export function SatelliteLoadingPill() {
           {/* Text */}
           <View style={{ flex: 1 }}>
             <Text
+              testID="prediction-satellite-pill-title"
               style={{
                 fontSize: 13,
                 fontWeight: "800",
@@ -174,6 +180,7 @@ export function SatelliteLoadingPill() {
                   : "Phân tích thất bại"}
             </Text>
             <Text
+              testID="prediction-satellite-pill-subtitle"
               style={{
                 fontSize: 11,
                 color: "rgba(255,255,255,0.75)",

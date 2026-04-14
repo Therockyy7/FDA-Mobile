@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW } from "~/lib/design-tokens";
 
 interface Props {
   visible: boolean;
@@ -12,7 +12,6 @@ interface Props {
 
 export function CommunityFloatingHint({ visible }: Props) {
   const router = useRouter();
-  const { isDarkColorScheme } = useColorScheme();
   const [dismissed, setDismissed] = useState(false);
 
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -59,21 +58,12 @@ export function CommunityFloatingHint({ visible }: Props) {
     outputRange: [0, 1],
   });
 
-  // Elegance theme colors
-  const gradientColors = isDarkColorScheme
-    ? ["rgba(30, 41, 59, 0.95)", "rgba(15, 23, 42, 0.95)"]
-    : ["rgba(255, 255, 255, 0.95)", "rgba(248, 250, 252, 0.95)"];
-  
-  const iconBg = isDarkColorScheme
-    ? "rgba(99, 102, 241, 0.2)"
-    : "#EEF2FF";
-
   return (
     <Animated.View
       style={{
         position: "absolute",
         left: 16,
-        right: 16, // Use full width with margin for elegance
+        right: 16,
         bottom: 24,
         zIndex: 50,
         transform: [{ translateY }],
@@ -85,20 +75,18 @@ export function CommunityFloatingHint({ visible }: Props) {
         style={{
           borderRadius: 20,
           overflow: "hidden",
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: isDarkColorScheme ? 0.4 : 0.12,
-          shadowRadius: 16,
-          elevation: 10,
+          ...SHADOW.lg,
           borderWidth: 1,
-          borderColor: isDarkColorScheme ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
         }}
+        className="border-black/5 dark:border-white/10"
       >
         <LinearGradient
-          colors={gradientColors as [string, string]}
+          colors={["rgba(255,255,255,0.95)", "rgba(248,250,252,0.95)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
           style={{ padding: 16 }}
         >
-          {/* Close Button placed cleanly on top right */}
+          {/* Close Button */}
           <TouchableOpacity
             style={{
               position: "absolute",
@@ -113,7 +101,8 @@ export function CommunityFloatingHint({ visible }: Props) {
             <Ionicons
               name="close"
               size={18}
-              color={isDarkColorScheme ? "#94A3B8" : "#64748B"}
+              className="text-muted-foreground"
+              color="#64748B"
             />
           </TouchableOpacity>
 
@@ -124,7 +113,7 @@ export function CommunityFloatingHint({ visible }: Props) {
                 width: 40,
                 height: 40,
                 borderRadius: 20,
-                backgroundColor: iconBg,
+                backgroundColor: "#EEF2FF",
                 alignItems: "center",
                 justifyContent: "center",
               }}
@@ -133,23 +122,14 @@ export function CommunityFloatingHint({ visible }: Props) {
             </View>
             <View style={{ flex: 1 }}>
               <Text
-                style={{
-                  fontSize: 15,
-                  fontWeight: "800",
-                  color: isDarkColorScheme ? "#F8FAFC" : "#0F172A",
-                  marginBottom: 2,
-                  letterSpacing: -0.2,
-                }}
+                className="text-foreground font-extrabold"
+                style={{ fontSize: 15, marginBottom: 2, letterSpacing: -0.2 }}
               >
                 Cập nhật ngập lụt
               </Text>
               <Text
-                style={{
-                  fontSize: 11,
-                  fontWeight: "500",
-                  color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-                  lineHeight: 16,
-                }}
+                className="text-muted-foreground"
+                style={{ fontSize: 11, fontWeight: "500", lineHeight: 16 }}
               >
                 Phát hiện điểm ngập? Hãy báo cáo để hỗ trợ cộng đồng di chuyển an toàn hơn.
               </Text>
@@ -186,17 +166,14 @@ export function CommunityFloatingHint({ visible }: Props) {
                 justifyContent: "center",
                 paddingHorizontal: 16,
                 paddingVertical: 10,
-                backgroundColor: isDarkColorScheme ? "rgba(255,255,255,0.05)" : "#F1F5F9",
                 borderRadius: 12,
               }}
+              className="bg-muted dark:bg-white/5"
               activeOpacity={0.8}
             >
               <Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: "700",
-                  color: isDarkColorScheme ? "#E2E8F0" : "#475569",
-                }}
+                className="text-secondary-foreground font-bold"
+                style={{ fontSize: 13 }}
               >
                 Vào Cộng đồng
               </Text>

@@ -3,7 +3,8 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { RADIUS, STATUS_BADGE } from "~/features/map/lib/map-ui-utils";
+import { STATUS_BADGE } from "~/features/map/lib/map-ui-utils";
+import { RADIUS } from "~/lib/design-tokens";
 
 interface StationStatsProps {
   waterLevel: number | null;
@@ -27,7 +28,7 @@ export function StationStats({
   colors,
 }: StationStatsProps) {
   return (
-    <View style={styles.root}>
+    <View testID="map-station-stats" style={styles.root}>
       {/* Water Level */}
       <View
         style={[
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   label: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: "700",
     letterSpacing: 0.8,
   },

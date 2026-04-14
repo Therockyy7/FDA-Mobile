@@ -17,7 +17,8 @@ interface FloodedRoutePolylineProps {
   zIndex?: number;
 }
 
-export function FloodedRoutePolyline({
+// strokeColor is a Polyline prop — MAP_COLORS exception applies
+export const FloodedRoutePolyline = React.memo(function FloodedRoutePolyline({
   start,
   end,
   status,
@@ -79,4 +80,4 @@ export function FloodedRoutePolyline({
       zIndex={isSelected ? zIndex + 1 : zIndex}
     />
   );
-}
+});

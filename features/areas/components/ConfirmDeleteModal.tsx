@@ -2,7 +2,7 @@
 // Beautiful confirmation modal for deleting areas
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect } from "react";
+import React from "react";
 import {
     ActivityIndicator,
     Dimensions,
@@ -12,7 +12,7 @@ import {
     View,
 } from "react-native";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW, RADIUS } from "~/lib/design-tokens";
 
 interface ConfirmDeleteModalProps {
   visible: boolean;
@@ -31,21 +31,6 @@ export function ConfirmDeleteModal({
   onConfirm,
   onCancel,
 }: ConfirmDeleteModalProps) {
-  const { isDarkColorScheme } = useColorScheme();
-
-  const colors = {
-    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
-    overlay: "rgba(0, 0, 0, 0.65)",
-    danger: "#EF4444",
-    dangerBg: isDarkColorScheme
-      ? "rgba(239, 68, 68, 0.15)"
-      : "rgba(239, 68, 68, 0.1)",
-    cancelBg: isDarkColorScheme ? "#334155" : "#F3F4F6",
-  };
-
   return (
     <Modal
       visible={visible}
@@ -54,42 +39,38 @@ export function ConfirmDeleteModal({
       statusBarTranslucent
       onRequestClose={onCancel}
     >
-      <View style={styles.container}>
-        {/* Overlay Background */}
+      <View style={styles.container} testID="areas-modal-confirm-delete-container">
         <TouchableOpacity
-          style={[styles.overlay, { backgroundColor: colors.overlay }]}
+          style={[styles.overlay, { backgroundColor: "rgba(0,0,0,0.65)" }]}
           activeOpacity={1}
           onPress={!isDeleting ? onCancel : undefined}
+          testID="areas-modal-confirm-delete-overlay"
         />
 
-        {/* Modal Content */}
         <View
-          style={[
-            styles.modalContent,
-            { backgroundColor: colors.cardBg },
-          ]}
+          style={styles.modalContent}
+          className="bg-white dark:bg-slate-800"
+          testID="areas-modal-confirm-delete-content"
         >
-          {/* Warning Icon without Animation */}
-          <View>
-            <LinearGradient
-              colors={["#FEE2E2", "#FECACA", "#FCA5A5"]}
-              style={styles.iconContainer}
-            >
-              <View style={styles.iconInner}>
-                <Ionicons name="trash" size={32} color={colors.danger} />
-              </View>
-            </LinearGradient>
-          </View>
+          {/* Warning Icon */}
+          <LinearGradient
+            colors={["#FEE2E2", "#FECACA", "#FCA5A5"]}
+            style={styles.iconContainer}
+          >
+            <View style={styles.iconInner}>
+              <Ionicons name="trash" size={32} color="#EF4444" />
+            </View>
+          </LinearGradient>
 
           {/* Title */}
-          <Text style={[styles.title, { color: colors.text }]}>
+          <Text className="text-xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight mb-3 text-center">
             Xóa vùng theo dõi?
           </Text>
 
           {/* Description */}
-          <Text style={[styles.description, { color: colors.subtext }]}>
+          <Text className="text-sm leading-6 text-center text-slate-500 dark:text-slate-400 mb-4 px-1">
             Bạn có chắc chắn muốn xóa vùng{" "}
-            <Text style={{ color: colors.danger, fontWeight: "700" }}>
+            <Text className="text-red-500 font-bold">
               &ldquo;{areaName}&rdquo;
             </Text>
             ? Hành động này không thể hoàn tác.
@@ -97,10 +78,12 @@ export function ConfirmDeleteModal({
 
           {/* Warning Box */}
           <View
-            style={[styles.warningBox, { backgroundColor: colors.dangerBg }]}
+            style={styles.warningBox}
+            className="bg-red-50 dark:bg-red-950/20"
+            testID="areas-modal-confirm-delete-warning"
           >
-            <Ionicons name="warning" size={18} color={colors.danger} />
-            <Text style={[styles.warningText, { color: colors.danger }]}>
+            <Ionicons name="warning" size={18} color="#EF4444" />
+            <Text className="text-xs font-semibold text-red-500 flex-1">
               Tất cả dữ liệu và cảnh báo sẽ bị xóa vĩnh viễn
             </Text>
           </View>
@@ -108,15 +91,14 @@ export function ConfirmDeleteModal({
           {/* Buttons */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={[
-                styles.cancelButton,
-                { backgroundColor: colors.cancelBg },
-              ]}
+              style={styles.cancelButton}
+              className="bg-slate-100 dark:bg-slate-700"
               onPress={onCancel}
               activeOpacity={0.7}
               disabled={isDeleting}
+              testID="areas-modal-confirm-delete-cancel"
             >
-              <Text style={[styles.cancelText, { color: colors.text }]}>
+              <Text className="text-base font-bold text-slate-800 dark:text-slate-100">
                 Hủy bỏ
               </Text>
             </TouchableOpacity>
@@ -126,6 +108,7 @@ export function ConfirmDeleteModal({
               onPress={onConfirm}
               activeOpacity={0.9}
               disabled={isDeleting}
+              testID="areas-modal-confirm-delete-confirm"
             >
               <LinearGradient
                 colors={
@@ -142,7 +125,9 @@ export function ConfirmDeleteModal({
                 ) : (
                   <>
                     <Ionicons name="trash-outline" size={18} color="white" />
-                    <Text style={styles.deleteText}>Xóa vùng</Text>
+                    <Text className="text-base font-bold text-white">
+                      Xóa vùng
+                    </Text>
                   </>
                 )}
               </LinearGradient>
@@ -155,26 +140,15 @@ export function ConfirmDeleteModal({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
+  container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24 },
+  overlay: { ...StyleSheet.absoluteFillObject },
   modalContent: {
     width: SCREEN_WIDTH - 48,
     maxWidth: 360,
-    borderRadius: 28,
+    borderRadius: RADIUS.sheet,
     padding: 28,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 15 },
-    shadowOpacity: 0.3,
-    shadowRadius: 25,
-    elevation: 25,
+    ...SHADOW.lg,
   },
   iconContainer: {
     width: 88,
@@ -197,71 +171,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  title: {
-    fontSize: 22,
-    fontWeight: "800",
-    letterSpacing: -0.5,
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  description: {
-    fontSize: 14,
-    lineHeight: 22,
-    textAlign: "center",
-    marginBottom: 16,
-    paddingHorizontal: 4,
-  },
   warningBox: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 12,
+    borderRadius: RADIUS.button,
     marginBottom: 24,
     width: "100%",
   },
-  warningText: {
-    fontSize: 12,
-    fontWeight: "600",
-    flex: 1,
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    gap: 12,
-    width: "100%",
-  },
+  buttonContainer: { flexDirection: "row", gap: 12, width: "100%" },
   cancelButton: {
     flex: 1,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: RADIUS.button,
     alignItems: "center",
     justifyContent: "center",
   },
-  cancelText: {
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  deleteButtonWrapper: {
-    flex: 1,
-  },
+  deleteButtonWrapper: { flex: 1 },
   deleteButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: RADIUS.button,
     shadowColor: "#EF4444",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
-  },
-  deleteText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "white",
   },
 });
 

@@ -3,7 +3,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { RADIUS } from "~/features/map/lib/map-ui-utils";
+import { RADIUS } from "~/lib/design-tokens";
 
 interface StationSensorInfoProps {
   sensorHeight: number | null;
@@ -16,7 +16,7 @@ export function StationSensorInfo({ sensorHeight, distance, unit, colors }: Stat
   if (sensorHeight === null && distance === null) return null;
 
   return (
-    <View style={styles.row}>
+    <View testID="map-station-sensor-info" style={styles.row}>
       {sensorHeight !== null && (
         <View style={[styles.pill, { backgroundColor: colors.cardBg }]}>
           <MaterialCommunityIcons name="arrow-expand-vertical" size={12} color={colors.subtext} />
@@ -46,6 +46,6 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.chip,
     gap: 4,
   },
-  label: { fontSize: 10, fontWeight: "500" },
+  label: { fontSize: 11, fontWeight: "500" },
   value: { fontSize: 13, fontWeight: "800", marginLeft: "auto" },
 });

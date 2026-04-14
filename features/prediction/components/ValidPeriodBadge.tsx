@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text } from "react-native";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { View } from "react-native";
+import { Text } from "~/components/ui/text";
+import { FLOOD_COLORS } from "~/lib/design-tokens";
 import type { ValidPeriod } from "../types/prediction.types";
 
 interface ValidPeriodBadgeProps {
@@ -8,8 +9,6 @@ interface ValidPeriodBadgeProps {
 }
 
 export function ValidPeriodBadge({ validPeriod }: ValidPeriodBadgeProps) {
-  const { isDarkColorScheme } = useColorScheme();
-
   const formatTime = (timestamp: string) => {
     try {
       const d = new Date(timestamp);
@@ -23,52 +22,56 @@ export function ValidPeriodBadge({ validPeriod }: ValidPeriodBadgeProps) {
   };
 
   const isActive = validPeriod.status === "Active";
+  const statusColor = isActive ? FLOOD_COLORS.safe : FLOOD_COLORS.danger;
 
   return (
     <View
+      testID="prediction-valid-period-badge"
       style={{
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: isDarkColorScheme
-          ? isActive ? "rgba(22, 163, 74, 0.15)" : "rgba(220, 38, 38, 0.15)"
-          : isActive ? "#F0FDF4" : "#FEF2F2",
         borderRadius: 16,
         paddingHorizontal: 14,
         paddingVertical: 10,
         gap: 10,
         borderWidth: 1,
-        borderColor: isDarkColorScheme
-          ? isActive ? "rgba(22, 163, 74, 0.3)" : "rgba(220, 38, 38, 0.3)"
-          : isActive ? "#BBF7D0" : "#FECACA",
       }}
+      className={
+        isActive
+          ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-700/40"
+          : "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-700/40"
+      }
     >
       {/* Status dot */}
       <View
+        testID="prediction-valid-period-dot"
         style={{
           width: 8,
           height: 8,
           borderRadius: 4,
-          backgroundColor: isActive ? "#16A34A" : "#DC2626",
+          backgroundColor: statusColor,
         }}
       />
 
       <View style={{ flex: 1 }}>
         <Text
+          testID="prediction-valid-period-status"
           style={{
             fontSize: 12,
             fontWeight: "700",
-            color: isActive ? "#16A34A" : "#DC2626",
+            color: statusColor,
           }}
         >
           {isActive ? "Dự báo đang hoạt động" : "Dự báo hết hạn"}
         </Text>
         <Text
+          testID="prediction-valid-period-time"
           style={{
             fontSize: 11,
             fontWeight: "500",
-            color: isDarkColorScheme ? "#94A3B8" : "#64748B",
             marginTop: 2,
           }}
+          className="text-slate-500 dark:text-slate-400"
         >
           {formatTime(validPeriod.start)} – {formatTime(validPeriod.end)} ({validPeriod.duration_hours}h)
         </Text>
@@ -77,19 +80,20 @@ export function ValidPeriodBadge({ validPeriod }: ValidPeriodBadgeProps) {
       <View style={{ alignItems: "flex-end" }}>
         <Text
           style={{
-            fontSize: 10,
+            fontSize: 11,
             fontWeight: "600",
-            color: isDarkColorScheme ? "#94A3B8" : "#64748B",
           }}
+          className="text-slate-500 dark:text-slate-400"
         >
           Cập nhật tiếp
         </Text>
         <Text
+          testID="prediction-valid-period-next-update"
           style={{
             fontSize: 11,
             fontWeight: "700",
-            color: isDarkColorScheme ? "#E2E8F0" : "#334155",
           }}
+          className="text-slate-700 dark:text-slate-200"
         >
           {formatTime(validPeriod.next_update_expected)}
         </Text>

@@ -4,28 +4,34 @@ import LottieView from "lottie-react-native";
 import React from "react";
 import { View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { MAP_COLORS } from "~/lib/design-tokens";
 
 interface LoadingChartProps {
   height?: number;
   isDark?: boolean;
   message?: string;
+  testID?: string;
 }
 
 export function LoadingChart({
   height = 200,
   isDark = false,
   message = "Đang tải biểu đồ...",
+  testID,
 }: LoadingChartProps) {
+  // JS-only exception: isDark for non-NativeWind context
+  const theme = isDark ? MAP_COLORS.dark : MAP_COLORS.light;
   return (
     <View
+      testID={testID}
       style={{
         height,
-        backgroundColor: isDark ? "#1E293B" : "#F8FAFC",
+        backgroundColor: isDark ? theme.card : theme.background,
         borderRadius: 16,
         justifyContent: "center",
         alignItems: "center",
         borderWidth: 1,
-        borderColor: isDark ? "#334155" : "#E2E8F0",
+        borderColor: isDark ? theme.border : theme.border,
         overflow: "hidden",
       }}
     >
@@ -69,7 +75,7 @@ export function LoadingChart({
         style={{
           fontSize: 13,
           fontWeight: "600",
-          color: isDark ? "#94A3B8" : "#64748B",
+          color: isDark ? theme.subtext : theme.subtext,
           marginTop: 8,
         }}
       >
@@ -95,7 +101,7 @@ export function LoadingChart({
             style={{
               width: 20,
               height: h,
-              backgroundColor: isDark ? "#475569" : "#CBD5E1",
+              backgroundColor: isDark ? theme.muted : theme.muted,
               borderRadius: 4,
             }}
           />

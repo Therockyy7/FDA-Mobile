@@ -78,15 +78,9 @@ export default function AreasScreen() {
   const [errorModalVisible, setErrorModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Theme colors
-  const colors = {
-    background: isDarkColorScheme ? "#0B1A33" : "#F9FAFB",
-    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
-    statusBarStyle: isDarkColorScheme ? "light-content" : "dark-content",
-  };
+  // Theme colors — use NativeWind dark: prefix instead of ternaries
+  // Background handled by className
+  const statusBarStyle = isDarkColorScheme ? "light-content" : "dark-content";
 
   // const {handleStartEditArea} = useControlArea();
 
@@ -281,18 +275,18 @@ export default function AreasScreen() {
   }, [router]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1 }} className="bg-slate-50 dark:bg-slate-900">
       <StatusBar
-        barStyle={colors.statusBarStyle as any}
+        barStyle={statusBarStyle as any}
         backgroundColor="transparent"
         translucent
       />
 
       {/* Header */}
       <LinearGradient
-        colors={
-          isDarkColorScheme ? ["#1E293B", "#0B1A33"] : ["#FFFFFF", "#F9FAFB"]
-        }
+        colors={isDarkColorScheme ? ["#1E293B", "#0B1A33"] : ["#FFFFFF", "#F9FAFB"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={{
           paddingTop:
             Platform.OS === "android"
@@ -301,8 +295,8 @@ export default function AreasScreen() {
           paddingBottom: 16,
           paddingHorizontal: 20,
           borderBottomWidth: 1,
-          borderBottomColor: colors.border,
         }}
+        className="dark:from-slate-800 dark:to-slate-900 border-border-light dark:border-border-dark"
       >
         <View
           style={{
@@ -328,18 +322,21 @@ export default function AreasScreen() {
                 <Ionicons name="location" size={20} color="white" />
               </View>
               <Text
-                style={{ fontSize: 24, fontWeight: "800", color: colors.text }}
+                className="text-slate-900 dark:text-slate-100 font-extrabold tracking-tight"
+                style={{ fontSize: 24 }}
+                testID="areas-screen-title"
               >
                 Vùng theo dõi
               </Text>
             </View>
             <Text
+              className="text-slate-500 dark:text-slate-400 font-medium"
               style={{
                 fontSize: 13,
-                color: colors.subtext,
                 marginTop: 4,
                 marginLeft: 48,
               }}
+              testID="areas-screen-count"
             >
               {areas.length} vùng đã tạo
             </Text>
@@ -356,43 +353,22 @@ export default function AreasScreen() {
                   paddingVertical: 9,
                   paddingHorizontal: 12,
                   borderRadius: 12,
-                  backgroundColor: isDarkColorScheme ? "#1F2937" : "#FFFFFF",
                   borderWidth: 1,
-                  borderColor: colors.border,
                 }}
+                className="bg-white dark:bg-slate-800 border-border-light dark:border-border-dark"
               >
-                <Ionicons name="time-outline" size={16} color={colors.text} />
+                <Ionicons name="time-outline" size={16} className="text-slate-900 dark:text-slate-100" />
                 <Text
+                  className="text-slate-900 dark:text-slate-100 font-bold"
                   style={{
                     fontSize: 12,
-                    fontWeight: "700",
-                    color: colors.text,
                   }}
+                  testID="areas-screen-history-button"
                 >
                   Lịch sử
                 </Text>
               </View>
             </TouchableOpacity>
-            {/* <TouchableOpacity onPress={handleCreateArea} activeOpacity={0.8}>
-              <LinearGradient
-                colors={["#10B981", "#059669"]}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 6,
-                  paddingVertical: 10,
-                  paddingHorizontal: 14,
-                  borderRadius: 12,
-                }}
-              >
-                <Ionicons name="add-circle" size={18} color="white" />
-                <Text
-                  style={{ fontSize: 13, fontWeight: "700", color: "white" }}
-                >
-                  Tạo mới
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity> */}
           </View>
         </View>
 
@@ -414,12 +390,10 @@ export default function AreasScreen() {
                 activeTab === "my-areas" ? "#007AFF" : "transparent",
               alignItems: "center",
             }}
+            testID="areas-screen-tab-my-areas"
           >
             <Text
-              style={{
-                fontWeight: activeTab === "my-areas" ? "700" : "500",
-                color: activeTab === "my-areas" ? "#007AFF" : colors.subtext,
-              }}
+              className={activeTab === "my-areas" ? "text-blue-600 dark:text-blue-400 font-bold" : "text-slate-500 dark:text-slate-400 font-medium"}
             >
               Khu vực của tôi
             </Text>
@@ -434,12 +408,10 @@ export default function AreasScreen() {
                 activeTab === "admin-areas" ? "#007AFF" : "transparent",
               alignItems: "center",
             }}
+            testID="areas-screen-tab-admin"
           >
             <Text
-              style={{
-                fontWeight: activeTab === "admin-areas" ? "700" : "500",
-                color: activeTab === "admin-areas" ? "#007AFF" : colors.subtext,
-              }}
+              className={activeTab === "admin-areas" ? "text-blue-600 dark:text-blue-400 font-bold" : "text-slate-500 dark:text-slate-400 font-medium"}
             >
               Khu vực hệ thống
             </Text>
@@ -462,41 +434,40 @@ export default function AreasScreen() {
               justifyContent: "center",
               padding: 40,
             }}
+            testID="areas-screen-empty"
           >
             <View
               style={{
                 width: 80,
                 height: 80,
                 borderRadius: 40,
-                backgroundColor: `${colors.border}50`,
                 alignItems: "center",
                 justifyContent: "center",
                 marginBottom: 20,
               }}
+              className="bg-slate-200/50 dark:bg-slate-700/50"
             >
               <Ionicons
                 name="location-outline"
                 size={40}
-                color={colors.subtext}
+                className="text-slate-400 dark:text-slate-500"
               />
             </View>
             <Text
+              className="text-slate-900 dark:text-slate-100 font-bold mb-2 text-center"
               style={{
                 fontSize: 18,
-                fontWeight: "700",
-                color: colors.text,
-                marginBottom: 8,
               }}
+              testID="areas-screen-empty-title"
             >
               Chưa có vùng nào
             </Text>
             <Text
+              className="text-slate-500 dark:text-slate-400 text-center font-medium mb-6"
               style={{
                 fontSize: 14,
-                color: colors.subtext,
-                textAlign: "center",
-                marginBottom: 24,
               }}
+              testID="areas-screen-empty-description"
             >
               Tạo vùng theo dõi để nhận cảnh báo mực nước trong khu vực của bạn
             </Text>
@@ -511,6 +482,7 @@ export default function AreasScreen() {
                   paddingHorizontal: 24,
                   borderRadius: 14,
                 }}
+                testID="areas-screen-empty-button"
               >
                 <Ionicons name="add-circle" size={20} color="white" />
                 <Text
@@ -563,14 +535,12 @@ export default function AreasScreen() {
               tintColor="#007AFF"
             />
           }
+          testID="areas-screen-admin-list"
         >
           {loadingAdminAreas && adminAreas.length === 0 ? (
             <Text
-              style={{
-                textAlign: "center",
-                marginTop: 20,
-                color: colors.subtext,
-              }}
+              className="text-slate-500 dark:text-slate-400 text-center font-medium mt-5"
+              testID="areas-screen-admin-loading"
             >
               Đang tải...
             </Text>
@@ -593,11 +563,8 @@ export default function AreasScreen() {
           )}
           {!loadingAdminAreas && adminAreas.length === 0 && (
             <Text
-              style={{
-                textAlign: "center",
-                marginTop: 20,
-                color: colors.subtext,
-              }}
+              className="text-slate-500 dark:text-slate-400 text-center font-medium mt-5"
+              testID="areas-screen-admin-empty"
             >
               Chưa có khu vực nào.
             </Text>

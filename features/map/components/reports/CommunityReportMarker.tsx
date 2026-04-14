@@ -4,24 +4,24 @@ import React from "react";
 import { View } from "react-native";
 import { Marker } from "react-native-maps";
 import { NearbyFloodReport } from "~/features/community/services/community.service";
+import { SHADOW, FLOOD_COLORS } from "~/lib/design-tokens";
 
 interface CommunityReportMarkerProps {
   report: NearbyFloodReport;
   mapRef: React.RefObject<any>;
   onPress: (report: NearbyFloodReport) => void;
-  // Added back to satisfy MapContent but not used to prevent Android rendering issues
   isSelected?: boolean;
 }
 
 const LATITUDE_OFFSET = 0.008;
 
 function getSeverityColor(severity: string): string {
-  if (severity === "high") return "#DC2626";
-  if (severity === "medium") return "#EA580C";
-  return "#059669";
+  if (severity === "high") return FLOOD_COLORS.danger;
+  if (severity === "medium") return FLOOD_COLORS.warning;
+  return FLOOD_COLORS.safe;
 }
 
-export function CommunityReportMarker({
+export const CommunityReportMarker = React.memo(function CommunityReportMarker({
   report,
   mapRef,
   onPress,
@@ -31,10 +31,7 @@ export function CommunityReportMarker({
   return (
     <Marker
       key={`community-report-${report.id}`}
-      coordinate={{
-        latitude: report.latitude,
-        longitude: report.longitude,
-      }}
+      coordinate={{ latitude: report.latitude, longitude: report.longitude }}
       onPress={() => {
         onPress(report);
         mapRef.current?.animateToRegion(
@@ -47,27 +44,28 @@ export function CommunityReportMarker({
           400,
         );
       }}
+      testID="map-report-marker"
     >
+      {/* Marker child — SHADOW.sm replaces inline shadow; borderColor "white" is react-native-maps exception */}
       <View style={{ alignItems: "center" }}>
         <View
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: 19,
-            backgroundColor: severityColor,
-            alignItems: "center",
-            justifyContent: "center",
-            borderWidth: 3,
-            borderColor: "white",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.06,
-            shadowRadius: 8,
-            elevation: 4,
-          }}
+          style={[
+            SHADOW.sm,
+            {
+              width: 38,
+              height: 38,
+              borderRadius: 19,
+              backgroundColor: severityColor,
+              alignItems: "center",
+              justifyContent: "center",
+              borderWidth: 3,
+              borderColor: "white",
+            },
+          ]}
         >
           <Ionicons name="megaphone" size={18} color="white" />
         </View>
+        {/* Pin tail — borderTopColor is react-native-maps Marker child (exception) */}
         <View
           style={{
             width: 0,
@@ -84,4 +82,4 @@ export function CommunityReportMarker({
       </View>
     </Marker>
   );
-}
+});

@@ -8,21 +8,18 @@ interface TransportModeButtonProps {
   onPress: () => void;
 }
 
-export function TransportModeButton({ active, icon, onPress }: TransportModeButtonProps) {
+export const TransportModeButton = React.memo(function TransportModeButton({
+  active,
+  icon,
+  onPress,
+}: TransportModeButtonProps) {
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.8}
-      style={{
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 999,
-        backgroundColor: active ? "#2563EB" : "transparent",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
+      className={`px-2.5 py-1.5 rounded-full items-center justify-center ${active ? "bg-blue-600" : "bg-transparent"}`}
     >
       {icon}
     </TouchableOpacity>
   );
-}
+});

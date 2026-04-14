@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW, RADIUS } from "~/lib/design-tokens";
 
 interface PremiumLimitModalProps {
   visible: boolean;
@@ -30,17 +30,6 @@ export function PremiumLimitModal({
   currentCount = 5,
   maxCount = 5,
 }: PremiumLimitModalProps) {
-  const { isDarkColorScheme } = useColorScheme();
-
-  const colors = {
-    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
-    overlay: "rgba(0, 0, 0, 0.6)",
-    gold: "#F59E0B",
-  };
-
   return (
     <Modal
       visible={visible}
@@ -49,23 +38,28 @@ export function PremiumLimitModal({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <View style={styles.container}>
-        {/* Overlay Background */}
+      <View style={styles.container} testID="areas-modal-premium-container">
         <TouchableOpacity
-          style={[styles.overlay, { backgroundColor: colors.overlay }]}
+          style={[styles.overlay, { backgroundColor: "rgba(0,0,0,0.6)" }]}
           activeOpacity={1}
           onPress={onClose}
+          testID="areas-modal-premium-overlay"
         />
 
-        {/* Modal Content */}
-        <View style={[styles.modalContent, { backgroundColor: colors.cardBg }]}>
+        <View
+          style={styles.modalContent}
+          className="bg-white dark:bg-slate-800"
+          testID="areas-modal-premium-content"
+        >
           {/* Close Button */}
           <TouchableOpacity
-            style={[styles.closeButton, { backgroundColor: colors.border }]}
+            style={styles.closeButton}
+            className="bg-slate-100 dark:bg-slate-700"
             onPress={onClose}
             activeOpacity={0.7}
+            testID="areas-modal-premium-close"
           >
-            <Ionicons name="close" size={20} color={colors.subtext} />
+            <Ionicons name="close" size={20} color="#94A3B8" />
           </TouchableOpacity>
 
           {/* Crown Icon */}
@@ -77,14 +71,14 @@ export function PremiumLimitModal({
           </LinearGradient>
 
           {/* Title */}
-          <Text style={[styles.title, { color: colors.text }]}>
+          <Text className="text-2xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight mb-2.5 text-center">
             Đã đạt giới hạn!
           </Text>
 
           {/* Description */}
-          <Text style={[styles.description, { color: colors.subtext }]}>
+          <Text className="text-sm leading-6 text-center text-slate-500 dark:text-slate-400 mb-4 px-2">
             Bạn đã tạo{" "}
-            <Text style={{ color: colors.gold, fontWeight: "800" }}>
+            <Text className="text-amber-500 font-extrabold">
               {currentCount}/{maxCount}
             </Text>{" "}
             vùng theo dõi miễn phí.{"\n"}
@@ -93,10 +87,8 @@ export function PremiumLimitModal({
 
           {/* Progress Bar */}
           <View
-            style={[
-              styles.progressContainer,
-              { backgroundColor: isDarkColorScheme ? "#0B1A33" : "#F3F4F6" },
-            ]}
+            style={styles.progressContainer}
+            className="bg-slate-100 dark:bg-slate-900"
           >
             <LinearGradient
               colors={["#F59E0B", "#EF4444"]}
@@ -110,7 +102,7 @@ export function PremiumLimitModal({
           </View>
 
           {/* Benefits List */}
-          <View style={styles.benefitsList}>
+          <View style={styles.benefitsList} testID="areas-modal-premium-benefits">
             {[
               { icon: "infinite", text: "Không giới hạn vùng theo dõi" },
               { icon: "notifications", text: "Thông báo ưu tiên" },
@@ -118,18 +110,16 @@ export function PremiumLimitModal({
             ].map((benefit, index) => (
               <View key={index} style={styles.benefitItem}>
                 <View
-                  style={[
-                    styles.benefitIcon,
-                    { backgroundColor: `${colors.gold}20` },
-                  ]}
+                  style={styles.benefitIcon}
+                  className="bg-amber-500/20"
                 >
                   <Ionicons
                     name={benefit.icon as any}
                     size={18}
-                    color={colors.gold}
+                    color="#F59E0B"
                   />
                 </View>
-                <Text style={[styles.benefitText, { color: colors.text }]}>
+                <Text className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex-1">
                   {benefit.text}
                 </Text>
               </View>
@@ -141,6 +131,7 @@ export function PremiumLimitModal({
             onPress={onUpgrade || onClose}
             activeOpacity={0.9}
             style={styles.upgradeButtonWrapper}
+            testID="areas-modal-premium-upgrade"
           >
             <LinearGradient
               colors={["#FBBF24", "#F59E0B", "#D97706"]}
@@ -149,13 +140,19 @@ export function PremiumLimitModal({
               style={styles.upgradeButton}
             >
               <MaterialCommunityIcons name="crown" size={22} color="white" />
-              <Text style={styles.upgradeText}>Nâng cấp Premium</Text>
+              <Text className="text-base font-bold text-white tracking-wide">
+                Nâng cấp Premium
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
 
           {/* Maybe Later */}
-          <TouchableOpacity onPress={onClose} style={styles.laterButton}>
-            <Text style={[styles.laterText, { color: colors.subtext }]}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.laterButton}
+            testID="areas-modal-premium-later"
+          >
+            <Text className="text-sm font-semibold text-slate-400 dark:text-slate-500">
               Để sau
             </Text>
           </TouchableOpacity>
@@ -178,14 +175,10 @@ const styles = StyleSheet.create({
   modalContent: {
     width: SCREEN_WIDTH - 48,
     maxWidth: 360,
-    borderRadius: 24,
+    borderRadius: RADIUS.sheet,
     padding: 24,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 20,
+    ...SHADOW.lg,
   },
   closeButton: {
     position: "absolute",
@@ -211,20 +204,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 12,
     elevation: 10,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "800",
-    letterSpacing: -0.5,
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  description: {
-    fontSize: 14,
-    lineHeight: 22,
-    textAlign: "center",
-    marginBottom: 16,
-    paddingHorizontal: 8,
   },
   progressContainer: {
     width: "100%",
@@ -254,11 +233,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  benefitText: {
-    fontSize: 14,
-    fontWeight: "600",
-    flex: 1,
-  },
   upgradeButtonWrapper: {
     width: "100%",
     marginBottom: 10,
@@ -269,20 +243,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
     paddingVertical: 14,
-    borderRadius: 14,
-  },
-  upgradeText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "white",
-    letterSpacing: 0.3,
+    borderRadius: RADIUS.button,
   },
   laterButton: {
     paddingVertical: 8,
-  },
-  laterText: {
-    fontSize: 14,
-    fontWeight: "600",
   },
 });
 

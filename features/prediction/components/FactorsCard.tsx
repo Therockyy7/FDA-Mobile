@@ -1,9 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { MotiView } from "moti";
 import React from "react";
 import { View, Text } from "react-native";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW } from "~/lib/design-tokens";
 
 interface FactorsCardProps {
   contributionScores: {
@@ -21,41 +20,34 @@ const FACTOR_CONFIGS = [
     icon: "flash" as const,
     label: "Cường Độ Mưa",
     color: "#EF4444",
-    gradientColors: ["#DC2626", "#EF4444"] as const,
   },
   {
     key: "saturation" as const,
     icon: "water" as const,
     label: "Độ Bão Hòa Đất",
     color: "#06B6D4",
-    gradientColors: ["#06B6D4", "#22D3EE"] as const,
   },
   {
     key: "accumulation" as const,
     icon: "rainy" as const,
     label: "Tích Lũy Mưa",
     color: "#3B82F6",
-    gradientColors: ["#2563EB", "#3B82F6"] as const,
   },
   {
     key: "topography" as const,
     icon: "trending-up" as const,
     label: "Địa Hình",
     color: "#8B5CF6",
-    gradientColors: ["#7C3AED", "#8B5CF6"] as const,
   },
   {
     key: "hydrology" as const,
     icon: "navigate" as const,
     label: "Thủy Văn",
     color: "#14B8A6",
-    gradientColors: ["#0D9488", "#14B8A6"] as const,
   },
 ];
 
 export function FactorsCard({ contributionScores }: FactorsCardProps) {
-  const { isDarkColorScheme } = useColorScheme();
-
   return (
     <MotiView
       from={{ opacity: 0, translateY: 20 }}
@@ -63,16 +55,9 @@ export function FactorsCard({ contributionScores }: FactorsCardProps) {
       transition={{ type: "timing", delay: 200, duration: 500 }}
     >
       <View
-        style={{
-          backgroundColor: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-          borderRadius: 24,
-          padding: 20,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.1,
-          shadowRadius: 16,
-          elevation: 8,
-        }}
+        testID="prediction-factors-card"
+        className="bg-white dark:bg-slate-800 rounded-3xl p-5"
+        style={SHADOW.lg}
       >
         {/* Header */}
         <View
@@ -83,24 +68,18 @@ export function FactorsCard({ contributionScores }: FactorsCardProps) {
           }}
         >
           <View
+            className="bg-blue-100 dark:bg-blue-900/40 rounded-xl items-center justify-center"
             style={{
               width: 40,
               height: 40,
-              borderRadius: 12,
-              backgroundColor: "#007AFF20",
-              alignItems: "center",
-              justifyContent: "center",
               marginRight: 12,
             }}
           >
             <Ionicons name="analytics" size={20} color="#007AFF" />
           </View>
           <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "800",
-              color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-            }}
+            testID="prediction-factors-title"
+            className="text-lg font-extrabold text-gray-800 dark:text-slate-100"
           >
             Nhân Tố Đóng Góp
           </Text>
@@ -123,23 +102,13 @@ export function FactorsCard({ contributionScores }: FactorsCardProps) {
                   duration: 400,
                 }}
               >
-                <LinearGradient
-                  colors={
-                    isDarkColorScheme
-                      ? ["rgba(51, 65, 85, 0.5)", "rgba(30, 41, 59, 0.3)"]
-                      : ["rgba(248, 250, 252, 1)", "rgba(241, 245, 249, 1)"]
-                  }
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{
-                    borderRadius: 16,
-                    padding: 16,
-                    borderLeftWidth: 4,
-                    borderLeftColor: factorConfig.color,
-                  }}
+                <View
+                  className="bg-slate-50 dark:bg-slate-700 rounded-2xl border-l-4"
+                  style={{ padding: 16, borderLeftColor: factorConfig.color }}
                 >
                   {/* Factor Header */}
                   <View
+                    testID={`prediction-factors-item-${factorConfig.key}`}
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
@@ -166,16 +135,13 @@ export function FactorsCard({ contributionScores }: FactorsCardProps) {
                         />
                       </View>
                       <Text
-                        style={{
-                          fontSize: 14,
-                          fontWeight: "700",
-                          color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-                        }}
+                        className="text-sm font-bold text-gray-800 dark:text-slate-100"
                       >
                         {factorConfig.label}
                       </Text>
                     </View>
                     <Text
+                      testID={`prediction-factors-pct-${factorConfig.key}`}
                       style={{
                         fontSize: 20,
                         fontWeight: "900",
@@ -188,12 +154,8 @@ export function FactorsCard({ contributionScores }: FactorsCardProps) {
 
                   {/* Progress Bar */}
                   <View
-                    style={{
-                      height: 6,
-                      backgroundColor: isDarkColorScheme ? "#475569" : "#E2E8F0",
-                      borderRadius: 3,
-                      overflow: "hidden",
-                    }}
+                    className="bg-slate-200 dark:bg-slate-600 rounded-md overflow-hidden"
+                    style={{ height: 6 }}
                   >
                     <MotiView
                       from={{ width: "0%" }}
@@ -206,7 +168,7 @@ export function FactorsCard({ contributionScores }: FactorsCardProps) {
                       }}
                     />
                   </View>
-                </LinearGradient>
+                </View>
               </MotiView>
             );
           })}

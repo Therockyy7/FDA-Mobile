@@ -9,13 +9,13 @@ interface LocationInputProps {
   placeholder: string;
   isGPS: boolean;
   hasCoord?: boolean;
-  isLoading?: boolean;      // ← thêm: đang tìm đường
+  isLoading?: boolean;
   onPress: () => void;
-  onClear?: () => void;     // ← thêm: xóa nội dung
+  onClear?: () => void;
   disabled: boolean;
 }
 
-export function LocationInput({
+export const LocationInput = React.memo(function LocationInput({
   label,
   placeholder,
   isGPS,
@@ -32,52 +32,24 @@ export function LocationInput({
       onPress={onPress}
       disabled={disabled}
       activeOpacity={0.6}
-      style={{
-        backgroundColor: "#F3F4F6",
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        borderWidth: 1,
-        borderColor: hasValue ? "#E5E7EB" : "#F3F4F6",
-        flexDirection: "row",
-        alignItems: "center",
-      }}
+      className={`bg-gray-100 rounded-lg px-3 py-2.5 border flex-row items-center ${hasValue ? "border-gray-200" : "border-gray-100"}`}
     >
-      {/* Nội dung chính */}
-      <View style={{ flex: 1 }}>
+      {/* Main content */}
+      <View className="flex-1">
         {isLoading ? (
-          // Skeleton loading bar khi đang tìm đường
-          <View style={{ gap: 4 }}>
-            <View style={{ height: 8, borderRadius: 4, backgroundColor: "#E5E7EB", overflow: "hidden" }}>
-              <Animated.View
-                style={{
-                  height: "100%",
-                  width: "60%",
-                  backgroundColor: "#BFDBFE",
-                  borderRadius: 4,
-                }}
-              />
+          <View className="gap-1">
+            <View className="h-2 rounded bg-gray-200 overflow-hidden">
+              <Animated.View className="h-full w-3/5 bg-blue-200 rounded" />
             </View>
-            <View style={{ height: 6, borderRadius: 3, backgroundColor: "#E5E7EB", overflow: "hidden" }}>
-              <Animated.View
-                style={{
-                  height: "100%",
-                  width: "40%",
-                  backgroundColor: "#DBEAFE",
-                  borderRadius: 3,
-                }}
-              />
+            <View className="h-1.5 rounded bg-gray-200 overflow-hidden">
+              <Animated.View className="h-full w-2/5 bg-blue-100 rounded" />
             </View>
           </View>
         ) : (
           <Text
             style={{
               fontSize: 14,
-              color: hasValue
-                ? isGPS
-                  ? "#2563EB"
-                  : "#111827"
-                : "#9CA3AF",
+              color: hasValue ? (isGPS ? "#2563EB" : "#111827") : "#9CA3AF",
               fontWeight: hasValue ? "500" : "400",
             }}
             numberOfLines={1}
@@ -87,25 +59,16 @@ export function LocationInput({
         )}
       </View>
 
-      {/* Nút X để xóa */}
+      {/* Clear button */}
       {showClear && (
         <TouchableOpacity
           onPress={onClear}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={{
-            marginLeft: 6,
-            width: 20,
-            height: 20,
-            borderRadius: 10,
-            backgroundColor: "#D1D5DB",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="ml-1.5 w-5 h-5 rounded-full bg-gray-300 items-center justify-center"
         >
           <Ionicons name="close" size={11} color="white" />
         </TouchableOpacity>
       )}
     </TouchableOpacity>
   );
-}
-
+});

@@ -5,12 +5,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { AlertChannelsStatus } from "~/features/alerts/components/AlertChannelsStatus";
+import { SHADOW } from "~/lib/design-tokens";
 import type { NotificationChannels } from "~/features/alerts/types/alert-settings.types";
 import type {
   Area,
   AreaStatusResponse,
 } from "~/features/map/types/map-layers.types";
-import { useColorScheme } from "~/lib/useColorScheme";
 
 interface WaterLevelAreaCardProps {
   area: Area;
@@ -22,7 +23,7 @@ interface WaterLevelAreaCardProps {
   alertChannels?: NotificationChannels;
 }
 
-// Status config
+// Status config — use flood-* tokens for colors
 const getStatusConfig = (status?: string) => {
   switch (status) {
     case "Critical":
@@ -101,8 +102,8 @@ export function WaterLevelAreaCard({
   onEdit,
   onDelete,
   onAlertSettings,
+  alertChannels,
 }: WaterLevelAreaCardProps) {
-  const { isDarkColorScheme } = useColorScheme();
   const cfg = getStatusConfig(status?.status);
 
   const maxWater =
@@ -114,35 +115,23 @@ export function WaterLevelAreaCard({
   const waterColor = getWaterColor(maxWater);
   const waterPct = Math.min((maxWater / 50) * 100, 100);
 
-  const c = {
-    bg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-    border: isDarkColorScheme ? "#334155" : "#E5E7EB",
-    text: isDarkColorScheme ? "#F1F5F9" : "#111827",
-    sub: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-    muted: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
-    divider: isDarkColorScheme ? "#334155" : "#F3F4F6",
-  };
-
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.92}
       style={{
-        backgroundColor: c.bg,
         borderRadius: 20,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: ["Warning", "Critical"].includes(status?.status ?? "") ? `${cfg.color}60` : c.border,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 4,
+        borderColor: ["Warning", "Critical"].includes(status?.status ?? "") ? `${cfg.color}60` : undefined,
         overflow: "hidden",
+        ...SHADOW.md,
       }}
+      className="bg-white dark:bg-slate-800 border-border-light dark:border-border-dark"
+      testID="water-level-area-card"
     >
       {/* ── Top Row: Name + Status ── */}
-      <View style={{ padding: 16, paddingBottom: 12 }}>
+      <View style={{ padding: 16, paddingBottom: 12 }} testID="water-level-area-card-header">
         <View
           style={{
             flexDirection: "row",
@@ -153,13 +142,10 @@ export function WaterLevelAreaCard({
           {/* Left: Name & Address */}
           <View style={{ flex: 1, marginRight: 12 }}>
             <Text
-              style={{
-                fontSize: 16,
-                fontWeight: "800",
-                color: c.text,
-                letterSpacing: -0.3,
-              }}
+              className="text-slate-900 dark:text-slate-100 font-extrabold tracking-tight"
+              style={{ fontSize: 16 }}
               numberOfLines={1}
+              testID="water-level-area-card-name"
             >
               {area.name}
             </Text>
@@ -172,9 +158,10 @@ export function WaterLevelAreaCard({
                   marginTop: 4,
                 }}
               >
-                <Ionicons name="location" size={11} color={c.sub} />
+                <Ionicons name="location" size={11} className="text-slate-400 dark:text-slate-500" />
                 <Text
-                  style={{ fontSize: 11, color: c.sub, flex: 1 }}
+                  className="text-slate-500 dark:text-slate-400 flex-1"
+                  style={{ fontSize: 11 }}
                   numberOfLines={1}
                 >
                   {area.addressText}
@@ -186,7 +173,6 @@ export function WaterLevelAreaCard({
           {/* Right: Status Pill */}
           <View
             style={{
-              backgroundColor: isDarkColorScheme ? cfg.darkBg : cfg.bg,
               paddingHorizontal: 10,
               paddingVertical: 4,
               borderRadius: 10,
@@ -196,15 +182,12 @@ export function WaterLevelAreaCard({
               borderWidth: 1,
               borderColor: `${cfg.color}30`,
             }}
+            className="bg-slate-50 dark:bg-slate-800"
+            testID="water-level-area-card-status"
           >
             <Ionicons name={cfg.icon} size={12} color={cfg.color} />
             <Text
-              style={{
-                fontSize: 10,
-                fontWeight: "700",
-                color: cfg.color,
-                letterSpacing: 0.3,
-              }}
+              style={{ fontSize: 10, fontWeight: "700", color: cfg.color, letterSpacing: 0.3 }}
             >
               {cfg.label.toUpperCase()}
             </Text>
@@ -226,12 +209,13 @@ export function WaterLevelAreaCard({
               width: 56,
               height: 56,
               borderRadius: 28,
-              backgroundColor: `${waterColor}15`,
               borderWidth: 3,
               borderColor: waterColor,
               alignItems: "center",
               justifyContent: "center",
             }}
+            className="bg-red-100/15 dark:bg-red-500/15"
+            testID="water-level-area-card-water-circle"
           >
             {maxWater > 0 ? (
               <View style={{ alignItems: "center" }}>
@@ -259,7 +243,7 @@ export function WaterLevelAreaCard({
                 </Text>
               </View>
             ) : (
-              <Ionicons name="water-outline" size={22} color={c.sub} />
+              <Ionicons name="water-outline" size={22} className="text-slate-400 dark:text-slate-500" />
             )}
           </View>
 
@@ -267,7 +251,7 @@ export function WaterLevelAreaCard({
           <View style={{ flex: 1, gap: 6 }}>
             {/* Progress bar */}
             {maxWater > 0 && (
-              <View>
+              <View testID="water-level-area-card-progress">
                 <View
                   style={{
                     flexDirection: "row",
@@ -277,13 +261,14 @@ export function WaterLevelAreaCard({
                   }}
                 >
                   <Text
-                    style={{ fontSize: 10, fontWeight: "600", color: c.sub }}
+                    className="text-slate-500 dark:text-slate-400 font-semibold"
+                    style={{ fontSize: 11 }}
                   >
                     Mực nước
                   </Text>
                   <Text
                     style={{
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: "700",
                       color: waterColor,
                     }}
@@ -294,12 +279,10 @@ export function WaterLevelAreaCard({
                 <View
                   style={{
                     height: 6,
-                    backgroundColor: isDarkColorScheme
-                      ? "rgba(255,255,255,0.08)"
-                      : "rgba(0,0,0,0.06)",
                     borderRadius: 3,
                     overflow: "hidden",
                   }}
+                  className="bg-slate-200/60 dark:bg-slate-700"
                 >
                   <View
                     style={{
@@ -320,6 +303,7 @@ export function WaterLevelAreaCard({
                 alignItems: "center",
                 gap: 12,
               }}
+              testID="water-level-area-card-mini-stats"
             >
               <View
                 style={{
@@ -334,7 +318,8 @@ export function WaterLevelAreaCard({
                   color="#007AFF"
                 />
                 <Text
-                  style={{ fontSize: 11, fontWeight: "600", color: c.text }}
+                  className="text-slate-900 dark:text-slate-100 font-semibold"
+                  style={{ fontSize: 11 }}
                 >
                   {formatRadius(area.radiusMeters)}
                 </Text>
@@ -348,7 +333,8 @@ export function WaterLevelAreaCard({
               >
                 <Ionicons name="analytics" size={13} color="#8B5CF6" />
                 <Text
-                  style={{ fontSize: 11, fontWeight: "600", color: c.text }}
+                  className="text-slate-900 dark:text-slate-100 font-semibold"
+                  style={{ fontSize: 11 }}
                 >
                   {stationCount} trạm
                 </Text>
@@ -369,7 +355,8 @@ export function WaterLevelAreaCard({
                   }}
                 />
                 <Text
-                  style={{ fontSize: 10, fontWeight: "500", color: c.sub }}
+                  className="text-slate-500 dark:text-slate-400 font-medium"
+                  style={{ fontSize: 10 }}
                 >
                   {formatTime(status?.evaluatedAt)}
                 </Text>
@@ -385,20 +372,18 @@ export function WaterLevelAreaCard({
           style={{
             marginHorizontal: 16,
             marginBottom: 12,
-            backgroundColor: isDarkColorScheme
-              ? `${cfg.color}12`
-              : `${cfg.color}08`,
             borderRadius: 10,
             padding: 10,
             borderLeftWidth: 3,
             borderLeftColor: cfg.color,
           }}
+          className={cfg.color === "#EF4444" ? "bg-red-50 dark:bg-red-500/10" : cfg.color === "#F97316" ? "bg-orange-50 dark:bg-orange-500/10" : cfg.color === "#FBBF24" ? "bg-yellow-50 dark:bg-yellow-500/10" : cfg.color === "#6B7280" ? "bg-gray-50 dark:bg-gray-500/10" : "bg-green-50 dark:bg-green-500/10"}
+          testID="water-level-area-card-summary"
         >
           <Text
+            className="text-slate-900 dark:text-slate-100 font-medium"
             style={{
               fontSize: 11,
-              color: isDarkColorScheme ? c.text : "#374151",
-              fontWeight: "500",
               lineHeight: 16,
             }}
             numberOfLines={2}
@@ -416,9 +401,10 @@ export function WaterLevelAreaCard({
           paddingHorizontal: 12,
           paddingVertical: 10,
           borderTopWidth: 1,
-          borderTopColor: c.divider,
           gap: 6,
         }}
+        className="border-slate-200 dark:border-slate-700"
+        testID="water-level-area-card-footer"
       >
         {/* Alert settings */}
         {onAlertSettings && (
@@ -432,16 +418,19 @@ export function WaterLevelAreaCard({
               width: 34,
               height: 34,
               borderRadius: 10,
-              backgroundColor: isDarkColorScheme ? "#3A2F0A" : "#FFFBEB",
               alignItems: "center",
               justifyContent: "center",
               borderWidth: 1,
-              borderColor: "#F59E0B40",
             }}
+            className="bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-500/40"
+            testID="water-level-area-card-alert-settings"
           >
             <Ionicons name="notifications" size={14} color="#F59E0B" />
           </TouchableOpacity>
         )}
+
+        {/* Alert channels status */}
+        {alertChannels && <AlertChannelsStatus channels={alertChannels} />}
 
         {/* Edit */}
         {onEdit && (
@@ -455,12 +444,12 @@ export function WaterLevelAreaCard({
               width: 34,
               height: 34,
               borderRadius: 10,
-              backgroundColor: isDarkColorScheme ? "#007AFF18" : "#EFF6FF",
               alignItems: "center",
               justifyContent: "center",
               borderWidth: 1,
-              borderColor: isDarkColorScheme ? "#007AFF40" : "#BFDBFE",
             }}
+            className="bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/40"
+            testID="water-level-area-card-edit"
           >
             <Ionicons name="pencil" size={14} color="#007AFF" />
           </TouchableOpacity>
@@ -478,12 +467,12 @@ export function WaterLevelAreaCard({
               width: 34,
               height: 34,
               borderRadius: 10,
-              backgroundColor: isDarkColorScheme ? "#EF444418" : "#FEF2F2",
               alignItems: "center",
               justifyContent: "center",
               borderWidth: 1,
-              borderColor: isDarkColorScheme ? "#EF444440" : "#FECACA",
             }}
+            className="bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/40"
+            testID="water-level-area-card-delete"
           >
             <Ionicons name="trash" size={14} color="#EF4444" />
           </TouchableOpacity>
@@ -493,7 +482,7 @@ export function WaterLevelAreaCard({
         <View style={{ flex: 1 }} />
 
         {/* Detail button */}
-        <TouchableOpacity onPress={onPress} activeOpacity={0.85}>
+        <TouchableOpacity onPress={onPress} activeOpacity={0.85} testID="water-level-area-card-detail">
           <LinearGradient
             colors={cfg.gradient}
             start={{ x: 0, y: 0 }}

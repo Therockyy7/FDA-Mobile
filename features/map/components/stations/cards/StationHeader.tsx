@@ -25,6 +25,7 @@ export function StationHeader({
 }: StationHeaderProps) {
   return (
     <View
+      testID="map-station-header"
       style={{
         flexDirection: "row",
         justifyContent: "space-between",

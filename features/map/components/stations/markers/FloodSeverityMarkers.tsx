@@ -91,6 +91,7 @@ export function FloodSeverityMarkers({
             description={`Mực nước: ${properties.waterLevel}${properties.unit} - ${label}`}
             onPress={() => onMarkerPress?.(feature)}
             tracksViewChanges={false}
+            testID={`map-station-marker-${properties.stationId}`}
           />
         );
       })}

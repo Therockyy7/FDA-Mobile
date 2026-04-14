@@ -35,6 +35,7 @@ import type {
   AreaStatusResponse,
 } from "~/features/map/types/map-layers.types";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { MAP_COLORS, SEVERITY_PALETTE, SHADOW } from "~/lib/design-tokens";
 
 // Header dimensions
 const HEADER_MAX_HEIGHT = 280;
@@ -80,28 +81,28 @@ const getStatusConfig = (status?: string) => {
   switch (status) {
     case "Critical":
       return {
-        main: "#EF4444",
-        bg: "#FEE2E2",
-        gradient: ["#EF4444", "#DC2626"] as const,
-        headerGradient: ["#EF4444", "#B91C1C", "#991B1B"] as const,
+        main: SEVERITY_PALETTE.critical.primary,
+        bg: SEVERITY_PALETTE.critical.bg,
+        gradient: [SEVERITY_PALETTE.critical.primary, SEVERITY_PALETTE.critical.text] as const,
+        headerGradient: [SEVERITY_PALETTE.critical.primary, "#B91C1C", SEVERITY_PALETTE.critical.text] as const,
         text: "Nguy hiểm",
         icon: "alert-circle" as const,
       };
     case "Warning":
       return {
-        main: "#F97316",
-        bg: "#FFEDD5",
-        gradient: ["#F97316", "#EA580C"] as const,
-        headerGradient: ["#F97316", "#EA580C", "#C2410C"] as const,
+        main: SEVERITY_PALETTE.warning.primary,
+        bg: SEVERITY_PALETTE.warning.bg,
+        gradient: [SEVERITY_PALETTE.warning.primary, SEVERITY_PALETTE.warning.text] as const,
+        headerGradient: [SEVERITY_PALETTE.warning.primary, SEVERITY_PALETTE.warning.text, "#C2410C"] as const,
         text: "Cảnh báo",
         icon: "warning" as const,
       };
     case "Caution":
       return {
-        main: "#FBBF24",
-        bg: "#FEF3C7",
-        gradient: ["#FBBF24", "#D97706"] as const,
-        headerGradient: ["#FBBF24", "#D97706", "#B45309"] as const,
+        main: SEVERITY_PALETTE.caution.primary,
+        bg: SEVERITY_PALETTE.caution.bg,
+        gradient: [SEVERITY_PALETTE.caution.primary, SEVERITY_PALETTE.caution.text] as const,
+        headerGradient: [SEVERITY_PALETTE.caution.primary, SEVERITY_PALETTE.caution.text, "#B45309"] as const,
         text: "Theo dõi",
         icon: "eye" as const,
       };
@@ -117,10 +118,10 @@ const getStatusConfig = (status?: string) => {
     case "Safe":
     default:
       return {
-        main: "#10B981",
-        bg: "#D1FAE5",
-        gradient: ["#10B981", "#059669"] as const,
-        headerGradient: ["#10B981", "#059669", "#047857"] as const,
+        main: SEVERITY_PALETTE.safe.primary,
+        bg: SEVERITY_PALETTE.safe.bg,
+        gradient: [SEVERITY_PALETTE.safe.primary, SEVERITY_PALETTE.safe.text] as const,
+        headerGradient: [SEVERITY_PALETTE.safe.primary, SEVERITY_PALETTE.safe.text, "#047857"] as const,
         text: "Bình thường",
         icon: "checkmark-circle" as const,
       };
@@ -186,13 +187,15 @@ export default function AreaDetailScreen() {
   }, [area]);
 
   // Theme colors
+  // JS-only exception: isDarkColorScheme for non-NativeWind contexts
+  const theme = isDarkColorScheme ? MAP_COLORS.dark : MAP_COLORS.light;
   const colors = {
-    background: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
-    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
-    mutedBg: isDarkColorScheme ? "#0B1A33" : "#F1F5F9",
+    background: theme.background,
+    cardBg: theme.card,
+    text: theme.text,
+    subtext: theme.subtext,
+    border: theme.border,
+    mutedBg: theme.divider,
   };
 
   const statusConfig = getStatusConfig(mergedStatus?.status);
@@ -328,6 +331,7 @@ export default function AreaDetailScreen() {
   if (isLoading) {
     return (
       <View
+        testID="areas-chart-screen-loading"
         style={{
           flex: 1,
           backgroundColor: colors.background,
@@ -380,7 +384,7 @@ export default function AreaDetailScreen() {
           onPress={() => router.back()}
           style={{
             marginTop: 20,
-            backgroundColor: "#007AFF",
+            backgroundColor: theme.accent,
             paddingHorizontal: 24,
             paddingVertical: 12,
             borderRadius: 12,
@@ -395,7 +399,7 @@ export default function AreaDetailScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View testID="areas-chart-screen-detail" style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar
         barStyle="light-content"
         backgroundColor="transparent"
@@ -730,8 +734,8 @@ export default function AreaDetailScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={["#007AFF"]}
-            tintColor="#007AFF"
+            colors={[theme.accent]}
+            tintColor={theme.accent}
             progressViewOffset={HEADER_MAX_HEIGHT}
           />
         }
@@ -821,7 +825,7 @@ export default function AreaDetailScreen() {
             <Text
               style={{
                 fontSize: 14,
-                color: isDarkColorScheme ? colors.text : "#374151",
+                color: isDarkColorScheme ? colors.text : theme.text,
                 lineHeight: 20,
               }}
             >
@@ -867,7 +871,7 @@ export default function AreaDetailScreen() {
                 justifyContent: "center",
               }}
             >
-              <Ionicons name="map-outline" size={18} color="#007AFF" />
+              <Ionicons name="map-outline" size={18} color={theme.accent} />
             </View>
             <Text
               style={{
@@ -956,11 +960,11 @@ export default function AreaDetailScreen() {
                 minWidth: "46%",
                 backgroundColor: isDarkColorScheme
                   ? "rgba(255,255,255,0.03)"
-                  : "#F8FAFC",
+                  : theme.background,
                 borderWidth: 1,
                 borderColor: isDarkColorScheme
                   ? "rgba(255,255,255,0.05)"
-                  : "#E2E8F0",
+                  : theme.border,
                 borderRadius: 16,
                 padding: 14,
               }}
@@ -976,7 +980,7 @@ export default function AreaDetailScreen() {
                 <MaterialCommunityIcons
                   name="radius-outline"
                   size={16}
-                  color="#007AFF"
+                  color={theme.accent}
                 />
                 <Text
                   style={{
@@ -1001,11 +1005,11 @@ export default function AreaDetailScreen() {
                 minWidth: "46%",
                 backgroundColor: isDarkColorScheme
                   ? "rgba(255,255,255,0.03)"
-                  : "#F8FAFC",
+                  : theme.background,
                 borderWidth: 1,
                 borderColor: isDarkColorScheme
                   ? "rgba(255,255,255,0.05)"
-                  : "#E2E8F0",
+                  : theme.border,
                 borderRadius: 16,
                 padding: 14,
               }}
@@ -1043,11 +1047,11 @@ export default function AreaDetailScreen() {
                 minWidth: "46%",
                 backgroundColor: isDarkColorScheme
                   ? "rgba(255,255,255,0.03)"
-                  : "#F8FAFC",
+                  : theme.background,
                 borderWidth: 1,
                 borderColor: isDarkColorScheme
                   ? "rgba(255,255,255,0.05)"
-                  : "#E2E8F0",
+                  : theme.border,
                 borderRadius: 16,
                 padding: 14,
               }}
@@ -1084,11 +1088,11 @@ export default function AreaDetailScreen() {
                 minWidth: "46%",
                 backgroundColor: isDarkColorScheme
                   ? "rgba(255,255,255,0.03)"
-                  : "#F8FAFC",
+                  : theme.background,
                 borderWidth: 1,
                 borderColor: isDarkColorScheme
                   ? "rgba(255,255,255,0.05)"
-                  : "#E2E8F0",
+                  : theme.border,
                 borderRadius: 16,
                 padding: 14,
               }}
@@ -1142,7 +1146,7 @@ export default function AreaDetailScreen() {
                   marginBottom: 14,
                 }}
               >
-                <Ionicons name="analytics" size={18} color="#007AFF" />
+                <Ionicons name="analytics" size={18} color={theme.accent} />
                 <Text
                   style={{
                     fontSize: 14,

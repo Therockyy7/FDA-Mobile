@@ -21,14 +21,13 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW, RADIUS } from "~/lib/design-tokens";
 
 interface ErrorModalProps {
   visible: boolean;
   title?: string;
   message: string;
   onClose: () => void;
-  // Optional action button
   actionText?: string;
   onAction?: () => void;
 }
@@ -43,40 +42,22 @@ export function ErrorModal({
   actionText,
   onAction,
 }: ErrorModalProps) {
-  const { isDarkColorScheme } = useColorScheme();
-
-  // Animations
   const iconScale = useSharedValue(0);
   const iconShake = useSharedValue(0);
   const pulseOpacity = useSharedValue(0.4);
   const contentScale = useSharedValue(0.8);
   const contentOpacity = useSharedValue(0);
 
-  const colors = {
-    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
-    overlay: "rgba(0, 0, 0, 0.65)",
-    error: "#EF4444",
-    errorLight: isDarkColorScheme
-      ? "rgba(239, 68, 68, 0.15)"
-      : "rgba(239, 68, 68, 0.08)",
-    buttonBg: isDarkColorScheme ? "#334155" : "#F3F4F6",
-  };
-
   useEffect(() => {
     if (visible) {
       contentScale.value = withSpring(1, { damping: 12, stiffness: 200 });
       contentOpacity.value = withSpring(1);
 
-      // Icon entrance with bounce
       iconScale.value = withSequence(
         withDelay(100, withSpring(1.3, { damping: 6 })),
         withSpring(1, { damping: 8 }),
       );
 
-      // Shake animation
       iconShake.value = withSequence(
         withDelay(200, withTiming(-8, { duration: 50 })),
         withTiming(8, { duration: 50 }),
@@ -86,17 +67,10 @@ export function ErrorModal({
         withTiming(0, { duration: 50 }),
       );
 
-      // Pulse effect
       pulseOpacity.value = withRepeat(
         withSequence(
-          withTiming(0.6, {
-            duration: 1000,
-            easing: Easing.inOut(Easing.ease),
-          }),
-          withTiming(0.3, {
-            duration: 1000,
-            easing: Easing.inOut(Easing.ease),
-          }),
+          withTiming(0.6, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.3, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
         ),
         -1,
         true,
@@ -108,14 +82,7 @@ export function ErrorModal({
       iconShake.value = 0;
       pulseOpacity.value = 0.4;
     }
-  }, [
-    visible,
-    contentScale,
-    contentOpacity,
-    iconScale,
-    iconShake,
-    pulseOpacity,
-  ]);
+  }, [visible, contentScale, contentOpacity, iconScale, iconShake, pulseOpacity]);
 
   const iconAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: iconScale.value }],
@@ -138,42 +105,35 @@ export function ErrorModal({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <View style={styles.container}>
-        {/* Overlay Background */}
+      <View style={styles.container} testID="areas-modal-error-container">
         <TouchableOpacity
-          style={[styles.overlay, { backgroundColor: colors.overlay }]}
+          style={[styles.overlay, { backgroundColor: "rgba(0,0,0,0.65)" }]}
           activeOpacity={1}
           onPress={onClose}
+          testID="areas-modal-error-overlay"
         />
 
-        {/* Modal Content */}
         <Animated.View
-          style={[
-            styles.modalContent,
-            { backgroundColor: colors.cardBg },
-            contentAnimatedStyle,
-          ]}
+          style={[styles.modalContent, contentAnimatedStyle]}
+          className="bg-white dark:bg-slate-800"
+          testID="areas-modal-error-content"
         >
           {/* Close Button */}
           <TouchableOpacity
-            style={[styles.closeButton, { backgroundColor: colors.border }]}
+            style={styles.closeButton}
+            className="bg-slate-100 dark:bg-slate-700"
             onPress={onClose}
             activeOpacity={0.7}
+            testID="areas-modal-error-close"
           >
-            <Ionicons name="close" size={18} color={colors.subtext} />
+            <Ionicons name="close" size={18} color="#94A3B8" />
           </TouchableOpacity>
 
           {/* Error Icon with Animations */}
           <View style={styles.iconWrapper}>
-            {/* Pulse Ring */}
             <Animated.View
-              style={[
-                styles.pulseRing,
-                { borderColor: colors.error },
-                pulseStyle,
-              ]}
+              style={[styles.pulseRing, { borderColor: "#EF4444" }, pulseStyle]}
             />
-
             <Animated.View style={iconAnimatedStyle}>
               <LinearGradient
                 colors={["#FEE2E2", "#FECACA", "#FCA5A5"]}
@@ -190,19 +150,18 @@ export function ErrorModal({
           </View>
 
           {/* Title */}
-          <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+          <Text className="text-slate-900 dark:text-slate-50 text-xl font-extrabold tracking-tight mb-4 text-center">
+            {title}
+          </Text>
 
           {/* Error Message Box */}
           <View
-            style={[styles.messageBox, { backgroundColor: colors.errorLight }]}
+            style={styles.messageBox}
+            className="bg-red-50 dark:bg-red-950/20"
           >
             <View style={styles.messageContent}>
-              <Ionicons
-                name="information-circle"
-                size={20}
-                color={colors.error}
-              />
-              <Text style={[styles.messageText, { color: colors.subtext }]}>
+              <Ionicons name="information-circle" size={20} color="#EF4444" />
+              <Text className="text-sm leading-5 text-slate-500 dark:text-slate-400 flex-1">
                 {message}
               </Text>
             </View>
@@ -212,14 +171,13 @@ export function ErrorModal({
           <View style={styles.buttonContainer}>
             {onAction && actionText && (
               <TouchableOpacity
-                style={[
-                  styles.actionButton,
-                  { backgroundColor: colors.buttonBg },
-                ]}
+                style={styles.actionButton}
+                className="bg-slate-100 dark:bg-slate-700"
                 onPress={onAction}
                 activeOpacity={0.7}
+                testID="areas-modal-error-action"
               >
-                <Text style={[styles.actionText, { color: colors.text }]}>
+                <Text className="text-sm font-bold text-slate-800 dark:text-slate-100">
                   {actionText}
                 </Text>
               </TouchableOpacity>
@@ -232,6 +190,7 @@ export function ErrorModal({
               ]}
               onPress={onClose}
               activeOpacity={0.9}
+              testID="areas-modal-error-confirm"
             >
               <LinearGradient
                 colors={["#007AFF", "#2563EB", "#1D4ED8"]}
@@ -240,14 +199,14 @@ export function ErrorModal({
                 style={styles.closeButtonGradient}
               >
                 <Ionicons name="checkmark-circle" size={18} color="white" />
-                <Text style={styles.closeButtonText}>Đã hiểu</Text>
+                <Text className="text-base font-bold text-white">Đã hiểu</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
 
           {/* Help Text */}
-          <TouchableOpacity style={styles.helpButton}>
-            <Text style={[styles.helpText, { color: colors.subtext }]}>
+          <TouchableOpacity style={styles.helpButton} testID="areas-modal-error-help">
+            <Text className="text-xs font-medium text-slate-400 dark:text-slate-500">
               Cần hỗ trợ? Liên hệ chúng tôi
             </Text>
           </TouchableOpacity>
@@ -270,14 +229,10 @@ const styles = StyleSheet.create({
   modalContent: {
     width: SCREEN_WIDTH - 48,
     maxWidth: 360,
-    borderRadius: 28,
+    borderRadius: RADIUS.sheet,
     padding: 28,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 15 },
-    shadowOpacity: 0.3,
-    shadowRadius: 25,
-    elevation: 25,
+    ...SHADOW.lg,
   },
   closeButton: {
     position: "absolute",
@@ -323,16 +278,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  title: {
-    fontSize: 22,
-    fontWeight: "800",
-    letterSpacing: -0.5,
-    marginBottom: 16,
-    textAlign: "center",
-  },
   messageBox: {
     width: "100%",
-    borderRadius: 14,
+    borderRadius: RADIUS.button,
     padding: 16,
     marginBottom: 24,
   },
@@ -340,11 +288,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 12,
-  },
-  messageText: {
-    fontSize: 13,
-    lineHeight: 20,
-    flex: 1,
   },
   buttonContainer: {
     flexDirection: "row",
@@ -354,13 +297,9 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: RADIUS.button,
     alignItems: "center",
     justifyContent: "center",
-  },
-  actionText: {
-    fontSize: 14,
-    fontWeight: "700",
   },
   closeButtonPrimary: {
     flex: 1,
@@ -371,25 +310,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: RADIUS.button,
     shadowColor: "#007AFF",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
   },
-  closeButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "white",
-  },
   helpButton: {
     marginTop: 16,
     paddingVertical: 4,
-  },
-  helpText: {
-    fontSize: 12,
-    fontWeight: "500",
   },
 });
 

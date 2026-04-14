@@ -2,21 +2,14 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
-import {
-  Animated,
-  Easing,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React, { useEffect, useMemo, useRef } from "react";
+import { Animated, Easing, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW } from "~/lib/design-tokens";
 
 export function CommunityBanner() {
   const router = useRouter();
-  const { isDarkColorScheme } = useColorScheme();
 
-  // Subtle shimmer animation for the report button
   const shimmerAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const loop = Animated.loop(
@@ -37,40 +30,33 @@ export function CommunityBanner() {
     );
     loop.start();
     return () => loop.stop();
-  }, [shimmerAnim]);
+    // Note: shimmerAnim is a stable ref, no need in dependency array
+  }, []);
 
-  const shimmerOpacity = shimmerAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.6, 1],
-  });
-
-  const colors = {
-    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
-    softBg: isDarkColorScheme ? "#1E293B50" : "#F8FAFC",
-  };
+  // Memoize interpolation to avoid recalculating on every render
+  const shimmerOpacity = useMemo(
+    () =>
+      shimmerAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.6, 1],
+      }),
+    [shimmerAnim],
+  );
 
   return (
-    <View className="px-4 py-1">
-      {/* ── Compact Card Container ── */}
+    <View testID="home-community-container" className="px-4 py-1">
       <View
+        className="bg-white dark:bg-[#1E293B] border border-border-light dark:border-border-dark overflow-hidden"
         style={{
           borderRadius: 20,
-          overflow: "hidden",
-          backgroundColor: colors.cardBg,
-          borderWidth: 1,
-          borderColor: colors.border,
+          ...SHADOW.sm,
           shadowColor: "#8B5CF6",
-          shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.08,
-          shadowRadius: 12,
-          elevation: 3,
         }}
       >
-        {/* ── Top: Gradient Hero Strip ── */}
+        {/* Top: Gradient Hero Strip */}
         <TouchableOpacity
+          testID="home-community-nav-btn"
           onPress={() => router.push("/community" as any)}
           activeOpacity={0.9}
         >
@@ -80,92 +66,49 @@ export function CommunityBanner() {
             end={{ x: 1, y: 1 }}
             style={{ paddingVertical: 14, paddingHorizontal: 16 }}
           >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              {/* Left: Icon + Title */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
-                  flex: 1,
-                }}
-              >
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center gap-2.5 flex-1">
                 <View
+                  className="items-center justify-center"
                   style={{
                     width: 36,
                     height: 36,
                     borderRadius: 12,
                     backgroundColor: "rgba(255,255,255,0.18)",
-                    alignItems: "center",
-                    justifyContent: "center",
                   }}
                 >
                   <Ionicons name="people" size={20} color="white" />
                 </View>
-                <View style={{ flex: 1 }}>
+                <View className="flex-1">
                   <Text
-                    style={{
-                      color: "white",
-                      fontSize: 15,
-                      fontWeight: "800",
-                      letterSpacing: -0.3,
-                    }}
+                    testID="home-community-title"
+                    className="text-white font-extrabold"
+                    style={{ fontSize: 15, letterSpacing: -0.3 }}
                   >
                     Cộng đồng Đà Nẵng
                   </Text>
                   <Text
-                    style={{
-                      color: "rgba(255,255,255,0.7)",
-                      fontSize: 10,
-                      fontWeight: "500",
-                      marginTop: 1,
-                    }}
+                    testID="home-community-subtitle"
+                    className="text-white/70 font-medium mt-0.5 text-caption"
                   >
                     Báo cáo & theo dõi ngập lụt thời gian thực
                   </Text>
                 </View>
               </View>
 
-              {/* Right: Mini Stats */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                {/* Active reports indicator */}
+              <View className="flex-row items-center gap-2">
                 <View
-                  style={{
-                    alignItems: "center",
-                    backgroundColor: "rgba(255,255,255,0.15)",
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                    borderRadius: 10,
-                  }}
+                  testID="home-community-alert-count"
+                  className="items-center px-2 py-1 rounded-[10px]"
+                  style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
                 >
                   <Text
-                    style={{
-                      color: "#FCD34D",
-                      fontSize: 14,
-                      fontWeight: "900",
-                    }}
+                    className="font-black"
+                    style={{ color: "#FCD34D", fontSize: 14 }}
                   >
                     3
                   </Text>
-                  <Text
-                    style={{
-                      color: "rgba(255,255,255,0.6)",
-                      fontSize: 8,
-                      fontWeight: "600",
-                    }}
-                  >
+                  <Text className="text-white/60 font-semibold text-caption">
                     Cảnh báo
                   </Text>
                 </View>
@@ -179,19 +122,14 @@ export function CommunityBanner() {
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* ── Bottom: Quick Actions Row ── */}
-        <View
-          style={{
-            flexDirection: "row",
-            paddingVertical: 10,
-            paddingHorizontal: 12,
-            gap: 8,
-          }}
-        >
-          {/* Report Flood Button */}
+        {/* Bottom: Quick Actions Row */}
+        <View className="flex-row py-2.5 px-3 gap-2">
           <Animated.View style={{ flex: 1, opacity: shimmerOpacity }}>
             <TouchableOpacity
-              onPress={() => router.push("/community/create-post?openCamera=true" as any)}
+              testID="home-community-report-btn"
+              onPress={() =>
+                router.push("/community/create-post?openCamera=true" as any)
+              }
               activeOpacity={0.8}
             >
               <LinearGradient
@@ -209,100 +147,46 @@ export function CommunityBanner() {
                 }}
               >
                 <Ionicons name="camera" size={16} color="white" />
-                <Text
-                  style={{
-                    color: "white",
-                    fontSize: 12,
-                    fontWeight: "700",
-                  }}
-                >
+                <Text className="text-white font-bold" style={{ fontSize: 12 }}>
                   Báo cáo ngập
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
           </Animated.View>
 
-          {/* View Map Button */}
           <TouchableOpacity
+            testID="home-community-map-btn"
             onPress={() => router.push("/map" as any)}
             activeOpacity={0.8}
             style={{ flex: 1 }}
           >
-            <View
-              style={{
-                borderRadius: 14,
-                paddingVertical: 10,
-                paddingHorizontal: 12,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                backgroundColor: isDarkColorScheme
-                  ? "rgba(16, 185, 129, 0.12)"
-                  : "#ECFDF5",
-                borderWidth: 1,
-                borderColor: isDarkColorScheme
-                  ? "rgba(16, 185, 129, 0.25)"
-                  : "#A7F3D0",
-              }}
-            >
+            <View className="rounded-[14px] py-2.5 px-3 flex-row items-center justify-center gap-1.5 bg-[#ECFDF5] dark:bg-[#10B98120] border border-[#A7F3D0] dark:border-[#10B98140]">
               <MaterialCommunityIcons
                 name="map-marker-radius"
                 size={16}
                 color="#10B981"
               />
-              <Text
-                style={{
-                  color: "#10B981",
-                  fontSize: 12,
-                  fontWeight: "700",
-                }}
-              >
+              <Text className="font-bold" style={{ color: "#10B981", fontSize: 12 }}>
                 Bản đồ ngập
               </Text>
             </View>
           </TouchableOpacity>
         </View>
 
-        {/* ── Smart Tip Strip ── */}
+        {/* Smart Tip Strip */}
         <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            paddingVertical: 8,
-            paddingHorizontal: 14,
-            backgroundColor: isDarkColorScheme
-              ? "rgba(139, 92, 246, 0.08)"
-              : "#FAF5FF",
-            borderTopWidth: 1,
-            borderTopColor: isDarkColorScheme
-              ? "rgba(139, 92, 246, 0.15)"
-              : "#EDE9FE",
-            gap: 8,
-          }}
+          testID="home-community-tip-strip"
+          className="flex-row items-center py-2 px-[14px] gap-2 bg-[#FAF5FF] dark:bg-[#8B5CF614] border-t border-[#EDE9FE] dark:border-[#8B5CF626]"
         >
           <View
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: 10,
-              backgroundColor: isDarkColorScheme
-                ? "rgba(139, 92, 246, 0.2)"
-                : "#EDE9FE",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="items-center justify-center bg-[#EDE9FE] dark:bg-[#8B5CF633]"
+            style={{ width: 20, height: 20, borderRadius: 10 }}
           >
             <Ionicons name="bulb" size={11} color="#8B5CF6" />
           </View>
           <Text
-            style={{
-              flex: 1,
-              color: isDarkColorScheme ? "#A78BFA" : "#7C3AED",
-              fontSize: 10,
-              fontWeight: "600",
-              lineHeight: 14,
-            }}
+            className="flex-1 font-semibold text-[#7C3AED] dark:text-[#A78BFA] text-caption"
+            style={{ lineHeight: 14 }}
             numberOfLines={2}
           >
             Thấy điểm ngập? Chụp ảnh & chia sẻ trên Cộng đồng để cảnh báo

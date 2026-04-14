@@ -5,7 +5,7 @@ import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { MAP_COLORS, SHADOW } from "~/lib/design-tokens";
 import type { AdminArea } from "~/features/areas/types/admin-area.types";
 
 interface AdminAreaConfirmModalProps {
@@ -21,7 +21,7 @@ export function AdminAreaConfirmModal({
 }: AdminAreaConfirmModalProps) {
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
-  const isDark = isDarkColorScheme;
+  const palette = isDarkColorScheme ? MAP_COLORS.dark : MAP_COLORS.light;
 
   if (!visible || !adminArea) return null;
 
@@ -40,17 +40,20 @@ export function AdminAreaConfirmModal({
       }}
     >
       <View
-        style={{
-          backgroundColor: isDark ? "#1E293B" : "#FFFFFF",
-          borderRadius: 24,
-          padding: 24,
-          marginHorizontal: 20,
-          width: "90%",
-          maxWidth: 400,
-          ...CARD_SHADOW,
-          borderWidth: 1,
-          borderColor: isDark ? "#334155" : "#E2E8F0",
-        }}
+        testID="map-area-modal"
+        style={[
+          SHADOW.lg,
+          {
+            backgroundColor: palette.card,
+            borderRadius: 24,
+            padding: 24,
+            marginHorizontal: 20,
+            width: "90%",
+            maxWidth: 400,
+            borderWidth: 1,
+            borderColor: palette.border,
+          },
+        ]}
       >
         <View style={{ alignItems: "center", marginBottom: 20 }}>
           <View
@@ -58,19 +61,19 @@ export function AdminAreaConfirmModal({
               width: 64,
               height: 64,
               borderRadius: 32,
-              backgroundColor: "#3B82F620",
+              backgroundColor: `${palette.accent}20`,
               alignItems: "center",
               justifyContent: "center",
               marginBottom: 16,
             }}
           >
-            <Ionicons name="analytics" size={32} color="#3B82F6" />
+            <Ionicons name="analytics" size={32} color={palette.accent} />
           </View>
           <Text
             style={{
               fontSize: 20,
               fontWeight: "800",
-              color: isDark ? "#F1F5F9" : "#1F2937",
+              color: palette.text,
               marginBottom: 8,
               textAlign: "center",
             }}
@@ -80,14 +83,14 @@ export function AdminAreaConfirmModal({
           <Text
             style={{
               fontSize: 14,
-              color: isDark ? "#94A3B8" : "#64748B",
+              color: palette.subtext,
               textAlign: "center",
               lineHeight: 20,
             }}
           >
             Bạn có muốn xem phân tích rủi ro ngập lụt của AI cho khu vực{" "}
-            <Text style={{ fontWeight: "700", color: "#3B82F6" }}>
-              {adminArea.name}
+            <Text style={{ fontWeight: "700", color: palette.accent }}>
+              {adminArea?.name ?? "Khu vực"}
             </Text>
             ?
           </Text>
@@ -95,6 +98,7 @@ export function AdminAreaConfirmModal({
 
         <View style={{ gap: 12 }}>
           <TouchableOpacity
+            testID="map-area-modal-confirm-btn"
             onPress={() => {
               onClose();
               router.push({
@@ -106,7 +110,7 @@ export function AdminAreaConfirmModal({
               });
             }}
             style={{
-              backgroundColor: "#3B82F6",
+              backgroundColor: palette.accent,
               borderRadius: 16,
               padding: 16,
               alignItems: "center",
@@ -124,9 +128,10 @@ export function AdminAreaConfirmModal({
           </TouchableOpacity>
 
           <TouchableOpacity
+            testID="map-area-modal-cancel-btn"
             onPress={onClose}
             style={{
-              backgroundColor: isDark ? "#334155" : "#F1F5F9",
+              backgroundColor: isDarkColorScheme ? palette.muted : palette.background,
               borderRadius: 16,
               padding: 16,
               alignItems: "center",
@@ -134,7 +139,7 @@ export function AdminAreaConfirmModal({
           >
             <Text
               style={{
-                color: isDark ? "#F1F5F9" : "#64748B",
+                color: palette.subtext,
                 fontSize: 16,
                 fontWeight: "600",
               }}

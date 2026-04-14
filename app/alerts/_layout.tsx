@@ -6,24 +6,15 @@ export default function AlertsLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen
         name="settings"
-        options={{
-          headerShown: false,
-          presentation: "modal",
-        }}
+        options={{ headerShown: false, presentation: "modal" }}
       />
       <Stack.Screen
         name="history"
-        options={{
-          headerShown: false,
-            presentation: "modal",
-        }}
+        options={{ headerShown: false, presentation: "modal" }}
       />
       <Stack.Screen
         name="thresholds"
-        options={{
-          headerShown: false,
-          presentation: "modal",
-        }}
+        options={{ headerShown: false, presentation: "modal" }}
       />
     </Stack>
   );

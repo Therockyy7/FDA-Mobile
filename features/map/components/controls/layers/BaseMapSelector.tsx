@@ -1,85 +1,56 @@
 // features/map/components/controls/layers/BaseMapSelector.tsx
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
-import { TouchableOpacity, View } from "react-native";
+import React, { useMemo } from "react";
+import { TouchableOpacity, View, useColorScheme } from "react-native";
 import { Text } from "~/components/ui/text";
+import { MAP_ICON_COLORS } from "~/lib/design-tokens";
 import type { BaseMapType } from "~/features/map/types";
 
 interface BaseMapSelectorProps {
   selectedMap: BaseMapType;
   onChange: (map: "standard" | "satellite") => void;
-  accentColor: string;
-  textColor: string;
-  subtextColor: string;
-  cardBg: string;
-  borderColor: string;
-  isDarkColorScheme: boolean;
 }
 
 export function BaseMapSelector({
   selectedMap,
   onChange,
-  accentColor,
-  textColor,
-  subtextColor,
-  cardBg,
-  borderColor,
-  isDarkColorScheme,
 }: BaseMapSelectorProps) {
+  const isDark = useColorScheme() === "dark";
+
+  const iconColor = useMemo(() => ({
+    selected: isDark ? MAP_ICON_COLORS.dark.active : MAP_ICON_COLORS.light.active,
+    unselected: isDark ? MAP_ICON_COLORS.dark.inactive : MAP_ICON_COLORS.light.inactive,
+  }), [isDark]);
+
   return (
-    <View style={{ marginBottom: 24 }}>
-      <Text
-        style={{
-          fontSize: 14,
-          fontWeight: "600",
-          color: subtextColor,
-          marginBottom: 12,
-          letterSpacing: 0.5,
-        }}
-      >
+    <View className="mb-6" testID="map-layer-basemap-selector">
+      <Text className="text-sm font-semibold text-muted-foreground mb-3 tracking-wide">
         LOẠI BẢN ĐỒ
       </Text>
 
-      <View style={{ flexDirection: "row", gap: 12 }}>
+      <View className="flex-row gap-3">
         {/* Standard Map */}
         <TouchableOpacity
           onPress={() => onChange("standard")}
-          style={{
-            flex: 1,
-            padding: 16,
-            borderRadius: 16,
-            backgroundColor: cardBg,
-            borderWidth: 2,
-            borderColor: selectedMap === "standard" ? accentColor : borderColor,
-            alignItems: "center",
-            gap: 8,
-          }}
+          className={`flex-1 p-4 rounded-2xl bg-card border-2 items-center gap-2 ${
+            selectedMap === "standard" ? "border-primary" : "border-border"
+          }`}
         >
           <View
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              backgroundColor:
-                selectedMap === "standard"
-                  ? `${accentColor}20`
-                  : isDarkColorScheme ? "#475569" : "#E2E8F0",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className={`w-12 h-12 rounded-xl items-center justify-center ${
+              selectedMap === "standard" ? "bg-primary/20" : "bg-muted dark:bg-muted"
+            }`}
           >
             <Ionicons
               name="map-outline"
               size={24}
-              color={selectedMap === "standard" ? accentColor : subtextColor}
+              color={selectedMap === "standard" ? iconColor.selected : iconColor.unselected}
             />
           </View>
           <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "600",
-              color: selectedMap === "standard" ? accentColor : textColor,
-            }}
+            className={`text-sm font-semibold ${
+              selectedMap === "standard" ? "text-primary" : "text-foreground"
+            }`}
           >
             Tiêu chuẩn
           </Text>
@@ -88,42 +59,25 @@ export function BaseMapSelector({
         {/* Satellite Map */}
         <TouchableOpacity
           onPress={() => onChange("satellite")}
-          style={{
-            flex: 1,
-            padding: 16,
-            borderRadius: 16,
-            backgroundColor: cardBg,
-            borderWidth: 2,
-            borderColor: selectedMap === "satellite" ? accentColor : borderColor,
-            alignItems: "center",
-            gap: 8,
-          }}
+          className={`flex-1 p-4 rounded-2xl bg-card border-2 items-center gap-2 ${
+            selectedMap === "satellite" ? "border-primary" : "border-border"
+          }`}
         >
           <View
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              backgroundColor:
-                selectedMap === "satellite"
-                  ? `${accentColor}20`
-                  : isDarkColorScheme ? "#475569" : "#E2E8F0",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className={`w-12 h-12 rounded-xl items-center justify-center ${
+              selectedMap === "satellite" ? "bg-primary/20" : "bg-muted dark:bg-muted"
+            }`}
           >
             <Ionicons
               name="earth"
               size={24}
-              color={selectedMap === "satellite" ? accentColor : subtextColor}
+              color={selectedMap === "satellite" ? iconColor.selected : iconColor.unselected}
             />
           </View>
           <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "600",
-              color: selectedMap === "satellite" ? accentColor : textColor,
-            }}
+            className={`text-sm font-semibold ${
+              selectedMap === "satellite" ? "text-primary" : "text-foreground"
+            }`}
           >
             Vệ tinh
           </Text>

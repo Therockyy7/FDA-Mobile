@@ -3,7 +3,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
 import { useColorScheme, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { SHADOW } from "~/lib/design-tokens";
 
 const SEVERITY_LEVELS = [
   { key: "safe", label: "An toàn", range: "< 10 cm", color: "#22C55E", bgColor: "#DCFCE7", icon: "checkmark-circle" as const },
@@ -18,7 +18,7 @@ const Legend = () => {
   return (
     <View
       style={[
-        CARD_SHADOW,
+        SHADOW.sm,
         {
           position: "absolute",
           top: 80,

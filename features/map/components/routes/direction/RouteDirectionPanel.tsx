@@ -20,7 +20,7 @@ import { TransportModeButton } from "~/features/map/components/routes/direction/
 
 type Phase = "idle" | "ready";
 
-export function RouteDirectionPanel({
+export const RouteDirectionPanel = React.memo(function RouteDirectionPanel({
   visible,
   onClose,
   originText,
@@ -113,6 +113,7 @@ export function RouteDirectionPanel({
             zIndex: 50,
             paddingHorizontal: 16,
           }}
+          testID="map-direction-panel-idle"
         >
           <View
             style={{
@@ -203,7 +204,6 @@ export function RouteDirectionPanel({
           initialQuery={isUsingGPSDest ? "" : destinationText}
           onQueryClear={onDestinationClear}
         />
-
       </>
     );
   }
@@ -221,6 +221,7 @@ export function RouteDirectionPanel({
           zIndex: 50,
           paddingHorizontal: 16,
         }}
+        testID="map-direction-panel-ready"
       >
         <View
           style={{
@@ -416,10 +417,26 @@ export function RouteDirectionPanel({
               padding: 3,
             }}
           >
-            <TransportModeButton active={transportMode === "car"} icon={<Ionicons name="car" size={15} color={transportMode === "car" ? "white" : "#6B7280"} />} onPress={() => onModeChange("car")} />
-            <TransportModeButton active={transportMode === "motorbike"} icon={<MaterialCommunityIcons name="motorbike" size={15} color={transportMode === "motorbike" ? "white" : "#6B7280"} />} onPress={() => onModeChange("motorbike")} />
-            <TransportModeButton active={transportMode === "bicycle"} icon={<Ionicons name="bicycle" size={15} color={transportMode === "bicycle" ? "white" : "#6B7280"} />} onPress={() => onModeChange("bicycle")} />
-            <TransportModeButton active={transportMode === "walk"} icon={<Ionicons name="walk" size={15} color={transportMode === "walk" ? "white" : "#6B7280"} />} onPress={() => onModeChange("walk")} />
+            <TransportModeButton
+              active={transportMode === "car"}
+              icon={<Ionicons name="car" size={15} color={transportMode === "car" ? "white" : "#6B7280"} />}
+              onPress={() => onModeChange("car")}
+            />
+            <TransportModeButton
+              active={transportMode === "motorbike"}
+              icon={<MaterialCommunityIcons name="motorbike" size={15} color={transportMode === "motorbike" ? "white" : "#6B7280"} />}
+              onPress={() => onModeChange("motorbike")}
+            />
+            <TransportModeButton
+              active={transportMode === "bicycle"}
+              icon={<Ionicons name="bicycle" size={15} color={transportMode === "bicycle" ? "white" : "#6B7280"} />}
+              onPress={() => onModeChange("bicycle")}
+            />
+            <TransportModeButton
+              active={transportMode === "walk"}
+              icon={<Ionicons name="walk" size={15} color={transportMode === "walk" ? "white" : "#6B7280"} />}
+              onPress={() => onModeChange("walk")}
+            />
           </View>
 
           <TouchableOpacity
@@ -472,4 +489,4 @@ export function RouteDirectionPanel({
       />
     </>
   );
-}
+});

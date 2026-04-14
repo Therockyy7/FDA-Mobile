@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
-import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
+import { Dimensions, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "~/components/ui/text";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
@@ -36,6 +37,8 @@ interface InAppNotificationBannerProps {
   onDismiss?: () => void;
 }
 
+// Flood severity color tokens — sourced from tailwind.config.js flood-* / standard Tailwind palette
+// bgLight/bgDark must stay as JS values (StyleSheet.create + dynamic backgroundColor)
 const SEVERITY_CONFIG: Record<
   NotificationSeverity,
   {
@@ -43,51 +46,51 @@ const SEVERITY_CONFIG: Record<
     bgDark: string;
     borderLight: string;
     borderDark: string;
-    icon: any;
+    icon: React.ElementType;
     iconColor: string;
     label: string;
-    badgeBg: string;
+    badgeBg: string; // matches flood-* tokens: danger=#EF4444, warning=#F59E0B, caution=#F59E0B, info=#0077BE
   }
 > = {
   CRITICAL: {
-    bgLight: "#fef2f2", // red-50
-    bgDark: "rgba(69, 10, 10, 0.4)", // red-950/40
-    borderLight: "#fecaca", // red-200
-    borderDark: "#991b1b", // red-800
+    bgLight: "#fef2f2",           // red-50
+    bgDark: "rgba(69,10,10,0.4)", // red-950/40
+    borderLight: "#fecaca",       // red-200
+    borderDark: "#991b1b",        // red-800
     icon: AlertOctagon,
-    iconColor: "#ef4444", // red-500
+    iconColor: "#EF4444",         // flood-danger
     label: "CRITICAL",
-    badgeBg: "#ef4444", // red-500
+    badgeBg: "#EF4444",           // flood-danger
   },
   WARNING: {
-    bgLight: "#fffbeb", // amber-50
-    bgDark: "rgba(69, 26, 3, 0.4)", // amber-950/40
-    borderLight: "#fde68a", // amber-200
-    borderDark: "#92400e", // amber-800
+    bgLight: "#fffbeb",              // amber-50
+    bgDark: "rgba(69,26,3,0.4)",    // amber-950/40
+    borderLight: "#fde68a",         // amber-200
+    borderDark: "#92400e",          // amber-800
     icon: AlertTriangle,
-    iconColor: "#f59e0b", // amber-500
+    iconColor: "#F97316",           // flood-warning (orange)
     label: "WARNING",
-    badgeBg: "#f59e0b", // amber-500
+    badgeBg: "#F97316",             // flood-warning
   },
   CAUTION: {
-    bgLight: "#fefce8", // yellow-50
-    bgDark: "rgba(66, 32, 6, 0.4)", // yellow-950/40
-    borderLight: "#fef08a", // yellow-200
-    borderDark: "#854d0e", // yellow-800
+    bgLight: "#fefce8",              // yellow-50
+    bgDark: "rgba(66,32,6,0.4)",    // yellow-950/40
+    borderLight: "#fef08a",         // yellow-200
+    borderDark: "#854d0e",          // yellow-800
     icon: AlertCircle,
-    iconColor: "#eab308", // yellow-500
+    iconColor: "#F59E0B",           // flood-warning (amber)
     label: "CAUTION",
-    badgeBg: "#eab308", // yellow-500
+    badgeBg: "#F59E0B",             // flood-warning
   },
   INFO: {
-    bgLight: "#eff6ff", // blue-50
-    bgDark: "rgba(23, 37, 84, 0.4)", // blue-950/40
-    borderLight: "#bfdbfe", // blue-200
-    borderDark: "#1e40af", // blue-800
+    bgLight: "#eff6ff",              // blue-50
+    bgDark: "rgba(23,37,84,0.4)",   // blue-950/40
+    borderLight: "#bfdbfe",         // blue-200
+    borderDark: "#1e40af",          // blue-800
     icon: Info,
-    iconColor: "#3b82f6", // blue-500
+    iconColor: "#0077BE",           // flood-info / brand primary
     label: "INFO",
-    badgeBg: "#3b82f6", // blue-500
+    badgeBg: "#0077BE",             // flood-info
   },
 };
 
@@ -100,7 +103,6 @@ export const InAppNotificationBanner: React.FC<
   const translateX = useSharedValue(0);
   const progressPercent = useSharedValue(100);
 
-  // Reset translateX mỗi khi notification hiện lại, tránh bị kẹt ngoài màn hình sau swipe dismiss
   useEffect(() => {
     if (visible && notification) {
       translateX.value = 0;
@@ -131,7 +133,7 @@ export const InAppNotificationBanner: React.FC<
     transform: [
       { translateY: translateY.value as number },
       { translateX: translateX.value as number },
-    ] as any,
+    ] as never,
   }));
 
   const progressStyle = useAnimatedStyle(() => ({
@@ -143,49 +145,47 @@ export const InAppNotificationBanner: React.FC<
   const cfg = SEVERITY_CONFIG[notification.severity] ?? SEVERITY_CONFIG.INFO;
   const SeverityIcon = cfg.icon;
 
-  const colors = {
-    bg: isDarkColorScheme ? cfg.bgDark : cfg.bgLight,
-    border: isDarkColorScheme ? cfg.borderDark : cfg.borderLight,
-    title: isDarkColorScheme ? "#FFFFFF" : "#0F172A",
-    body: isDarkColorScheme ? "#CBD5E1" : "#475569",
-    meta: isDarkColorScheme ? "#94A3B8" : "#64748B",
-    progressBg: isDarkColorScheme ? "rgba(51, 65, 85, 0.6)" : "rgba(226, 232, 240, 0.6)",
-    shadow: "#000000",
-  };
+  // JS-only dark-mode exception: backgroundColor from SEVERITY_CONFIG must stay as inline style
+  // Use strict equality to avoid falsy coercion issues if hook returns null
+  const bgColor = isDarkColorScheme === true ? cfg.bgDark : cfg.bgLight;
+  const borderColor = isDarkColorScheme === true ? cfg.borderDark : cfg.borderLight;
+  const progressBg = isDarkColorScheme === true
+    ? "rgba(51,65,85,0.6)"
+    : "rgba(226,232,240,0.6)";
 
   return (
-    <View style={styles.host} pointerEvents="box-none">
+    <View style={styles.host} pointerEvents="box-none" testID="alerts-banner-host">
       <GestureDetector gesture={panGesture}>
         <Animated.View
-          style={[
-            styles.bannerWrap,
-            {
-              top: insets.top + 10,
-            },
-            animatedStyle as any,
-          ]}
+          style={[styles.bannerWrap, { top: insets.top + 10 }, animatedStyle as never]}
+          testID="alerts-banner-wrap"
         >
-          <Pressable onPress={() => onPress?.(notification)}>
+          <Pressable onPress={() => onPress?.(notification)} testID="alerts-banner-pressable">
             <View
-              style={[
-                styles.card,
-                {
-                  backgroundColor: colors.bg,
-                  borderColor: colors.border,
-                  shadowColor: colors.shadow,
-                },
-              ]}
+              style={[styles.card, { backgroundColor: bgColor, borderColor, shadowColor: "#000" }]}
+              testID="alerts-banner-card"
             >
               <View style={styles.headerRow}>
-                <View style={[styles.iconBox, { backgroundColor: cfg.badgeBg }]}>
+                <View
+                  style={[styles.iconBox, { backgroundColor: cfg.badgeBg }]}
+                  testID="alerts-banner-icon-box"
+                >
                   <SeverityIcon size={14} color="#FFF" />
                 </View>
-                <Text style={[styles.headerLabel, { color: colors.meta }]}>
+                <Text
+                  className="text-xs font-extrabold uppercase ml-2"
+                  style={{ color: isDarkColorScheme ? "#94A3B8" : "#64748B", letterSpacing: 0.5 }}
+                  testID="alerts-banner-label"
+                >
                   FDA {cfg.label}
                 </Text>
-                
+
                 <View style={styles.headerRight}>
-                  <Text style={[styles.headerTime, { color: colors.meta }]}>
+                  <Text
+                    className="text-xs"
+                    style={{ color: isDarkColorScheme ? "#94A3B8" : "#64748B" }}
+                    testID="alerts-banner-time"
+                  >
                     Vừa xong
                   </Text>
                   <Pressable
@@ -194,8 +194,9 @@ export const InAppNotificationBanner: React.FC<
                       onDismiss?.();
                     }}
                     hitSlop={{ top: 12, right: 12, bottom: 12, left: 12 }}
+                    testID="alerts-banner-dismiss"
                   >
-                    <X size={14} color={colors.meta} />
+                    <X size={14} color={isDarkColorScheme ? "#94A3B8" : "#64748B"} />
                   </Pressable>
                 </View>
               </View>
@@ -203,7 +204,9 @@ export const InAppNotificationBanner: React.FC<
               <Text
                 numberOfLines={1}
                 ellipsizeMode="tail"
-                style={[styles.title, { color: colors.title }]}
+                className="text-base font-extrabold mb-1"
+                style={{ color: isDarkColorScheme ? "#FFFFFF" : "#0F172A" }}
+                testID="alerts-banner-title"
               >
                 {notification.title}
               </Text>
@@ -211,13 +214,21 @@ export const InAppNotificationBanner: React.FC<
               <Text
                 numberOfLines={3}
                 ellipsizeMode="tail"
-                style={[styles.body, { color: colors.body }]}
+                className="text-sm leading-snug"
+                style={{ color: isDarkColorScheme ? "#CBD5E1" : "#475569" }}
+                testID="alerts-banner-body"
               >
                 {notification.body}
               </Text>
 
-              <View style={[styles.progressTrack, { backgroundColor: colors.progressBg }]}>
-                 <Animated.View style={[styles.progressBar, { backgroundColor: cfg.badgeBg }, progressStyle]} />
+              <View
+                style={[styles.progressTrack, { backgroundColor: progressBg }]}
+                testID="alerts-banner-progress-track"
+              >
+                <Animated.View
+                  style={[styles.progressBar, { backgroundColor: cfg.badgeBg }, progressStyle]}
+                  testID="alerts-banner-progress-bar"
+                />
               </View>
             </View>
           </Pressable>
@@ -261,30 +272,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  headerLabel: {
-    fontSize: 12,
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginLeft: 8,
-  },
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
     marginLeft: "auto",
     gap: 8,
-  },
-  headerTime: {
-    fontSize: 11,
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: "800",
-    marginBottom: 4,
-  },
-  body: {
-    fontSize: 13,
-    lineHeight: 18,
   },
   progressTrack: {
     marginTop: 12,

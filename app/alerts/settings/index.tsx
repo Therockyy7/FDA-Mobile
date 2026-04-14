@@ -8,17 +8,13 @@ export default function AlertSettingsScreen() {
   const areaId = params.areaId as string;
   const areaName = params.areaName as string;
 
-  if (!areaId || !areaName) {
-    return null; // Or show an error
-  }
+  // Validate params are not empty strings (type assertion allows empty string)
+  if (!areaId?.trim() || !areaName?.trim()) return null;
 
   return (
     <AlertSettings
       areaId={areaId}
       areaName={areaName}
-      // TODO: Load initial settings from API/service
-      // initialSettings={loadedSettings}
-      // onSave={handleSaveSettings}
     />
   );
 }

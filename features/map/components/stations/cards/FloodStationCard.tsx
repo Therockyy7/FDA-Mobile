@@ -4,13 +4,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { RADIUS } from "~/features/map/lib/map-ui-utils";
+import { useMapColors } from "~/features/map/lib/map-ui-utils";
+import { RADIUS } from "~/lib/design-tokens";
 import {
   FloodSeverityFeature,
   SEVERITY_COLORS,
   SEVERITY_LABELS,
 } from "~/features/map/types/map-layers.types";
-import { useColorScheme } from "~/lib/useColorScheme";
 import { StationFooter } from "./StationFooter";
 import { StationStats } from "./StationStats";
 
@@ -32,8 +32,7 @@ export function FloodStationCard({
   onClose,
   onViewDetails,
 }: FloodStationCardProps) {
-  const { isDarkColorScheme } = useColorScheme();
-  const isDark = isDarkColorScheme;
+  const colors = useMapColors();
   const { properties } = station;
 
   const severityColor =
@@ -44,19 +43,11 @@ export function FloodStationCard({
     SEVERITY_LABELS[properties.severity] || SEVERITY_LABELS.unknown;
   const severityIcon = getSeverityIcon(properties.severity);
 
-  const colors = {
-    card: isDark ? "rgba(15,23,42,0.98)" : "#FFFFFF",
-    text: isDark ? "#F1F5F9" : "#1F2937",
-    subtext: isDark ? "#94A3B8" : "#64748B",
-    muted: isDark ? "#64748B" : "#9CA3AF",
-    cardBg: isDark ? "#1E293B" : "#F8FAFC",
-  };
-
   return (
-    <View style={[styles.root, { backgroundColor: colors.card }]}>
+    <View testID="map-station-card" style={[styles.root, { backgroundColor: colors.card }]}>
       {/* Thin gradient header */}
       <LinearGradient
-        colors={[severityColor, `${severityColor}C0`]}
+        colors={[severityColor, severityColor + "80"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.header}
@@ -110,7 +101,7 @@ export function FloodStationCard({
           severityColor={severityColor}
           severityLabel={severityLabel}
           severityConfig={{ name: severityIcon }}
-          colors={colors}
+          colors={{ cardBg: colors.background, text: colors.text, subtext: colors.subtext }}
         />
 
         {/* <StationSensorInfo
@@ -125,7 +116,7 @@ export function FloodStationCard({
           stationStatus={properties.stationStatus}
           severityColor={severityColor}
           onViewDetails={onViewDetails}
-          colors={colors}
+          colors={{ subtext: colors.subtext, muted: colors.muted }}
         />
       </View>
     </View>

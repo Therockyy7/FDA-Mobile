@@ -9,12 +9,11 @@ import { Text } from "~/components/ui/text";
 import { FloodZone } from "~/features/map/constants/map-data";
 import { getStatusColor } from "~/features/map/lib/map-utils";
 import {
-  CARD_SHADOW,
   PULSE_ANIM,
-  RADIUS,
   STATUS_BADGE,
   useMapColors,
 } from "~/features/map/lib/map-ui-utils";
+import { FLOOD_COLORS, RADIUS, SHADOW } from "~/lib/design-tokens";
 
 interface FloodZoneCardProps {
   zone: FloodZone;
@@ -72,8 +71,9 @@ export function FloodZoneCard({ zone, slideAnim, onClose }: FloodZoneCardProps) 
     >
       <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
         <View
+          testID="map-area-card"
           style={[
-            CARD_SHADOW,
+            SHADOW.md,
             {
               backgroundColor: colors.card,
               borderRadius: RADIUS.card,
@@ -271,7 +271,7 @@ export function FloodZoneCard({ zone, slideAnim, onClose }: FloodZoneCardProps) 
               <View style={{ width: 1, backgroundColor: colors.border }} />
 
               <View style={{ alignItems: "center" }}>
-                <Ionicons name="time-outline" size={24} color="#10B981" />
+                <Ionicons name="time-outline" size={24} color={FLOOD_COLORS.safe} />
                 <Text style={{ fontSize: 11, color: colors.muted, marginTop: 6, marginBottom: 4 }}>
                   Cập nhật
                 </Text>
@@ -283,7 +283,7 @@ export function FloodZoneCard({ zone, slideAnim, onClose }: FloodZoneCardProps) 
               <View style={{ width: 1, backgroundColor: colors.border }} />
 
               <View style={{ alignItems: "center" }}>
-                <Ionicons name="people-outline" size={24} color="#F59E0B" />
+                <Ionicons name="people-outline" size={24} color={FLOOD_COLORS.warning} />
                 <Text style={{ fontSize: 11, color: colors.muted, marginTop: 6, marginBottom: 4 }}>
                   Dân số
                 </Text>

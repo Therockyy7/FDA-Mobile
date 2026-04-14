@@ -1,22 +1,28 @@
+// app/alerts/thresholds/index.tsx
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { ScrollView, StatusBar, View } from "react-native";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useColorScheme } from "~/lib/useColorScheme";
+import { MAP_COLORS, SEVERITY_PALETTE } from "~/lib/design-tokens";
 
 import AlertThresholdsFooter from "~/features/alerts/components/alert-thresholds/AlertThresholdsFooter";
 import AlertThresholdsHeader from "~/features/alerts/components/alert-thresholds/AlertThresholdsHeader";
 import GlobalThresholdCard from "~/features/alerts/components/alert-thresholds/GlobalThresholdCard";
 import ThresholdCard from "~/features/alerts/components/alert-thresholds/ThresholdCard";
 import ThresholdSectionTitle from "~/features/alerts/components/alert-thresholds/ThresholdSectionTitle";
-import { useColorScheme } from "~/lib/useColorScheme";
 
 type SeverityKey = "info" | "caution" | "warning" | "critical";
 
-const clamp = (n: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, n));
+// Flood severity color tokens — import from design-tokens to stay in sync with Tailwind config
+const SEVERITY_COLORS: Record<SeverityKey, string> = {
+  info: "#0077BE",                  // flood-info / brand primary (TAB_COLORS.light.active)
+  caution: SEVERITY_PALETTE.caution.primary,  // caution
+  warning: SEVERITY_PALETTE.warning.primary,  // warning (orange)
+  critical: SEVERITY_PALETTE.critical.primary, // critical (red)
+};
+
+const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
 export default function AlertThresholdsScreen() {
@@ -25,15 +31,25 @@ export default function AlertThresholdsScreen() {
   const insets = useSafeAreaInsets();
   const { isDarkColorScheme } = useColorScheme();
 
+  // Theme colors — sub-components still consume colors props (story 4.2 pending migration)
+  // Defensive: provide defaults if MAP_COLORS returns incomplete structure
+  const defaultScheme = isDarkColorScheme ? MAP_COLORS.dark : MAP_COLORS.light;
+  const scheme = {
+    background: defaultScheme?.background ?? "#f6f7f8",
+    card: defaultScheme?.card ?? "#ffffff",
+    text: defaultScheme?.text ?? "#1F2937",
+    subtext: defaultScheme?.subtext ?? "#64748B",
+    border: defaultScheme?.border ?? "#E2E8F0",
+  };
   const colors = useMemo(
     () => ({
       primary: "#137fec",
-      bg: isDarkColorScheme ? "#101922" : "#f6f7f8",
-      surface: isDarkColorScheme ? "#111827" : "#ffffff",
+      bg: isDarkColorScheme ? "#101922" : scheme.background,
+      surface: scheme.card,
       surfaceSoft: isDarkColorScheme ? "#0B1A33" : "#F9FAFB",
-      text: isDarkColorScheme ? "#ffffff" : "#111418",
+      text: scheme.text,
       subtext: isDarkColorScheme ? "#9CA3AF" : "#617589",
-      border: isDarkColorScheme ? "#1F2937" : "#E5E7EB",
+      border: scheme.border,
       borderSoft: isDarkColorScheme
         ? "rgba(31,41,55,0.5)"
         : "rgba(229,231,235,0.7)",
@@ -42,12 +58,7 @@ export default function AlertThresholdsScreen() {
         : "rgba(255,255,255,0.80)",
       error: "#EF4444",
       errorSoft: isDarkColorScheme ? "rgba(239,68,68,0.15)" : "#FEF2F2",
-      status: {
-        info: "#137fec",
-        caution: "#f59e0b",
-        warning: "#f97316",
-        critical: "#ef4444",
-      } as Record<SeverityKey, string>,
+      status: SEVERITY_COLORS,
     }),
     [isDarkColorScheme],
   );
@@ -87,9 +98,10 @@ export default function AlertThresholdsScreen() {
   };
 
   const setFromText = (key: SeverityKey, text: string) => {
-    const cleaned = text.replace(",", ".");
-    const n = Number(cleaned);
-    if (Number.isFinite(n)) setValue(key, n);
+    // Validate numeric input: reject if not finite after decimal normalization
+    const n = Number(text.replace(",", "."));
+    if (!Number.isFinite(n) || n < 0) return;
+    setValue(key, n);
   };
 
   const resetToDefault = () => {
@@ -105,8 +117,27 @@ export default function AlertThresholdsScreen() {
     // TODO: wire API, use params.areaId
   };
 
+  // Memoize color object to prevent unnecessary child re-renders
+  const thresholdCardColors = useMemo(
+    () => ({
+      surface: colors.surface,
+      surfaceSoft: colors.surfaceSoft,
+      text: colors.text,
+      subtext: colors.subtext,
+      borderSoft: colors.borderSoft,
+      primary: colors.primary,
+      error: colors.error,
+      errorSoft: colors.errorSoft,
+      bg: colors.bg,
+    }),
+    [colors],
+  );
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: colors.bg }}
+      testID="alerts-thresholds-screen"
+    >
       <StatusBar
         barStyle={isDarkColorScheme ? "light-content" : "dark-content"}
         backgroundColor={colors.bg}
@@ -124,16 +155,18 @@ export default function AlertThresholdsScreen() {
       />
 
       <ScrollView
-        style={{ flex: 1 }}
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingTop: headerHeight + 4,
           paddingBottom: footerHeight + 10,
         }}
+        testID="alerts-thresholds-scroll"
       >
         <ThresholdSectionTitle
           title="Mặc định toàn hệ thống"
           colors={{ text: colors.text }}
+          testID="alerts-thresholds-global-title"
         />
         <GlobalThresholdCard
           global={global}
@@ -144,14 +177,16 @@ export default function AlertThresholdsScreen() {
             subtext: colors.subtext,
             text: colors.text,
           }}
+          testID="alerts-thresholds-global-card"
         />
 
         <ThresholdSectionTitle
           title="Ngưỡng tùy chỉnh của bạn"
           colors={{ text: colors.text }}
+          testID="alerts-thresholds-custom-title"
         />
 
-        <View style={{ paddingHorizontal: 16, gap: 10 }}>
+        <View className="px-4 gap-2.5" testID="alerts-thresholds-custom-list">
           <ThresholdCard
             title="Info"
             color={colors.status.info}
@@ -159,19 +194,9 @@ export default function AlertThresholdsScreen() {
             unit="m"
             onChange={(v) => setValue("info", v)}
             onTextChange={(t) => setFromText("info", t)}
-            colors={{
-              surface: colors.surface,
-              surfaceSoft: colors.surfaceSoft,
-              text: colors.text,
-              subtext: colors.subtext,
-              borderSoft: colors.borderSoft,
-              primary: colors.primary,
-              error: colors.error,
-              errorSoft: colors.errorSoft,
-              bg: colors.bg,
-            }}
+            colors={thresholdCardColors}
+            testID="alerts-thresholds-card-info"
           />
-
           <ThresholdCard
             title="Caution"
             color={colors.status.caution}
@@ -179,20 +204,10 @@ export default function AlertThresholdsScreen() {
             unit="m"
             onChange={(v) => setValue("caution", v)}
             onTextChange={(t) => setFromText("caution", t)}
-            colors={{
-              surface: colors.surface,
-              surfaceSoft: colors.surfaceSoft,
-              text: colors.text,
-              subtext: colors.subtext,
-              borderSoft: colors.borderSoft,
-              primary: colors.primary,
-              error: colors.error,
-              errorSoft: colors.errorSoft,
-              bg: colors.bg,
-            }}
+            colors={thresholdCardColors}
             error={errors.caution}
+            testID="alerts-thresholds-card-caution"
           />
-
           <ThresholdCard
             title="Warning"
             color={colors.status.warning}
@@ -200,20 +215,10 @@ export default function AlertThresholdsScreen() {
             unit="m"
             onChange={(v) => setValue("warning", v)}
             onTextChange={(t) => setFromText("warning", t)}
-            colors={{
-              surface: colors.surface,
-              surfaceSoft: colors.surfaceSoft,
-              text: colors.text,
-              subtext: colors.subtext,
-              borderSoft: colors.borderSoft,
-              primary: colors.primary,
-              error: colors.error,
-              errorSoft: colors.errorSoft,
-              bg: colors.bg,
-            }}
+            colors={thresholdCardColors}
             error={errors.warning}
+            testID="alerts-thresholds-card-warning"
           />
-
           <ThresholdCard
             title="Critical"
             color={colors.status.critical}
@@ -221,22 +226,13 @@ export default function AlertThresholdsScreen() {
             unit="m"
             onChange={(v) => setValue("critical", v)}
             onTextChange={(t) => setFromText("critical", t)}
-            colors={{
-              surface: colors.surface,
-              surfaceSoft: colors.surfaceSoft,
-              text: colors.text,
-              subtext: colors.subtext,
-              borderSoft: colors.borderSoft,
-              primary: colors.primary,
-              error: colors.error,
-              errorSoft: colors.errorSoft,
-              bg: colors.bg,
-            }}
+            colors={thresholdCardColors}
             error={errors.critical}
+            testID="alerts-thresholds-card-critical"
           />
         </View>
 
-        <View style={{ height: 8 }} />
+        <View className="h-2" />
       </ScrollView>
 
       <AlertThresholdsFooter

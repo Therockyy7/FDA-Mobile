@@ -27,24 +27,16 @@ export function MapHeader({
 }: MapHeaderProps) {
   const { isDarkColorScheme } = useColorScheme();
 
-  const colors = {
-    background: isDarkColorScheme ? "#0B1A33" : "#FFFFFF",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
-    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
-  };
-
   return (
     <View
+      className="bg-white dark:bg-[#0B1A33] border-b border-border dark:border-[#334155]"
       style={{
-        backgroundColor: colors.background,
         paddingTop:
           Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 8 : 54,
         paddingBottom: 12,
         paddingHorizontal: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
       }}
+      testID="map-header"
     >
       {/* Top Row */}
       <View
@@ -76,14 +68,14 @@ export function MapHeader({
             {/* Location + Status */}
             <View>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Ionicons name="location" size={12} color={colors.subtext} />
+                <Ionicons
+                  name="location"
+                  size={12}
+                  color={isDarkColorScheme ? "#94A3B8" : "#64748B"}
+                />
                 <Text
-                  style={{
-                    fontSize: 13,
-                    fontWeight: "600",
-                    color: colors.text,
-                    marginLeft: 4,
-                  }}
+                  className="text-foreground dark:text-[#F1F5F9] font-semibold"
+                  style={{ fontSize: 13, marginLeft: 4 }}
                 >
                   Đà Nẵng
                 </Text>
@@ -106,12 +98,8 @@ export function MapHeader({
                     }}
                   />
                   <Text
-                    style={{
-                      fontSize: 11,
-                      fontWeight: "600",
-                      color: "#22C55E",
-                      marginLeft: 4,
-                    }}
+                    className="font-semibold"
+                    style={{ fontSize: 11, color: "#22C55E", marginLeft: 4 }}
                   >
                     Đang cập nhật
                   </Text>
@@ -126,7 +114,7 @@ export function MapHeader({
           {showCreateAreaButton && onCreateArea && (
             <CreateAreaButton onPress={onCreateArea} />
           )}
-          <LayersToggleButton onPress={onShowLayers} />
+          <LayersToggleButton onPress={onShowLayers} testID="map-header-layers-btn" />
         </View>
       </View>
     </View>

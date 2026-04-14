@@ -1,10 +1,9 @@
 // features/map/components/overlays/PickOnMapOverlay.tsx
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useMemo } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
-import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { SHADOW, MAP_SEMANTIC_COLORS } from "~/lib/design-tokens";
 
 interface PickOnMapOverlayProps {
   visible: boolean;
@@ -19,71 +18,49 @@ export function PickOnMapOverlay({
   onConfirm,
   onCancel,
 }: PickOnMapOverlayProps) {
-  const { isDarkColorScheme } = useColorScheme();
-  const isDark = isDarkColorScheme;
-
   if (!visible) return null;
 
-  const accentColor = pickingTarget === "origin" ? "#16A34A" : "#4F46E5";
+  // Map picking target to semantic colors (origin/destination)
+  const accentColor = useMemo(() =>
+    pickingTarget === "origin" ? MAP_SEMANTIC_COLORS.origin : MAP_SEMANTIC_COLORS.destination,
+    [pickingTarget]
+  );
 
   return (
     <>
       {/* Center pin marker */}
       <View style={styles.pinContainer} pointerEvents="none">
-        <View style={{ alignItems: "center", marginBottom: 36 }}>
+        <View className="items-center mb-9">
           <Ionicons name="location-sharp" size={40} color={accentColor} />
-          <View style={styles.pinDot} />
+          <View className="w-1 h-1 rounded-full bg-foreground -mt-1" />
         </View>
       </View>
 
       {/* Bottom confirm card */}
       <View
-        style={[
-          styles.card,
-          {
-            backgroundColor: isDark ? "#1E293B" : "white",
-            borderColor: isDark ? "#334155" : "#E2E8F0",
-          },
-        ]}
+        className="absolute bottom-6 left-4 right-4 z-50 rounded-2xl p-4 border bg-card dark:bg-card border-border"
+        style={SHADOW.md}
+        testID="map-overlay-pickonmap"
       >
-        <Text
-          style={[
-            styles.title,
-            { color: isDark ? "#F1F5F9" : "#374151" },
-          ]}
-        >
+        <Text className="text-sm font-semibold text-foreground mb-1">
           {pickingTarget === "origin" ? "Chọn điểm đi" : "Chọn điểm đến"}
         </Text>
-        <Text
-          style={[
-            styles.hint,
-            { color: isDark ? "#94A3B8" : "#9CA3AF" },
-          ]}
-        >
+        <Text className="text-xs text-muted-foreground mb-3">
           Di chuyển bản đồ để đặt vị trí tại điểm ghim
         </Text>
-        <View style={styles.buttons}>
+        <View className="flex-row gap-2.5">
           <TouchableOpacity
             onPress={onCancel}
-            style={[
-              styles.cancelBtn,
-              { backgroundColor: isDark ? "#334155" : "#F3F4F6" },
-            ]}
+            className="flex-1 py-3 rounded-full items-center bg-muted dark:bg-muted"
           >
-            <Text
-              style={[
-                styles.cancelText,
-                { color: isDark ? "#F1F5F9" : "#374151" },
-              ]}
-            >
-              Hủy
-            </Text>
+            <Text className="text-sm font-semibold text-foreground">Hủy</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={onConfirm}
-            style={[styles.confirmBtn, { backgroundColor: accentColor }]}
+            className="flex-1 py-3 rounded-full items-center"
+            style={{ backgroundColor: accentColor }}
           >
-            <Text style={styles.confirmText}>Xác nhận</Text>
+            <Text className="text-sm font-bold text-white">Xác nhận</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -101,57 +78,5 @@ const styles = StyleSheet.create({
     zIndex: 50,
     alignItems: "center",
     justifyContent: "center",
-  },
-  pinDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#374151",
-    marginTop: -4,
-  },
-  card: {
-    position: "absolute",
-    bottom: 24,
-    left: 16,
-    right: 16,
-    zIndex: 50,
-    borderRadius: 16,
-    padding: 16,
-    ...CARD_SHADOW,
-    borderWidth: 1,
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  hint: {
-    fontSize: 12,
-    marginBottom: 12,
-  },
-  buttons: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  cancelBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 999,
-    alignItems: "center",
-  },
-  cancelText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  confirmBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 999,
-    alignItems: "center",
-  },
-  confirmText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "white",
   },
 });

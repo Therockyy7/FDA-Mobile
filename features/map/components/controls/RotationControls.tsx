@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { OVERLAY_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { SHADOW, MAP_ICON_COLORS } from "~/lib/design-tokens";
 
 interface RotationControlsProps {
   onRotateLeft: () => void;
@@ -12,21 +12,24 @@ interface RotationControlsProps {
 
 export function RotationControls({ onRotateLeft, onRotateRight }: RotationControlsProps) {
   const { isDarkColorScheme } = useColorScheme();
-  const isDark = isDarkColorScheme;
+  const iconColor = isDarkColorScheme ? MAP_ICON_COLORS.dark.active : MAP_ICON_COLORS.light.active;
 
   return (
     <View
-      style={{
-        backgroundColor: isDark ? "#1E293B" : "white",
-        borderRadius: 20,
-        ...OVERLAY_SHADOW,
-        overflow: "hidden",
-        borderWidth: 1,
-        borderColor: isDark ? "#334155" : "#F1F5F9",
-      }}
+      className="bg-white dark:bg-[#1E293B] border border-[#F1F5F9] dark:border-[#334155]"
+      style={[
+        SHADOW.md,
+        {
+          borderRadius: 20,
+          overflow: "hidden",
+        },
+      ]}
     >
       <TouchableOpacity
         onPress={onRotateLeft}
+        testID="map-controls-rotate-left-btn"
+        accessibilityRole="button"
+        accessibilityLabel="Xoay bản đồ sang trái"
         style={{
           width: 50,
           height: 44,
@@ -35,11 +38,14 @@ export function RotationControls({ onRotateLeft, onRotateRight }: RotationContro
         }}
         activeOpacity={0.7}
       >
-        <Ionicons name="return-up-back" size={20} color="#3B82F6" />
+        <Ionicons name="return-up-back" size={20} color={iconColor} />
       </TouchableOpacity>
-      <View style={{ height: 1, backgroundColor: isDark ? "#334155" : "#F1F5F9" }} />
+      <View className="bg-[#F1F5F9] dark:bg-[#334155]" style={{ height: 1 }} />
       <TouchableOpacity
         onPress={onRotateRight}
+        testID="map-controls-rotate-right-btn"
+        accessibilityRole="button"
+        accessibilityLabel="Xoay bản đồ sang phải"
         style={{
           width: 50,
           height: 44,
@@ -48,11 +54,7 @@ export function RotationControls({ onRotateLeft, onRotateRight }: RotationContro
         }}
         activeOpacity={0.7}
       >
-        <Ionicons
-          name="return-up-forward"
-          size={20}
-          color="#3B82F6"
-        />
+        <Ionicons name="return-up-forward" size={20} color={iconColor} />
       </TouchableOpacity>
     </View>
   );

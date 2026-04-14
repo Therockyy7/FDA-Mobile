@@ -20,7 +20,12 @@ export function ViewModeButton({ mode, currentMode, onPress }: ViewModeButtonPro
 
   if (mode === "zones") {
     return (
-      <TouchableOpacity onPress={() => onPress("zones")} activeOpacity={0.7} style={{ flex: 1 }}>
+      <TouchableOpacity
+        onPress={() => onPress("zones")}
+        testID="map-selector-viewmode-zones-btn"
+        activeOpacity={0.7}
+        style={{ flex: 1 }}
+      >
         {isActive ? (
           <LinearGradient
             colors={["#007AFF", "#2563EB"]}
@@ -42,7 +47,12 @@ export function ViewModeButton({ mode, currentMode, onPress }: ViewModeButtonPro
   }
 
   return (
-    <TouchableOpacity onPress={() => onPress("routes")} activeOpacity={0.7} style={{ flex: 1 }}>
+    <TouchableOpacity
+      onPress={() => onPress("routes")}
+      testID="map-selector-viewmode-routes-btn"
+      activeOpacity={0.7}
+      style={{ flex: 1 }}
+    >
       {isActive ? (
         <LinearGradient
           colors={["#007AFF", "#2563EB"]}

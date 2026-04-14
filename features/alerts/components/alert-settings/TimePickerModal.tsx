@@ -1,11 +1,13 @@
 // features/alerts/components/alert-settings/TimePickerModal.tsx
 import DateTimePicker, {
-    DateTimePickerEvent,
+  DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import React, { useEffect, useRef, useState } from "react";
 import { FlatList, Modal, Platform, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { SHADOW } from "~/lib/design-tokens";
 import type { AlertSettingsColors } from "../../types/alert-settings.types";
+import { TimePickerScrollColumn } from "./time-picker-scroll-column";
 
 interface TimePickerModalProps {
   visible: boolean;
@@ -16,6 +18,11 @@ interface TimePickerModalProps {
   colors: AlertSettingsColors;
 }
 
+const ITEM_HEIGHT = 36;
+const LIST_HEIGHT = ITEM_HEIGHT * 5;
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const MINUTES = Array.from({ length: 60 }, (_, i) => i);
+
 export function TimePickerModal({
   visible,
   title,
@@ -25,22 +32,24 @@ export function TimePickerModal({
   colors,
 }: TimePickerModalProps) {
   const [tempDate, setTempDate] = useState<Date>(value);
-  const [tempHour, setTempHour] = useState<number>(value.getHours());
-  const [tempMinute, setTempMinute] = useState<number>(value.getMinutes());
+  const [tempHour, setTempHour] = useState<number>(() => {
+    const hour = value.getHours();
+    return isNaN(hour) ? 0 : hour;
+  });
+  const [tempMinute, setTempMinute] = useState<number>(() => {
+    const minute = value.getMinutes();
+    return isNaN(minute) ? 0 : minute;
+  });
   const hourListRef = useRef<FlatList<number>>(null);
   const minuteListRef = useRef<FlatList<number>>(null);
-  const itemHeight = 36;
-  const listHeight = itemHeight * 5;
-  const hours = Array.from({ length: 24 }, (_, index) => index);
-  const minutes = Array.from({ length: 60 }, (_, index) => index);
-
-  const formatNumber = (num: number) => String(num).padStart(2, "0");
 
   useEffect(() => {
     if (visible) {
       setTempDate(value);
-      setTempHour(value.getHours());
-      setTempMinute(value.getMinutes());
+      const safeHour = isNaN(value.getHours()) ? 0 : value.getHours();
+      const safeMinute = isNaN(value.getMinutes()) ? 0 : value.getMinutes();
+      setTempHour(safeHour);
+      setTempMinute(safeMinute);
     }
   }, [value, visible]);
 
@@ -57,21 +66,27 @@ export function TimePickerModal({
   useEffect(() => {
     if (!visible || Platform.OS !== "android") return;
     requestAnimationFrame(() => {
-      hourListRef.current?.scrollToOffset({
-        offset: tempHour * itemHeight,
-        animated: false,
-      });
-      minuteListRef.current?.scrollToOffset({
-        offset: tempMinute * itemHeight,
-        animated: false,
-      });
+      if (hourListRef.current) {
+        hourListRef.current.scrollToOffset({
+          offset: tempHour * ITEM_HEIGHT,
+          animated: false,
+        });
+      }
+      if (minuteListRef.current) {
+        minuteListRef.current.scrollToOffset({
+          offset: tempMinute * ITEM_HEIGHT,
+          animated: false,
+        });
+      }
     });
-  }, [visible, tempHour, tempMinute, itemHeight]);
+  }, [visible, tempHour, tempMinute]);
 
   const handleConfirmPress = () => {
     if (Platform.OS === "android") {
+      const safeHour = Math.max(0, Math.min(23, tempHour));
+      const safeMinute = Math.max(0, Math.min(59, tempMinute));
       const updated = new Date(value);
-      updated.setHours(tempHour, tempMinute, 0, 0);
+      updated.setHours(safeHour, safeMinute, 0, 0);
       onConfirm(updated);
       return;
     }
@@ -79,7 +94,13 @@ export function TimePickerModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+    <Modal
+      testID="alerts-settings-time-picker-modal"
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onCancel}
+    >
       <View
         style={{
           flex: 1,
@@ -98,165 +119,60 @@ export function TimePickerModal({
             maxWidth: 360,
             borderWidth: 1,
             borderColor: colors.border,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.25,
-            shadowRadius: 16,
-            elevation: 10,
+            ...SHADOW.lg,
           }}
         >
-          <View
+          <Text
+            testID="alerts-settings-time-picker-title"
             style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
+              fontSize: 16,
+              fontWeight: "700",
+              color: colors.text,
               marginBottom: 12,
             }}
           >
-            <Text style={{ fontSize: 16, fontWeight: "700", color: colors.text }}>
-              {title}
-            </Text>
-          </View>
+            {title}
+          </Text>
+
           {Platform.OS === "android" ? (
-            <View style={{ marginTop: 6 }}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 14,
-                }}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 14,
+                marginTop: 6,
+              }}
+            >
+              <TimePickerScrollColumn
+                ref={hourListRef}
+                data={HOURS}
+                selectedValue={tempHour}
+                keyPrefix="h"
+                maxValue={23}
+                itemHeight={ITEM_HEIGHT}
+                listHeight={LIST_HEIGHT}
+                primaryColor={colors.primary}
+                subtextColor={colors.subtext}
+                onValueChange={setTempHour}
+              />
+              <Text
+                style={{ fontSize: 20, fontWeight: "700", color: colors.text }}
               >
-                <View style={{ flex: 1 }}>
-                  <View style={{ height: listHeight, overflow: "hidden" }}>
-                    <FlatList
-                      ref={hourListRef}
-                      data={hours}
-                      keyExtractor={(item) => `h-${item}`}
-                      showsVerticalScrollIndicator={false}
-                      snapToInterval={itemHeight}
-                      decelerationRate="fast"
-                      getItemLayout={(_, index) => ({
-                        length: itemHeight,
-                        offset: itemHeight * index,
-                        index,
-                      })}
-                      contentContainerStyle={{
-                        paddingVertical: itemHeight * 2,
-                      }}
-                      onMomentumScrollEnd={(event) => {
-                        const index = Math.round(
-                          event.nativeEvent.contentOffset.y / itemHeight
-                        );
-                        setTempHour(Math.min(Math.max(index, 0), 23));
-                      }}
-                      renderItem={({ item }) => {
-                        const isSelected = item === tempHour;
-                        return (
-                          <View
-                            style={{
-                              height: itemHeight,
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <Text
-                              style={{
-                                fontSize: isSelected ? 20 : 16,
-                                fontWeight: isSelected ? "800" : "500",
-                                color: isSelected ? colors.primary : colors.subtext,
-                              }}
-                            >
-                              {formatNumber(item)}
-                            </Text>
-                          </View>
-                        );
-                      }}
-                    />
-                    <View
-                      pointerEvents="none"
-                      style={{
-                        position: "absolute",
-                        top: itemHeight * 2,
-                        left: 0,
-                        right: 0,
-                        height: itemHeight,
-                        borderRadius: 10,
-                        borderWidth: 1,
-                        borderColor: colors.primary,
-                        backgroundColor: `${colors.primary}10`,
-                      }}
-                    />
-                  </View>
-                </View>
-
-                <Text style={{ fontSize: 20, fontWeight: "700", color: colors.text }}>
-                  :
-                </Text>
-
-                <View style={{ flex: 1 }}>
-                  <View style={{ height: listHeight, overflow: "hidden" }}>
-                    <FlatList
-                      ref={minuteListRef}
-                      data={minutes}
-                      keyExtractor={(item) => `m-${item}`}
-                      showsVerticalScrollIndicator={false}
-                      snapToInterval={itemHeight}
-                      decelerationRate="fast"
-                      getItemLayout={(_, index) => ({
-                        length: itemHeight,
-                        offset: itemHeight * index,
-                        index,
-                      })}
-                      contentContainerStyle={{
-                        paddingVertical: itemHeight * 2,
-                      }}
-                      onMomentumScrollEnd={(event) => {
-                        const index = Math.round(
-                          event.nativeEvent.contentOffset.y / itemHeight
-                        );
-                        setTempMinute(Math.min(Math.max(index, 0), 59));
-                      }}
-                      renderItem={({ item }) => {
-                        const isSelected = item === tempMinute;
-                        return (
-                          <View
-                            style={{
-                              height: itemHeight,
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <Text
-                              style={{
-                                fontSize: isSelected ? 20 : 16,
-                                fontWeight: isSelected ? "800" : "500",
-                                color: isSelected ? colors.primary : colors.subtext,
-                              }}
-                            >
-                              {formatNumber(item)}
-                            </Text>
-                          </View>
-                        );
-                      }}
-                    />
-                    <View
-                      pointerEvents="none"
-                      style={{
-                        position: "absolute",
-                        top: itemHeight * 2,
-                        left: 0,
-                        right: 0,
-                        height: itemHeight,
-                        borderRadius: 10,
-                        borderWidth: 1,
-                        borderColor: colors.primary,
-                        backgroundColor: `${colors.primary}10`,
-                      }}
-                    />
-                  </View>
-                </View>
-              </View>
+                :
+              </Text>
+              <TimePickerScrollColumn
+                ref={minuteListRef}
+                data={MINUTES}
+                selectedValue={tempMinute}
+                keyPrefix="m"
+                maxValue={59}
+                itemHeight={ITEM_HEIGHT}
+                listHeight={LIST_HEIGHT}
+                primaryColor={colors.primary}
+                subtextColor={colors.subtext}
+                onValueChange={setTempMinute}
+              />
             </View>
           ) : (
             <DateTimePicker
@@ -267,6 +183,7 @@ export function TimePickerModal({
               themeVariant="dark"
             />
           )}
+
           <View
             style={{
               flexDirection: "row",
@@ -276,6 +193,7 @@ export function TimePickerModal({
             }}
           >
             <TouchableOpacity
+              testID="alerts-settings-time-picker-cancel"
               onPress={onCancel}
               activeOpacity={0.8}
               style={{
@@ -288,9 +206,12 @@ export function TimePickerModal({
                 backgroundColor: colors.mutedBg,
               }}
             >
-              <Text style={{ color: colors.subtext, fontWeight: "700" }}>Cancel</Text>
+              <Text style={{ color: colors.subtext, fontWeight: "700" }}>
+                Cancel
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
+              testID="alerts-settings-time-picker-confirm"
               onPress={handleConfirmPress}
               activeOpacity={0.8}
               style={{
@@ -301,7 +222,7 @@ export function TimePickerModal({
                 backgroundColor: colors.primary,
               }}
             >
-              <Text style={{ color: "white", fontWeight: "700" }}>Done</Text>
+              <Text className="text-white font-bold">Done</Text>
             </TouchableOpacity>
           </View>
         </View>

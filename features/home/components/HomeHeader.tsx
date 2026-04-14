@@ -5,7 +5,9 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { Platform, StatusBar, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { IconButton } from "~/components/ui/IconButton";
 import { useUser } from "~/features/auth/stores/hooks";
+import { MAP_COLORS } from "~/lib/design-tokens";
 import { useColorScheme } from "~/lib/useColorScheme";
 import type { OpenMeteoResponse } from "../types/open-meteo.types";
 import { getWeatherTheme } from "../types/open-meteo.types";
@@ -23,6 +25,12 @@ export function HomeHeader({
   const { isDarkColorScheme } = useColorScheme();
   const user = useUser();
 
+  // JS-only color values for icon components (non-NativeWind context)
+  // Uses NativeWind dark: class for text, but icon colors must be JS-only
+  const iconColor = isDarkColorScheme
+    ? MAP_COLORS.dark.subtext
+    : MAP_COLORS.light.subtext;
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Chào buổi sáng";
@@ -30,46 +38,32 @@ export function HomeHeader({
     return "Chào buổi tối";
   };
 
-  const currentTemp = meteo
+  // Defensive checks for nested meteo properties
+  const currentTemp = meteo?.current?.temperature_2m
     ? Math.round(meteo.current.temperature_2m)
     : null;
-  const weatherTheme = meteo
+  const weatherTheme = meteo?.current?.weather_code
     ? getWeatherTheme(meteo.current.weather_code)
     : null;
 
-  const colors = {
-    background: isDarkColorScheme ? "#0B1A33" : "#FFFFFF",
-    cardBg: isDarkColorScheme ? "#1E293B" : "#F8FAFC",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
-    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
-  };
-
   return (
     <View
+      testID="home-header-container"
+      className="bg-white dark:bg-bg-dark border-b border-border-light dark:border-border-dark"
       style={{
-        backgroundColor: colors.background,
         paddingTop:
           Platform.OS === "ios" ? 50 : (StatusBar.currentHeight || 0) + 12,
         paddingBottom: 14,
         paddingHorizontal: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
       }}
     >
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
+      <View className="flex-row items-center justify-between">
         {/* Left: Logo + Greeting */}
-        <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+        <View className="flex-row items-center flex-1">
           <LinearGradient
             colors={
               weatherTheme
-                ? (weatherTheme.cardGradient as any)
+                ? (weatherTheme.cardGradient.slice(0, 2) as [string, string])
                 : ["#007AFF", "#1D4ED8"]
             }
             start={{ x: 0, y: 0 }}
@@ -81,7 +75,7 @@ export function HomeHeader({
               alignItems: "center",
               justifyContent: "center",
               marginRight: 12,
-              shadowColor: weatherTheme?.color || "#007AFF",
+              shadowColor: weatherTheme?.color ?? "#007AFF",
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.25,
               shadowRadius: 8,
@@ -90,7 +84,7 @@ export function HomeHeader({
           >
             {weatherTheme ? (
               <MaterialCommunityIcons
-                name={weatherTheme.icon as any}
+                name={weatherTheme.icon as keyof typeof MaterialCommunityIcons.glyphMap}
                 size={24}
                 color="white"
               />
@@ -99,35 +93,23 @@ export function HomeHeader({
             )}
           </LinearGradient>
 
-          <View style={{ flex: 1 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 2,
-              }}
-            >
+          <View className="flex-1">
+            <View className="flex-row items-center mb-0.5">
               <Text
-                style={{
-                  fontSize: 12,
-                  color: colors.subtext,
-                  fontWeight: "500",
-                }}
+                testID="home-header-greeting"
+                className="text-caption text-text-secondary-light dark:text-text-secondary-dark font-medium"
               >
                 {getGreeting()} 👋
               </Text>
             </View>
             <Text
-              style={{
-                fontSize: 18,
-                fontWeight: "800",
-                color: colors.text,
-                letterSpacing: -0.5,
-              }}
+              testID="home-header-city"
+              className="text-lg font-extrabold text-text-light dark:text-text-dark"
+              style={{ letterSpacing: -0.5 }}
             >
               Đà Nẵng
               {currentTemp !== null && (
-                <Text style={{ color: weatherTheme?.color || colors.subtext }}>
+                <Text style={{ color: weatherTheme?.color ?? iconColor }}>
                   {" "}
                   {currentTemp}°C
                 </Text>
@@ -137,9 +119,10 @@ export function HomeHeader({
         </View>
 
         {/* Right: Actions */}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <View className="flex-row items-center gap-2">
           {!user ? (
             <TouchableOpacity
+              testID="home-header-login-btn"
               onPress={() => router.push("/(auth)/sign-in")}
               activeOpacity={0.8}
             >
@@ -155,73 +138,60 @@ export function HomeHeader({
                   alignItems: "center",
                 }}
               >
-                <Text
-                  style={{ color: "white", fontSize: 13, fontWeight: "700" }}
-                >
-                  Đăng nhập
-                </Text>
+                <Text className="text-white text-sm font-bold">Đăng nhập</Text>
               </LinearGradient>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity
-              onPress={() => router.push("/notifications" as any)}
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: 14,
-                backgroundColor: colors.cardBg,
-                alignItems: "center",
-                justifyContent: "center",
-                borderWidth: 1,
-                borderColor: colors.border,
-                position: "relative",
-              }}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="notifications"
-                size={20}
-                color={colors.subtext}
-              />
+            <View style={{ position: "relative" }}>
+              <IconButton
+                testID="home-header-notifications-btn"
+                variant="outline"
+                size="md"
+                onPress={() => router.push("/notifications" as any)}
+                style={{ borderRadius: 14 }}
+              >
+                <Ionicons
+                  name="notifications"
+                  size={20}
+                  color={iconColor}
+                />
+              </IconButton>
               {notificationCount > 0 && (
                 <View
+                  testID="home-header-notification-badge"
+                  className="absolute -top-1 -right-1 bg-flood-danger border-2 border-white dark:border-bg-dark items-center justify-center"
                   style={{
-                    position: "absolute",
-                    top: -4,
-                    right: -4,
                     minWidth: 18,
                     height: 18,
                     borderRadius: 9,
-                    backgroundColor: "#EF4444",
-                    alignItems: "center",
-                    justifyContent: "center",
                     paddingHorizontal: 5,
-                    borderWidth: 2,
-                    borderColor: colors.background,
                   }}
                 >
                   <Text
-                    style={{ color: "white", fontSize: 9, fontWeight: "800" }}
+                    className="text-white font-extrabold"
+                    style={{ fontSize: 11 }}
                   >
-                    {notificationCount > 99 ? "99+" : notificationCount}
+                    {/* Validate: notificationCount should be 0-99, cap display at 99+ */}
+                    {notificationCount >= 0 && notificationCount <= 99
+                      ? notificationCount
+                      : "99+"}
                   </Text>
                 </View>
               )}
-            </TouchableOpacity>
+            </View>
           )}
         </View>
       </View>
 
-      {/* Status pill - dynamic from weather data */}
+      {/* Status pill - dynamic from weather data (dynamic color = JS-only exception) */}
       {weatherTheme && (
         <View
+          testID="home-header-weather-pill"
+          className="flex-row items-center mt-3"
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginTop: 12,
             paddingVertical: 8,
             paddingHorizontal: 14,
-            backgroundColor: weatherTheme.color + (isDarkColorScheme ? "18" : "10"),
+            backgroundColor: weatherTheme.color + "15",
             borderRadius: 12,
             borderWidth: 1,
             borderColor: weatherTheme.color + "25",
@@ -237,12 +207,8 @@ export function HomeHeader({
             }}
           />
           <Text
-            style={{
-              fontSize: 12,
-              color: weatherTheme.color,
-              fontWeight: "600",
-              flex: 1,
-            }}
+            className="flex-1 font-semibold"
+            style={{ fontSize: 12, color: weatherTheme.color }}
           >
             {weatherTheme.labelVn}
             {meteo && meteo.current.precipitation > 0
@@ -250,19 +216,15 @@ export function HomeHeader({
               : " • Không có mưa"}
           </Text>
           {currentTemp !== null && (
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View className="flex-row items-center">
               <MaterialCommunityIcons
                 name="thermometer"
                 size={14}
-                color={colors.subtext}
+                color={iconColor}
               />
               <Text
-                style={{
-                  fontSize: 12,
-                  color: colors.subtext,
-                  fontWeight: "600",
-                  marginLeft: 2,
-                }}
+                className="text-text-secondary-light dark:text-text-secondary-dark font-semibold"
+                style={{ fontSize: 12, marginLeft: 2 }}
               >
                 {currentTemp}°C
               </Text>

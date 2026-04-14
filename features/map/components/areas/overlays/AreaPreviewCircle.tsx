@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View } from "react-native";
 import { Circle, Marker, MarkerDragStartEndEvent } from "react-native-maps";
+import { SHADOW } from "~/lib/design-tokens";
 
 interface AreaPreviewCircleProps {
   center: {
@@ -65,11 +66,8 @@ export function AreaPreviewCircle({
             backgroundColor: PREVIEW_COLOR,
             borderWidth: 4,
             borderColor: "white",
+            ...SHADOW.md,
             shadowColor: PREVIEW_COLOR,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.5,
-            shadowRadius: 8,
-            elevation: 8,
             alignItems: "center",
             justifyContent: "center",
           }}

@@ -22,6 +22,7 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW } from "~/lib/design-tokens";
 import type { SearchResult } from "~/features/map/types/area.types";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -350,19 +351,11 @@ const styles = StyleSheet.create({
   //   flex: 1,
   // },
   sheet: {
-    // position: "absolute",
-    // bottom: 0,
-    // left: 0,
-    // right: 0,
     width: "100%",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: SCREEN_HEIGHT * 0.7,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 16,
+    ...SHADOW.lg,
   },
   handleContainer: {
     alignItems: "center",

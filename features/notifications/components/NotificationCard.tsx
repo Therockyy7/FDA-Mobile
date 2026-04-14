@@ -5,170 +5,111 @@ import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { formatAlertTitle } from "~/features/alerts/utils/formatAlertTitle";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW } from "~/lib/design-tokens";
+import { cn } from "~/lib/utils";
 import { getPriorityConfig } from "../lib/notifications-utils";
 import { NotificationItem } from "../types/notifications-types";
 
 interface NotificationCardProps {
   notification: NotificationItem;
   onPress: () => void;
-  onMapPress?: () => void;
-  onDirectionsPress?: () => void;
 }
 
 export function NotificationCard({
   notification,
   onPress,
-  onMapPress,
-  onDirectionsPress,
 }: NotificationCardProps) {
-  const { isDarkColorScheme } = useColorScheme();
   const config = getPriorityConfig(notification.severity);
-
-  // Theme colors
-  const colors = {
-    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-    muted: isDarkColorScheme ? "#64748B" : "#9CA3AF",
-    border: isDarkColorScheme ? "#334155" : "#F3F4F6",
-    primary: isDarkColorScheme ? "#3B82F6" : "#2563EB",
-  };
 
   const timeAgo = React.useMemo(() => {
     try {
-      const date = new Date(notification.sentAt || notification.createdAt);
+      const timestamp = notification.sentAt || notification.createdAt;
+      if (!timestamp) return "Vừa xong";
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) return "Vừa xong";
       return formatDistanceToNow(date, { addSuffix: true, locale: vi });
     } catch {
       return "Vừa xong";
     }
-  }, [notification]);
+  }, [notification.sentAt, notification.createdAt]);
 
   return (
     <TouchableOpacity
+      testID="notifications-card-container"
       onPress={onPress}
       activeOpacity={0.65}
+      className="flex-row items-center bg-white dark:bg-slate-800 rounded-2xl border-0 dark:border dark:border-slate-700 mb-2"
       style={{
-        flexDirection: "row",
-        alignItems: "center",
         paddingVertical: 12,
         paddingHorizontal: 14,
-        backgroundColor: colors.cardBg,
-        borderRadius: 14,
-        borderWidth: isDarkColorScheme ? 1 : 0,
-        borderColor: colors.border,
         gap: 12,
-        marginBottom: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: isDarkColorScheme ? 0 : 0.04,
-        shadowRadius: 8,
-        elevation: 2,
+        ...SHADOW.sm,
       }}
     >
       {/* ── Severity Avatar ── */}
       <View
+        testID="notifications-card-avatar"
         style={{
           width: 44,
           height: 44,
           borderRadius: 22,
-          backgroundColor: isDarkColorScheme
-            ? config.darkBgColor || config.bgColor
-            : config.bgColor,
+          backgroundColor: config.bgColor,
           alignItems: "center",
           justifyContent: "center",
           borderWidth: 1.5,
           borderColor: config.color + "30",
         }}
       >
-        <Ionicons name={config.icon as any} size={22} color={config.color} />
+        <Ionicons name={config.icon || "alert-circle"} size={22} color={config.color || "#666"} />
       </View>
 
       {/* ── Content ── */}
       <View style={{ flex: 1, gap: 1 }}>
         {/* Title Group */}
-        <View style={{ gap: 0 }}>
+        <View>
           <Text
+            testID="notifications-card-station"
             numberOfLines={1}
-            style={{
-              fontSize: 14.5,
-              fontWeight: "700",
-              color: colors.text,
-              lineHeight: 20,
-            }}
+            className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-5"
           >
-            {notification.stationName}
+            {notification.stationName || "Trạm không xác định"}
           </Text>
           <Text
+            testID="notifications-card-title"
             numberOfLines={1}
-            style={{
-              fontSize: 14.5,
-              fontWeight: "600",
-              color: colors.text,
-              lineHeight: 20,
-            }}
+            className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-5"
           >
-            {formatAlertTitle(notification.title)}
+            {formatAlertTitle(notification.title || "Thông báo")}
           </Text>
         </View>
 
         {/* Content / Message */}
         <Text
+          testID="notifications-card-content"
           numberOfLines={2}
-          style={{
-            fontSize: 13.5,
-            fontWeight: "400",
-            color: colors.subtext,
-            lineHeight: 18,
-            marginTop: 1,
-            opacity: 0.9,
-          }}
+          className="text-xs font-normal text-slate-500 dark:text-slate-400 leading-4 mt-0.5 opacity-90"
         >
-          {notification.content || notification.alertMessage}
+          {notification.content || notification.alertMessage || "Không có thông tin chi tiết"}
         </Text>
 
         {/* Metadata Row: Time · Severity */}
         <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginTop: 3,
-            gap: 6,
-            flexWrap: "wrap",
-          }}
+          testID="notifications-card-meta"
+          className="flex-row items-center mt-1 gap-1.5 flex-wrap"
         >
-          {/* Relative Time */}
           <Text
-            style={{
-              fontSize: 12,
-              fontWeight: "600",
-              color: colors.primary,
-            }}
+            testID="notifications-card-time"
+            className="text-xs font-semibold text-primary dark:text-secondary"
           >
             {timeAgo}
           </Text>
-
-          {/* Dot Separator */}
+          <Text className="text-xs text-slate-400 dark:text-slate-500 opacity-60">·</Text>
           <Text
-            style={{
-              fontSize: 10,
-              color: colors.muted,
-              opacity: 0.6,
-            }}
+            testID="notifications-card-severity"
+            className={cn("text-xs font-bold tracking-wide")}
+            style={{ color: config.color || "#666" }}
           >
-            ·
-          </Text>
-
-          {/* Severity Label */}
-          <Text
-            style={{
-              fontSize: 11.5,
-              fontWeight: "700",
-              color: config.color,
-              letterSpacing: 0.2,
-            }}
-          >
-            {config.label}
+            {config.label || ""}
           </Text>
         </View>
       </View>

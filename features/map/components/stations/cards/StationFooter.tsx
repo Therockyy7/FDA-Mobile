@@ -4,7 +4,7 @@ import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { formatTime } from "~/features/map/lib/formatters";
-import { RADIUS } from "~/features/map/lib/map-ui-utils";
+import { FLOOD_COLORS, RADIUS } from "~/lib/design-tokens";
 
 interface StationFooterProps {
   measuredAt: string | null;
@@ -22,7 +22,7 @@ export function StationFooter({
   colors,
 }: StationFooterProps) {
   return (
-    <View style={styles.row}>
+    <View testID="map-station-footer" style={styles.row}>
       <View style={styles.meta}>
         <Ionicons name="time-outline" size={11} color={colors.muted} />
         <Text style={[styles.timeText, { color: colors.muted }]}>
@@ -35,14 +35,14 @@ export function StationFooter({
                 styles.dot,
                 {
                   backgroundColor:
-                    stationStatus === "online" ? "#22C55E" : "#EF4444",
+                    stationStatus === "online" ? FLOOD_COLORS.safe : FLOOD_COLORS.danger,
                 },
               ]}
             />
             <Text
               style={[
                 styles.statusText,
-                { color: stationStatus === "online" ? "#22C55E" : "#EF4444" },
+                { color: stationStatus === "online" ? FLOOD_COLORS.safe : FLOOD_COLORS.danger },
               ]}
             >
               {stationStatus}
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   statusText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "600",
   },
   btn: {

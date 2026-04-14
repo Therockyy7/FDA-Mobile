@@ -12,7 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { OVERLAY_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { SHADOW, MAP_COLORS } from "~/lib/design-tokens";
 import { LoadingDot } from "./LoadingDot";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -27,7 +27,6 @@ export function MapLoadingOverlay({
   message = "Đang tải bản đồ...",
 }: MapLoadingOverlayProps) {
   const { isDarkColorScheme } = useColorScheme();
-  const isDark = isDarkColorScheme;
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.8);
   const textOpacity = useSharedValue(0.6);
@@ -68,18 +67,30 @@ export function MapLoadingOverlay({
     opacity: textOpacity.value,
   }));
 
-  const colors = {
-    background: isDark ? "rgba(15, 23, 42, 0.97)" : "rgba(255, 255, 255, 0.97)",
-    cardBg: isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.9)",
-    cardBorder: isDark ? "#334155" : "#E2E8F0",
-    textPrimary: isDark ? "#E2E8F0" : "#1F2937",
-    textSecondary: isDark ? "#94A3B8" : "#64748B",
-  };
+  // Dark mode exception: semi-transparent overlay bg cannot use NativeWind classes
+  const overlayBg = isDarkColorScheme
+    ? "rgba(15, 23, 42, 0.97)"
+    : "rgba(255, 255, 255, 0.97)";
+  const cardBg = isDarkColorScheme
+    ? "rgba(30, 41, 59, 0.9)"
+    : "rgba(255, 255, 255, 0.9)";
+  const cardBorder = isDarkColorScheme
+    ? MAP_COLORS.dark.border
+    : MAP_COLORS.light.border;
+  const textPrimary = isDarkColorScheme
+    ? MAP_COLORS.dark.text
+    : MAP_COLORS.light.text;
+  const textSecondary = isDarkColorScheme
+    ? MAP_COLORS.dark.subtext
+    : MAP_COLORS.light.subtext;
 
   if (!visible) return null;
 
   return (
-    <Animated.View style={[styles.overlay, { backgroundColor: colors.background }, containerStyle]}>
+    <Animated.View
+      style={[styles.overlay, { backgroundColor: overlayBg }, containerStyle]}
+      testID="map-overlay-loading"
+    >
       {/* Background pattern */}
       <View style={styles.backgroundPattern}>
         <LottieView
@@ -95,7 +106,8 @@ export function MapLoadingOverlay({
       <Animated.View
         style={[
           styles.contentCard,
-          { backgroundColor: colors.cardBg, borderColor: colors.cardBorder },
+          { backgroundColor: cardBg, borderColor: cardBorder },
+          SHADOW.lg,
           contentStyle,
         ]}
       >
@@ -116,11 +128,11 @@ export function MapLoadingOverlay({
           ))}
         </View>
 
-        <Animated.Text style={[styles.message, { color: colors.textPrimary }, textStyle]}>
+        <Animated.Text style={[styles.message, { color: textPrimary }, textStyle]}>
           {message}
         </Animated.Text>
 
-        <Text style={[styles.hint, { color: colors.textSecondary }]}>Hệ thống cảnh báo ngập lụt</Text>
+        <Text style={[styles.hint, { color: textSecondary }]}>Hệ thống cảnh báo ngập lụt</Text>
       </Animated.View>
     </Animated.View>
   );
@@ -156,7 +168,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 50,
     borderRadius: 28,
     borderWidth: 1,
-    ...OVERLAY_SHADOW,
   },
   lottieContainer: {
     width: 100,

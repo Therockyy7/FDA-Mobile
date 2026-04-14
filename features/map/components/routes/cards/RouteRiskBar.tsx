@@ -1,28 +1,22 @@
 // features/map/components/routes/cards/RouteRiskBar.tsx
 import React from "react";
 import { View } from "react-native";
+import { FLOOD_COLORS } from "~/lib/design-tokens";
 
 interface RouteRiskBarProps {
   floodRiskScore: number;
 }
 
-function getRiskColor(score: number) {
-  if (score > 60) return "#EF4444";
-  if (score > 30) return "#F59E0B";
-  return "#10B981";
+function getRiskColor(score: number): string {
+  if (score > 60) return FLOOD_COLORS.danger;
+  if (score > 30) return FLOOD_COLORS.warning;
+  return FLOOD_COLORS.safe;
 }
 
-export function RouteRiskBar({ floodRiskScore }: RouteRiskBarProps) {
+export const RouteRiskBar = React.memo(function RouteRiskBar({ floodRiskScore }: RouteRiskBarProps) {
   return (
-    <View style={{ marginBottom: 12 }}>
-      <View
-        style={{
-          height: 6,
-          backgroundColor: "#F1F5F9",
-          borderRadius: 999,
-          overflow: "hidden",
-        }}
-      >
+    <View className="mb-3" testID="map-route-riskbar">
+      <View className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
         <View
           style={{
             height: "100%",
@@ -34,4 +28,4 @@ export function RouteRiskBar({ floodRiskScore }: RouteRiskBarProps) {
       </View>
     </View>
   );
-}
+});

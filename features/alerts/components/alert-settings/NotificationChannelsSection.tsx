@@ -20,8 +20,9 @@ export function NotificationChannelsSection({
   colors,
 }: NotificationChannelsSectionProps) {
   return (
-    <View style={{ marginTop: 32 }}>
+    <View testID="alerts-settings-channels-section" style={{ marginTop: 32 }}>
       <Text
+        testID="alerts-settings-channels-label"
         style={{
           fontSize: 12,
           fontWeight: "700",
@@ -47,6 +48,7 @@ export function NotificationChannelsSection({
       >
         {/* Push Notifications */}
         <View
+          testID="alerts-settings-channel-push"
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -70,13 +72,14 @@ export function NotificationChannelsSection({
               <Ionicons name="notifications" size={18} color={colors.primary} />
             </View>
             <Text
-              style={{ fontSize: 15, fontWeight: "500", color: colors.text }}
+              style={{ fontSize: 16, fontWeight: "500", color: colors.text }}
             >
               Push Notifications
             </Text>
           </View>
           <Switch
-            value={notificationChannels.push}
+            testID="alerts-settings-channel-push-toggle"
+            value={notificationChannels.push ?? false}
             onValueChange={(value) =>
               onChange({ ...notificationChannels, push: value })
             }
@@ -87,6 +90,7 @@ export function NotificationChannelsSection({
 
         {/* Email Alerts */}
         <View
+          testID="alerts-settings-channel-email"
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -98,25 +102,19 @@ export function NotificationChannelsSection({
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <View
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 8,
-                backgroundColor: "#8B5CF615",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className="w-8 h-8 rounded-lg bg-violet-500/10 items-center justify-center"
             >
               <Ionicons name="mail" size={18} color="#8B5CF6" />
             </View>
             <Text
-              style={{ fontSize: 15, fontWeight: "500", color: colors.text }}
+              style={{ fontSize: 16, fontWeight: "500", color: colors.text }}
             >
               Email Alerts
             </Text>
           </View>
           <Switch
-            value={notificationChannels.email}
+            testID="alerts-settings-channel-email-toggle"
+            value={notificationChannels.email ?? false}
             onValueChange={(value) =>
               onChange({ ...notificationChannels, email: value })
             }
@@ -127,6 +125,7 @@ export function NotificationChannelsSection({
 
         {/* SMS Messages */}
         <View
+          testID="alerts-settings-channel-sms"
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -136,25 +135,19 @@ export function NotificationChannelsSection({
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <View
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 8,
-                backgroundColor: "#10B98115",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className="w-8 h-8 rounded-lg bg-emerald-500/10 items-center justify-center"
             >
               <Ionicons name="chatbubble" size={18} color="#10B981" />
             </View>
             <Text
-              style={{ fontSize: 15, fontWeight: "500", color: colors.text }}
+              style={{ fontSize: 16, fontWeight: "500", color: colors.text }}
             >
               SMS Messages
             </Text>
           </View>
           <Switch
-            value={notificationChannels.sms}
+            testID="alerts-settings-channel-sms-toggle"
+            value={notificationChannels.sms ?? false}
             onValueChange={(value) =>
               onChange({ ...notificationChannels, sms: value })
             }

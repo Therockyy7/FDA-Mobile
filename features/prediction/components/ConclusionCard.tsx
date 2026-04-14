@@ -1,9 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { MotiView } from "moti";
 import React from "react";
 import { View, Text } from "react-native";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW } from "~/lib/design-tokens";
 
 interface ConclusionCardProps {
   icon: string;
@@ -11,34 +10,19 @@ interface ConclusionCardProps {
 }
 
 export function ConclusionCard({ icon, text }: ConclusionCardProps) {
-  const { isDarkColorScheme } = useColorScheme();
-
   return (
     <MotiView
       from={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ type: "spring", delay: 600, damping: 20 }}
     >
-      <LinearGradient
-        colors={
-          isDarkColorScheme
-            ? ["#1E3A8A", "#1E293B"]
-            : ["#DBEAFE", "#EFF6FF"]
-        }
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{
-          borderRadius: 24,
-          padding: 20,
-          shadowColor: "#007AFF",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.15,
-          shadowRadius: 16,
-          elevation: 8,
-        }}
+      <View
+        className="bg-blue-50 dark:bg-blue-950/40 rounded-3xl"
+        style={{ padding: 20, ...SHADOW.md }}
       >
         {/* Header */}
         <View
+          testID="prediction-conclusion-header"
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -46,15 +30,10 @@ export function ConclusionCard({ icon, text }: ConclusionCardProps) {
           }}
         >
           <View
+            className="bg-blue-200/60 dark:bg-blue-800/40 rounded-xl items-center justify-center"
             style={{
               width: 44,
               height: 44,
-              borderRadius: 12,
-              backgroundColor: isDarkColorScheme
-                ? "rgba(59, 130, 246, 0.2)"
-                : "rgba(59, 130, 246, 0.15)",
-              alignItems: "center",
-              justifyContent: "center",
               marginRight: 12,
             }}
           >
@@ -62,20 +41,16 @@ export function ConclusionCard({ icon, text }: ConclusionCardProps) {
           </View>
           <View style={{ flex: 1 }}>
             <Text
-              style={{
-                fontSize: 18,
-                fontWeight: "800",
-                color: isDarkColorScheme ? "#FFFFFF" : "#1E3A8A",
-              }}
+              testID="prediction-conclusion-title"
+              className="text-gray-900 dark:text-slate-100"
+              style={{ fontSize: 18, fontWeight: "800" }}
             >
               Kết Luận
             </Text>
             <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "600",
-                color: isDarkColorScheme ? "#93C5FD" : "#007AFF",
-              }}
+              testID="prediction-conclusion-subtitle"
+              className="text-blue-600 dark:text-blue-400"
+              style={{ fontSize: 12, fontWeight: "600" }}
             >
               Tổng hợp đánh giá
             </Text>
@@ -84,21 +59,16 @@ export function ConclusionCard({ icon, text }: ConclusionCardProps) {
 
         {/* Content */}
         <View
-          style={{
-            backgroundColor: isDarkColorScheme
-              ? "rgba(255, 255, 255, 0.05)"
-              : "rgba(255, 255, 255, 0.8)",
-            borderRadius: 16,
-            padding: 18,
-            borderLeftWidth: 4,
-            borderLeftColor: "#007AFF",
-          }}
+          testID="prediction-conclusion-content"
+          className="bg-white/80 dark:bg-slate-800/60 rounded-2xl border-l-4 border-blue-500"
+          style={{ padding: 18 }}
         >
           <Text
+            testID="prediction-conclusion-text"
+            className="text-gray-800 dark:text-slate-200"
             style={{
               fontSize: 15,
               fontWeight: "600",
-              color: isDarkColorScheme ? "#E2E8F0" : "#1F2937",
               lineHeight: 26,
             }}
           >
@@ -108,6 +78,7 @@ export function ConclusionCard({ icon, text }: ConclusionCardProps) {
 
         {/* Footer Badge */}
         <View
+          testID="prediction-conclusion-footer"
           style={{
             marginTop: 16,
             flexDirection: "row",
@@ -118,14 +89,14 @@ export function ConclusionCard({ icon, text }: ConclusionCardProps) {
           <Ionicons
             name="shield-checkmark"
             size={16}
-            color={isDarkColorScheme ? "#93C5FD" : "#007AFF"}
+            color="#007AFF"
             style={{ marginRight: 6 }}
           />
           <Text
+            className="text-blue-600 dark:text-blue-400"
             style={{
               fontSize: 12,
               fontWeight: "700",
-              color: isDarkColorScheme ? "#93C5FD" : "#007AFF",
               textTransform: "uppercase",
               letterSpacing: 1,
             }}
@@ -133,7 +104,7 @@ export function ConclusionCard({ icon, text }: ConclusionCardProps) {
             Phân Tích Từ AI
           </Text>
         </View>
-      </LinearGradient>
+      </View>
     </MotiView>
   );
 }

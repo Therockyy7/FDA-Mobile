@@ -4,7 +4,7 @@ import React from "react";
 import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { RADIUS } from "~/features/map/lib/map-ui-utils";
+import { RADIUS } from "~/lib/design-tokens";
 
 interface AreaNameInputProps {
   value: string;

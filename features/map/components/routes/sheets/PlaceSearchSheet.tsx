@@ -48,7 +48,6 @@ export function PlaceSearchSheet({
   onQueryClear,
 }: PlaceSearchSheetProps) {
   const { isDarkColorScheme } = useColorScheme();
-  const isDark = isDarkColorScheme;
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
   const {
@@ -79,7 +78,6 @@ export function PlaceSearchSheet({
     }
   };
 
-  // When user presses "search" on keyboard, auto-select first result
   const handleSubmitEditing = async () => {
     if (predictions.length > 0) {
       await handleSelect(predictions[0]);
@@ -109,60 +107,48 @@ export function PlaceSearchSheet({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={handleClose}>
       <View
+        className="flex-1 bg-white dark:bg-slate-800"
         style={{
-          flex: 1,
-          backgroundColor: isDark ? "#1E293B" : "#FFFFFF",
           paddingTop:
             Platform.OS === "android"
               ? (StatusBar.currentHeight ?? 0) + 8
               : insets.top,
         }}
+        testID="map-route-sheet-search-input"
       >
         {/* Search Header */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            paddingHorizontal: 12,
-            paddingBottom: 12,
-            gap: 8,
-            borderBottomWidth: 1,
-            borderBottomColor: isDark ? "#334155" : "#F1F5F9",
-          }}
-        >
+        <View className="flex-row items-center px-3 pb-3 gap-2 border-b border-slate-100 dark:border-slate-700">
           <TouchableOpacity
             onPress={handleClose}
             style={{ padding: 8 }}
             hitSlop={8}
           >
-            <Ionicons name="arrow-back" size={22} color={isDark ? "#94A3B8" : "#374151"} />
+            <Ionicons
+              name="arrow-back"
+              size={22}
+              color={isDarkColorScheme ? "#94A3B8" : "#374151"}
+            />
           </TouchableOpacity>
 
-          <View
-            style={{
-              flex: 1,
-              flexDirection: "row",
-              alignItems: "center",
-              backgroundColor: isDark ? "#334155" : "#F3F4F6",
-              borderRadius: 12,
-              paddingHorizontal: 12,
-              gap: 8,
-            }}
-          >
-            <Ionicons name="search" size={18} color={isDark ? "#64748B" : "#9CA3AF"} />
+          <View className="flex-1 flex-row items-center bg-gray-100 dark:bg-slate-700 rounded-xl px-3 gap-2">
+            <Ionicons
+              name="search"
+              size={18}
+              color={isDarkColorScheme ? "#64748B" : "#9CA3AF"}
+            />
             <TextInput
               ref={inputRef}
               value={query}
               onChangeText={setQuery}
               placeholder={placeholder}
-              placeholderTextColor={isDark ? "#64748B" : "#9CA3AF"}
+              placeholderTextColor={isDarkColorScheme ? "#64748B" : "#9CA3AF"}
               returnKeyType="search"
               autoCorrect={false}
               onSubmitEditing={handleSubmitEditing}
               style={{
                 flex: 1,
                 fontSize: 15,
-                color: isDark ? "#F1F5F9" : "#111827",
+                color: isDarkColorScheme ? "#F1F5F9" : "#111827",
                 paddingVertical: 12,
               }}
             />
@@ -170,7 +156,10 @@ export function PlaceSearchSheet({
               <ActivityIndicator size="small" color={accentColor} />
             )}
             {query.length > 0 && !isSearching && (
-              <TouchableOpacity onPress={() => { setQuery(""); onQueryClear?.(); }} hitSlop={6}>
+              <TouchableOpacity
+                onPress={() => { setQuery(""); onQueryClear?.(); }}
+                hitSlop={6}
+              >
                 <Ionicons name="close-circle" size={18} color="#9CA3AF" />
               </TouchableOpacity>
             )}
@@ -178,41 +167,17 @@ export function PlaceSearchSheet({
         </View>
 
         {/* Quick Actions */}
-        <View
-          style={{
-            paddingHorizontal: 16,
-            paddingVertical: 8,
-            gap: 2,
-            borderBottomWidth: 1,
-            borderBottomColor: isDark ? "#334155" : "#F1F5F9",
-          }}
-        >
+        <View className="px-4 py-2 gap-0.5 border-b border-slate-100 dark:border-slate-700">
           {showGPSOption && (
             <TouchableOpacity
               onPress={handleUseGPS}
               activeOpacity={0.6}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingVertical: 12,
-                gap: 12,
-              }}
+              className="flex-row items-center py-3 gap-3"
             >
-              <View
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: "#D1FAE5",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
+              <View className="w-9 h-9 rounded-full bg-emerald-100 items-center justify-center">
                 <Ionicons name="navigate" size={18} color="#16A34A" />
               </View>
-              <Text
-                style={{ fontSize: 15, fontWeight: "600", color: "#16A34A" }}
-              >
+              <Text className="text-[15px] font-semibold text-emerald-600">
                 Vị trí hiện tại
               </Text>
             </TouchableOpacity>
@@ -221,12 +186,7 @@ export function PlaceSearchSheet({
           <TouchableOpacity
             onPress={handlePickOnMap}
             activeOpacity={0.6}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              paddingVertical: 12,
-              gap: 12,
-            }}
+            className="flex-row items-center py-3 gap-3"
           >
             <View
               style={{
@@ -240,26 +200,17 @@ export function PlaceSearchSheet({
             >
               <Ionicons name="map" size={18} color={accentColor} />
             </View>
-            <Text style={{ fontSize: 15, fontWeight: "500", color: isDark ? "#94A3B8" : "#374151" }}>
+            <Text className="text-[15px] font-medium text-slate-600 dark:text-slate-400">
               Chọn trên bản đồ
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Search Results */}
-        <View style={{ flex: 1 }}>
+        <View className="flex-1">
           {predictions.length > 0 && (
-            <View style={{ paddingTop: 8 }}>
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: "600",
-                  color: isDark ? "#64748B" : "#9CA3AF",
-                  paddingHorizontal: 16,
-                  paddingBottom: 8,
-                  letterSpacing: 0.5,
-                }}
-              >
+            <View className="pt-2">
+              <Text className="text-[12px] font-semibold text-slate-400 dark:text-slate-500 px-4 pb-2 tracking-wide">
                 KẾT QUẢ TÌM KIẾM
               </Text>
               {predictions.map((prediction, index) => (
@@ -267,46 +218,25 @@ export function PlaceSearchSheet({
                   key={prediction.placeId + index}
                   onPress={() => handleSelect(prediction)}
                   activeOpacity={0.6}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    gap: 12,
-                    borderBottomWidth: 1,
-                    borderBottomColor: isDark ? "#334155" : "#F8FAFC",
-                  }}
+                  className="flex-row items-center px-4 py-3 gap-3 border-b border-slate-50 dark:border-slate-700"
                 >
-                  <View
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 18,
-                      backgroundColor: isDark ? "#334155" : "#F1F5F9",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Ionicons name="location" size={18} color={isDark ? "#94A3B8" : "#6B7280"} />
+                  <View className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-700 items-center justify-center">
+                    <Ionicons
+                      name="location"
+                      size={18}
+                      color={isDarkColorScheme ? "#94A3B8" : "#6B7280"}
+                    />
                   </View>
-                  <View style={{ flex: 1 }}>
+                  <View className="flex-1">
                     <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: "600",
-                        color: isDark ? "#F1F5F9" : "#1F2937",
-                      }}
+                      className="text-sm font-semibold text-slate-800 dark:text-slate-100"
                       numberOfLines={1}
                     >
                       {prediction.mainText}
                     </Text>
                     {prediction.secondaryText ? (
                       <Text
-                        style={{
-                          fontSize: 12,
-                          color: isDark ? "#64748B" : "#9CA3AF",
-                          marginTop: 2,
-                        }}
+                        className="text-[12px] text-slate-400 dark:text-slate-500 mt-0.5"
                         numberOfLines={1}
                       >
                         {prediction.secondaryText}
@@ -320,46 +250,27 @@ export function PlaceSearchSheet({
 
           {/* Empty state */}
           {query.length >= 2 && predictions.length === 0 && !isSearching && (
-            <View
-              style={{
-                alignItems: "center",
-                paddingTop: 40,
-                paddingHorizontal: 32,
-              }}
-            >
-              <Ionicons name="search" size={40} color={isDark ? "#334155" : "#D1D5DB"} />
-              <Text
-                style={{
-                  fontSize: 14,
-                  color: isDark ? "#64748B" : "#9CA3AF",
-                  textAlign: "center",
-                  marginTop: 12,
-                }}
-              >
-                Không tìm thấy kết quả cho “{query}”
+            <View className="items-center pt-10 px-8">
+              <Ionicons
+                name="search"
+                size={40}
+                color={isDarkColorScheme ? "#334155" : "#D1D5DB"}
+              />
+              <Text className="text-sm text-slate-400 dark:text-slate-500 text-center mt-3">
+                Không tìm thấy kết quả cho "{query}"
               </Text>
             </View>
           )}
 
           {/* Hint */}
           {query.length < 2 && predictions.length === 0 && (
-            <View
-              style={{
-                alignItems: "center",
-                paddingTop: 40,
-                paddingHorizontal: 32,
-              }}
-            >
-              <Ionicons name="location-outline" size={40} color={isDark ? "#334155" : "#D1D5DB"} />
-              <Text
-                style={{
-                  fontSize: 14,
-                  color: isDark ? "#64748B" : "#9CA3AF",
-                  textAlign: "center",
-                  marginTop: 12,
-                  lineHeight: 20,
-                }}
-              >
+            <View className="items-center pt-10 px-8">
+              <Ionicons
+                name="location-outline"
+                size={40}
+                color={isDarkColorScheme ? "#334155" : "#D1D5DB"}
+              />
+              <Text className="text-sm text-slate-400 dark:text-slate-500 text-center mt-3 leading-5">
                 Nhập tên đường, địa danh hoặc địa chỉ để tìm kiếm
               </Text>
             </View>

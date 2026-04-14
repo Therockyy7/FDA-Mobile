@@ -6,7 +6,7 @@ import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { CARD_SHADOW, OVERLAY_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { SHADOW } from "~/lib/design-tokens";
 import { Legend, MapControls } from "~/features/map/components/controls";
 
 interface Props {
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#3B82F6",
     alignItems: "center",
     justifyContent: "center",
-    ...OVERLAY_SHADOW,
+    ...SHADOW.md,
     borderWidth: 2,
     borderColor: "#3B82F6",
     marginTop: 10,
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     alignItems: "center",
     justifyContent: "center",
-    ...OVERLAY_SHADOW,
+    ...SHADOW.md,
     borderWidth: 2,
     borderColor: "#3B82F6",
   },
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    ...CARD_SHADOW,
+    ...SHADOW.sm,
     borderWidth: 1,
     zIndex: 20,
     maxWidth: "80%",

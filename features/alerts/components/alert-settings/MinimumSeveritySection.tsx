@@ -28,8 +28,9 @@ export function MinimumSeveritySection({
   colors,
 }: MinimumSeveritySectionProps) {
   return (
-    <View style={{ marginTop: 24, opacity: 1 }}>
+    <View testID="alerts-settings-severity-section" style={{ marginTop: 24, opacity: 1 }}>
       <Text
+        testID="alerts-settings-severity-label"
         style={{
           fontSize: 12,
           fontWeight: "700",
@@ -60,6 +61,7 @@ export function MinimumSeveritySection({
             return (
               <TouchableOpacity
                 key={option.value}
+                testID={`alerts-settings-severity-option-${option.value.toLowerCase()}`}
                 onPress={() => onChange(option.value)}
                 activeOpacity={1}
                 style={{
@@ -95,7 +97,7 @@ export function MinimumSeveritySection({
                   />
                   <Text
                     style={{
-                      fontSize: 13,
+                      fontSize: 14,
                       fontWeight: isSelected ? "800" : "600",
                       color: isSelected ? option.color : colors.subtext,
                       textShadowColor: isSelected
@@ -127,6 +129,7 @@ export function MinimumSeveritySection({
           })}
         </View>
         <Text
+          testID="alerts-settings-severity-hint"
           style={{
             fontSize: 11,
             color: colors.subtext,

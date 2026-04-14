@@ -5,7 +5,8 @@ import { Animated, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { Sensor } from "~/features/map/constants/map-data";
 import { getStatusColor } from "~/features/map/lib/map-utils";
-import { CARD_SHADOW, RADIUS, STATUS_BADGE, useMapColors } from "~/features/map/lib/map-ui-utils";
+import { STATUS_BADGE, useMapColors } from "~/features/map/lib/map-ui-utils";
+import { RADIUS, SHADOW } from "~/lib/design-tokens";
 
 interface SelectedSensorCardProps {
   sensor: Sensor;
@@ -35,13 +36,14 @@ export function SelectedSensorCard({ sensor, slideAnim, onClose }: SelectedSenso
     >
       <View
         style={[
-          CARD_SHADOW,
+          SHADOW.md,
           {
             backgroundColor: colors.card,
             borderRadius: RADIUS.card,
             padding: 16,
           },
         ]}
+        testID="map-station-card"
       >
         {/* Top strip */}
         <View
@@ -116,13 +118,13 @@ export function SelectedSensorCard({ sensor, slideAnim, onClose }: SelectedSenso
               }}
             >
               <View>
-                <Text style={{ fontSize: 10, color: colors.muted }}>Nhiệt độ</Text>
+                <Text style={{ fontSize: 11, color: colors.muted }}>Nhiệt độ</Text>
                 <Text style={{ fontSize: 14, fontWeight: "700", color: colors.text }}>
                   {sensor.temperature}°C
                 </Text>
               </View>
               <View>
-                <Text style={{ fontSize: 10, color: colors.muted }}>Độ ẩm</Text>
+                <Text style={{ fontSize: 11, color: colors.muted }}>Độ ẩm</Text>
                 <Text style={{ fontSize: 14, fontWeight: "700", color: colors.text }}>
                   {sensor.humidity}%
                 </Text>
@@ -133,7 +135,7 @@ export function SelectedSensorCard({ sensor, slideAnim, onClose }: SelectedSenso
               style={{
                 height: 6,
                 backgroundColor: colors.border,
-                borderRadius: RADIUS.progress,
+                borderRadius: RADIUS.chip,
                 overflow: "hidden",
               }}
             >
@@ -142,7 +144,7 @@ export function SelectedSensorCard({ sensor, slideAnim, onClose }: SelectedSenso
                   width: `${(sensor.waterLevel / sensor.maxLevel) * 100}%`,
                   height: "100%",
                   backgroundColor: status.main,
-                  borderRadius: RADIUS.progress,
+                  borderRadius: RADIUS.chip,
                 }}
               />
             </View>
@@ -187,3 +189,5 @@ export function SelectedSensorCard({ sensor, slideAnim, onClose }: SelectedSenso
     </Animated.View>
   );
 }
+
+export default React.memo(SelectedSensorCard);

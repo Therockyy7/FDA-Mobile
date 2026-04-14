@@ -6,6 +6,7 @@ import React, { useMemo } from "react";
 import { View } from "react-native";
 import { PieChart } from "react-native-gifted-charts";
 import { Text } from "~/components/ui/text";
+import { MAP_COLORS, SEVERITY_PALETTE, SHADOW } from "~/lib/design-tokens";
 import type { FloodStatisticsData } from "~/features/areas/types/flood-history.types";
 import { LoadingChart } from "./LoadingChart";
 
@@ -13,46 +14,41 @@ interface FloodStatisticsCardProps {
   data: FloodStatisticsData | null;
   isLoading?: boolean;
   isDark?: boolean;
+  testID?: string;
 }
 
+// Severity display config — uses SEVERITY_PALETTE from design-tokens for colors
 const SEVERITY_CONFIG = {
-  safe: {
-    color: "#10B981",
-    bg: "#D1FAE5",
-    label: "An toàn",
-    icon: "checkmark-circle",
-  },
-  caution: {
-    color: "#FBBF24",
-    bg: "#FEF3C7",
-    label: "Chú ý",
-    icon: "alert-circle",
-  },
-  warning: {
-    color: "#F97316",
-    bg: "#FFEDD5",
-    label: "Cảnh báo",
-    icon: "warning",
-  },
-  critical: {
-    color: "#EF4444",
-    bg: "#FEE2E2",
-    label: "Nguy hiểm",
-    icon: "alert",
-  },
+  safe:     { ...SEVERITY_PALETTE.safe,     label: "An toàn",  icon: "checkmark-circle" as const },
+  caution:  { ...SEVERITY_PALETTE.caution,  label: "Chú ý",    icon: "alert-circle" as const },
+  warning:  { ...SEVERITY_PALETTE.warning,  label: "Cảnh báo", icon: "warning" as const },
+  critical: { ...SEVERITY_PALETTE.critical, label: "Nguy hiểm",icon: "alert" as const },
 };
 
 export function FloodStatisticsCard({
   data,
   isLoading = false,
   isDark = false,
+  testID,
 }: FloodStatisticsCardProps) {
+  // JS-only exception: isDark prop for non-NativeWind contexts (chart library, dynamic styles)
+  const theme = isDark ? MAP_COLORS.dark : MAP_COLORS.light;
   const colors = {
-    background: isDark ? "#1E293B" : "#FFFFFF",
-    text: isDark ? "#F1F5F9" : "#1F2937",
-    subtext: isDark ? "#94A3B8" : "#6B7280",
-    border: isDark ? "#334155" : "#E2E8F0",
-    cardBg: isDark ? "#0B1A33" : "#F8FAFC",
+    background: theme.card,
+    text: theme.text,
+    subtext: theme.subtext,
+    border: theme.border,
+    cardBg: isDark ? "#0B1A33" : theme.background,
+    // Severity token shortcuts for JSX readability
+    dangerBg: SEVERITY_PALETTE.critical.bg,
+    safeBg: SEVERITY_PALETTE.safe.bg,
+    cautionBg: SEVERITY_PALETTE.caution.bg,
+    warningBg: SEVERITY_PALETTE.warning.bg,
+    accentBg: "#DBEAFE", // blue-100 — JS-only exception for chart lib context
+    dangerText: SEVERITY_PALETTE.critical.primary,
+    safeText: SEVERITY_PALETTE.safe.primary,
+    warningText: SEVERITY_PALETTE.warning.primary,
+    accentText: theme.accent,
   };
 
   // Prepare pie chart data
@@ -66,22 +62,22 @@ export function FloodStatisticsCard({
     return [
       {
         value: hoursSafe,
-        color: SEVERITY_CONFIG.safe.color,
+        color: SEVERITY_CONFIG.safe.primary,
         text: `${Math.round((hoursSafe / total) * 100)}%`,
       },
       {
         value: hoursCaution,
-        color: SEVERITY_CONFIG.caution.color,
+        color: SEVERITY_CONFIG.caution.primary,
         text: `${Math.round((hoursCaution / total) * 100)}%`,
       },
       {
         value: hoursWarning,
-        color: SEVERITY_CONFIG.warning.color,
+        color: SEVERITY_CONFIG.warning.primary,
         text: `${Math.round((hoursWarning / total) * 100)}%`,
       },
       {
         value: hoursCritical,
-        color: SEVERITY_CONFIG.critical.color,
+        color: SEVERITY_CONFIG.critical.primary,
         text: `${Math.round((hoursCritical / total) * 100)}%`,
       },
     ].filter((item) => item.value > 0);
@@ -132,10 +128,10 @@ export function FloodStatisticsCard({
     >
       {/* Header with gradient */}
       <LinearGradient
-        colors={isDark ? ["#1E3A5F", "#1E293B"] : ["#EFF6FF", "#FFFFFF"]}
+        colors={isDark ? ["#1E3A5F", MAP_COLORS.dark.card] : ["#EFF6FF", MAP_COLORS.light.card]}
         style={{ padding: 16 }}
       >
-        <View
+        <View testID="areas-chart-statistics-root"
           style={{
             flexDirection: "row",
             justifyContent: "space-between",
@@ -158,10 +154,10 @@ export function FloodStatisticsCard({
               style={{
                 backgroundColor:
                   dataQuality.completeness >= 99
-                    ? "#D1FAE5"
+                    ? colors.safeBg
                     : dataQuality.completeness >= 95
-                      ? "#FEF3C7"
-                      : "#FEE2E2",
+                      ? colors.cautionBg
+                      : colors.dangerBg,
                 paddingHorizontal: 10,
                 paddingVertical: 4,
                 borderRadius: 8,
@@ -173,10 +169,10 @@ export function FloodStatisticsCard({
                   fontWeight: "700",
                   color:
                     dataQuality.completeness >= 99
-                      ? "#059669"
+                      ? colors.safeText
                       : dataQuality.completeness >= 95
-                        ? "#D97706"
-                        : "#DC2626",
+                        ? SEVERITY_PALETTE.caution.text
+                        : SEVERITY_PALETTE.critical.text,
                 }}
               >
                 {dataQuality.completeness.toFixed(1)}% dữ liệu
@@ -215,7 +211,7 @@ export function FloodStatisticsCard({
                   width: 32,
                   height: 32,
                   borderRadius: 8,
-                  backgroundColor: "#FEE2E2",
+                  backgroundColor: colors.dangerBg,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
@@ -223,7 +219,7 @@ export function FloodStatisticsCard({
                 <MaterialCommunityIcons
                   name="arrow-up-bold"
                   size={18}
-                  color="#EF4444"
+                  color={colors.dangerText}
                 />
               </View>
               <View style={{ flex: 1 }}>
@@ -234,7 +230,7 @@ export function FloodStatisticsCard({
                   Cao nhất
                 </Text>
                 <Text
-                  style={{ fontSize: 17, fontWeight: "800", color: "#EF4444" }}
+                  style={{ fontSize: 17, fontWeight: "800", color: colors.dangerText }}
                   numberOfLines={1}
                   adjustsFontSizeToFit
                 >
@@ -263,7 +259,7 @@ export function FloodStatisticsCard({
                   width: 32,
                   height: 32,
                   borderRadius: 8,
-                  backgroundColor: "#D1FAE5",
+                  backgroundColor: colors.safeBg,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
@@ -271,7 +267,7 @@ export function FloodStatisticsCard({
                 <MaterialCommunityIcons
                   name="arrow-down-bold"
                   size={18}
-                  color="#10B981"
+                  color={colors.safeText}
                 />
               </View>
               <View style={{ flex: 1 }}>
@@ -282,7 +278,7 @@ export function FloodStatisticsCard({
                   Thấp nhất
                 </Text>
                 <Text
-                  style={{ fontSize: 17, fontWeight: "800", color: "#10B981" }}
+                  style={{ fontSize: 17, fontWeight: "800", color: colors.safeText }}
                   numberOfLines={1}
                   adjustsFontSizeToFit
                 >
@@ -311,12 +307,12 @@ export function FloodStatisticsCard({
                   width: 32,
                   height: 32,
                   borderRadius: 8,
-                  backgroundColor: "#DBEAFE",
+                  backgroundColor: colors.accentBg,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
-                <Ionicons name="analytics" size={18} color="#007AFF" />
+                <Ionicons name="analytics" size={18} color={colors.accentText} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text
@@ -326,7 +322,7 @@ export function FloodStatisticsCard({
                   Trung bình
                 </Text>
                 <Text
-                  style={{ fontSize: 17, fontWeight: "800", color: "#007AFF" }}
+                  style={{ fontSize: 17, fontWeight: "800", color: colors.accentText }}
                   numberOfLines={1}
                   adjustsFontSizeToFit
                 >
@@ -355,12 +351,12 @@ export function FloodStatisticsCard({
                   width: 32,
                   height: 32,
                   borderRadius: 8,
-                  backgroundColor: "#FFEDD5",
+                  backgroundColor: colors.warningBg,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
-                <Ionicons name="time" size={18} color="#F97316" />
+                <Ionicons name="time" size={18} color={colors.warningText} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text
@@ -370,7 +366,7 @@ export function FloodStatisticsCard({
                   Tổng giờ ngập
                 </Text>
                 <Text
-                  style={{ fontSize: 17, fontWeight: "800", color: "#F97316" }}
+                  style={{ fontSize: 17, fontWeight: "800", color: colors.warningText }}
                   numberOfLines={1}
                   adjustsFontSizeToFit
                 >
@@ -457,7 +453,7 @@ export function FloodStatisticsCard({
                           width: 12,
                           height: 12,
                           borderRadius: 6,
-                          backgroundColor: config.color,
+                          backgroundColor: config.primary,
                         }}
                       />
                       <Text
@@ -510,9 +506,9 @@ export function FloodStatisticsCard({
                       gap: 6,
                       backgroundColor:
                         comparison.avgLevelChange > 0
-                          ? "#FEE2E2"
+                          ? colors.dangerBg
                           : comparison.avgLevelChange < 0
-                            ? "#D1FAE5"
+                            ? colors.safeBg
                             : colors.cardBg,
                       paddingVertical: 10,
                       borderRadius: 10,
@@ -529,9 +525,9 @@ export function FloodStatisticsCard({
                       size={16}
                       color={
                         comparison.avgLevelChange > 0
-                          ? "#EF4444"
+                          ? colors.dangerText
                           : comparison.avgLevelChange < 0
-                            ? "#10B981"
+                            ? colors.safeText
                             : colors.subtext
                       }
                     />
@@ -541,9 +537,9 @@ export function FloodStatisticsCard({
                         fontWeight: "700",
                         color:
                           comparison.avgLevelChange > 0
-                            ? "#EF4444"
+                            ? colors.dangerText
                             : comparison.avgLevelChange < 0
-                              ? "#10B981"
+                              ? colors.safeText
                               : colors.subtext,
                       }}
                     >
@@ -565,9 +561,9 @@ export function FloodStatisticsCard({
                       gap: 6,
                       backgroundColor:
                         comparison.floodHoursChange > 0
-                          ? "#FEE2E2"
+                          ? colors.dangerBg
                           : comparison.floodHoursChange < 0
-                            ? "#D1FAE5"
+                            ? colors.safeBg
                             : colors.cardBg,
                       paddingVertical: 10,
                       borderRadius: 10,
@@ -584,9 +580,9 @@ export function FloodStatisticsCard({
                       size={16}
                       color={
                         comparison.floodHoursChange > 0
-                          ? "#EF4444"
+                          ? colors.dangerText
                           : comparison.floodHoursChange < 0
-                            ? "#10B981"
+                            ? colors.safeText
                             : colors.subtext
                       }
                     />
@@ -596,9 +592,9 @@ export function FloodStatisticsCard({
                         fontWeight: "700",
                         color:
                           comparison.floodHoursChange > 0
-                            ? "#EF4444"
+                            ? colors.dangerText
                             : comparison.floodHoursChange < 0
-                              ? "#10B981"
+                              ? colors.safeText
                               : colors.subtext,
                       }}
                     >

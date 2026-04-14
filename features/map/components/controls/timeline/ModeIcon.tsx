@@ -35,6 +35,7 @@ export function ModeIcon({ active, viewMode, onPress }: ModeIconProps) {
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
       <TouchableOpacity
         onPress={handlePress}
+        testID={`map-timeline-mode-${viewMode}-btn`}
         activeOpacity={0.8}
         style={[
           styles.button,

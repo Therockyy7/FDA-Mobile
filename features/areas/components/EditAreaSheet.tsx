@@ -17,7 +17,7 @@ import {
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { Text } from "~/components/ui/text";
 import type { Area } from "~/features/map/types/map-layers.types";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW, RADIUS } from "~/lib/design-tokens";
 
 interface EditAreaSheetProps {
   visible: boolean;
@@ -35,7 +35,6 @@ function EditAreaSheetContent({
   onSubmit,
   isLoading = false,
 }: Omit<EditAreaSheetProps, "visible">) {
-  const { isDarkColorScheme } = useColorScheme();
   const [name, setName] = useState(area?.name || "");
   const [address, setAddress] = useState(area?.addressText || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,17 +45,6 @@ function EditAreaSheetContent({
       setAddress(area.addressText || "");
     }
   }, [area]);
-
-  const colors = {
-    background: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-    cardBg: isDarkColorScheme ? "#334155" : "#F8FAFC",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
-    border: isDarkColorScheme ? "#475569" : "#E2E8F0",
-    inputBg: isDarkColorScheme ? "#0B1A33" : "#F1F5F9",
-    accent: "#007AFF",
-    overlay: "rgba(0, 0, 0, 0.5)",
-  };
 
   const handleSubmit = useCallback(async () => {
     if (!name.trim()) return;
@@ -78,38 +66,26 @@ function EditAreaSheetContent({
   return (
     <>
       <Pressable
-        style={{ flex: 1, backgroundColor: colors.overlay }}
+        className="flex-1"
+        style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         onPress={onClose}
+        testID="areas-modal-edit-overlay"
       />
 
       <Animated.View
         entering={FadeIn.duration(200)}
+        className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-800"
         style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: colors.background,
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
+          borderTopLeftRadius: RADIUS.sheet,
+          borderTopRightRadius: RADIUS.sheet,
           maxHeight: SCREEN_HEIGHT * 0.55,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.15,
-          shadowRadius: 20,
-          elevation: 20,
+          ...SHADOW.lg,
         }}
+        testID="areas-modal-edit-sheet"
       >
         {/* Handle Bar */}
-        <View style={{ alignItems: "center", paddingTop: 12 }}>
-          <View
-            style={{
-              width: 40,
-              height: 4,
-              borderRadius: 2,
-              backgroundColor: colors.border,
-            }}
-          />
+        <View className="items-center pt-3">
+          <View className="w-10 h-1 rounded-full bg-slate-200 dark:bg-slate-600" />
         </View>
 
         {/* Header */}
@@ -120,39 +96,26 @@ function EditAreaSheetContent({
           style={{
             margin: 16,
             marginTop: 16,
-            borderRadius: 16,
+            borderRadius: RADIUS.card,
             padding: 16,
           }}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <TouchableOpacity
-              style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
-            >
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity className="flex-row items-center gap-3">
               <View
+                className="w-11 h-11 items-center justify-center"
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 12,
+                  borderRadius: RADIUS.iconBox,
                   backgroundColor: "rgba(255,255,255,0.2)",
-                  alignItems: "center",
-                  justifyContent: "center",
                 }}
               >
                 <Ionicons name="pencil" size={24} color="white" />
               </View>
               <View>
-                <Text
-                  style={{ fontSize: 18, fontWeight: "700", color: "white" }}
-                >
+                <Text className="text-lg font-bold text-white">
                   Chỉnh sửa vùng
                 </Text>
-                <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.8)" }}>
+                <Text className="text-xs text-white/80">
                   Cập nhật thông tin
                 </Text>
               </View>
@@ -160,14 +123,9 @@ function EditAreaSheetContent({
 
             <TouchableOpacity
               onPress={onClose}
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 16,
-                backgroundColor: "rgba(255,255,255,0.2)",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className="w-8 h-8 rounded-full items-center justify-center"
+              style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
+              testID="areas-modal-edit-close"
             >
               <Ionicons name="close" size={18} color="white" />
             </TouchableOpacity>
@@ -175,97 +133,50 @@ function EditAreaSheetContent({
         </LinearGradient>
 
         {/* Content */}
-        <View style={{ paddingHorizontal: 16, paddingBottom: 32 }}>
+        <View className="px-4 pb-8">
           {/* Name Input */}
           <Animated.View entering={FadeInDown.delay(100).duration(300)}>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "600",
-                color: colors.subtext,
-                marginBottom: 8,
-              }}
-            >
+            <Text className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">
               TÊN VÙNG *
             </Text>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: colors.inputBg,
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: colors.border,
-                paddingHorizontal: 14,
-                marginBottom: 16,
-              }}
-            >
-              <Ionicons name="bookmark" size={18} color={colors.subtext} />
+            <View className="flex-row items-center bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600 px-3.5 mb-4">
+              <Ionicons name="bookmark" size={18} color="#64748B" />
               <TextInput
                 value={name}
                 onChangeText={setName}
                 placeholder="Tên vùng theo dõi"
-                placeholderTextColor={colors.subtext}
-                style={{
-                  flex: 1,
-                  paddingVertical: 14,
-                  paddingHorizontal: 10,
-                  fontSize: 15,
-                  color: colors.text,
-                }}
+                placeholderTextColor="#94A3B8"
+                className="flex-1 py-3.5 px-2.5 text-base text-slate-900 dark:text-slate-100"
                 maxLength={255}
                 editable={!isSubmitting}
+                testID="areas-modal-edit-name-input"
               />
             </View>
           </Animated.View>
 
           {/* Address Input */}
           <Animated.View entering={FadeInDown.delay(200).duration(300)}>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "600",
-                color: colors.subtext,
-                marginBottom: 8,
-              }}
-            >
+            <Text className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">
               ĐỊA CHỈ
             </Text>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "flex-start",
-                backgroundColor: colors.inputBg,
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: colors.border,
-                paddingHorizontal: 14,
-                paddingVertical: 4,
-                marginBottom: 20,
-              }}
-            >
+            <View className="flex-row items-start bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600 px-3.5 py-1 mb-5">
               <Ionicons
                 name="location"
                 size={18}
-                color={colors.subtext}
+                color="#64748B"
                 style={{ marginTop: 14 }}
               />
               <TextInput
                 value={address}
                 onChangeText={setAddress}
                 placeholder="Địa chỉ (tùy chọn)"
-                placeholderTextColor={colors.subtext}
-                style={{
-                  flex: 1,
-                  paddingVertical: 14,
-                  paddingHorizontal: 10,
-                  fontSize: 15,
-                  color: colors.text,
-                }}
+                placeholderTextColor="#94A3B8"
+                className="flex-1 py-3.5 px-2.5 text-base text-slate-900 dark:text-slate-100"
                 maxLength={500}
                 multiline
                 numberOfLines={2}
                 editable={!isSubmitting}
+                testID="areas-modal-edit-address-input"
               />
             </View>
           </Animated.View>
@@ -276,13 +187,14 @@ function EditAreaSheetContent({
               onPress={handleSubmit}
               disabled={!canSubmit}
               activeOpacity={0.8}
+              testID="areas-modal-edit-submit"
             >
               <LinearGradient
                 colors={
                   canSubmit ? ["#F97316", "#EA580C"] : ["#94A3B8", "#64748B"]
                 }
                 style={{
-                  borderRadius: 14,
+                  borderRadius: RADIUS.button,
                   paddingVertical: 16,
                   flexDirection: "row",
                   alignItems: "center",
@@ -295,13 +207,7 @@ function EditAreaSheetContent({
                 ) : (
                   <>
                     <Ionicons name="checkmark-circle" size={20} color="white" />
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "700",
-                        color: "white",
-                      }}
-                    >
+                    <Text className="text-base font-bold text-white">
                       Lưu thay đổi
                     </Text>
                   </>

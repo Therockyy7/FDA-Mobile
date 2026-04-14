@@ -5,7 +5,7 @@ import { Animated, Easing, TouchableOpacity, View } from "react-native";
 import { MapSearch } from "~/features/map/components/controls/MapSearch";
 import { ModeIcon } from "~/features/map/components/controls/timeline/ModeIcon";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { SHADOW } from "~/lib/design-tokens";
 import type { ViewMode } from "~/features/map/components/controls/selectors/ViewModeSelector";
 
 interface MapTopControlsProps {
@@ -57,11 +57,18 @@ export function MapTopControls({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="map-top-controls">
       {/* Search bar */}
-      <Animated.View style={[styles.searchBar, { width: containerWidth, backgroundColor: isDark ? "#1E293B" : "white" }]}>
+      <Animated.View
+        style={[
+          styles.searchBar,
+          SHADOW.sm,
+          { width: containerWidth, backgroundColor: isDark ? "#1E293B" : "white" },
+        ]}
+      >
         <TouchableOpacity
           onPress={handleToggleSearch}
+          testID="map-header-search-btn"
           activeOpacity={0.7}
           style={styles.searchIcon}
         >
@@ -102,7 +109,7 @@ export function MapTopControls({
       </Animated.View>
 
       {/* Mode icons */}
-      <View style={[styles.modeBar, { backgroundColor: isDark ? "#1E293B" : "white" }]}>
+      <View style={[styles.modeBar, SHADOW.sm, { backgroundColor: isDark ? "#1E293B" : "white" }]}>
         <ModeIcon
           active={viewMode === "zones"}
           viewMode="zones"
@@ -131,7 +138,6 @@ const styles = {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     paddingHorizontal: 4,
-    ...CARD_SHADOW,
     overflow: "hidden" as const,
     borderWidth: 1,
     borderColor: "#E2E8F0",
@@ -147,6 +153,5 @@ const styles = {
     flexDirection: "row" as const,
     borderRadius: 999,
     padding: 4,
-    ...CARD_SHADOW,
   },
 };

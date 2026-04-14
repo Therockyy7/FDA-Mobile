@@ -11,7 +11,8 @@ interface SafeRoutePolylinesProps {
   onRoutePress: (index: number) => void;
 }
 
-export function SafeRoutePolylines({
+// strokeColor values are Polyline props — MAP_COLORS exception applies
+export const SafeRoutePolylines = React.memo(function SafeRoutePolylines({
   routes,
   selectedIndex,
   onRoutePress,
@@ -64,4 +65,4 @@ export function SafeRoutePolylines({
       })}
     </>
   );
-}
+});

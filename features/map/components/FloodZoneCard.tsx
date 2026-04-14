@@ -9,12 +9,11 @@ import { Text } from "~/components/ui/text";
 import { FloodZone } from "~/features/map/constants/map-data";
 import { getStatusColor } from "~/features/map/lib/map-utils";
 import {
-  CARD_SHADOW,
   PULSE_ANIM,
-  RADIUS,
   STATUS_BADGE,
   useMapColors,
 } from "~/features/map/lib/map-ui-utils";
+import { RADIUS, SHADOW } from "~/lib/design-tokens";
 
 interface FloodZoneCardProps {
   zone: FloodZone;
@@ -93,7 +92,7 @@ export function FloodZoneCard({ zone, slideAnim, onClose }: FloodZoneCardProps) 
       <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
         <View
           style={[
-            CARD_SHADOW,
+            SHADOW.sm,
             {
               backgroundColor: colors.card,
               borderRadius: RADIUS.card,

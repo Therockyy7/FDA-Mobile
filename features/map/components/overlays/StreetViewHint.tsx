@@ -3,44 +3,23 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
-import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { SHADOW } from "~/lib/design-tokens";
 
 interface StreetViewHintProps {
   visible: boolean;
 }
 
 export function StreetViewHint({ visible }: StreetViewHintProps) {
-  const { isDarkColorScheme } = useColorScheme();
-  const isDark = isDarkColorScheme;
-
   if (!visible) return null;
 
   return (
     <View
-      style={{
-        position: "absolute",
-        top: 80,
-        right: 16,
-        backgroundColor: isDark ? "rgba(245,158,11,0.95)" : "rgba(245,158,11,0.95)",
-        borderRadius: 16,
-        padding: 12,
-        ...CARD_SHADOW,
-        maxWidth: 200,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-      }}
+      className="absolute top-20 right-4 rounded-2xl p-3 max-w-[200px] flex-row items-center gap-2 bg-amber-500"
+      style={SHADOW.md}
+      testID="map-overlay-streetview-hint"
     >
       <Ionicons name="eye" size={16} color="white" />
-      <Text
-        style={{
-          fontSize: 12,
-          fontWeight: "600",
-          color: "white",
-          flex: 1,
-        }}
-      >
+      <Text className="text-xs font-semibold text-white flex-1">
         Nhấn marker để xem Street View
       </Text>
     </View>

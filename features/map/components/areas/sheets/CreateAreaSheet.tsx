@@ -18,7 +18,7 @@ import { useColorScheme } from "~/lib/useColorScheme";
 import { formatRadius } from "~/features/map/lib/formatters";
 import { AreaNameInput } from "~/features/map/components/areas/sheets/AreaNameInput";
 import { AreaAddressInput } from "~/features/map/components/areas/sheets/AreaAddressInput";
-import { RADIUS } from "~/features/map/lib/map-ui-utils";
+import { RADIUS, SHADOW } from "~/lib/design-tokens";
 
 interface CreateAreaSheetProps {
   visible: boolean;
@@ -139,11 +139,7 @@ const styles = StyleSheet.create({
   sheet: {
     borderTopLeftRadius: RADIUS.sheet,
     borderTopRightRadius: RADIUS.sheet,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 18,
+    ...SHADOW.lg,
     borderTopWidth: 1,
     paddingHorizontal: 16,
   },

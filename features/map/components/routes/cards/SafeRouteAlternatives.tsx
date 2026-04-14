@@ -9,7 +9,8 @@ import {
   SAFETY_STATUS_COLORS,
   SAFETY_STATUS_LABELS,
 } from "~/features/map/types/safe-route.types";
-import { CARD_SHADOW, RADIUS, STATUS_BADGE, useMapColors } from "~/features/map/lib/map-ui-utils";
+import { SHADOW, RADIUS, } from "~/lib/design-tokens";
+import { STATUS_BADGE, useMapColors } from "~/features/map/lib/map-ui-utils";
 
 interface SafeRouteAlternativesProps {
   routes: DecodedRoute[];
@@ -18,7 +19,7 @@ interface SafeRouteAlternativesProps {
   onExitRouting: () => void;
 }
 
-export function SafeRouteAlternatives({
+export const SafeRouteAlternatives = React.memo(function SafeRouteAlternatives({
   routes,
   selectedIndex,
   onSelectRoute,
@@ -29,7 +30,7 @@ export function SafeRouteAlternatives({
   const colors = useMapColors();
 
   return (
-    <View>
+    <View testID="map-route-alternatives">
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -55,7 +56,7 @@ export function SafeRouteAlternatives({
               onPress={() => onSelectRoute(index)}
               activeOpacity={0.8}
               style={[
-                CARD_SHADOW,
+                SHADOW.sm,
                 styles.routeCard,
                 {
                   backgroundColor: isSelected ? colors.card : colors.background,
@@ -99,7 +100,7 @@ export function SafeRouteAlternatives({
       </ScrollView>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   scrollContent: {

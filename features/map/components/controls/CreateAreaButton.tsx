@@ -2,24 +2,25 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { TouchableOpacity } from "react-native";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { MAP_OVERLAY_LAYER_COLORS } from "~/lib/design-tokens";
 
 interface CreateAreaButtonProps {
   onPress: () => void;
+  testID?: string;
 }
 
-export function CreateAreaButton({ onPress }: CreateAreaButtonProps) {
-  const { isDarkColorScheme } = useColorScheme();
-  const isDark = isDarkColorScheme;
-
+export function CreateAreaButton({ onPress, testID }: CreateAreaButtonProps) {
   return (
     <TouchableOpacity
       onPress={onPress}
+      testID={testID ?? "map-controls-create-area-btn"}
+      accessibilityRole="button"
+      accessibilityLabel="Tạo vùng mới"
       style={{
         width: 40,
         height: 40,
         borderRadius: 12,
-        backgroundColor: isDark ? "#10B981" : "#10B981",
+        backgroundColor: MAP_OVERLAY_LAYER_COLORS.success,
         alignItems: "center",
         justifyContent: "center",
       }}

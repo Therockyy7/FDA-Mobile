@@ -1,5 +1,7 @@
+// features/alerts/components/alert-thresholds/ThresholdRow.tsx
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "~/components/ui/text";
 
 interface ThresholdRowProps {
   label: string;
@@ -9,6 +11,7 @@ interface ThresholdRowProps {
     subtext: string;
     text: string;
   };
+  testID?: string;
 }
 
 export function ThresholdRow({
@@ -16,9 +19,11 @@ export function ThresholdRow({
   dotColor,
   value,
   colors,
+  testID,
 }: ThresholdRowProps) {
   return (
     <View
+      testID={testID}
       style={{
         flexDirection: "row",
         alignItems: "center",

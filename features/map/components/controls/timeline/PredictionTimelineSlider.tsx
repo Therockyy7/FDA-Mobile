@@ -1,5 +1,5 @@
 // features/map/components/controls/timeline/PredictionTimelineSlider.tsx
-import React, { useCallback } from "react";
+import React from "react";
 import { View, Dimensions, Platform } from "react-native";
 import { MotiView } from "moti";
 import { useColorScheme } from "~/lib/useColorScheme";
@@ -10,7 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { PredictionSliderHeader } from "./PredictionSliderHeader";
 import { HorizonPillTrack } from "./HorizonPillTrack";
-import { OVERLAY_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { SHADOW } from "~/lib/design-tokens";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -85,8 +85,9 @@ export const PredictionTimelineSlider: React.FC<PredictionTimelineSliderProps> =
       style={inline ? { width: "100%", zIndex: 30 } : absoluteStyle}
     >
       <View
+        testID="map-timeline-slider"
         style={[
-          OVERLAY_SHADOW,
+          SHADOW.md,
           {
             marginHorizontal: inline ? 0 : SLIDER_PADDING,
             marginBottom: inline ? 0 : Platform.OS === "ios" ? 32 : 24,

@@ -1,4 +1,4 @@
-// features/map/components/WaterLevelVisualization.tsx
+// features/map/components/overlays/WaterLevelVisualization.tsx
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
@@ -15,6 +15,7 @@ import Animated, {
 import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { MAP_COLORS, SHADOW } from "~/lib/design-tokens";
 
 interface WaterLevelVisualizationProps {
   waterLevel: number | null;
@@ -131,14 +132,8 @@ export function WaterLevelVisualization({
     height: waterFillHeight.value,
   }));
 
-  const colors = {
-    background: isDarkColorScheme ? "#1E293B" : "#F8FAFC",
-    cardBg: isDarkColorScheme ? "#334155" : "#FFFFFF",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
-    border: isDarkColorScheme ? "#475569" : "#E2E8F0",
-    columnBg: isDarkColorScheme ? "#0B1A33" : "#E2E8F0",
-  };
+  // Dark mode exception: JS color values needed for SVG and dynamic bg
+  const palette = isDarkColorScheme ? MAP_COLORS.dark : MAP_COLORS.light;
 
   // Generate scale markers based on effective max level
   const getScaleMarkers = () => {
@@ -163,12 +158,18 @@ export function WaterLevelVisualization({
     return "Mức nước rất cao";
   };
 
+  // columnBg is a very dark tint not in MAP_COLORS — use muted dark token
+  const columnBg = isDarkColorScheme ? "#0B1A33" : "#E2E8F0";
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.cardBg }]}>
+    <View
+      style={[styles.container, { backgroundColor: palette.card }, SHADOW.md]}
+      testID="map-overlay-waterlevel"
+    >
       {/* Title */}
       <View style={styles.header}>
         <Ionicons name="water" size={20} color={severityColor} />
-        <Text style={[styles.title, { color: colors.text }]}>
+        <Text style={[styles.title, { color: palette.text }]}>
           Biểu đồ mực nước
         </Text>
       </View>
@@ -181,21 +182,21 @@ export function WaterLevelVisualization({
             const yPos = VIS_HEIGHT - (level / effectiveMaxLevel) * VIS_HEIGHT;
             return (
               <View key={level} style={[styles.scaleMark, { top: yPos - 8 }]}>
-                <Text style={[styles.scaleText, { color: colors.subtext }]}>
+                <Text style={[styles.scaleText, { color: palette.subtext }]}>
                   {level}
                 </Text>
                 <View
-                  style={[styles.scaleLine, { backgroundColor: colors.border }]}
+                  style={[styles.scaleLine, { backgroundColor: palette.border }]}
                 />
               </View>
             );
           })}
-          <Text style={[styles.unitLabel, { color: colors.subtext }]}>cm</Text>
+          <Text style={[styles.unitLabel, { color: palette.subtext }]}>cm</Text>
         </View>
 
         {/* Water Column */}
         <View style={styles.columnContainer}>
-          <View style={[styles.column, { backgroundColor: colors.columnBg }]}>
+          <View style={[styles.column, { backgroundColor: columnBg }]}>
             {/* Water Fill */}
             <Animated.View style={[styles.waterFill, waterFillStyle]}>
               {/* Wave Layer 1 */}
@@ -300,7 +301,7 @@ export function WaterLevelVisualization({
         ]}
       >
         <View style={[styles.statusDot, { backgroundColor: severityColor }]} />
-        <Text style={[styles.statusText, { color: colors.text }]}>
+        <Text style={[styles.statusText, { color: palette.text }]}>
           {getAlertMessage()}
         </Text>
       </View>
@@ -313,11 +314,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 16,
     marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
   },
   header: {
     flexDirection: "row",

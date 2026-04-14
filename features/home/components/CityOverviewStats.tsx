@@ -6,6 +6,7 @@ import LottieView from "lottie-react-native";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { SHADOW } from "~/lib/design-tokens";
 import { CityStats } from "../types/home-types";
 
 interface CityOverviewStatsProps {
@@ -16,7 +17,7 @@ export function CityOverviewStats({ stats }: CityOverviewStatsProps) {
   const router = useRouter();
 
   return (
-    <View className="px-4 mt-6 mb-4">
+    <View className="px-4 mt-6 mb-4" testID="home-stats-section">
       <Text className="text-slate-900 dark:text-white text-lg font-bold mb-3">
         Tổng quan {stats.cityName}
       </Text>
@@ -27,14 +28,12 @@ export function CityOverviewStats({ stats }: CityOverviewStatsProps) {
         end={{ x: 1, y: 1 }}
         className="rounded-xl p-4"
         style={{
+          ...SHADOW.md,
           shadowColor: "#0EA5E9",
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.3,
-          shadowRadius: 12,
-          elevation: 6,
           borderRadius: 20,
           overflow: "hidden",
         }}
+        testID="home-stats-card"
       >
         {/* Lottie Water Animation Background */}
         <LottieView
@@ -67,7 +66,7 @@ export function CityOverviewStats({ stats }: CityOverviewStatsProps) {
               </Text>
             </View>
           </View>
-          <View className="bg-amber-500 rounded-full px-3 py-1.5">
+          <View className="bg-amber-500 rounded-full px-3 py-1.5" testID="home-stats-status">
             <Text className="text-white text-xs font-bold">
               {stats.statusText}
             </Text>
@@ -76,21 +75,21 @@ export function CityOverviewStats({ stats }: CityOverviewStatsProps) {
 
         {/* Main Stats */}
         <View className="flex-row gap-3 mb-3">
-          <View className="flex-1 bg-white/15 rounded-lg p-3">
+          <View className="flex-1 bg-white/15 rounded-lg p-3" testID="home-stats-flooded-areas">
             <Text className="text-white/70 text-xs mb-1">Khu vực ngập</Text>
             <Text className="text-white text-2xl font-bold">
               {stats.floodedAreas}
             </Text>
-            <Text className="text-white/70 text-[10px] mt-0.5">
+            <Text className="text-white/70 text-xs mt-0.5">
               / {stats.totalAreas} khu vực
             </Text>
           </View>
-          <View className="flex-1 bg-white/15 rounded-lg p-3">
+          <View className="flex-1 bg-white/15 rounded-lg p-3" testID="home-stats-sensors">
             <Text className="text-white/70 text-xs mb-1">Cảm biến</Text>
             <Text className="text-white text-2xl font-bold">
               {stats.activeSensors}
             </Text>
-            <Text className="text-white/70 text-[10px] mt-0.5">
+            <Text className="text-white/70 text-xs mt-0.5">
               / {stats.totalSensors} hoạt động
             </Text>
           </View>
@@ -98,28 +97,28 @@ export function CityOverviewStats({ stats }: CityOverviewStatsProps) {
 
         {/* Additional Info */}
         <View className="flex-row gap-3">
-          <View className="flex-1 bg-white/10 rounded-lg p-2.5">
+          <View className="flex-1 bg-white/10 rounded-lg p-2.5" testID="home-stats-water-level">
             <View className="flex-row items-center gap-1.5 mb-1">
               <MaterialIcons name="water-drop" size={14} color="white" />
-              <Text className="text-white/80 text-[10px]">Mực nước TB</Text>
+              <Text className="text-white/80 text-xs">Mực nước TB</Text>
             </View>
             <Text className="text-white text-lg font-bold">
               {stats.averageWaterLevel}m
             </Text>
           </View>
-          <View className="flex-1 bg-white/10 rounded-lg p-2.5">
+          <View className="flex-1 bg-white/10 rounded-lg p-2.5" testID="home-stats-rainfall">
             <View className="flex-row items-center gap-1.5 mb-1">
               <MaterialIcons name="grain" size={14} color="white" />
-              <Text className="text-white/80 text-[10px]">Lượng mưa 24h</Text>
+              <Text className="text-white/80 text-xs">Lượng mưa 24h</Text>
             </View>
             <Text className="text-white text-lg font-bold">
               {stats.rainfall24h}mm
             </Text>
           </View>
-          <View className="flex-1 bg-white/10 rounded-lg p-2.5">
+          <View className="flex-1 bg-white/10 rounded-lg p-2.5" testID="home-stats-population">
             <View className="flex-row items-center gap-1.5 mb-1">
               <MaterialIcons name="people" size={14} color="white" />
-              <Text className="text-white/80 text-[10px]">
+              <Text className="text-white/80 text-xs">
                 Dân số ảnh hưởng
               </Text>
             </View>
@@ -134,6 +133,7 @@ export function CityOverviewStats({ stats }: CityOverviewStatsProps) {
           activeOpacity={0.8}
           onPress={() => router.push("/map" as any)}
           className="mt-3 bg-white/20 rounded-lg p-3 flex-row items-center justify-center gap-2"
+          testID="home-stats-map-button"
         >
           <MaterialIcons name="map" size={18} color="white" />
           <Text className="text-white text-sm font-semibold">

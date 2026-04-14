@@ -17,31 +17,26 @@ export function NotificationMetadata({
 
   return (
     <View
-      style={{
-        flexDirection: "row",
-        gap: 12,
-        marginBottom: 12,
-      }}
+      testID="notifications-metadata-container"
+      style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}
     >
       {waterLevel && (
         <View
+          testID="notifications-metadata-water-level"
           style={{
             flexDirection: "row",
             alignItems: "center",
-            backgroundColor: "#F3F4F6",
             paddingHorizontal: 10,
             paddingVertical: 6,
             borderRadius: 8,
           }}
+          className="bg-slate-100 dark:bg-slate-800"
         >
           <MaterialCommunityIcons name="waves" size={16} color="#007AFF" />
           <Text
-            style={{
-              fontSize: 12,
-              fontWeight: "700",
-              color: "#1F2937",
-              marginLeft: 6,
-            }}
+            testID="notifications-metadata-water-level-value"
+            style={{ fontSize: 12, fontWeight: "700", marginLeft: 6 }}
+            className="text-slate-900 dark:text-slate-100"
           >
             {waterLevel}cm
           </Text>
@@ -49,23 +44,21 @@ export function NotificationMetadata({
       )}
       {affectedArea && (
         <View
+          testID="notifications-metadata-affected-area"
           style={{
             flexDirection: "row",
             alignItems: "center",
-            backgroundColor: "#F3F4F6",
             paddingHorizontal: 10,
             paddingVertical: 6,
             borderRadius: 8,
           }}
+          className="bg-slate-100 dark:bg-slate-800"
         >
           <Ionicons name="resize" size={14} color="#6B7280" />
           <Text
-            style={{
-              fontSize: 12,
-              fontWeight: "600",
-              color: "#6B7280",
-              marginLeft: 6,
-            }}
+            testID="notifications-metadata-affected-area-value"
+            style={{ fontSize: 12, fontWeight: "600", marginLeft: 6 }}
+            className="text-slate-500 dark:text-slate-400"
           >
             {affectedArea}
           </Text>

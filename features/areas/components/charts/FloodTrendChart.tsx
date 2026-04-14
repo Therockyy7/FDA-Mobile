@@ -5,6 +5,7 @@ import React, { useMemo } from "react";
 import { Dimensions, View } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { Text } from "~/components/ui/text";
+import { MAP_COLORS, SEVERITY_PALETTE, SHADOW } from "~/lib/design-tokens";
 import type { FloodTrendsData } from "~/features/areas/types/flood-history.types";
 import { LoadingChart } from "./LoadingChart";
 
@@ -15,13 +16,15 @@ interface FloodTrendChartProps {
   isLoading?: boolean;
   isDark?: boolean;
   height?: number;
+  testID?: string;
 }
 
+// JS values required by chart library — cannot use Tailwind classes here
 const SEVERITY_COLORS = {
-  safe: "#10B981",
-  caution: "#FBBF24",
-  warning: "#F97316",
-  critical: "#EF4444",
+  safe:     SEVERITY_PALETTE.safe.primary,
+  caution:  SEVERITY_PALETTE.caution.primary,
+  warning:  SEVERITY_PALETTE.warning.primary,
+  critical: SEVERITY_PALETTE.critical.primary,
 };
 
 export function FloodTrendChart({
@@ -29,22 +32,27 @@ export function FloodTrendChart({
   isLoading = false,
   isDark = false,
   height = 260,
+  testID,
 }: FloodTrendChartProps) {
-  const colors = {
-    background: isDark ? "#1E293B" : "#FFFFFF",
-    text: isDark ? "#F1F5F9" : "#1F2937",
-    subtext: isDark ? "#94A3B8" : "#6B7280",
-    border: isDark ? "#334155" : "#E2E8F0",
-    grid: isDark ? "#334155" : "#E5E7EB",
-    positive: "#10B981",
-    negative: "#EF4444",
+  // JS-only exception: isDark prop for non-NativeWind contexts (chart library, dynamic styles)
+  const theme = isDark ? MAP_COLORS.dark : MAP_COLORS.light;
+  const chartColors = {
+    background: theme.card,
+    text: theme.text,
+    subtext: theme.subtext,
+    border: theme.border,
+    grid: isDark ? MAP_COLORS.dark.border : MAP_COLORS.light.border,
+    positive: SEVERITY_COLORS.safe,
+    negative: SEVERITY_COLORS.critical,
+    accent: theme.accent,
+    dangerBg: SEVERITY_PALETTE.critical.bg,
+    safeBg: SEVERITY_PALETTE.safe.bg,
+    tooltipBg: isDark ? MAP_COLORS.dark.background : theme.card,
   };
 
-  // Transform data for bar chart
   const chartData = useMemo(() => {
     if (!data?.dataPoints?.length) return [];
 
-    // Take last 14 days or all data if less
     const points = data.dataPoints.slice(-14);
 
     return points.map((point, index) => {
@@ -59,26 +67,21 @@ export function FloodTrendChart({
         topLabelComponent: () =>
           point.floodHours > 0 ? (
             <View
-              style={{
-                backgroundColor: "rgba(239, 68, 68, 0.9)",
-                borderRadius: 8,
-                paddingHorizontal: 4,
-                paddingVertical: 1,
-                marginBottom: 2,
-              }}
+              className="rounded-lg px-1 mb-0.5"
+              style={{ backgroundColor: "rgba(239, 68, 68, 0.9)" }}
             >
-              <Text style={{ fontSize: 8, color: "#FFF", fontWeight: "700" }}>
+              <Text className="text-[11px] text-white font-bold">
                 {point.floodHours}h
               </Text>
             </View>
           ) : null,
         labelTextStyle: {
-          color: colors.subtext,
+          color: chartColors.subtext,
           fontSize: 9,
         },
       };
     });
-  }, [data, colors.subtext]);
+  }, [data, chartColors.subtext]);
 
   if (isLoading) {
     return (
@@ -86,6 +89,7 @@ export function FloodTrendChart({
         height={height}
         isDark={isDark}
         message="Đang tải xu hướng..."
+        testID="areas-chart-trend-loading"
       />
     );
   }
@@ -93,82 +97,59 @@ export function FloodTrendChart({
   if (!data || !chartData.length) {
     return (
       <View
-        style={{
-          height,
-          backgroundColor: colors.background,
-          borderRadius: 16,
-          justifyContent: "center",
-          alignItems: "center",
-          borderWidth: 1,
-          borderColor: colors.border,
-        }}
+        testID={testID ?? "areas-chart-trend-empty"}
+        className="rounded-2xl justify-center items-center border border-border-light dark:border-border-dark bg-white dark:bg-slate-800"
+        style={{ height }}
       >
-        <Ionicons name="trending-up-outline" size={40} color={colors.subtext} />
-        <Text style={{ color: colors.subtext, marginTop: 12, fontSize: 14 }}>
+        <Ionicons name="trending-up-outline" size={40} color={chartColors.subtext} />
+        <Text className="text-slate-500 dark:text-slate-400 mt-3 text-sm">
           Không có dữ liệu xu hướng
         </Text>
       </View>
     );
   }
 
-  // Comparison indicator
   const comparison = data.comparison;
   const avgChange = comparison?.avgLevelChange ?? 0;
   const floodHoursChange = comparison?.floodHoursChange ?? 0;
 
   return (
     <View
-      style={{
-        backgroundColor: colors.background,
-        borderRadius: 16,
-        padding: 16,
-        borderWidth: 1,
-        borderColor: colors.border,
-      }}
+      testID={testID ?? "areas-chart-trend"}
+      className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-border-light dark:border-border-dark"
     >
       {/* Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          marginBottom: 16,
-        }}
-      >
+      <View className="flex-row justify-between mb-4">
         <View>
-          <Text style={{ fontSize: 14, fontWeight: "700", color: colors.text }}>
+          <Text className="text-sm font-bold text-slate-800 dark:text-slate-100">
             Xu hướng mực nước cao nhất
           </Text>
-          <Text style={{ fontSize: 11, color: colors.subtext, marginTop: 2 }}>
+          <Text className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
             {data.dataPoints.length} ngày gần đây
           </Text>
         </View>
 
-        {/* Summary stats */}
-        <View style={{ alignItems: "flex-end" }}>
-          <Text style={{ fontSize: 18, fontWeight: "800", color: colors.text }}>
+        <View className="items-end">
+          <Text className="text-lg font-extrabold text-slate-800 dark:text-slate-100">
             {Number(data.summary.maxWaterLevel).toLocaleString("vi-VN", { maximumFractionDigits: 2 })} cm
           </Text>
-          <Text style={{ fontSize: 10, color: colors.subtext }}>Cao nhất</Text>
+          <Text className="text-[10px] text-slate-500 dark:text-slate-400">Cao nhất</Text>
         </View>
       </View>
 
       {/* Comparison badges */}
       {comparison && (
-        <View style={{ flexDirection: "row", gap: 12, marginBottom: 16 }}>
+        <View className="flex-row gap-3 mb-4">
           <View
+            testID="areas-chart-trend-avg-change"
+            className="flex-1 flex-row items-center justify-center gap-1 rounded-lg px-2.5 py-1.5"
             style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 4,
               backgroundColor:
                 avgChange > 0
-                  ? "#FEE2E2"
+                  ? chartColors.dangerBg
                   : avgChange < 0
-                    ? "#D1FAE5"
-                    : colors.border,
-              paddingHorizontal: 10,
-              paddingVertical: 5,
-              borderRadius: 8,
+                    ? chartColors.safeBg
+                    : chartColors.border,
             }}
           >
             <Ionicons
@@ -182,22 +163,21 @@ export function FloodTrendChart({
               size={14}
               color={
                 avgChange > 0
-                  ? colors.negative
+                  ? chartColors.negative
                   : avgChange < 0
-                    ? colors.positive
-                    : colors.subtext
+                    ? chartColors.positive
+                    : chartColors.subtext
               }
             />
             <Text
+              className="text-[11px] font-semibold"
               style={{
-                fontSize: 11,
-                fontWeight: "600",
                 color:
                   avgChange > 0
-                    ? colors.negative
+                    ? chartColors.negative
                     : avgChange < 0
-                      ? colors.positive
-                      : colors.subtext,
+                      ? chartColors.positive
+                      : chartColors.subtext,
               }}
             >
               {avgChange > 0 ? "+" : ""}
@@ -206,19 +186,15 @@ export function FloodTrendChart({
           </View>
 
           <View
+            testID="areas-chart-trend-flood-change"
+            className="flex-1 flex-row items-center justify-center gap-1 rounded-lg px-2.5 py-1.5"
             style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 4,
               backgroundColor:
                 floodHoursChange > 0
-                  ? "#FEE2E2"
+                  ? chartColors.dangerBg
                   : floodHoursChange < 0
-                    ? "#D1FAE5"
-                    : colors.border,
-              paddingHorizontal: 10,
-              paddingVertical: 5,
-              borderRadius: 8,
+                    ? chartColors.safeBg
+                    : chartColors.border,
             }}
           >
             <Ionicons
@@ -226,22 +202,21 @@ export function FloodTrendChart({
               size={12}
               color={
                 floodHoursChange > 0
-                  ? colors.negative
+                  ? chartColors.negative
                   : floodHoursChange < 0
-                    ? colors.positive
-                    : colors.subtext
+                    ? chartColors.positive
+                    : chartColors.subtext
               }
             />
             <Text
+              className="text-[11px] font-semibold"
               style={{
-                fontSize: 11,
-                fontWeight: "600",
                 color:
                   floodHoursChange > 0
-                    ? colors.negative
+                    ? chartColors.negative
                     : floodHoursChange < 0
-                      ? colors.positive
-                      : colors.subtext,
+                      ? chartColors.positive
+                      : chartColors.subtext,
               }}
             >
               {floodHoursChange > 0 ? "+" : ""}
@@ -251,7 +226,7 @@ export function FloodTrendChart({
         </View>
       )}
 
-      {/* Chart - wrapped to prevent overflow */}
+      {/* Chart */}
       <View
         style={{
           overflow: "hidden",
@@ -268,17 +243,17 @@ export function FloodTrendChart({
           initialSpacing={10}
           endSpacing={10}
           noOfSections={4}
-          maxValue={Math.ceil(Math.max(...chartData.map((d) => d.value)) + 0.5)}
-          xAxisColor={colors.grid}
-          yAxisColor={colors.grid}
-          yAxisTextStyle={{ color: colors.subtext, fontSize: 10 }}
-          xAxisLabelTextStyle={{ color: colors.subtext, fontSize: 9 }}
+          maxValue={chartData.length > 0 ? Math.ceil(Math.max(...chartData.map((d) => d.value)) + 0.5) : 10}
+          xAxisColor={chartColors.grid}
+          yAxisColor={chartColors.grid}
+          yAxisTextStyle={{ color: chartColors.subtext, fontSize: 11 }}
+          xAxisLabelTextStyle={{ color: chartColors.subtext, fontSize: 11 }}
           rulesType="solid"
-          rulesColor={colors.grid}
+          rulesColor={chartColors.grid}
           barBorderRadius={4}
           showGradient
           gradientColor="rgba(59, 130, 246, 0.2)"
-          frontColor="#007AFF"
+          frontColor={chartColors.accent}
           yAxisLabelSuffix=" Cm"
           yAxisLabelWidth={35}
           renderTooltip={(item: { value: number }, index: number) => {
@@ -288,30 +263,14 @@ export function FloodTrendChart({
               ];
             return (
               <View
-                style={{
-                  backgroundColor: isDark ? "#0B1A33" : "#FFFFFF",
-                  padding: 8,
-                  borderRadius: 8,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 4,
-                  elevation: 4,
-                }}
+                className="bg-white dark:bg-slate-900 rounded-lg border border-border-light dark:border-border-dark p-2"
+                style={SHADOW.sm}
               >
-                <Text
-                  style={{
-                    fontSize: 11,
-                    fontWeight: "700",
-                    color: colors.text,
-                  }}
-                >
+                <Text className="text-[11px] font-bold text-slate-800 dark:text-slate-100">
                   {Number(item.value).toLocaleString("vi-VN", { maximumFractionDigits: 2 })} cm
                 </Text>
                 {point && (
-                  <Text style={{ fontSize: 9, color: colors.subtext }}>
+                  <Text className="text-[11px] text-slate-500 dark:text-slate-400">
                     {point.floodHours > 0
                       ? `${point.floodHours} giờ ngập`
                       : "Không ngập"}
@@ -325,28 +284,22 @@ export function FloodTrendChart({
 
       {/* Flood hours summary */}
       <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          marginTop: 12,
-          paddingTop: 12,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-        }}
+        testID="areas-chart-trend-summary"
+        className="flex-row justify-between mt-3 pt-3 border-t border-border-light dark:border-border-dark"
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <Ionicons name="water-outline" size={16} color="#007AFF" />
-          <Text style={{ fontSize: 12, color: colors.subtext }}>
-            <Text style={{ fontWeight: "700", color: colors.text }}>
+        <View className="flex-row items-center gap-1.5">
+          <Ionicons name="water-outline" size={16} color={chartColors.accent} />
+          <Text className="text-xs text-slate-500 dark:text-slate-400">
+            <Text className="font-bold text-slate-800 dark:text-slate-100">
               {data.summary.totalFloodHours}
             </Text>{" "}
             giờ ngập tổng
           </Text>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <Ionicons name="calendar-outline" size={16} color="#F97316" />
-          <Text style={{ fontSize: 12, color: colors.subtext }}>
-            <Text style={{ fontWeight: "700", color: colors.text }}>
+        <View className="flex-row items-center gap-1.5">
+          <Ionicons name="calendar-outline" size={16} color={SEVERITY_COLORS.warning} />
+          <Text className="text-xs text-slate-500 dark:text-slate-400">
+            <Text className="font-bold text-slate-800 dark:text-slate-100">
               {data.summary.daysWithFlooding}
             </Text>{" "}
             ngày có ngập

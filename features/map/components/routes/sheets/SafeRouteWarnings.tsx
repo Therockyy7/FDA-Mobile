@@ -12,7 +12,9 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "~/components/ui/text";
 import type { FloodWarningDto } from "~/features/map/types/safe-route.types";
-import { CARD_SHADOW, RADIUS, STATUS_BADGE, useMapColors } from "~/features/map/lib/map-ui-utils";
+import { SHADOW, RADIUS, FLOOD_COLORS } from "~/lib/design-tokens";
+import { STATUS_BADGE, useMapColors } from "~/features/map/lib/map-ui-utils";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 interface SafeRouteWarningsProps {
   warnings: FloodWarningDto[];
@@ -22,20 +24,18 @@ interface SafeRouteWarningsProps {
 
 function WarningItem({ warning }: { warning: FloodWarningDto }) {
   const colors = useMapColors();
+  const { isDarkColorScheme } = useColorScheme();
   const isCritical = warning.severity === "critical";
-  const accentColor = isCritical ? "#EF4444" : "#F97316";
-  const bgColor = isCritical ? "#FEF2F2" : "#FFF7ED";
-  const darkBgColor = "#1A2540";
-  const isDark = colors.background === "#0F172A";
-  const itemBg = isDark ? darkBgColor : bgColor;
+  // Use FLOOD_COLORS tokens instead of hardcoded hex
+  const accentColor = isCritical ? FLOOD_COLORS.danger : FLOOD_COLORS.warning;
 
   return (
     <View
       style={[
-        CARD_SHADOW,
+        SHADOW.sm,
         styles.warningItem,
         {
-          backgroundColor: itemBg,
+          backgroundColor: isDarkColorScheme ? "#1A2540" : (isCritical ? "#FEF2F2" : "#FFF7ED"),
           borderLeftColor: accentColor,
         },
       ]}
@@ -45,7 +45,7 @@ function WarningItem({ warning }: { warning: FloodWarningDto }) {
         <View style={[styles.iconBadge, { backgroundColor: `${accentColor}18` }]}>
           <Ionicons name={isCritical ? "alert-circle" : "warning"} size={14} color={accentColor} />
         </View>
-        <Text style={[styles.stationName, { color: isDark ? "#F1F5F9" : "#1F2937" }]}>
+        <Text style={[styles.stationName, { color: isDarkColorScheme ? "#F1F5F9" : "#1F2937" }]}>
           {warning.stationName}
         </Text>
         {/* Standard badge */}
@@ -60,21 +60,21 @@ function WarningItem({ warning }: { warning: FloodWarningDto }) {
       {/* Detail row */}
       <View style={styles.detailRow}>
         <View style={styles.detailItem}>
-          <Ionicons name="water" size={12} color={isDark ? "#64748B" : "#94A3B8"} />
+          <Ionicons name="water" size={12} color={colors.muted} />
           <Text style={[styles.detailLabel, { color: colors.muted }]}>Mực nước</Text>
           <Text style={[styles.detailValue, { color: colors.text }]}>
             {warning.waterLevel} {warning.unit}
           </Text>
         </View>
         <View style={styles.detailItem}>
-          <Ionicons name="navigate-outline" size={12} color={isDark ? "#64748B" : "#94A3B8"} />
+          <Ionicons name="navigate-outline" size={12} color={colors.muted} />
           <Text style={[styles.detailLabel, { color: colors.muted }]}>Khoảng cách</Text>
           <Text style={[styles.detailValue, { color: colors.text }]}>
             {Math.round(warning.distanceFromRoute)}m
           </Text>
         </View>
         <View style={styles.detailItem}>
-          <Ionicons name="speedometer-outline" size={12} color={isDark ? "#64748B" : "#94A3B8"} />
+          <Ionicons name="speedometer-outline" size={12} color={colors.muted} />
           <Text style={[styles.detailLabel, { color: colors.muted }]}>Mức độ</Text>
           <Text style={[styles.detailValue, { color: colors.text }]}>
             {warning.severityLevel === 3 ? "Nghiêm trọng" : "Cảnh báo"}
@@ -87,7 +87,7 @@ function WarningItem({ warning }: { warning: FloodWarningDto }) {
 
 export function SafeRouteWarnings({ warnings, visible, onClose }: SafeRouteWarningsProps) {
   const colors = useMapColors();
-  const isDark = colors.background === "#0F172A";
+  const { isDarkColorScheme } = useColorScheme();
 
   return (
     <Modal
@@ -97,14 +97,14 @@ export function SafeRouteWarnings({ warnings, visible, onClose }: SafeRouteWarni
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      {/* Animated backdrop */}
+      {/* Backdrop */}
       <Pressable
-        style={[styles.backdrop, { backgroundColor: isDark ? "rgba(0,0,0,0.75)" : "rgba(0,0,0,0.5)" }]}
+        style={[styles.backdrop, { backgroundColor: isDarkColorScheme ? "rgba(0,0,0,0.75)" : "rgba(0,0,0,0.5)" }]}
         onPress={onClose}
       />
 
-      {/* Sheet */}
-      <View style={[styles.sheet, { backgroundColor: colors.card }]}>
+      {/* Sheet — SHADOW.lg */}
+      <View style={[SHADOW.lg, styles.sheet, { backgroundColor: colors.card }]}>
         {/* Handle */}
         <View style={styles.handleArea}>
           <View style={[styles.handleBar, { backgroundColor: colors.border }]} />
@@ -113,7 +113,7 @@ export function SafeRouteWarnings({ warnings, visible, onClose }: SafeRouteWarni
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <View style={[styles.headerIconBadge, { backgroundColor: "#FEF3C7" }]}>
+            <View className="w-9 h-9 rounded-xl items-center justify-center bg-amber-100">
               <Ionicons name="warning" size={16} color="#D97706" />
             </View>
             <View>
@@ -125,7 +125,7 @@ export function SafeRouteWarnings({ warnings, visible, onClose }: SafeRouteWarni
               </Text>
             </View>
           </View>
-          <TouchableOpacity onPress={onClose} hitSlop={8} style={styles.closeBtn}>
+          <TouchableOpacity onPress={onClose} hitSlop={8} style={styles.closeBtn} testID="map-route-warnings-close">
             <Ionicons name="close" size={20} color={colors.subtext} />
           </TouchableOpacity>
         </View>
@@ -159,11 +159,6 @@ const styles = StyleSheet.create({
     right: 0,
     borderTopLeftRadius: RADIUS.sheet,
     borderTopRightRadius: RADIUS.sheet,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 24,
-    elevation: 20,
     paddingBottom: Platform.OS === "ios" ? 40 : 20,
   },
   handleArea: {
@@ -188,13 +183,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
-  headerIconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   headerTitle: {
     fontSize: 17,
     fontWeight: "800",
@@ -209,7 +197,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "transparent",
   },
   divider: {
     height: StyleSheet.hairlineWidth,
@@ -268,7 +255,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   detailLabel: {
-    fontSize: 10,
+    fontSize: 11,
   },
   detailValue: {
     fontSize: 12,

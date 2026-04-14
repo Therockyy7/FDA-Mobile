@@ -1,7 +1,9 @@
+// features/alerts/components/alert-thresholds/ThresholdCard.tsx
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import React from "react";
-import { Platform, Text, TextInput, View } from "react-native";
+import { Platform, TextInput, View } from "react-native";
+import { Text } from "~/components/ui/text";
 
 type SeverityKey = "info" | "caution" | "warning" | "critical";
 
@@ -24,10 +26,12 @@ interface ThresholdCardProps {
     bg: string;
   };
   error?: string;
+  testID?: string;
 }
 
-const isDarkTrack = (colors: ThresholdCardProps["colors"]) =>
-  colors.bg === "#101922" ? "#374151" : "#E5E7EB";
+// Dark/light track color for the Slider — Slider API is JS-only, cannot use NativeWind.
+const sliderTrackColor = (bg: string) =>
+  bg === "#101922" ? "#374151" : "#E5E7EB";
 
 export function ThresholdCard({
   title,
@@ -38,11 +42,16 @@ export function ThresholdCard({
   onTextChange,
   colors,
   error,
+  testID,
 }: ThresholdCardProps) {
-  const hasError = !!error;
+  const hasError = !!error && error.length > 0;
+
+  const displayValue = isFinite(value) ? value.toFixed(1) : "0.0";
+  const clampedValue = Math.max(0, Math.min(value, 10));
 
   return (
     <View
+      testID={testID}
       style={{
         backgroundColor: colors.surface,
         borderRadius: 16,
@@ -60,16 +69,33 @@ export function ThresholdCard({
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <View style={{ width: 12, height: 12, borderRadius: 999, backgroundColor: color }} />
-          <Text style={{ fontSize: 16, fontWeight: "800", color: colors.text }}>{title}</Text>
+          <View
+            style={{
+              width: 12,
+              height: 12,
+              borderRadius: 999,
+              backgroundColor: color,
+            }}
+          />
+          <Text
+            style={{ fontSize: 16, fontWeight: "800", color: colors.text }}
+          >
+            {title}
+          </Text>
         </View>
 
         <View style={{ width: 96 }}>
           <View style={{ position: "relative" }}>
             <TextInput
-              defaultValue={value.toFixed(1)}
+              testID={testID ? `${testID}-input` : "threshold-input"}
+              defaultValue={displayValue}
               onChangeText={onTextChange}
-              keyboardType={Platform.select({ ios: "decimal-pad", android: "numeric" }) as any}
+              keyboardType={
+                Platform.select({
+                  ios: "decimal-pad",
+                  android: "numeric",
+                }) as "decimal-pad" | "numeric"
+              }
               style={{
                 backgroundColor: hasError ? colors.errorSoft : colors.surfaceSoft,
                 borderWidth: hasError ? 1 : 0,
@@ -91,7 +117,9 @@ export function ThresholdCard({
                 top: "50%",
                 transform: [{ translateY: -7 }],
                 fontSize: 12,
-                color: hasError ? "rgba(239,68,68,0.6)" : "rgba(156,163,175,0.9)",
+                color: hasError
+                  ? "rgba(239,68,68,0.6)"
+                  : "rgba(156,163,175,0.9)",
               }}
             >
               {unit}
@@ -101,25 +129,47 @@ export function ThresholdCard({
       </View>
 
       <Slider
-        value={value}
+        testID={testID ? `${testID}-slider` : "threshold-slider"}
+        value={clampedValue}
         minimumValue={0}
         maximumValue={10}
         step={0.1}
         onValueChange={onChange}
         minimumTrackTintColor={hasError ? colors.error : colors.primary}
-        maximumTrackTintColor={isDarkTrack(colors)}
+        maximumTrackTintColor={sliderTrackColor(colors.bg)}
         thumbTintColor={hasError ? colors.error : colors.primary}
       />
 
-      <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 6 }}>
-        <Text style={{ fontSize: 10, color: "rgba(156,163,175,0.9)" }}>0.0m</Text>
-        <Text style={{ fontSize: 10, color: "rgba(156,163,175,0.9)" }}>10.0m</Text>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          marginTop: 6,
+        }}
+      >
+        <Text style={{ fontSize: 11, color: "rgba(156,163,175,0.9)" }}>
+          0.0m
+        </Text>
+        <Text style={{ fontSize: 11, color: "rgba(156,163,175,0.9)" }}>
+          10.0m
+        </Text>
       </View>
 
       {hasError ? (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 10 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            marginTop: 10,
+          }}
+        >
           <Ionicons name="alert-circle" size={14} color={colors.error} />
-          <Text style={{ color: colors.error, fontSize: 12, fontWeight: "600" }}>{error}</Text>
+          <Text
+            style={{ color: colors.error, fontSize: 12, fontWeight: "600" }}
+          >
+            {error}
+          </Text>
         </View>
       ) : null}
     </View>

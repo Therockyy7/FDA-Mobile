@@ -5,7 +5,7 @@ import { View } from "react-native";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { Marker, Polygon } from "react-native-maps";
 import type { FloodWarningDto } from "~/features/map/types/safe-route.types";
-import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { SHADOW } from "~/lib/design-tokens";
 
 interface FloodWarningMarkersProps {
   warnings: FloodWarningDto[];
@@ -24,9 +24,9 @@ const WARNING_COLORS = {
   border: "#C2410C",
 };
 
-export function FloodWarningMarkers({ warnings }: FloodWarningMarkersProps) {
+export const FloodWarningMarkers = React.memo(function FloodWarningMarkers({ warnings }: FloodWarningMarkersProps) {
+  // isDarkColorScheme preserved — used only for react-native-maps Marker backgroundColor (MAP_COLORS exception)
   const { isDarkColorScheme } = useColorScheme();
-  const isDark = isDarkColorScheme;
 
   if (warnings.length === 0) return null;
 
@@ -63,16 +63,18 @@ export function FloodWarningMarkers({ warnings }: FloodWarningMarkersProps) {
               title={warning.stationName}
               description={`Mực nước: ${warning.waterLevel} ${warning.unit} - ${isCritical ? "Nguy hiểm" : "Cảnh báo"}`}
               tracksViewChanges={false}
+              testID="map-route-flood-warning-marker"
             >
+              {/* isDarkColorScheme allowed here — react-native-maps Marker child style (MAP_COLORS exception) */}
               <View
                 style={[
-                  CARD_SHADOW,
+                  SHADOW.sm,
                   {
-                    backgroundColor: isDark ? c.border : c.bg,
+                    backgroundColor: isDarkColorScheme ? c.border : c.bg,
                     borderRadius: 12,
                     padding: 6,
                     borderWidth: 2,
-                    borderColor: isDark ? c.bg : c.border,
+                    borderColor: isDarkColorScheme ? c.bg : c.border,
                   },
                 ]}
               >
@@ -88,4 +90,4 @@ export function FloodWarningMarkers({ warnings }: FloodWarningMarkersProps) {
       })}
     </>
   );
-}
+});

@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { SHADOW } from "~/lib/design-tokens";
 import { cn } from "~/lib/utils";
 import { getStatusConfig } from "../lib/home-utils";
 import { MonitoredArea } from "../types/home-types";
@@ -15,7 +16,6 @@ export function MonitoredAreaCard({ area }: MonitoredAreaCardProps) {
   const router = useRouter();
   const statusConfig = getStatusConfig(area.status);
 
- 
   const ratio =
     area.maxLevel > 0
       ? Math.min((area.waterLevel / area.maxLevel) * 100, 100)
@@ -25,13 +25,8 @@ export function MonitoredAreaCard({ area }: MonitoredAreaCardProps) {
     <TouchableOpacity
       onPress={() => router.push(`/areas/${area.id}` as any)}
       activeOpacity={0.7}
-      style={{
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        elevation: 2,
-      }}
+      style={SHADOW.sm}
+      testID={`home-areas-card-${area.id}`}
     >
       <View className="rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4">
         {/* Header */}
@@ -49,6 +44,7 @@ export function MonitoredAreaCard({ area }: MonitoredAreaCardProps) {
               "flex-row items-center gap-1.5 rounded-full px-2.5 py-1",
               statusConfig.bg,
             )}
+            testID={`home-areas-status-${area.id}`}
           >
             <Ionicons
               name={statusConfig.icon}
@@ -79,11 +75,9 @@ export function MonitoredAreaCard({ area }: MonitoredAreaCardProps) {
                 area.status === "danger" && "bg-red-500",
                 area.status === "warning" && "bg-amber-500",
                 area.status === "safe" && "bg-emerald-500",
-                // area.status === "critical" && "bg-red-700",
               )}
-              style={{
-                width: `${ratio}%`,
-              }}
+              style={{ width: `${ratio}%` }}
+              testID={`home-areas-water-level-${area.id}`}
             />
           </View>
         </View>

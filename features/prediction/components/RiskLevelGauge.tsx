@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { FLOOD_COLORS, SHADOW } from "~/lib/design-tokens";
 
 interface RiskLevelGaugeProps {
   level: string;
@@ -17,33 +17,33 @@ const getRiskConfig = (level: string) => {
     normalizedLevel.includes("extreme")
   ) {
     return {
-      color: "#EF4444",
+      color: FLOOD_COLORS.danger,
       label: "Nguy cấp",
       icon: "alert-circle" as const,
     };
   }
   if (normalizedLevel.includes("high")) {
-    return { color: "#F97316", label: "Cao", icon: "warning" as const };
+    return { color: FLOOD_COLORS.danger, label: "Cao", icon: "warning" as const };
   }
   if (
     normalizedLevel.includes("medium") ||
     normalizedLevel.includes("moderate")
   ) {
     return {
-      color: "#F59E0B",
+      color: FLOOD_COLORS.warning,
       label: "Trung bình",
       icon: "alert-circle-outline" as const,
     };
   }
-  return { color: "#10B981", label: "Thấp", icon: "shield-checkmark" as const };
+  return { color: FLOOD_COLORS.safe, label: "Thấp", icon: "shield-checkmark" as const };
 };
 
 export function RiskLevelGauge({ level, probability }: RiskLevelGaugeProps) {
-  const { isDarkColorScheme } = useColorScheme();
   const config = getRiskConfig(level);
 
   return (
     <View
+      testID="prediction-gauge-container"
       style={{
         flexDirection: "row",
         alignItems: "center",
@@ -59,8 +59,8 @@ export function RiskLevelGauge({ level, probability }: RiskLevelGaugeProps) {
           alignItems: "center",
           justifyContent: "center",
           position: "relative",
-          backgroundColor: isDarkColorScheme ? "#334155" : "#F1F5F9",
         }}
+        className="bg-slate-100 dark:bg-slate-700"
       >
         {/* Outer ring */}
         <View
@@ -95,17 +95,15 @@ export function RiskLevelGauge({ level, probability }: RiskLevelGaugeProps) {
             width: 86,
             height: 86,
             borderRadius: 43,
-            backgroundColor: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
             alignItems: "center",
             justifyContent: "center",
+            ...SHADOW.sm,
             shadowColor: config.color,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.2,
-            shadowRadius: 8,
-            elevation: 4,
           }}
+          className="bg-white dark:bg-slate-900"
         >
           <Text
+            testID="prediction-gauge-probability"
             style={{
               fontSize: 28,
               fontWeight: "900",
@@ -117,13 +115,13 @@ export function RiskLevelGauge({ level, probability }: RiskLevelGaugeProps) {
           </Text>
           <Text
             style={{
-              fontSize: 9,
+              fontSize: 11,
               fontWeight: "700",
-              color: isDarkColorScheme ? "#94A3B8" : "#64748B",
               textTransform: "uppercase",
               letterSpacing: 0.5,
               marginTop: 2,
             }}
+            className="text-slate-500 dark:text-slate-400"
           >
             Xác suất
           </Text>
@@ -135,12 +133,12 @@ export function RiskLevelGauge({ level, probability }: RiskLevelGaugeProps) {
         <Text
           style={{
             fontSize: 11,
-            color: isDarkColorScheme ? "#94A3B8" : "#64748B",
             fontWeight: "700",
             marginBottom: 6,
             textTransform: "uppercase",
             letterSpacing: 1,
           }}
+          className="text-slate-500 dark:text-slate-400"
         >
           Mức độ rủi ro
         </Text>
@@ -152,6 +150,7 @@ export function RiskLevelGauge({ level, probability }: RiskLevelGaugeProps) {
           }}
         >
           <View
+            testID="prediction-gauge-icon-box"
             style={{
               width: 36,
               height: 36,
@@ -169,6 +168,7 @@ export function RiskLevelGauge({ level, probability }: RiskLevelGaugeProps) {
             />
           </View>
           <Text
+            testID="prediction-gauge-risk-label"
             style={{
               fontSize: 28,
               fontWeight: "900",
@@ -181,10 +181,10 @@ export function RiskLevelGauge({ level, probability }: RiskLevelGaugeProps) {
         <Text
           style={{
             fontSize: 12,
-            color: isDarkColorScheme ? "#CBD5E1" : "#64748B",
             lineHeight: 18,
             fontWeight: "500",
           }}
+          className="text-slate-500 dark:text-slate-300"
         >
           Tổng hợp từ {Math.floor(probability * 10)} mô hình dự báo
         </Text>

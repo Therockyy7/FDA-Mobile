@@ -5,14 +5,15 @@ import React, { useEffect, useState } from "react";
 import { Alert, Dimensions, ScrollView, StatusBar, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { MAP_COLORS } from "~/lib/design-tokens";
 import { AlertSettingsService } from "../services/alert-settings.service";
 import type {
-    AlertSettingsColors,
-    AlertSettingsFormData,
-    AlertSettingsHeaderColors,
-    AlertSeverity,
-    NotificationChannels,
-    QuietHours,
+  AlertSettingsColors,
+  AlertSettingsFormData,
+  AlertSettingsHeaderColors,
+  AlertSeverity,
+  NotificationChannels,
+  QuietHours,
 } from "../types/alert-settings.types";
 import AlertSettingsHeader from "./alert-settings/AlertSettingsHeader";
 import MinimumSeveritySection from "./alert-settings/MinimumSeveritySection";
@@ -30,6 +31,14 @@ interface AlertSettingsProps {
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ALERT_SETTINGS_KEY_PREFIX = "@alert_settings_";
+const PRIMARY = "#137fec";
+
+// Flood severity colors — sourced from tailwind flood-* tokens
+const SEVERITY_OPTIONS: { value: AlertSeverity; label: string; color: string }[] = [
+  { value: "Caution", label: "Chú ý", color: "#F59E0B" },
+  { value: "Warning", label: "Cảnh báo", color: "#F97316" },
+  { value: "Critical", label: "Nguy hiểm", color: "#EF4444" },
+];
 
 export function AlertSettings({
   areaId,
@@ -40,19 +49,16 @@ export function AlertSettings({
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isDarkColorScheme } = useColorScheme();
+
   const normalizeTime = (time: string) =>
     time.length === 5 ? `${time}:00` : time;
-  // Form state
+
   const [minimumSeverity, setMinimumSeverity] = useState<AlertSeverity>(
-    initialSettings?.minimumSeverity || "Warning",
+    initialSettings?.minimumSeverity ?? "Warning",
   );
   const [notificationChannels, setNotificationChannels] =
     useState<NotificationChannels>(
-      initialSettings?.notificationChannels || {
-        push: true,
-        email: false,
-        sms: false,
-      },
+      initialSettings?.notificationChannels ?? { push: true, email: false, sms: false },
     );
   const [quietHours, setQuietHours] = useState<QuietHours>(() => {
     if (initialSettings?.quietHours) {
@@ -61,12 +67,11 @@ export function AlertSettings({
         endTime: normalizeTime(initialSettings.quietHours.endTime),
       };
     }
-    return {
-      startTime: "22:00:00",
-      endTime: "06:00:00",
-    };
+    return { startTime: "22:00:00", endTime: "06:00:00" };
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [activeTimeField, setActiveTimeField] = useState<"start" | "end" | null>(null);
+  const [timePickerValue, setTimePickerValue] = useState<Date>(new Date());
 
   useEffect(() => {
     if (initialSettings) return;
@@ -77,12 +82,8 @@ export function AlertSettings({
         );
         if (!stored) return;
         const parsed = JSON.parse(stored) as AlertSettingsFormData;
-        if (parsed.minimumSeverity) {
-          setMinimumSeverity(parsed.minimumSeverity);
-        }
-        if (parsed.notificationChannels) {
-          setNotificationChannels(parsed.notificationChannels);
-        }
+        if (parsed.minimumSeverity) setMinimumSeverity(parsed.minimumSeverity);
+        if (parsed.notificationChannels) setNotificationChannels(parsed.notificationChannels);
         if (parsed.quietHours) {
           setQuietHours({
             startTime: normalizeTime(parsed.quietHours.startTime),
@@ -90,49 +91,47 @@ export function AlertSettings({
           });
         }
       } catch {
-        // Ignore storage errors and keep defaults
+        // Ignore storage errors — keep defaults
       }
     };
     loadSettings();
   }, [areaId, initialSettings]);
 
-  // Theme colors
+  // Theme colors — sub-components still consume colors props (story 4.2 pending migration)
+  // Defensive: provide defaults if MAP_COLORS returns incomplete structure
+  const defaultScheme = isDarkColorScheme ? MAP_COLORS.dark : MAP_COLORS.light;
+  const scheme = {
+    background: defaultScheme?.background ?? "#f6f7f8",
+    card: defaultScheme?.card ?? "#ffffff",
+    text: defaultScheme?.text ?? "#1F2937",
+    subtext: defaultScheme?.subtext ?? "#64748B",
+    border: defaultScheme?.border ?? "#E2E8F0",
+  };
   const colors: AlertSettingsColors = {
-    background: isDarkColorScheme ? "#101922" : "#f6f7f8",
-    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#64748B",
-    border: isDarkColorScheme ? "#334155" : "#E2E8F0",
-    primary: "#137fec",
+    background: isDarkColorScheme ? "#101922" : scheme.background,
+    cardBg: scheme.card,
+    text: scheme.text,
+    subtext: scheme.subtext,
+    border: scheme.border,
+    primary: PRIMARY,
     mutedBg: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
-    divider: isDarkColorScheme ? "#334155" : "#F3F4F6",
+    divider: isDarkColorScheme ? scheme.border : "#F3F4F6",
     statusBarStyle: "light-content",
   };
 
   const headerColors: AlertSettingsHeaderColors = {
     background: "#1E293B",
-    text: "#F1F5F9",
-    subtext: "#94A3B8",
-    border: "#334155",
+    text: (defaultScheme?.text ?? MAP_COLORS.dark.text),
+    subtext: (defaultScheme?.subtext ?? MAP_COLORS.dark.subtext),
+    border: (defaultScheme?.border ?? MAP_COLORS.dark.border),
   };
 
-  const severityOptions: {
-    value: AlertSeverity;
-    label: string;
-    color: string;
-  }[] = [
-    { value: "Caution", label: "Chú ý", color: "#F59E0B" },
-    { value: "Warning", label: "Cảnh báo", color: "#F97316" },
-    { value: "Critical", label: "Nguy hiểm", color: "#EF4444" },
-  ];
-
-  const [activeTimeField, setActiveTimeField] = useState<
-    "start" | "end" | null
-  >(null);
-  const [timePickerValue, setTimePickerValue] = useState<Date>(new Date());
-
   const parseTimeToDate = (time: string) => {
-    const [hours, minutes] = time.split(":").map((value) => Number(value));
+    const [hours, minutes] = time.split(":").map(Number);
+    // Validate time bounds to prevent invalid dates
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return new Date(); // Return current time as fallback
+    }
     const date = new Date();
     date.setHours(hours, minutes, 0, 0);
     return date;
@@ -150,14 +149,8 @@ export function AlertSettings({
   const openTimePicker = (field: "start" | "end") => {
     setActiveTimeField(field);
     setTimePickerValue(
-      parseTimeToDate(
-        field === "start" ? quietHours.startTime : quietHours.endTime,
-      ),
+      parseTimeToDate(field === "start" ? quietHours.startTime : quietHours.endTime),
     );
-  };
-
-  const closeTimePicker = () => {
-    setActiveTimeField(null);
   };
 
   const applyTimePicker = (selectedDate: Date) => {
@@ -186,9 +179,7 @@ export function AlertSettings({
       const payload = AlertSettingsService.buildSubscriptionPayload(settings);
       await AlertSettingsService.updateSubscription(areaId, payload);
 
-      if (onSave) {
-        await onSave(settings);
-      }
+      if (onSave) await onSave(settings);
 
       await AsyncStorage.setItem(
         `${ALERT_SETTINGS_KEY_PREFIX}${areaId}`,
@@ -198,52 +189,49 @@ export function AlertSettings({
       Alert.alert("Thành công", "Cài đặt cảnh báo đã được lưu", [
         { text: "OK", onPress: () => router.back() },
       ]);
-    } catch (error: any) {
-      Alert.alert("Lỗi", error?.message || "Không thể lưu cài đặt");
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Không thể lưu cài đặt";
+      Alert.alert("Lỗi", msg);
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar
-        barStyle={colors.statusBarStyle as any}
-        backgroundColor={headerColors.background}
-      />
+    <View
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
+      testID="alerts-settings-root"
+    >
+      <StatusBar barStyle="light-content" backgroundColor={headerColors.background} />
 
       <ScrollView
-        style={{ flex: 1 }}
+        className="flex-1"
         contentContainerStyle={{ paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
+        testID="alerts-settings-scroll"
       >
         <AlertSettingsHeader
           areaName={areaName}
           description="Thiết lập cảnh báo cho khu vực bạn đã lưu"
           onBack={() => router.back()}
           onThresholdPress={() =>
-            router.push({
-              pathname: "/alerts/thresholds",
-              params: { areaId, areaName },
-            })
+            router.push({ pathname: "/alerts/thresholds", params: { areaId, areaName } })
           }
           topInset={insets.top}
           colors={headerColors}
         />
-
         <MinimumSeveritySection
           minimumSeverity={minimumSeverity}
           onChange={setMinimumSeverity}
-          options={severityOptions}
+          options={SEVERITY_OPTIONS}
           colors={colors}
         />
-
         <NotificationChannelsSection
           notificationChannels={notificationChannels}
           onChange={setNotificationChannels}
           colors={colors}
         />
-
         <QuietHoursSection
           quietHours={quietHours}
           onStartPress={() => openTimePicker("start")}
@@ -261,42 +249,32 @@ export function AlertSettings({
 
       <TimePickerModal
         visible={activeTimeField !== null}
-        title={
-          activeTimeField === "start" ? "Chọn giờ bắt đầu" : "Chọn giờ kết thúc"
-        }
+        title={activeTimeField === "start" ? "Chọn giờ bắt đầu" : "Chọn giờ kết thúc"}
         value={timePickerValue}
-        onConfirm={(date) => applyTimePicker(date)}
-        onCancel={closeTimePicker}
+        onConfirm={applyTimePicker}
+        onCancel={() => setActiveTimeField(null)}
         colors={colors}
       />
 
-      {/* Background Decorations */}
+      {/* Background decorations — JS styles required for dynamic radius calculation */}
       <View
+        pointerEvents="none"
+        className="absolute top-0 right-0 opacity-50"
         style={{
-          pointerEvents: "none",
-          position: "absolute",
-          top: 0,
-          right: 0,
           width: SCREEN_WIDTH * 0.5,
           height: SCREEN_WIDTH * 0.5,
-          backgroundColor: `${colors.primary}05`,
+          backgroundColor: `${PRIMARY}05`,
           borderRadius: SCREEN_WIDTH * 0.25,
-          transform: [{ scale: 1 }],
-          opacity: 0.5,
         }}
       />
       <View
+        pointerEvents="none"
+        className="absolute bottom-0 left-0 opacity-50"
         style={{
-          pointerEvents: "none",
-          position: "absolute",
-          bottom: 0,
-          left: 0,
           width: SCREEN_WIDTH * 0.5,
           height: SCREEN_WIDTH * 0.5,
-          backgroundColor: `${colors.primary}05`,
+          backgroundColor: `${PRIMARY}05`,
           borderRadius: SCREEN_WIDTH * 0.25,
-          transform: [{ scale: 1 }],
-          opacity: 0.5,
         }}
       />
     </View>

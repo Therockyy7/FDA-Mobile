@@ -1,12 +1,13 @@
 import React, { useEffect } from "react";
 import { StyleSheet, TouchableOpacity, View, Dimensions } from "react-native";
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { Text } from "~/components/ui/text";
+import { SHADOW } from "~/lib/design-tokens";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 type TabType = "alerts" | "news";
@@ -17,12 +18,12 @@ type Props = {
 };
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const TOGGLE_WIDTH = SCREEN_WIDTH - 32; // Matches common padding
+const TOGGLE_WIDTH = SCREEN_WIDTH - 32;
 const INDICATOR_WIDTH = (TOGGLE_WIDTH - 8) / 2;
+const TOGGLE_PRIMARY_COLOR = "#0077BE"; // FDA brand primary
 
 const NotificationTabToggle: React.FC<Props> = ({ activeTab, onChange }) => {
   const { isDarkColorScheme } = useColorScheme();
-  const isDark = isDarkColorScheme;
 
   const translateX = useSharedValue(activeTab === "alerts" ? 0 : 1);
 
@@ -44,46 +45,62 @@ const NotificationTabToggle: React.FC<Props> = ({ activeTab, onChange }) => {
     }
   };
 
-  const colors = {
-    containerBg: isDark ? "rgba(255,255,255,0.05)" : "#F1F5F9",
-    indicator: "#007AFF", // Keep the primary blue as requested
-    activeText: "#FFFFFF",
-    inactiveText: isDark ? "#94A3B8" : "#64748B",
-  };
-
   return (
-    <View style={styles.outerContainer}>
-      <View style={[styles.container, { backgroundColor: colors.containerBg, width: TOGGLE_WIDTH }]}>
-        <Animated.View 
-            style={[
-                styles.indicator, 
-                indicatorStyle, 
-                { backgroundColor: colors.indicator, width: INDICATOR_WIDTH }
-            ]} 
+    <View
+      testID="notifications-toggle-container"
+      style={styles.outerContainer}
+    >
+      <View
+        style={[
+          styles.container,
+          {
+            width: TOGGLE_WIDTH,
+            // JS-only dark mode exception: dynamic width calc prevents NativeWind use
+            backgroundColor: isDarkColorScheme
+              ? "rgba(255,255,255,0.05)"
+              : "#F1F5F9",
+          },
+        ]}
+      >
+        <Animated.View
+          testID="notifications-toggle-indicator"
+          style={[
+            styles.indicator,
+            indicatorStyle,
+            { width: INDICATOR_WIDTH },
+          ]}
         />
-        
+
         <TouchableOpacity
+          testID="notifications-toggle-alerts"
           style={styles.tab}
           onPress={() => handleToggle("alerts")}
           activeOpacity={1}
         >
-          <Text style={[
-            styles.tabText, 
-            { color: activeTab === "alerts" ? colors.activeText : colors.inactiveText }
-          ]}>
+          <Text
+            className={
+              activeTab === "alerts"
+                ? "text-sm font-extrabold text-white"
+                : "text-sm font-extrabold text-slate-500 dark:text-slate-400"
+            }
+          >
             Lịch sử cảnh báo
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
+          testID="notifications-toggle-news"
           style={styles.tab}
           onPress={() => handleToggle("news")}
           activeOpacity={1}
         >
-          <Text style={[
-            styles.tabText, 
-            { color: activeTab === "news" ? colors.activeText : colors.inactiveText }
-          ]}>
+          <Text
+            className={
+              activeTab === "news"
+                ? "text-sm font-extrabold text-white"
+                : "text-sm font-extrabold text-slate-500 dark:text-slate-400"
+            }
+          >
             Tin tức & Cập nhật
           </Text>
         </TouchableOpacity>
@@ -111,22 +128,14 @@ const styles = StyleSheet.create({
     left: 4,
     bottom: 4,
     borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: TOGGLE_PRIMARY_COLOR,
+    ...SHADOW.sm,
   },
   tab: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1,
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: "800",
-    letterSpacing: -0.2,
   },
 });
 

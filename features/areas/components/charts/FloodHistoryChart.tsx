@@ -108,11 +108,13 @@ export function FloodHistoryChart({
       <View
         style={{
           height,
-          
+          justifyContent: "center",
+          alignItems: "center",
+          paddingHorizontal: 20,
         }}
       >
         <Ionicons name="analytics-outline" size={40} color={colors.subtext} />
-        <Text style={{ color: colors.subtext, marginTop: 12, fontSize: 14 }}>
+        <Text style={{ color: colors.subtext, marginTop: 12, fontSize: 14, textAlign: "center" }}>
           Không có dữ liệu lịch sử
         </Text>
       </View>
@@ -229,7 +231,7 @@ export function FloodHistoryChart({
               return (
                 <View
                   style={{
-                    backgroundColor: isDark ? theme.card : theme.card,
+                    backgroundColor: theme.card,
                     padding: 8,
                     borderRadius: 8,
                     borderWidth: 1,

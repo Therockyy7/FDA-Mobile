@@ -3,8 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { useColorScheme } from "~/lib/useColorScheme";
-import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { SHADOW } from "~/lib/design-tokens";
 import type { ForecastHorizon } from "~/features/prediction/hooks/useDistrictsForecast";
 
 interface HorizonStep {
@@ -34,7 +33,6 @@ export function HorizonPillTrack({
   subtextColor,
   onHorizonChange,
 }: HorizonPillTrackProps) {
-  const { isDarkColorScheme: hookDark } = useColorScheme();
   const TRACK_PADDING = 6;
 
   return (
@@ -43,10 +41,11 @@ export function HorizonPillTrack({
         styles.track,
         {
           padding: TRACK_PADDING,
-          backgroundColor: hookDark ? "#1E293B" : "rgba(241, 245, 249, 0.8)",
-          borderColor: hookDark ? "#334155" : "#E2E8F0",
+          backgroundColor: isDarkColorScheme ? "#1E293B" : "rgba(241, 245, 249, 0.8)",
+          borderColor: isDarkColorScheme ? "#334155" : "#E2E8F0",
         },
       ]}
+      testID="map-timeline-horizon-track"
     >
       {/* Active pill background */}
       <MotiView
@@ -57,6 +56,7 @@ export function HorizonPillTrack({
         transition={{ type: "spring", stiffness: 220, damping: 22, mass: 0.8 }}
         style={[
           styles.activePill,
+          SHADOW.sm,
           {
             left: TRACK_PADDING,
             width: pillWidth,
@@ -75,6 +75,7 @@ export function HorizonPillTrack({
           <TouchableOpacity
             key={step.id}
             onPress={() => onHorizonChange(step.id)}
+            testID={`map-timeline-horizon-pill-${step.id}`}
             activeOpacity={0.7}
             style={{ width: pillWidth, height: "100%", alignItems: "center", justifyContent: "center", zIndex: 2 }}
           >
@@ -115,9 +116,5 @@ const styles = {
     position: "absolute" as const,
     top: 0,
     borderRadius: 20,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 4,
   },
 };

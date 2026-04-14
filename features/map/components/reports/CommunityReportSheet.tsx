@@ -1,6 +1,7 @@
 // features/map/components/reports/CommunityReportSheet.tsx
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View, ActivityIndicator, Text } from "react-native";
+import { ActivityIndicator, View } from "react-native";
+import { Text } from "~/components/ui/text";
 import { NearbyFloodReport, CommunityService } from "~/features/community/services/community.service";
 import { PostCard } from "~/features/community/components/PostCard";
 import { transformFloodReportToPost } from "~/features/community/types/post-types";
@@ -24,39 +25,33 @@ export function CommunityReportSheet({ report, onClose }: CommunityReportSheetPr
     (async () => {
       try {
         const data = await CommunityService.getFloodReportById(report.id);
-        console.log("[CommunityReportSheet] Fetched report data:", JSON.stringify(data, null, 2));
         if (!cancelled) {
           if (data && data.id) {
             setFullReport(data);
           } else {
-            console.warn("[CommunityReportSheet] Report missing id field:", data);
             setError(true);
           }
         }
       } catch (e) {
-        console.error("[CommunityReportSheet] Error fetching report:", e);
         if (!cancelled) setError(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [report.id]);
 
   if (loading) {
     return (
-      <View style={styles.center}>
+      <View className="flex-1 items-center justify-center p-10" testID="map-report-sheet">
         <ActivityIndicator size="large" color="#10B981" />
-        <Text style={styles.loadingText}>Đang tải báo cáo...</Text>
+        <Text className="mt-3 text-sm text-slate-400">Đang tải báo cáo...</Text>
       </View>
     );
   }
 
   if (error || !fullReport) {
-    // Fallback: render minimal card from NearbyFloodReport (marker data)
     const fallbackPost = {
       id: report.id,
       authorId: "",
@@ -76,13 +71,12 @@ export function CommunityReportSheet({ report, onClose }: CommunityReportSheetPr
     };
 
     return (
-      <View style={styles.container}>
+      <View className="flex-1" testID="map-report-sheet">
         <PostCard post={fallbackPost} />
       </View>
     );
   }
 
-  // Build compatible object for transformFloodReportToPost
   const reportForTransform = {
     id: fullReport.id,
     reporterUserId: fullReport.reporterUserId ?? "",
@@ -102,25 +96,8 @@ export function CommunityReportSheet({ report, onClose }: CommunityReportSheetPr
   const postData = transformFloodReportToPost(reportForTransform);
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1" testID="map-report-sheet">
       <PostCard post={postData} />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 40,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: "#94A3B8",
-  },
-});

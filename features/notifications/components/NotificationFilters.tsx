@@ -1,9 +1,8 @@
-
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { ScrollView, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { cn } from "~/lib/utils";
 import { FilterOption } from "../types/notifications-types";
 
 interface NotificationFiltersProps {
@@ -32,24 +31,10 @@ export function NotificationFilters({
   activeFilter,
   onFilterChange,
 }: NotificationFiltersProps) {
-  const { isDarkColorScheme } = useColorScheme();
-
-  // Theme colors
-  const colors = {
-    background: isDarkColorScheme ? "#0B1A33" : "#FFFFFF",
-    border: isDarkColorScheme ? "#1E293B" : "#E5E7EB",
-    inactiveBg: isDarkColorScheme ? "#1E293B" : "#F3F4F6",
-    inactiveText: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-  };
-
   return (
     <View
-      style={{
-        paddingVertical: 12,
-        backgroundColor: colors.background,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
-      }}
+      testID="notifications-filters-container"
+      className="py-3 bg-white dark:bg-bg-dark border-b border-border-light dark:border-border-dark"
     >
       <ScrollView
         horizontal
@@ -61,37 +46,35 @@ export function NotificationFilters({
       >
         {filters.map((filter) => {
           const isActive = activeFilter === filter.key;
-          const backgroundColor = isActive
-            ? filter.color || "#007AFF"
-            : colors.inactiveBg;
-          const textColor = isActive ? "white" : colors.inactiveText;
+          const iconName = getFilterIcon(filter.key);
 
           return (
             <TouchableOpacity
               key={filter.key}
+              testID={`notifications-filters-chip-${filter.key}`}
               onPress={() => onFilterChange(filter.key)}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
-                paddingHorizontal: 14,
-                paddingVertical: 8,
-                borderRadius: 12,
-                backgroundColor,
-              }}
               activeOpacity={0.7}
+              className={cn(
+                "flex-row items-center gap-1.5 px-3.5 py-2 rounded-xl",
+                isActive ? "bg-primary" : "bg-slate-100 dark:bg-slate-800"
+              )}
+              style={
+                isActive && filter.color
+                  ? { backgroundColor: filter.color }
+                  : undefined
+              }
             >
-              <Ionicons 
-                name={getFilterIcon(filter.key) as any} 
-                size={14} 
-                color={textColor} 
+              <Ionicons
+                name={iconName as any}
+                size={14}
+                color={isActive ? "#FFFFFF" : "#6B7280"}
               />
               <Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: "700",
-                  color: textColor,
-                }}
+                className={
+                  isActive
+                    ? "text-sm font-bold text-white"
+                    : "text-sm font-bold text-slate-500 dark:text-slate-400"
+                }
               >
                 {filter.label}
               </Text>

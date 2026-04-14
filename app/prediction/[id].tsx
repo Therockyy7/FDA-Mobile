@@ -31,8 +31,7 @@ import {
 import { SatelliteVerificationCard } from "~/features/prediction/components/SatelliteVerificationCard";
 import { StationsCard } from "~/features/prediction/components/StationsCard";
 import { PredictionService } from "~/features/prediction/services/prediction.service";
-import { PredictionResponse } from "~/features/prediction/types/prediction.types";
-import { useColorScheme } from "~/lib/useColorScheme";
+import type { PredictionResponse } from "~/features/prediction/types/prediction.types";
 
 export default function PredictionScreen() {
   const { id, scrollTo: scrollToParam } = useLocalSearchParams<{
@@ -40,8 +39,6 @@ export default function PredictionScreen() {
     scrollTo?: string;
   }>();
   const insets = useSafeAreaInsets();
-  const { isDarkColorScheme } = useColorScheme();
-
   const [prediction, setPrediction] = useState<PredictionResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,13 +85,18 @@ export default function PredictionScreen() {
   );
 
   const loadPrediction = useCallback(async (areaId: string) => {
+    if (!areaId) {
+      setError("Invalid area ID");
+      setLoading(false);
+      return;
+    }
     try {
       setError(null);
       const data = await PredictionService.getFloodRiskPrediction(areaId);
       setPrediction(data);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Không thể tải dự báo rủi ro.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err || "Không thể tải dự báo rủi ro.");
+      setError(msg);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -134,13 +136,11 @@ export default function PredictionScreen() {
     }
   }, [id, loadPrediction]);
 
-  const bgColor = isDarkColorScheme ? "#0B1A33" : "#F1F5F9";
-
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <View style={{ flex: 1, backgroundColor: bgColor }}>
+      <View className="flex-1 bg-slate-100 dark:bg-dark" testID="prediction-screen-root">
         <Animated.ScrollView
           ref={scrollRef}
           style={{ flex: 1 }}
@@ -162,72 +162,27 @@ export default function PredictionScreen() {
           }
         >
           {error ? (
-            /* ── Error ── */
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-                padding: 24,
-              }}
-            >
-              <View
-                style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: 24,
-                  backgroundColor: isDarkColorScheme ? "#1E293B" : "#FEE2E2",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 16,
-                }}
-              >
+            <View className="flex-1 justify-center items-center p-6" testID="prediction-screen-error">
+              <View className="w-[72px] h-[72px] rounded-3xl bg-red-50 dark:bg-slate-800 items-center justify-center mb-4">
                 <Ionicons name="alert-circle" size={36} color="#EF4444" />
               </View>
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontWeight: "800",
-                  color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-                  marginBottom: 8,
-                }}
-              >
+              <Text className="text-base font-extrabold text-slate-800 dark:text-slate-100 mb-2 text-center">
                 Không thể tải dự báo
               </Text>
-              <Text
-                style={{
-                  fontSize: 13,
-                  color: "#EF4444",
-                  textAlign: "center",
-                  marginBottom: 24,
-                  lineHeight: 20,
-                }}
-              >
+              <Text className="text-[13px] text-red-500 text-center mb-6 leading-5">
                 {error}
               </Text>
               <TouchableOpacity
                 onPress={onRefresh}
-                style={{
-                  backgroundColor: "#6366F1",
-                  paddingHorizontal: 28,
-                  paddingVertical: 12,
-                  borderRadius: 14,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 8,
-                }}
+                className="bg-indigo-500 px-7 py-3 rounded-xl flex-row items-center gap-2"
+                testID="prediction-screen-retry"
               >
                 <Ionicons name="refresh" size={16} color="#fff" />
-                <Text
-                  style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}
-                >
-                  Thử lại
-                </Text>
+                <Text className="text-white font-bold text-sm">Thử lại</Text>
               </TouchableOpacity>
             </View>
           ) : prediction ? (
-            /* ── Content ── */
-            <View style={{ paddingHorizontal: 16, paddingTop: 24, gap: 16 }}>
+            <View className="px-4 pt-6 gap-4" testID="prediction-screen-content">
 
               <ForecastWindowsCard
                 windows={prediction.forecast.windows}
@@ -271,28 +226,11 @@ export default function PredictionScreen() {
                 <NewAiConsultantCard aiConsultant={prediction.aiConsultant} />
               ) : null}
 
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: 6,
-                  paddingTop: 4,
-                }}
-              >
-                <Ionicons
-                  name="time-outline"
-                  size={12}
-                  color={isDarkColorScheme ? "#475569" : "#94A3B8"}
-                />
-                <Text
-                  style={{
-                    fontSize: 11,
-                    color: isDarkColorScheme ? "#475569" : "#94A3B8",
-                  }}
-                >
+              <View className="flex-row justify-center items-center gap-1.5 pt-1" testID="prediction-screen-eval-time">
+                <Ionicons name="time-outline" size={12} color="#94A3B8" />
+                <Text className="text-[11px] text-slate-400 dark:text-slate-600">
                   Đánh giá lúc{" "}
-                  {new Date(prediction.evaluatedAt).toLocaleString("vi-VN")}
+                  {new Date(prediction.evaluatedAt ?? Date.now()).toLocaleString("vi-VN")}
                 </Text>
               </View>
             </View>
@@ -304,50 +242,18 @@ export default function PredictionScreen() {
           <PredictionHeroHeader prediction={prediction} scrollY={scrollY} />
         )}
 
-        {/* ── Loading overlay — full-screen centered, above everything ── */}
         {loading && !refreshing && (
           <View
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              justifyContent: "center",
-              alignItems: "center",
-              backgroundColor: bgColor,
-            }}
+            className="absolute inset-0 justify-center items-center bg-slate-100 dark:bg-dark"
+            testID="prediction-screen-loading"
           >
-            <View
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: 24,
-                backgroundColor: isDarkColorScheme ? "#1E293B" : "#EEF2FF",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 16,
-              }}
-            >
+            <View className="w-[72px] h-[72px] rounded-3xl bg-indigo-50 dark:bg-slate-800 items-center justify-center mb-4">
               <ActivityIndicator size="large" color="#6366F1" />
             </View>
-            <Text
-              style={{
-                fontSize: 15,
-                fontWeight: "700",
-                color: isDarkColorScheme ? "#E2E8F0" : "#1E293B",
-                marginBottom: 4,
-              }}
-            >
+            <Text className="text-[15px] font-bold text-slate-800 dark:text-slate-200 mb-1">
               Đang phân tích AI...
             </Text>
-            <Text
-              style={{
-                fontSize: 12,
-                color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-                textAlign: "center",
-              }}
-            >
+            <Text className="text-xs text-slate-500 dark:text-slate-400 text-center">
               Tổng hợp dữ liệu từ vệ tinh, cảm biến và mô hình thời tiết
             </Text>
           </View>

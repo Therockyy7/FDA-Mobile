@@ -72,7 +72,7 @@ export function PredictionSliderHeader({
   const subtextColor = isDarkColorScheme ? "#94A3B8" : "#64748B";
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="map-timeline-slider-header">
       <View style={{ flex: 1 }}>
         <View style={styles.titleRow}>
           <Animated.View
@@ -110,6 +110,7 @@ export function PredictionSliderHeader({
       {!inline && onClose && (
         <TouchableOpacity
           onPress={onClose}
+          testID="map-timeline-slider-close-btn"
           activeOpacity={0.6}
           style={[
             styles.closeButton,

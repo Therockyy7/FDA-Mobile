@@ -5,8 +5,10 @@ import DateTimePicker, {
     DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import React, { useState } from "react";
+import { SHADOW } from "~/lib/design-tokens";
 import { Modal, Platform, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { MAP_COLORS } from "~/lib/design-tokens";
 
 interface DateRangePickerProps {
   startDate: Date;
@@ -32,14 +34,16 @@ export function DateRangePicker({
   const [activeField, setActiveField] = useState<"start" | "end" | null>(null);
   const [showPicker, setShowPicker] = useState(false);
 
+  // JS-only exception: isDark for non-NativeWind contexts
+  const theme = isDark ? MAP_COLORS.dark : MAP_COLORS.light;
   const colors = {
-    background: isDark ? "#1E293B" : "#FFFFFF",
+    background: theme.card,
     overlay: "rgba(0, 0, 0, 0.5)",
-    text: isDark ? "#F1F5F9" : "#1F2937",
-    subtext: isDark ? "#94A3B8" : "#6B7280",
-    border: isDark ? "#334155" : "#E2E8F0",
-    primary: "#007AFF",
-    inputBg: isDark ? "#0B1A33" : "#F8FAFC",
+    text: theme.text,
+    subtext: theme.subtext,
+    border: theme.border,
+    primary: theme.accent,
+    inputBg: isDark ? "#0B1A33" : theme.background,
   };
 
   const formatDate = (date: Date): string => {
@@ -84,6 +88,7 @@ export function DateRangePicker({
       visible={visible}
       transparent
       animationType="fade"
+      testID="areas-chart-datepicker-modal"
       onRequestClose={onCancel}
     >
       <View
@@ -102,11 +107,7 @@ export function DateRangePicker({
             padding: 20,
             width: "100%",
             maxWidth: 350,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.25,
-            shadowRadius: 20,
-            elevation: 10,
+            ...SHADOW.lg,
           }}
         >
           {/* Header */}
@@ -147,6 +148,7 @@ export function DateRangePicker({
             </Text>
             <TouchableOpacity
               onPress={() => openPicker("start")}
+              testID="areas-chart-datepicker-start"
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -182,6 +184,7 @@ export function DateRangePicker({
             </Text>
             <TouchableOpacity
               onPress={() => openPicker("end")}
+              testID="areas-chart-datepicker-end"
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -259,7 +262,7 @@ export function DateRangePicker({
               }}
             >
               <Text
-                style={{ fontSize: 14, fontWeight: "700", color: "#FFFFFF" }}
+                style={{ fontSize: 14, fontWeight: "700", color: "white" }}
               >
                 Áp dụng
               </Text>

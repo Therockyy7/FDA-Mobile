@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View, Dimensions } from "react-native";
 import { Region } from "react-native-maps";
+import { SHADOW } from "~/lib/design-tokens";
 
 interface Props {
   radiusMeters: number;
@@ -66,11 +67,8 @@ export function StaticAreaTarget({ radiusMeters, region }: Props) {
           backgroundColor: PREVIEW_COLOR,
           borderWidth: 4,
           borderColor: "white",
+          ...SHADOW.md,
           shadowColor: PREVIEW_COLOR,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.5,
-          shadowRadius: 8,
-          elevation: 8,
           alignItems: "center",
           justifyContent: "center",
         }}

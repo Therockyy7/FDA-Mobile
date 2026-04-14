@@ -2,8 +2,9 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
-import { ForecastWindow } from "../types/prediction.types";
+import { SectionHeader } from "~/components/ui/SectionHeader";
+import { SHADOW } from "~/lib/design-tokens";
+import type { ForecastWindow } from "../types/prediction.types";
 
 interface Props {
   windows: ForecastWindow[];
@@ -25,102 +26,40 @@ const WINDOW_LABEL: Record<string, string> = {
 };
 
 export function ForecastWindowsCard({ windows, evaluatedAt }: Props) {
-  const { isDarkColorScheme } = useColorScheme();
-  const bg = isDarkColorScheme ? "#1E293B" : "#FFFFFF";
-  const muted = isDarkColorScheme ? "#94A3B8" : "#64748B";
-  const text = isDarkColorScheme ? "#F1F5F9" : "#0F172A";
-
   const evalDate = new Date(evaluatedAt);
-  const evalStr = evalDate.toLocaleTimeString("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const evalStr = evalDate.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
 
   return (
-    <View
-      style={{
-        backgroundColor: bg,
-        borderRadius: 20,
-        padding: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 4,
-      }}
-    >
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          marginBottom: 14,
-          gap: 8,
-        }}
-      >
-        <View
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 10,
-            backgroundColor: isDarkColorScheme ? "#0F172A" : "#EFF6FF",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name="time" size={16} color="#3B82F6" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 13, fontWeight: "800", color: text }}>
-            Dự báo theo giờ
-          </Text>
-          <Text style={{ fontSize: 11, color: muted }}>
-            Cập nhật lúc {evalStr}
-          </Text>
-        </View>
-      </View>
+    <View className="bg-white dark:bg-slate-800 rounded-2xl p-4" style={SHADOW.md} testID="prediction-forecast-windows-card">
+      <SectionHeader
+        title="Dự báo theo giờ"
+        subtitle={`Cập nhật lúc ${evalStr}`}
+        testID="prediction-forecast-windows-header"
+        className="mb-3.5"
+        rightAction={
+          <View className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-slate-900 items-center justify-center">
+            <Ionicons name="time" size={16} color="#3B82F6" />
+          </View>
+        }
+      />
 
-      <View style={{ flexDirection: "row", gap: 8 }}>
+      <View className="flex-row gap-2">
         {windows.map((w) => {
           const color = WINDOW_STATUS_COLOR[w.status] ?? "#94A3B8";
           const prob = Math.round(w.probability * 100);
           return (
             <View
               key={w.horizon}
-              style={{
-                flex: 1,
-                backgroundColor: isDarkColorScheme ? "#0F172A" : "#F8FAFC",
-                borderRadius: 14,
-                padding: 12,
-                alignItems: "center",
-                borderTopWidth: 3,
-                borderTopColor: color,
-                gap: 4,
-              }}
+              className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl p-3 items-center gap-1"
+              style={{ borderTopWidth: 3, borderTopColor: color }}
+              testID={`prediction-forecast-window-${w.horizon}`}
             >
-              <Text style={{ fontSize: 18, fontWeight: "900", color: color }}>
-                {prob}%
-              </Text>
-              <Text
-                style={{
-                  fontSize: 11,
-                  fontWeight: "700",
-                  color: text,
-                  textAlign: "center",
-                }}
-              >
+              <Text className="text-lg font-black" style={{ color }}>{prob}%</Text>
+              <Text className="text-[11px] font-bold text-slate-800 dark:text-slate-100 text-center">
                 {WINDOW_LABEL[w.status] ?? w.status}
               </Text>
-              <View
-                style={{
-                  backgroundColor: isDarkColorScheme ? "#1E293B" : "#E2E8F0",
-                  paddingHorizontal: 8,
-                  paddingVertical: 2,
-                  borderRadius: 8,
-                }}
-              >
-                <Text style={{ fontSize: 11, fontWeight: "700", color: muted }}>
-                  +{w.horizon}
-                </Text>
+              <View className="bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded-lg">
+                <Text className="text-[11px] font-bold text-slate-500 dark:text-slate-400">+{w.horizon}</Text>
               </View>
             </View>
           );

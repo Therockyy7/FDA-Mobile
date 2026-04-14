@@ -3,7 +3,7 @@ import React from "react";
 import { View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { AiPrediction } from "../types/prediction.types";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW } from "~/lib/design-tokens";
 
 interface Props {
   aiPrediction: AiPrediction;
@@ -49,30 +49,27 @@ const COMPONENT_META = [
 ];
 
 export function AiFactorsCard({ aiPrediction }: Props) {
-  const { isDarkColorScheme } = useColorScheme();
-  const bg   = isDarkColorScheme ? "#1E293B" : "#FFFFFF";
-  const muted = isDarkColorScheme ? "#94A3B8" : "#64748B";
-  const text  = isDarkColorScheme ? "#F1F5F9" : "#0F172A";
-  const sub   = isDarkColorScheme ? "#334155" : "#F1F5F9";
-
   return (
-    <View style={{
-      backgroundColor: bg, borderRadius: 20,
-      padding: 16,
-      shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.08, shadowRadius: 12, elevation: 4,
-    }}>
+    <View
+      testID="prediction-ai-factors-card"
+      className="bg-white dark:bg-slate-800 rounded-2xl"
+      style={{ padding: 16, ...SHADOW.md }}
+    >
       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14, gap: 8 }}>
-        <View style={{
-          width: 32, height: 32, borderRadius: 10,
-          backgroundColor: isDarkColorScheme ? "#0F172A" : "#FEF3C7",
-          alignItems: "center", justifyContent: "center",
-        }}>
+        <View className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/40 items-center justify-center">
           <Ionicons name="git-merge-outline" size={16} color="#F59E0B" />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 13, fontWeight: "800", color: text }}>Phân tích yếu tố AI</Text>
-          <Text style={{ fontSize: 11, color: muted }}>
+          <Text
+            testID="prediction-ai-factors-title"
+            className="text-sm font-extrabold text-gray-900 dark:text-slate-100"
+          >
+            Phân tích yếu tố AI
+          </Text>
+          <Text
+            testID="prediction-ai-factors-subtitle"
+            className="text-xs text-slate-500 dark:text-slate-400"
+          >
             Xác suất ensemble: {Math.round(aiPrediction.ensembleProbability * 100)}% · {aiPrediction.riskLevel}
           </Text>
         </View>
@@ -84,9 +81,12 @@ export function AiFactorsCard({ aiPrediction }: Props) {
           const pct = Math.min(100, Math.round(rawVal * 100));
           const detail = meta.getDetail(aiPrediction);
           return (
-            <View key={meta.key} style={{
-              backgroundColor: sub, borderRadius: 14, padding: 12,
-            }}>
+            <View
+              key={meta.key}
+              testID={`prediction-ai-factors-item-${meta.key}`}
+              className="bg-slate-100 dark:bg-slate-700 rounded-2xl"
+              style={{ padding: 12 }}
+            >
               <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 8 }}>
                 <View style={{
                   width: 28, height: 28, borderRadius: 8,
@@ -95,28 +95,42 @@ export function AiFactorsCard({ aiPrediction }: Props) {
                 }}>
                   <Ionicons name={meta.icon} size={15} color={meta.color} />
                 </View>
-                <Text style={{ flex: 1, fontSize: 12, fontWeight: "700", color: text }}>{meta.label}</Text>
-                <Text style={{ fontSize: 14, fontWeight: "900", color: meta.color }}>{pct}%</Text>
+                <Text className="text-xs font-bold text-gray-900 dark:text-slate-100" style={{ flex: 1 }}>
+                  {meta.label}
+                </Text>
+                <Text
+                  testID={`prediction-ai-factors-pct-${meta.key}`}
+                  style={{ fontSize: 14, fontWeight: "900", color: meta.color }}
+                >
+                  {pct}%
+                </Text>
               </View>
               {/* Progress bar */}
-              <View style={{ height: 5, backgroundColor: isDarkColorScheme ? "#1E293B" : "#E2E8F0", borderRadius: 4, overflow: "hidden" }}>
-                <View style={{ height: 5, width: `${pct}%`, backgroundColor: meta.color, borderRadius: 4 }} />
+              <View className="h-1.5 bg-slate-200 dark:bg-slate-600 rounded-md overflow-hidden">
+                <View style={{ height: "100%" as any, width: `${pct}%`, backgroundColor: meta.color, borderRadius: 3 }} />
               </View>
-              <Text style={{ fontSize: 11, color: muted, marginTop: 6 }}>{detail}</Text>
+              <Text className="text-xs text-slate-500 dark:text-slate-400" style={{ marginTop: 6 }}>
+                {detail}
+              </Text>
             </View>
           );
         })}
       </View>
 
       {/* Accuracy strip */}
-      <View style={{
-        marginTop: 12,
-        backgroundColor: isDarkColorScheme ? "#0F172A" : "#F0FDF4",
-        borderRadius: 12, padding: 10,
-        flexDirection: "row", alignItems: "center", gap: 8,
-      }}>
+      <View
+        testID="prediction-ai-factors-accuracy"
+        className="bg-emerald-50 dark:bg-emerald-950/40 rounded-xl"
+        style={{
+          marginTop: 12,
+          padding: 10,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
         <Ionicons name="ribbon-outline" size={14} color="#10B981" />
-        <Text style={{ fontSize: 11, color: isDarkColorScheme ? "#6EE7B7" : "#059669", fontWeight: "600", flex: 1 }}>
+        <Text className="text-xs font-semibold text-emerald-700 dark:text-emerald-400" style={{ flex: 1 }}>
           Độ chính xác: {aiPrediction.accuracyMetrics.total_improvement} · Phase 3: {aiPrediction.accuracyMetrics.phase_3_accuracy}
         </Text>
       </View>

@@ -1,3 +1,4 @@
+// features/alerts/components/alert-thresholds/AlertThresholdsHeader.tsx
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
@@ -20,10 +21,11 @@ export function AlertThresholdsHeader({
   colors,
   onBack,
 }: AlertThresholdsHeaderProps) {
-  const safeTop = Math.max(topInset - 6, 0);
+  const safeTop = Math.max(Math.max(topInset, 0) - 6, 0);
 
   return (
     <View
+      testID="alerts-thresholds-header"
       style={{
         position: "absolute",
         top: 0,
@@ -46,6 +48,7 @@ export function AlertThresholdsHeader({
         }}
       >
         <TouchableOpacity
+          testID="alerts-thresholds-back-button"
           activeOpacity={0.8}
           style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
           onPress={onBack}
@@ -53,7 +56,16 @@ export function AlertThresholdsHeader({
           <Ionicons name="chevron-back" size={22} color={colors.text} />
         </TouchableOpacity>
 
-        <Text style={{ flex: 1, textAlign: "center", fontSize: 16, fontWeight: "800", color: colors.text }}>
+        <Text
+          testID="alerts-thresholds-title"
+          style={{
+            flex: 1,
+            textAlign: "center",
+            fontSize: 16,
+            fontWeight: "800",
+            color: colors.text,
+          }}
+        >
           {title}
         </Text>
 

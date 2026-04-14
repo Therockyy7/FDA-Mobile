@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { Text } from "~/components/ui/text";
 import type { AreaError } from "~/features/areas/hooks/useControlArea";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW, RADIUS } from "~/lib/design-tokens";
 
 interface AreaCreationErrorModalProps {
   visible: boolean;
@@ -31,43 +31,8 @@ export function AreaCreationErrorModal({
   onClose,
   onChangeLocation,
 }: AreaCreationErrorModalProps) {
-  const { isDarkColorScheme } = useColorScheme();
-
-  const colors = {
-    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-    cardBorder: isDarkColorScheme ? "#334155" : "#E2E8F0",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-    overlay: "rgba(0, 0, 0, 0.7)",
-    // Error colors
-    errorPrimary: "#EF4444",
-    errorLight: isDarkColorScheme
-      ? "rgba(239, 68, 68, 0.15)"
-      : "rgba(239, 68, 68, 0.08)",
-    errorBorder: isDarkColorScheme
-      ? "rgba(239, 68, 68, 0.3)"
-      : "rgba(239, 68, 68, 0.2)",
-    // Duplicate specific colors
-    duplicateWarning: "#F59E0B",
-    duplicateLight: isDarkColorScheme
-      ? "rgba(245, 158, 11, 0.15)"
-      : "rgba(245, 158, 11, 0.08)",
-    duplicateBorder: isDarkColorScheme
-      ? "rgba(245, 158, 11, 0.3)"
-      : "rgba(245, 158, 11, 0.2)",
-    // Button
-    buttonSecondary: isDarkColorScheme ? "#334155" : "#F3F4F6",
-  };
-
-  // Determine colors based on error type
   const isDuplicateError = error?.type === "duplicate";
-  const accentColor = isDuplicateError
-    ? colors.duplicateWarning
-    : colors.errorPrimary;
-  const lightBg = isDuplicateError ? colors.duplicateLight : colors.errorLight;
-  const borderColor = isDuplicateError
-    ? colors.duplicateBorder
-    : colors.errorBorder;
+  const accentColor = isDuplicateError ? "#F59E0B" : "#EF4444";
 
   if (!error) return null;
 
@@ -79,11 +44,9 @@ export function AreaCreationErrorModal({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <View style={styles.container}>
+      <View style={styles.container} testID="areas-modal-creation-error-container">
         {/* Static Overlay */}
-        <View
-          style={StyleSheet.absoluteFill}
-        >
+        <View style={StyleSheet.absoluteFill}>
           {Platform.OS === "ios" ? (
             <BlurView
               intensity={25}
@@ -91,59 +54,41 @@ export function AreaCreationErrorModal({
               style={[styles.overlay, { backgroundColor: "rgba(0,0,0,0.4)" }]}
             />
           ) : (
-            <View
-              style={[styles.overlay, { backgroundColor: colors.overlay }]}
-            />
+            <View style={[styles.overlay, { backgroundColor: "rgba(0,0,0,0.7)" }]} />
           )}
         </View>
 
-        {/* Touchable overlay to close */}
         <TouchableOpacity
           style={StyleSheet.absoluteFill}
           activeOpacity={1}
           onPress={onClose}
+          testID="areas-modal-creation-error-overlay"
         />
 
-        {/* Modal Content */}
         <View
           style={[
             styles.modalContent,
-            {
-              backgroundColor: colors.cardBg,
-              borderColor: borderColor,
-            },
+            { borderColor: isDuplicateError ? "rgba(245,158,11,0.2)" : "rgba(239,68,68,0.2)" },
           ]}
+          className="bg-white dark:bg-slate-800"
+          testID="areas-modal-creation-error-content"
         >
-          <View
-            style={[
-              styles.glowEffect,
-              { backgroundColor: accentColor },
-            ]}
-          />
+          <View style={[styles.glowEffect, { backgroundColor: accentColor }]} />
 
           {/* Close Button */}
           <TouchableOpacity
-            style={[
-              styles.closeButton,
-              { backgroundColor: colors.buttonSecondary },
-            ]}
+            style={styles.closeButton}
+            className="bg-slate-100 dark:bg-slate-700"
             onPress={onClose}
             activeOpacity={0.7}
+            testID="areas-modal-creation-error-close"
           >
-            <Ionicons name="close" size={18} color={colors.subtext} />
+            <Ionicons name="close" size={18} color="#94A3B8" />
           </TouchableOpacity>
 
-          {/* Icon Container without Animations */}
+          {/* Icon */}
           <View style={styles.iconWrapper}>
-            {/* Pulse Ring */}
-            <View
-              style={[
-                styles.pulseRing,
-                { borderColor: accentColor },
-              ]}
-            />
-
-            {/* Main Icon */}
+            <View style={[styles.pulseRing, { borderColor: accentColor }]} />
             <View>
               <LinearGradient
                 colors={
@@ -172,20 +117,24 @@ export function AreaCreationErrorModal({
           </View>
 
           {/* Title */}
-          <Text style={[styles.title, { color: colors.text }]}>
+          <Text className="text-2xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight mb-3 text-center">
             {error.title}
           </Text>
 
-          {/* Subtitle for duplicate error */}
+          {/* Duplicate badge */}
           {isDuplicateError && error.existingAreaName && (
             <View
               style={[
                 styles.existingAreaBadge,
-                { backgroundColor: lightBg, borderColor: borderColor },
+                {
+                  backgroundColor: "rgba(245,158,11,0.08)",
+                  borderColor: "rgba(245,158,11,0.2)",
+                },
               ]}
+              testID="areas-modal-creation-error-existing-badge"
             >
               <Ionicons name="pin" size={14} color={accentColor} />
-              <Text style={[styles.existingAreaText, { color: accentColor }]}>
+              <Text className="text-sm font-bold text-amber-500">
                 {error.existingAreaName}
               </Text>
             </View>
@@ -195,8 +144,16 @@ export function AreaCreationErrorModal({
           <View
             style={[
               styles.messageBox,
-              { backgroundColor: lightBg, borderColor: borderColor },
+              {
+                backgroundColor: isDuplicateError
+                  ? "rgba(245,158,11,0.08)"
+                  : "rgba(239,68,68,0.08)",
+                borderColor: isDuplicateError
+                  ? "rgba(245,158,11,0.2)"
+                  : "rgba(239,68,68,0.2)",
+              },
             ]}
+            testID="areas-modal-creation-error-message"
           >
             <View style={styles.messageHeader}>
               <Ionicons
@@ -204,11 +161,14 @@ export function AreaCreationErrorModal({
                 size={22}
                 color={accentColor}
               />
-              <Text style={[styles.messageLabel, { color: accentColor }]}>
+              <Text
+                className="text-xs font-bold uppercase tracking-wide"
+                style={{ color: accentColor }}
+              >
                 {isDuplicateError ? "Vị trí trùng lặp" : "Chi tiết lỗi"}
               </Text>
             </View>
-            <Text style={[styles.messageText, { color: colors.subtext }]}>
+            <Text className="text-sm leading-6 text-slate-500 dark:text-slate-400">
               {error.message}
             </Text>
           </View>
@@ -217,20 +177,14 @@ export function AreaCreationErrorModal({
           <View style={styles.buttonContainer}>
             {isDuplicateError && onChangeLocation && (
               <TouchableOpacity
-                style={[
-                  styles.secondaryButton,
-                  { backgroundColor: colors.buttonSecondary },
-                ]}
-                onPress={() => {
-                  onClose();
-                  onChangeLocation();
-                }}
+                style={styles.secondaryButton}
+                className="bg-slate-100 dark:bg-slate-700"
+                onPress={() => { onClose(); onChangeLocation(); }}
                 activeOpacity={0.7}
+                testID="areas-modal-creation-error-change-location"
               >
-                <Ionicons name="navigate" size={18} color={colors.text} />
-                <Text
-                  style={[styles.secondaryButtonText, { color: colors.text }]}
-                >
+                <Ionicons name="navigate" size={18} color="#1F2937" />
+                <Text className="text-sm font-bold text-slate-800 dark:text-slate-100">
                   Đổi vị trí
                 </Text>
               </TouchableOpacity>
@@ -245,6 +199,7 @@ export function AreaCreationErrorModal({
               ]}
               onPress={onClose}
               activeOpacity={0.9}
+              testID="areas-modal-creation-error-confirm"
             >
               <LinearGradient
                 colors={["#007AFF", "#2563EB", "#1D4ED8"]}
@@ -253,31 +208,25 @@ export function AreaCreationErrorModal({
                 style={styles.primaryButtonGradient}
               >
                 <Ionicons name="checkmark-circle" size={18} color="white" />
-                <Text style={styles.primaryButtonText}>Đã hiểu</Text>
+                <Text className="text-base font-bold text-white">Đã hiểu</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
 
-          {/* Tips Section */}
+          {/* Tips */}
           {isDuplicateError && (
-            <View style={styles.tipsContainer}>
-              <View style={styles.tipRow}>
-                <View
-                  style={[styles.tipBullet, { backgroundColor: accentColor }]}
-                />
-                <Text style={[styles.tipText, { color: colors.subtext }]}>
-                  Di chuyển đến vị trí khác cách xa hơn 50m
-                </Text>
-              </View>
-              <View style={styles.tipRow}>
-                <View
-                  style={[styles.tipBullet, { backgroundColor: accentColor }]}
-                />
-                <Text style={[styles.tipText, { color: colors.subtext }]}>
-                  Hoặc chỉnh sửa vùng &quot;{error.existingAreaName}&quot; hiện
-                  có
-                </Text>
-              </View>
+            <View style={styles.tipsContainer} testID="areas-modal-creation-error-tips">
+              {[
+                "Di chuyển đến vị trí khác cách xa hơn 50m",
+                `Hoặc chỉnh sửa vùng "${error.existingAreaName}" hiện có`,
+              ].map((tip, i) => (
+                <View key={i} style={styles.tipRow}>
+                  <View style={[styles.tipBullet, { backgroundColor: accentColor }]} />
+                  <Text className="text-xs leading-5 text-slate-500 dark:text-slate-400 flex-1">
+                    {tip}
+                  </Text>
+                </View>
+              ))}
             </View>
           )}
         </View>
@@ -287,28 +236,17 @@ export function AreaCreationErrorModal({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
+  container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24 },
+  overlay: { ...StyleSheet.absoluteFillObject },
   modalContent: {
     width: SCREEN_WIDTH - 48,
     maxWidth: 380,
-    borderRadius: 28,
+    borderRadius: RADIUS.sheet,
     padding: 28,
     alignItems: "center",
     borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.35,
-    shadowRadius: 30,
-    elevation: 30,
     overflow: "hidden",
+    ...SHADOW.lg,
   },
   glowEffect: {
     position: "absolute",
@@ -364,13 +302,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "800",
-    letterSpacing: -0.5,
-    marginBottom: 12,
-    textAlign: "center",
-  },
   existingAreaBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -381,13 +312,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 16,
   },
-  existingAreaText: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
   messageBox: {
     width: "100%",
-    borderRadius: 16,
+    borderRadius: RADIUS.card,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
@@ -398,21 +325,7 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 10,
   },
-  messageLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  messageText: {
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    gap: 12,
-    width: "100%",
-  },
+  buttonContainer: { flexDirection: "row", gap: 12, width: "100%" },
   secondaryButton: {
     flex: 1,
     flexDirection: "row",
@@ -420,54 +333,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: RADIUS.button,
   },
-  secondaryButtonText: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  primaryButton: {
-    flex: 1,
-  },
+  primaryButton: { flex: 1 },
   primaryButtonGradient: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: RADIUS.button,
     shadowColor: "#007AFF",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
     shadowRadius: 12,
     elevation: 10,
   },
-  primaryButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "white",
-  },
-  tipsContainer: {
-    width: "100%",
-    marginTop: 16,
-    gap: 8,
-  },
-  tipRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-  },
-  tipBullet: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginTop: 7,
-  },
-  tipText: {
-    fontSize: 12,
-    lineHeight: 18,
-    flex: 1,
-  },
+  tipsContainer: { width: "100%", marginTop: 16, gap: 8 },
+  tipRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  tipBullet: { width: 6, height: 6, borderRadius: 3, marginTop: 7 },
 });
 
 export default AreaCreationErrorModal;

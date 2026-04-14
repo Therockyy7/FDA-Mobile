@@ -1,33 +1,38 @@
 // features/map/components/controls/layers/OpacitySlider.tsx
-import React from "react";
-import { View } from "react-native";
+import React, { useMemo } from "react";
+import { View, useColorScheme } from "react-native";
 import Slider from "@react-native-community/slider";
 import { Text } from "~/components/ui/text";
+import { MAP_COLORS } from "~/lib/design-tokens";
 
 interface OpacitySliderProps {
   label: string;
   value: number;
-  color: string;
-  subtextColor: string;
-  textColor: string;
-  borderColor: string;
   onChange: (value: number) => void;
+  testID?: string;
 }
 
 export function OpacitySlider({
   label,
   value,
-  color,
-  subtextColor,
-  textColor,
-  borderColor,
   onChange,
+  testID,
 }: OpacitySliderProps) {
+  const isDark = useColorScheme() === "dark";
+
+  const colors = useMemo(() => {
+    const palette = isDark ? MAP_COLORS.dark : MAP_COLORS.light;
+    return {
+      active: palette.accent,
+      inactive: palette.border,
+    };
+  }, [isDark]);
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={{ fontSize: 13, color: subtextColor }}>{label}</Text>
-        <Text style={{ fontSize: 13, fontWeight: "600", color: textColor }}>
+    <View testID={testID}>
+      <View className="flex-row items-center justify-between mb-2">
+        <Text className="text-[13px] text-muted-foreground">{label}</Text>
+        <Text className="text-[13px] font-semibold text-foreground">
           {value}%
         </Text>
       </View>
@@ -37,27 +42,10 @@ export function OpacitySlider({
         maximumValue={100}
         value={value}
         onSlidingComplete={onChange}
-        minimumTrackTintColor={color}
-        maximumTrackTintColor={borderColor}
-        thumbTintColor={color}
+        minimumTrackTintColor={colors.active}
+        maximumTrackTintColor={colors.inactive}
+        thumbTintColor={colors.active}
       />
     </View>
   );
 }
-
-const styles = {
-  container: {
-    padding: 16,
-    borderRadius: 16,
-    backgroundColor: "transparent",
-    marginTop: -4,
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-  },
-  header: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-    marginBottom: 8,
-  },
-};

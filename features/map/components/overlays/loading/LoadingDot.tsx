@@ -7,7 +7,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { useEffect } from "react";
 
 interface LoadingDotProps {
@@ -55,6 +55,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#3B82F6",
+    // bg-primary token: #007AFF (FDA brand primary)
+    backgroundColor: "#007AFF",
   },
 });

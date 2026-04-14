@@ -3,30 +3,18 @@ import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { FLOOD_COLORS, SHADOW } from "~/lib/design-tokens";
 
 interface AiConsultantCardProps {
   advice: string;
 }
 
 export function AiConsultantCard({ advice }: AiConsultantCardProps) {
-  const { isDarkColorScheme } = useColorScheme();
-
   return (
     <View
-      style={{
-        backgroundColor: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-        borderRadius: 24,
-        padding: 20,
-        marginBottom: 16,
-        shadowColor: "#6366F1",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 16,
-        elevation: 8,
-        borderWidth: 2,
-        borderColor: isDarkColorScheme ? "#3730A3" : "#E0E7FF",
-      }}
+      testID="prediction-ai-consultant-card"
+      className="bg-white dark:bg-slate-800 rounded-3xl border-2 border-indigo-100 dark:border-indigo-900"
+      style={{ padding: 20, marginBottom: 16, ...SHADOW.md }}
     >
       {/* Header with animated gradient badge */}
       <View
@@ -47,11 +35,7 @@ export function AiConsultantCard({ advice }: AiConsultantCardProps) {
             alignItems: "center",
             justifyContent: "center",
             marginRight: 14,
-            shadowColor: "#6366F1",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 12,
-            elevation: 6,
+            ...SHADOW.md,
           }}
         >
           <MaterialCommunityIcons
@@ -69,28 +53,26 @@ export function AiConsultantCard({ advice }: AiConsultantCardProps) {
             }}
           >
             <Text
-              style={{
-                fontSize: 20,
-                fontWeight: "900",
-                color: isDarkColorScheme ? "#FFFFFF" : "#1F2937",
-                marginRight: 8,
-              }}
+              testID="prediction-ai-consultant-title"
+              className="text-xl font-black text-gray-800 dark:text-slate-100"
+              style={{ marginRight: 8 }}
             >
               AI Consultant
             </Text>
             <View
+              className="bg-emerald-100 dark:bg-emerald-900/40"
               style={{
-                backgroundColor: "#10B98120",
                 paddingHorizontal: 8,
                 paddingVertical: 3,
                 borderRadius: 6,
               }}
             >
               <Text
+                testID="prediction-ai-consultant-badge"
                 style={{
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: "700",
-                  color: "#10B981",
+                  color: FLOOD_COLORS.safe,
                   textTransform: "uppercase",
                   letterSpacing: 0.5,
                 }}
@@ -100,11 +82,8 @@ export function AiConsultantCard({ advice }: AiConsultantCardProps) {
             </View>
           </View>
           <Text
-            style={{
-              fontSize: 13,
-              fontWeight: "600",
-              color: isDarkColorScheme ? "#A78BFA" : "#6366F1",
-            }}
+            testID="prediction-ai-consultant-subtitle"
+            className="text-sm font-semibold text-indigo-500 dark:text-indigo-400"
           >
             Phân tích chuyên sâu từ AI
           </Text>
@@ -113,15 +92,9 @@ export function AiConsultantCard({ advice }: AiConsultantCardProps) {
 
       {/* Content Box with modern styling */}
       <View
-        style={{
-          backgroundColor: isDarkColorScheme
-            ? "rgba(139, 92, 246, 0.1)"
-            : "#F5F3FF",
-          borderRadius: 16,
-          padding: 18,
-          borderLeftWidth: 4,
-          borderLeftColor: "#8B5CF6",
-        }}
+        testID="prediction-ai-consultant-content"
+        className="bg-violet-50 dark:bg-violet-950/40 rounded-2xl border-l-4 border-violet-500"
+        style={{ padding: 18 }}
       >
         <View
           style={{
@@ -137,22 +110,18 @@ export function AiConsultantCard({ advice }: AiConsultantCardProps) {
             style={{ marginRight: 8 }}
           />
           <Text
-            style={{
-              fontSize: 12,
-              fontWeight: "700",
-              color: "#8B5CF6",
-              textTransform: "uppercase",
-              letterSpacing: 0.8,
-            }}
+            className="text-xs font-bold text-violet-600 dark:text-violet-400 uppercase"
+            style={{ letterSpacing: 0.8 }}
           >
             Khuyến nghị
           </Text>
         </View>
         <Text
+          testID="prediction-ai-consultant-advice"
+          className="text-gray-800 dark:text-slate-200"
           style={{
             fontSize: 15,
             lineHeight: 26,
-            color: isDarkColorScheme ? "#E2E8F0" : "#1F2937",
             fontWeight: "500",
             letterSpacing: 0.2,
           }}
@@ -163,28 +132,24 @@ export function AiConsultantCard({ advice }: AiConsultantCardProps) {
 
       {/* Footer info */}
       <View
+        testID="prediction-ai-consultant-footer"
+        className="border-t border-gray-200 dark:border-slate-700"
         style={{
           flexDirection: "row",
           alignItems: "center",
           marginTop: 16,
           paddingTop: 16,
-          borderTopWidth: 1,
-          borderTopColor: isDarkColorScheme ? "#334155" : "#E5E7EB",
         }}
       >
         <MaterialCommunityIcons
           name="information"
           size={14}
-          color={isDarkColorScheme ? "#94A3B8" : "#9CA3AF"}
+          color="#9CA3AF"
           style={{ marginRight: 6 }}
         />
         <Text
-          style={{
-            fontSize: 11,
-            color: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-            fontWeight: "500",
-            flex: 1,
-          }}
+          className="text-xs font-medium text-gray-500 dark:text-slate-400"
+          style={{ flex: 1 }}
         >
           Được tạo bởi mô hình AI phân tích dữ liệu thời gian thực
         </Text>

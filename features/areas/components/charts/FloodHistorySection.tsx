@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { MAP_COLORS, SEVERITY_PALETTE } from "~/lib/design-tokens";
 
 import { useFloodHistory } from "~/features/areas/hooks/useFloodHistory";
 import { useFloodStatistics } from "~/features/areas/hooks/useFloodStatistics";
@@ -122,13 +123,15 @@ export function FloodHistorySection({
     enabled: activeTab === "statistics",
   });
 
+  // JS-only exception: isDark for chart context colors
+  const theme = isDark ? MAP_COLORS.dark : MAP_COLORS.light;
   const colors = {
-    background: isDark ? "#1E293B" : "#FFFFFF",
-    text: isDark ? "#F1F5F9" : "#1F2937",
-    subtext: isDark ? "#94A3B8" : "#6B7280",
-    border: isDark ? "#334155" : "#E2E8F0",
-    tabBg: isDark ? "#0B1A33" : "#F1F5F9",
-    tabActive: isDark ? "#007AFF" : "#007AFF",
+    background: theme.card,
+    text: theme.text,
+    subtext: theme.subtext,
+    border: theme.border,
+    tabBg: isDark ? "#0B1A33" : theme.divider,
+    tabActive: theme.accent,
   };
 
   // Handle refresh for current tab
@@ -147,7 +150,7 @@ export function FloodHistorySection({
   };
 
   return (
-    <View
+    <View testID="areas-chart-section-root"
       style={{
         backgroundColor: colors.background,
         borderRadius: 18,
@@ -167,7 +170,7 @@ export function FloodHistorySection({
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Ionicons name="bar-chart" size={18} color="#007AFF" />
+          <Ionicons name="bar-chart" size={18} color={theme.accent} />
           <Text style={{ fontSize: 14, fontWeight: "700", color: colors.text }}>
             Biểu đồ mực nước
           </Text>
@@ -219,13 +222,13 @@ export function FloodHistorySection({
               <Ionicons
                 name={tab.icon}
                 size={14}
-                color={isActive ? "#FFFFFF" : colors.subtext}
+                color={isActive ? "white" : colors.subtext}
               />
               <Text
                 style={{
                   fontSize: 11,
                   fontWeight: isActive ? "700" : "500",
-                  color: isActive ? "#FFFFFF" : colors.subtext,
+                  color: isActive ? "white" : colors.subtext,
                 }}
               >
                 {tab.label}
@@ -287,19 +290,19 @@ export function FloodHistorySection({
           style={{
             marginTop: 12,
             padding: 12,
-            backgroundColor: "#FEE2E2",
+            backgroundColor: SEVERITY_PALETTE.critical.bg,
             borderRadius: 10,
             flexDirection: "row",
             alignItems: "center",
             gap: 8,
           }}
         >
-          <Ionicons name="warning" size={16} color="#EF4444" />
-          <Text style={{ fontSize: 12, color: "#DC2626", flex: 1 }}>
+          <Ionicons name="warning" size={16} color={SEVERITY_PALETTE.critical.primary} />
+          <Text style={{ fontSize: 12, color: SEVERITY_PALETTE.critical.text, flex: 1 }}>
             Không thể tải dữ liệu. Nhấn nút làm mới để thử lại.
           </Text>
           <TouchableOpacity onPress={handleRefresh}>
-            <Text style={{ fontSize: 12, fontWeight: "700", color: "#007AFF" }}>
+            <Text style={{ fontSize: 12, fontWeight: "700", color: theme.accent }}>
               Thử lại
             </Text>
           </TouchableOpacity>

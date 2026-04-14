@@ -3,7 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { MotiView } from "moti";
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW } from "~/lib/design-tokens";
 import type {
   ConfidenceBreakdown,
   DataQuality,
@@ -28,7 +28,6 @@ export function EnsembleDetailsCard({
   aiProbability,
   physicsProbability,
 }: EnsembleDetailsCardProps) {
-  const { isDarkColorScheme } = useColorScheme();
   const [expanded, setExpanded] = useState(false);
 
   const qualityItems = [
@@ -56,16 +55,9 @@ export function EnsembleDetailsCard({
       transition={{ type: "timing", delay: 400, duration: 500 }}
     >
       <View
-        style={{
-          backgroundColor: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-          borderRadius: 24,
-          padding: 20,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.1,
-          shadowRadius: 16,
-          elevation: 8,
-        }}
+        testID="prediction-ensemble-card"
+        className="bg-white dark:bg-slate-800 rounded-3xl p-5"
+        style={SHADOW.lg}
       >
         {/* Header */}
         <View
@@ -94,21 +86,14 @@ export function EnsembleDetailsCard({
           </LinearGradient>
           <View style={{ flex: 1 }}>
             <Text
-              style={{
-                fontSize: 18,
-                fontWeight: "800",
-                color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-              }}
+              testID="prediction-ensemble-title"
+              className="text-lg font-extrabold text-gray-800 dark:text-slate-100"
             >
               Chi Tiết Mô Hình
             </Text>
             <Text
-              style={{
-                fontSize: 11,
-                fontWeight: "600",
-                color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-                marginTop: 2,
-              }}
+              testID="prediction-ensemble-version"
+              className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5"
             >
               {modelInfo.ensemble_version}
             </Text>
@@ -116,40 +101,31 @@ export function EnsembleDetailsCard({
         </View>
 
         {/* Model Badges */}
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+        <View
+          testID="prediction-ensemble-badges"
+          style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 16 }}
+        >
           <View
-            style={{
-              backgroundColor: "#6366F120",
-              paddingHorizontal: 10,
-              paddingVertical: 5,
-              borderRadius: 8,
-            }}
+            className="bg-indigo-100 dark:bg-indigo-900/40"
+            style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 }}
           >
-            <Text style={{ fontSize: 10, fontWeight: "700", color: "#6366F1" }}>
+            <Text className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
               🧠 {modelInfo.ai_model.split("(")[0].trim()}
             </Text>
           </View>
           <View
-            style={{
-              backgroundColor: "#06B6D420",
-              paddingHorizontal: 10,
-              paddingVertical: 5,
-              borderRadius: 8,
-            }}
+            className="bg-cyan-100 dark:bg-cyan-900/40"
+            style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 }}
           >
-            <Text style={{ fontSize: 10, fontWeight: "700", color: "#06B6D4" }}>
+            <Text className="text-xs font-bold text-cyan-600 dark:text-cyan-400">
               ⚙️ {modelInfo.physics_model.split("+")[0].trim()}
             </Text>
           </View>
           <View
-            style={{
-              backgroundColor: "#10B98120",
-              paddingHorizontal: 10,
-              paddingVertical: 5,
-              borderRadius: 8,
-            }}
+            className="bg-emerald-100 dark:bg-emerald-900/40"
+            style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 }}
           >
-            <Text style={{ fontSize: 10, fontWeight: "700", color: "#10B981" }}>
+            <Text className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
               🛰️ {modelInfo.satellite_model.split("(")[0].trim()}
             </Text>
           </View>
@@ -157,22 +133,11 @@ export function EnsembleDetailsCard({
 
         {/* AI vs Physics comparison */}
         <View
-          style={{
-            backgroundColor: isDarkColorScheme ? "#334155" : "#F8FAFC",
-            borderRadius: 16,
-            padding: 14,
-            marginBottom: 16,
-          }}
+          testID="prediction-ensemble-comparison"
+          className="bg-slate-50 dark:bg-slate-700 rounded-2xl p-3.5 mb-4"
         >
           <Text
-            style={{
-              fontSize: 12,
-              fontWeight: "700",
-              color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-              textTransform: "uppercase",
-              letterSpacing: 0.8,
-              marginBottom: 10,
-            }}
+            className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2.5"
           >
             So Sánh Mô Hình
           </Text>
@@ -180,17 +145,17 @@ export function EnsembleDetailsCard({
           {/* AI bar */}
           <View style={{ marginBottom: 8 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
-              <Text style={{ fontSize: 12, fontWeight: "600", color: "#6366F1" }}>
+              <Text className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
                 AI ({(weightingStrategy.ai_weight * 100).toFixed(0)}%)
               </Text>
-              <Text style={{ fontSize: 12, fontWeight: "800", color: "#6366F1" }}>
+              <Text className="text-xs font-extrabold text-indigo-600 dark:text-indigo-400">
                 {(aiProbability * 100).toFixed(1)}%
               </Text>
             </View>
-            <View style={{ height: 6, backgroundColor: isDarkColorScheme ? "#475569" : "#E2E8F0", borderRadius: 3 }}>
+            <View className="h-1.5 bg-slate-200 dark:bg-slate-600 rounded-md">
               <View
                 style={{
-                  height: "100%",
+                  height: "100%" as any,
                   width: `${Math.min(aiProbability * 100, 100)}%`,
                   backgroundColor: "#6366F1",
                   borderRadius: 3,
@@ -202,17 +167,17 @@ export function EnsembleDetailsCard({
           {/* Physics bar */}
           <View>
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
-              <Text style={{ fontSize: 12, fontWeight: "600", color: "#06B6D4" }}>
+              <Text className="text-xs font-semibold text-cyan-600 dark:text-cyan-400">
                 Vật Lý ({(weightingStrategy.physics_weight * 100).toFixed(0)}%)
               </Text>
-              <Text style={{ fontSize: 12, fontWeight: "800", color: "#06B6D4" }}>
+              <Text className="text-xs font-extrabold text-cyan-600 dark:text-cyan-400">
                 {(physicsProbability * 100).toFixed(1)}%
               </Text>
             </View>
-            <View style={{ height: 6, backgroundColor: isDarkColorScheme ? "#475569" : "#E2E8F0", borderRadius: 3 }}>
+            <View className="h-1.5 bg-slate-200 dark:bg-slate-600 rounded-md">
               <View
                 style={{
-                  height: "100%",
+                  height: "100%" as any,
                   width: `${Math.min(physicsProbability * 100, 100)}%`,
                   backgroundColor: "#06B6D4",
                   borderRadius: 3,
@@ -223,16 +188,12 @@ export function EnsembleDetailsCard({
         </View>
 
         {/* Data Quality */}
-        <View style={{ marginBottom: 12 }}>
+        <View
+          testID="prediction-ensemble-quality"
+          style={{ marginBottom: 12 }}
+        >
           <Text
-            style={{
-              fontSize: 12,
-              fontWeight: "700",
-              color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-              textTransform: "uppercase",
-              letterSpacing: 0.8,
-              marginBottom: 10,
-            }}
+            className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2.5"
           >
             Chất Lượng Dữ Liệu
           </Text>
@@ -243,33 +204,17 @@ export function EnsembleDetailsCard({
               return (
                 <View
                   key={item.label}
-                  style={{
-                    flex: 1,
-                    backgroundColor: isDarkColorScheme ? "#334155" : "#F1F5F9",
-                    borderRadius: 12,
-                    padding: 10,
-                    alignItems: "center",
-                  }}
+                  testID={`prediction-ensemble-quality-${item.label}`}
+                  className="flex-1 bg-slate-100 dark:bg-slate-700 rounded-xl p-2.5 items-center"
                 >
                   <Ionicons name={item.icon as any} size={18} color={color} />
                   <Text
-                    style={{
-                      fontSize: 16,
-                      fontWeight: "900",
-                      color,
-                      marginTop: 4,
-                    }}
+                    style={{ fontSize: 16, fontWeight: "900", color, marginTop: 4 }}
                   >
                     {pct.toFixed(0)}%
                   </Text>
                   <Text
-                    style={{
-                      fontSize: 9,
-                      fontWeight: "600",
-                      color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-                      textAlign: "center",
-                      marginTop: 2,
-                    }}
+                    className="text-xs font-semibold text-slate-500 dark:text-slate-400 text-center mt-0.5"
                   >
                     {item.label}
                   </Text>
@@ -288,14 +233,10 @@ export function EnsembleDetailsCard({
             <Ionicons
               name="information-circle-outline"
               size={14}
-              color={isDarkColorScheme ? "#64748B" : "#94A3B8"}
+              color="#94A3B8"
             />
             <Text
-              style={{
-                fontSize: 10,
-                fontWeight: "500",
-                color: isDarkColorScheme ? "#64748B" : "#94A3B8",
-              }}
+              className="text-xs font-medium text-slate-400 dark:text-slate-500"
             >
               Nguồn mưa 12h: {dataQuality.rainfall_12h_source}
             </Text>
@@ -304,6 +245,7 @@ export function EnsembleDetailsCard({
 
         {/* Expandable confidence breakdown */}
         <TouchableOpacity
+          testID="prediction-ensemble-expand"
           onPress={() => setExpanded(!expanded)}
           style={{
             flexDirection: "row",
@@ -311,74 +253,53 @@ export function EnsembleDetailsCard({
             justifyContent: "space-between",
             paddingTop: 12,
             borderTopWidth: 1,
-            borderTopColor: isDarkColorScheme ? "#334155" : "#E2E8F0",
           }}
+          className="border-slate-200 dark:border-slate-700"
         >
           <Text
-            style={{
-              fontSize: 12,
-              fontWeight: "700",
-              color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-              textTransform: "uppercase",
-              letterSpacing: 0.8,
-            }}
+            className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest"
           >
             Phân tích tin cậy chi tiết
           </Text>
           <Ionicons
             name={expanded ? "chevron-up" : "chevron-down"}
             size={16}
-            color={isDarkColorScheme ? "#94A3B8" : "#64748B"}
+            color="#94A3B8"
           />
         </TouchableOpacity>
 
         {expanded && (
-          <View style={{ marginTop: 12, gap: 8 }}>
+          <View
+            testID="prediction-ensemble-breakdown"
+            style={{ marginTop: 12, gap: 8 }}
+          >
             {Object.entries(confidenceBreakdown.breakdown_components).map(
               ([key, comp]) => (
                 <View
                   key={key}
-                  style={{
-                    backgroundColor: isDarkColorScheme ? "#334155" : "#F8FAFC",
-                    borderRadius: 10,
-                    padding: 10,
-                  }}
+                  className="bg-slate-50 dark:bg-slate-700 rounded-xl p-2.5"
                 >
                   <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                     <Text
-                      style={{
-                        fontSize: 12,
-                        fontWeight: "700",
-                        color: isDarkColorScheme ? "#E2E8F0" : "#334155",
-                        textTransform: "capitalize",
-                      }}
+                      className="text-xs font-bold text-slate-700 dark:text-slate-200 capitalize"
                     >
                       {key.replace(/_/g, " ")}
                     </Text>
                     <Text
-                      style={{
-                        fontSize: 11,
-                        fontWeight: "800",
-                        color:
-                          comp.confidence === "Very High" || comp.confidence === "High"
-                            ? "#16A34A"
-                            : comp.confidence === "Medium"
-                              ? "#CA8A04"
-                              : "#DC2626",
-                      }}
+                      className={
+                        comp.confidence === "Very High" || comp.confidence === "High"
+                          ? "text-xs font-extrabold text-green-700 dark:text-green-400"
+                          : comp.confidence === "Medium"
+                            ? "text-xs font-extrabold text-amber-600 dark:text-amber-400"
+                            : "text-xs font-extrabold text-red-600 dark:text-red-400"
+                      }
                     >
                       {comp.confidence}
                     </Text>
                   </View>
                   {comp.reason && (
                     <Text
-                      style={{
-                        fontSize: 11,
-                        fontWeight: "500",
-                        color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-                        marginTop: 4,
-                        lineHeight: 16,
-                      }}
+                      className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 leading-4"
                     >
                       {comp.reason}
                     </Text>
@@ -388,14 +309,7 @@ export function EnsembleDetailsCard({
             )}
             {/* Rationale */}
             <Text
-              style={{
-                fontSize: 11,
-                fontWeight: "500",
-                color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-                lineHeight: 18,
-                fontStyle: "italic",
-                marginTop: 4,
-              }}
+              className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-4 italic mt-1"
             >
               {confidenceBreakdown.confidence_rationale}
             </Text>

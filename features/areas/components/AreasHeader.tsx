@@ -5,7 +5,6 @@ import LottieView from "lottie-react-native";
 import React, { useMemo } from "react";
 import { Platform, StatusBar, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
 import { Area } from "../types/areas-types";
 
 interface AreasHeaderProps {
@@ -14,17 +13,6 @@ interface AreasHeaderProps {
 }
 
 export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
-  const { isDarkColorScheme } = useColorScheme();
-
-  // Theme colors
-  const colors = {
-    gradientStart: isDarkColorScheme ? "#1E3A5F" : "#007AFF",
-    gradientEnd: isDarkColorScheme ? "#0B1A33" : "#1D4ED8",
-    cardBg: isDarkColorScheme ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.2)",
-    text: "#FFFFFF",
-    subtext: "rgba(255,255,255,0.8)",
-  };
-
   const stats = useMemo(() => {
     const safeCount = areas.filter((a) => a.status === "safe").length;
     const warningCount = areas.filter((a) => a.status === "warning").length;
@@ -35,7 +23,7 @@ export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
 
   return (
     <LinearGradient
-      colors={[colors.gradientStart, colors.gradientEnd]}
+      colors={["#1E3A5F", "#0B1A33"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={{
@@ -43,6 +31,7 @@ export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
         paddingBottom: 20,
         paddingHorizontal: 16,
       }}
+      testID="areas-header"
     >
       {/* Background Lottie */}
       <LottieView
@@ -70,19 +59,12 @@ export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
         }}
       >
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 22, fontWeight: "900", color: colors.text, letterSpacing: -0.5 }}>
+          <Text className="text-white text-2xl font-black tracking-tight" testID="areas-header-title">
             Khu vực của tôi
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 4 }}>
-            <View
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: "#22C55E",
-              }}
-            />
-            <Text style={{ fontSize: 12, color: colors.subtext, fontWeight: "600" }}>
+            <View className="w-1.5 h-1.5 rounded-full bg-flood-safe" />
+            <Text className="text-white/80 text-xs font-semibold" testID="areas-header-count">
               {areas.length} vị trí đang theo dõi
             </Text>
           </View>
@@ -102,6 +84,7 @@ export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
             borderColor: "rgba(255,255,255,0.3)",
           }}
           activeOpacity={0.8}
+          testID="areas-header-add-button"
         >
           <Ionicons name="add" size={26} color="white" />
         </TouchableOpacity>
@@ -113,7 +96,7 @@ export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
         <View
           style={{
             flex: 1,
-            backgroundColor: "rgba(34, 197, 94, 0.2)",
+            backgroundColor: "rgba(16, 185, 129, 0.2)",
             paddingVertical: 12,
             paddingHorizontal: 14,
             borderRadius: 14,
@@ -121,26 +104,27 @@ export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
             alignItems: "center",
             gap: 10,
             borderWidth: 1,
-            borderColor: "rgba(34, 197, 94, 0.3)",
+            borderColor: "rgba(16, 185, 129, 0.3)",
           }}
+          testID="areas-header-stats-safe"
         >
           <View
             style={{
               width: 36,
               height: 36,
               borderRadius: 12,
-              backgroundColor: "rgba(34, 197, 94, 0.3)",
+              backgroundColor: "rgba(16, 185, 129, 0.3)",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Ionicons name="checkmark-circle" size={20} color="#86EFAC" />
+            <Ionicons name="checkmark-circle" size={20} color="#6EE7B7" />
           </View>
           <View>
-            <Text style={{ fontSize: 22, fontWeight: "900", color: "#86EFAC" }}>
+            <Text className="text-2xl font-black text-emerald-300">
               {stats.safe}
             </Text>
-            <Text style={{ fontSize: 10, color: "#86EFAC", fontWeight: "600" }}>
+            <Text className="text-xs font-semibold text-emerald-300">
               An toàn
             </Text>
           </View>
@@ -150,7 +134,7 @@ export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
         <View
           style={{
             flex: 1,
-            backgroundColor: "rgba(251, 191, 36, 0.2)",
+            backgroundColor: "rgba(245, 158, 11, 0.2)",
             paddingVertical: 12,
             paddingHorizontal: 14,
             borderRadius: 14,
@@ -158,15 +142,16 @@ export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
             alignItems: "center",
             gap: 10,
             borderWidth: 1,
-            borderColor: "rgba(251, 191, 36, 0.3)",
+            borderColor: "rgba(245, 158, 11, 0.3)",
           }}
+          testID="areas-header-stats-warning"
         >
           <View
             style={{
               width: 36,
               height: 36,
               borderRadius: 12,
-              backgroundColor: "rgba(251, 191, 36, 0.3)",
+              backgroundColor: "rgba(245, 158, 11, 0.3)",
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -174,10 +159,10 @@ export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
             <Ionicons name="warning" size={20} color="#FDE68A" />
           </View>
           <View>
-            <Text style={{ fontSize: 22, fontWeight: "900", color: "#FDE68A" }}>
+            <Text className="text-2xl font-black text-yellow-200">
               {stats.warning}
             </Text>
-            <Text style={{ fontSize: 10, color: "#FDE68A", fontWeight: "600" }}>
+            <Text className="text-xs font-semibold text-yellow-200">
               Cảnh báo
             </Text>
           </View>
@@ -197,6 +182,7 @@ export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
             borderWidth: 1,
             borderColor: "rgba(239, 68, 68, 0.3)",
           }}
+          testID="areas-header-stats-danger"
         >
           <View
             style={{
@@ -211,10 +197,10 @@ export function AreasHeader({ areas, onAddPress }: AreasHeaderProps) {
             <Ionicons name="alert-circle" size={20} color="#FCA5A5" />
           </View>
           <View>
-            <Text style={{ fontSize: 22, fontWeight: "900", color: "#FCA5A5" }}>
+            <Text className="text-2xl font-black text-red-300">
               {stats.danger}
             </Text>
-            <Text style={{ fontSize: 10, color: "#FCA5A5", fontWeight: "600" }}>
+            <Text className="text-xs font-semibold text-red-300">
               Nguy hiểm
             </Text>
           </View>

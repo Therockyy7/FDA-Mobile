@@ -1,6 +1,7 @@
+// features/alerts/components/alert-thresholds/GlobalThresholdCard.tsx
 import React from "react";
 import { View } from "react-native";
-import ThresholdDivider from "./ThresholdDivider";
+import { Divider } from "~/components/ui/Divider";
 import ThresholdRow from "./ThresholdRow";
 
 interface GlobalThresholds {
@@ -25,14 +26,22 @@ interface GlobalThresholdCardProps {
     subtext: string;
     text: string;
   };
+  testID?: string;
 }
 
 export function GlobalThresholdCard({
   global,
   colors,
+  testID,
 }: GlobalThresholdCardProps) {
+  const formatValue = (value: number, unit: string) => {
+    const safeValue = isFinite(value) ? value : 0;
+    const safeUnit = unit || "m";
+    return `${safeValue.toFixed(1)}${safeUnit}`;
+  };
   return (
     <View
+      testID={testID ?? "alerts-thresholds-global-card"}
       style={{
         marginHorizontal: 16,
         backgroundColor: colors.surface,
@@ -43,30 +52,34 @@ export function GlobalThresholdCard({
       }}
     >
       <ThresholdRow
+        testID="alerts-thresholds-global-row-info"
         label="Info"
         dotColor={colors.status.info}
-        value={`${global.info.toFixed(1)}${global.unit}`}
+        value={formatValue(global.info, global.unit)}
         colors={{ subtext: colors.subtext, text: colors.text }}
       />
-      <ThresholdDivider colors={{ borderSoft: colors.borderSoft }} />
+      <Divider />
       <ThresholdRow
+        testID="alerts-thresholds-global-row-caution"
         label="Caution"
         dotColor={colors.status.caution}
-        value={`${global.caution.toFixed(1)}${global.unit}`}
+        value={formatValue(global.caution, global.unit)}
         colors={{ subtext: colors.subtext, text: colors.text }}
       />
-      <ThresholdDivider colors={{ borderSoft: colors.borderSoft }} />
+      <Divider />
       <ThresholdRow
+        testID="alerts-thresholds-global-row-warning"
         label="Warning"
         dotColor={colors.status.warning}
-        value={`${global.warning.toFixed(1)}${global.unit}`}
+        value={formatValue(global.warning, global.unit)}
         colors={{ subtext: colors.subtext, text: colors.text }}
       />
-      <ThresholdDivider colors={{ borderSoft: colors.borderSoft }} />
+      <Divider />
       <ThresholdRow
+        testID="alerts-thresholds-global-row-critical"
         label="Critical"
         dotColor={colors.status.critical}
-        value={`${global.critical.toFixed(1)}${global.unit}`}
+        value={formatValue(global.critical, global.unit)}
         colors={{ subtext: colors.subtext, text: colors.text }}
       />
     </View>

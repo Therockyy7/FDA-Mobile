@@ -9,6 +9,7 @@ import { Text } from "~/components/ui/text";
 import { AlertChannelsStatus } from "~/features/alerts/components/AlertChannelsStatus";
 import type { NotificationChannels } from "~/features/alerts/types/alert-settings.types";
 import type { Area, AreaStatusResponse } from "~/features/map/types/map-layers.types";
+import { SHADOW } from "~/lib/design-tokens";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 interface ApiAreaCardProps {
@@ -21,7 +22,7 @@ interface ApiAreaCardProps {
   alertChannels?: NotificationChannels;
 }
 
-// Get status config based on AreaStatus
+// Get status config based on AreaStatus — use flood-* tokens for colors
 const getStatusConfig = (status?: string) => {
   switch (status) {
     case "Critical":
@@ -78,6 +79,17 @@ const formatRadius = (meters: number) => {
   return `${meters}m`;
 };
 
+// Map severity color to background class for NativeWind
+const getStatusBgClass = (colorCode: string) => {
+  switch (colorCode) {
+    case "#EF4444": return "bg-red-50 dark:bg-red-500/15";
+    case "#F97316": return "bg-orange-50 dark:bg-orange-500/15";
+    case "#FBBF24": return "bg-yellow-50 dark:bg-yellow-500/15";
+    case "#6B7280": return "bg-gray-50 dark:bg-gray-500/15";
+    default: return "bg-green-50 dark:bg-green-500/15";
+  }
+};
+
 // Format relative time
 const formatRelativeTime = (dateString?: string) => {
   if (!dateString) return "";
@@ -105,7 +117,7 @@ export function ApiAreaCard({
 }: ApiAreaCardProps) {
   const { isDarkColorScheme } = useColorScheme();
   const statusConfig = getStatusConfig(status?.status);
-  
+
   // Pulse animation for warnings
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -136,16 +148,6 @@ export function ApiAreaCard({
     }
   }, [status?.status, pulseAnim]);
 
-  const colors = {
-    cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-    cardBorder: isDarkColorScheme ? "#334155" : "#E5E7EB",
-    text: isDarkColorScheme ? "#F1F5F9" : "#111827",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-    mutedBg: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
-    divider: isDarkColorScheme ? "#334155" : "#F3F4F6",
-    waterBg: isDarkColorScheme ? "rgba(6, 182, 212, 0.15)" : "rgba(6, 182, 212, 0.1)",
-  };
-
   const channels: NotificationChannels = alertChannels || {
     push: true,
     email: false,
@@ -157,18 +159,14 @@ export function ApiAreaCard({
       onPress={onPress}
       activeOpacity={0.95}
       style={{
-        backgroundColor: colors.cardBg,
         borderRadius: 24,
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: colors.cardBorder,
-        shadowColor: statusConfig.main,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.12,
-        shadowRadius: 16,
-        elevation: 6,
         overflow: "hidden",
+        ...SHADOW.lg,
       }}
+      className="bg-white dark:bg-slate-800 border-border-light dark:border-border-dark"
+      testID="api-area-card"
     >
       {/* Animated Background Lottie for Warning Status */}
       {["Warning", "Critical"].includes(status?.status ?? "") && (
@@ -195,15 +193,15 @@ export function ApiAreaCard({
         }}
       >
         <LinearGradient
-          colors={isDarkColorScheme 
-            ? ["#0B1A33", "#1E293B"] 
-            : ["#F0F9FF", "#E0F2FE"]}
+          colors={statusConfig.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={{
             paddingTop: 20,
             paddingHorizontal: 20,
             paddingBottom: 16,
-            
           }}
+          className="dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800"
         >
           {onAlertSettings && (
             <TouchableOpacity
@@ -215,32 +213,28 @@ export function ApiAreaCard({
                 width: 34,
                 height: 34,
                 borderRadius: 12,
-                backgroundColor: isDarkColorScheme ? "#3A2F0A" : "#FFFBEB",
+                borderWidth: 1,
                 alignItems: "center",
                 justifyContent: "center",
-                borderWidth: 1,
                 borderColor: "#F59E0B",
               }}
+              className="bg-yellow-50 dark:bg-yellow-900/20"
+              testID="api-area-card-alert-settings"
             >
               <Ionicons name="notifications" size={16} color="#F59E0B" />
             </TouchableOpacity>
           )}
+
           {/* Water Level Display - HERO */}
-          <View style={{ alignItems: "center", marginBottom: 12
-           }}>
+          <View style={{ alignItems: "center", marginBottom: 12 }} testID="api-area-card-hero">
             {maxWaterLevel > 0 ? (
-              <View
-                style={{
-                  alignItems: "center",
-                }}
-              >
+              <View style={{ alignItems: "center" }}>
                 {/* Circular Water Level Indicator */}
                 <View
                   style={{
                     width: 100,
                     height: 100,
                     borderRadius: 50,
-                    backgroundColor: colors.waterBg,
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: 3,
@@ -248,6 +242,7 @@ export function ApiAreaCard({
                     position: "relative",
                     overflow: "hidden",
                   }}
+                  className="bg-cyan-100/15 dark:bg-cyan-500/15"
                 >
                   {/* Animated Wave Effect */}
                   <LottieView
@@ -262,12 +257,12 @@ export function ApiAreaCard({
                       opacity: 0.3,
                     }}
                   />
-                  
+
                   {/* Water Level Value */}
-                  <View style={{ alignItems: "center", zIndex: 1 }}>
-                    <MaterialCommunityIcons 
-                      name="waves" 
-                      size={20} 
+                  <View style={{ alignItems: "center", zIndex: 1 }} testID="api-area-card-water-value">
+                    <MaterialCommunityIcons
+                      name="waves"
+                      size={20}
                       color={statusConfig.main}
                       style={{ marginBottom: 2 }}
                     />
@@ -298,9 +293,6 @@ export function ApiAreaCard({
                 <View
                   style={{
                     marginTop: 10,
-                    backgroundColor: isDarkColorScheme 
-                      ? `${statusConfig.main}25` 
-                      : statusConfig.bg,
                     paddingHorizontal: 14,
                     paddingVertical: 6,
                     borderRadius: 16,
@@ -310,6 +302,7 @@ export function ApiAreaCard({
                     borderWidth: 1,
                     borderColor: `${statusConfig.main}30`,
                   }}
+                  className={getStatusBgClass(statusConfig.main)}
                 >
                   <Ionicons name={statusConfig.icon} size={14} color={statusConfig.main} />
                   <Text
@@ -325,22 +318,21 @@ export function ApiAreaCard({
               </View>
             ) : (
               // No water level data
-              <View style={{ alignItems: "center", paddingVertical: 10 }}>
+              <View style={{ alignItems: "center", paddingVertical: 10 }} testID="api-area-card-no-data">
                 <View
                   style={{
                     width: 60,
                     height: 60,
                     borderRadius: 30,
-                    backgroundColor: colors.mutedBg,
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: 2,
-                    borderColor: colors.divider,
                   }}
+                  className="bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600"
                 >
-                  <Ionicons name="water-outline" size={28} color={colors.subtext} />
+                  <Ionicons name="water-outline" size={28} className="text-slate-400 dark:text-slate-500" />
                 </View>
-                <Text style={{ fontSize: 12, color: colors.subtext, marginTop: 8 }}>
+                <Text className="text-slate-500 dark:text-slate-400 mt-2" style={{ fontSize: 12 }}>
                   Chưa có dữ liệu
                 </Text>
               </View>
@@ -352,25 +344,20 @@ export function ApiAreaCard({
       {/* Content Section */}
       <View style={{ padding: 18, paddingTop: 14 }}>
         {/* Area Name & Location */}
-        <View style={{ marginBottom: 14 }}>
+        <View style={{ marginBottom: 14 }} testID="api-area-card-name-location">
           <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "800",
-              color: colors.text,
-              letterSpacing: -0.3,
-              marginBottom: 4,
-              textAlign: "center",
-            }}
+            className="text-slate-900 dark:text-slate-100 font-extrabold text-center tracking-tight"
+            style={{ fontSize: 18, marginBottom: 4 }}
             numberOfLines={1}
           >
             {area.name}
           </Text>
           {area.addressText && (
             <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 4 }}>
-              <Ionicons name="location" size={12} color={colors.subtext} />
+              <Ionicons name="location" size={12} className="text-slate-400 dark:text-slate-500" />
               <Text
-                style={{ fontSize: 12, color: colors.subtext, textAlign: "center" }}
+                className="text-slate-500 dark:text-slate-400 text-center"
+                style={{ fontSize: 12 }}
                 numberOfLines={1}
               >
                 {area.addressText}
@@ -383,32 +370,32 @@ export function ApiAreaCard({
         <View
           style={{
             flexDirection: "row",
-            backgroundColor: colors.mutedBg,
             borderRadius: 14,
             padding: 12,
             marginBottom: 14,
             borderWidth: 1,
-            borderColor: colors.divider,
           }}
+          className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+          testID="api-area-card-stats"
         >
           {/* Radius */}
           <View style={{ flex: 1, alignItems: "center" }}>
             <MaterialCommunityIcons name="radius-outline" size={18} color="#007AFF" />
-            <Text style={{ fontSize: 9, color: colors.subtext, marginTop: 3, fontWeight: "600" }}>
+            <Text className="text-slate-400 dark:text-slate-500 font-semibold mt-0.5" style={{ fontSize: 11 }}>
               BÁN KÍNH
             </Text>
-            <Text style={{ fontSize: 14, fontWeight: "800", color: colors.text }}>
+            <Text className="text-slate-900 dark:text-slate-100 font-extrabold" style={{ fontSize: 14 }}>
               {formatRadius(area.radiusMeters)}
             </Text>
           </View>
 
           {/* Divider */}
-          <View style={{ width: 1, backgroundColor: colors.divider, marginVertical: 4 }} />
+          <View style={{ width: 1, marginVertical: 4 }} className="bg-slate-300 dark:bg-slate-600" />
 
           {/* Severity */}
           <View style={{ flex: 1, alignItems: "center" }}>
             <Ionicons name="speedometer" size={18} color={statusConfig.main} />
-            <Text style={{ fontSize: 9, color: colors.subtext, marginTop: 3, fontWeight: "600" }}>
+            <Text className="text-slate-400 dark:text-slate-500 font-semibold mt-0.5" style={{ fontSize: 11 }}>
               MỨC ĐỘ
             </Text>
             <Text style={{ fontSize: 14, fontWeight: "800", color: statusConfig.main }}>
@@ -417,15 +404,15 @@ export function ApiAreaCard({
           </View>
 
           {/* Divider */}
-          <View style={{ width: 1, backgroundColor: colors.divider, marginVertical: 4 }} />
+          <View style={{ width: 1, marginVertical: 4 }} className="bg-slate-300 dark:bg-slate-600" />
 
           {/* Stations */}
           <View style={{ flex: 1, alignItems: "center" }}>
             <Ionicons name="analytics" size={18} color="#8B5CF6" />
-            <Text style={{ fontSize: 9, color: colors.subtext, marginTop: 3, fontWeight: "600" }}>
+            <Text className="text-slate-400 dark:text-slate-500 font-semibold mt-0.5" style={{ fontSize: 11 }}>
               TRẠM ĐO
             </Text>
-            <Text style={{ fontSize: 14, fontWeight: "800", color: colors.text }}>
+            <Text className="text-slate-900 dark:text-slate-100 font-extrabold" style={{ fontSize: 14 }}>
               {status?.contributingStations?.length ?? 0}
             </Text>
           </View>
@@ -435,23 +422,18 @@ export function ApiAreaCard({
         {status?.summary && (
           <View
             style={{
-              backgroundColor: isDarkColorScheme 
-                ? `${statusConfig.main}15` 
-                : `${statusConfig.main}10`,
               borderRadius: 12,
               padding: 12,
               marginBottom: 14,
               borderLeftWidth: 3,
               borderLeftColor: statusConfig.main,
             }}
+            className={statusConfig.main === "#EF4444" ? "bg-red-50 dark:bg-red-500/10" : statusConfig.main === "#F97316" ? "bg-orange-50 dark:bg-orange-500/10" : statusConfig.main === "#FBBF24" ? "bg-yellow-50 dark:bg-yellow-500/10" : statusConfig.main === "#6B7280" ? "bg-gray-50 dark:bg-gray-500/10" : "bg-green-50 dark:bg-green-500/10"}
+            testID="api-area-card-summary"
           >
             <Text
-              style={{
-                fontSize: 12,
-                color: isDarkColorScheme ? colors.text : "#374151",
-                fontWeight: "500",
-                lineHeight: 18,
-              }}
+              className="text-slate-900 dark:text-slate-100 font-medium"
+              style={{ fontSize: 12, lineHeight: 18 }}
               numberOfLines={2}
             >
               {status.summary}
@@ -469,6 +451,7 @@ export function ApiAreaCard({
             alignItems: "center",
             justifyContent: "space-between",
           }}
+          testID="api-area-card-footer"
         >
           {/* Update time */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
@@ -480,7 +463,7 @@ export function ApiAreaCard({
                 backgroundColor: "#10B981",
               }}
             />
-            <Text style={{ fontSize: 11, color: colors.subtext, fontWeight: "500" }}>
+            <Text className="text-slate-500 dark:text-slate-400 font-medium" style={{ fontSize: 11 }}>
               {formatRelativeTime(status?.evaluatedAt)}
             </Text>
           </View>
@@ -494,12 +477,12 @@ export function ApiAreaCard({
                   width: 36,
                   height: 36,
                   borderRadius: 12,
-                  backgroundColor: isDarkColorScheme ? "#007AFF20" : "#EFF6FF",
                   alignItems: "center",
                   justifyContent: "center",
                   borderWidth: 1,
-                  borderColor: isDarkColorScheme ? "#007AFF40" : "#BFDBFE",
                 }}
+                className="bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/40"
+                testID="api-area-card-edit"
               >
                 <Ionicons name="pencil" size={16} color="#007AFF" />
               </TouchableOpacity>
@@ -511,17 +494,17 @@ export function ApiAreaCard({
                   width: 36,
                   height: 36,
                   borderRadius: 12,
-                  backgroundColor: isDarkColorScheme ? "#EF444420" : "#FEF2F2",
                   alignItems: "center",
                   justifyContent: "center",
                   borderWidth: 1,
-                  borderColor: isDarkColorScheme ? "#EF444440" : "#FECACA",
                 }}
+                className="bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/40"
+                testID="api-area-card-delete"
               >
                 <Ionicons name="trash" size={16} color="#EF4444" />
               </TouchableOpacity>
             )}
-            <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+            <TouchableOpacity onPress={onPress} activeOpacity={0.8} testID="api-area-card-detail">
               <LinearGradient
                 colors={statusConfig.gradient}
                 start={{ x: 0, y: 0 }}

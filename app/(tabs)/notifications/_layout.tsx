@@ -5,45 +5,12 @@ export default function NotificationsLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: {
-          backgroundColor: "#F9FAFB",
-        },
-        headerShadowVisible: false,
-        headerLargeTitle: true,
-        headerLargeTitleStyle: {
-          fontWeight: "800",
-          fontSize: 32,
-        },
-        headerLargeStyle: {
-          backgroundColor: "#F9FAFB",
-        },
+        headerShown: false,
       }}
     >
-      {/* Danh sách notifications */}
-      <Stack.Screen
-        name="index"
-        options={{
-          title: "Thông báo",
-          headerRight: () => null,
-          headerShown: false,
-        }}
-      />
-      
-      {/* Detail notification */}
-      <Stack.Screen
-        name="[id]"
-        options={{
-          headerShown: false, // Detail dùng custom header
-        }}
-      />
-      
-      {/* Detail News */}
-      <Stack.Screen
-        name="news/[id]"
-        options={{
-          headerShown: false, // Detail dùng custom header
-        }}
-      />
+      <Stack.Screen name="index" options={{ title: "Thông báo" }} />
+      <Stack.Screen name="[id]" options={{ title: "Chi tiết thông báo" }} />
+      <Stack.Screen name="news/[id]" options={{ title: "Chi tiết tin tức" }} />
     </Stack>
   );
 }

@@ -12,6 +12,7 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW, MAP_ICON_COLORS, MAP_OVERLAY_LAYER_COLORS } from "~/lib/design-tokens";
 
 interface MapControlsProps {
   onZoomIn: () => void;
@@ -66,7 +67,7 @@ export function MapControls({
 
   const panelBg = isDark ? "rgba(15,23,42,0.95)" : "white";
   const divider = isDark ? "#334155" : "#F1F5F9";
-  const iconColor = isDark ? "#94A3B8" : "#1F2937";
+  const iconColor = isDark ? MAP_ICON_COLORS.dark.inactive : MAP_ICON_COLORS.light.inactive;
 
   // FAB rotation + scale
   const fabRotate = useSharedValue(0);
@@ -119,17 +120,23 @@ export function MapControls({
 
           {onShowLayers && (
             <Animated.View style={layersAnim.animatedStyle}>
-              <TouchableOpacity onPress={onShowLayers} style={styles.fabBlue} activeOpacity={0.8}>
+              <TouchableOpacity
+                onPress={onShowLayers}
+                testID="map-controls-layers-fab-btn"
+                style={[styles.fabBlue, SHADOW.md]}
+                activeOpacity={0.8}
+              >
                 <Ionicons name="layers" size={22} color="white" />
               </TouchableOpacity>
             </Animated.View>
           )}
 
-          <Animated.View style={[controlsAnim.animatedStyle, styles.panel, { backgroundColor: panelBg, borderColor: divider }]}>
+          <Animated.View style={[controlsAnim.animatedStyle, styles.panel, SHADOW.md, { backgroundColor: panelBg, borderColor: divider }]}>
             {onToggle3D && (
               <>
                 <TouchableOpacity
                   onPress={onToggle3D}
+                  testID="map-controls-3d-btn"
                   style={[styles.iconBtn, is3DEnabled && styles.iconBtnActive]}
                   activeOpacity={0.7}
                 >
@@ -145,6 +152,7 @@ export function MapControls({
 
             <TouchableOpacity
               onPress={onShowLegend}
+              testID="map-controls-legend-btn"
               style={[styles.iconBtn, showLegend && styles.iconBtnLegend]}
               activeOpacity={0.7}
             >
@@ -157,24 +165,24 @@ export function MapControls({
 
             <View style={[styles.divider, { backgroundColor: divider }]} />
 
-            <TouchableOpacity onPress={onZoomIn} style={styles.iconBtn} activeOpacity={0.7}>
+            <TouchableOpacity onPress={onZoomIn} testID="map-controls-zoom-in-btn" style={styles.iconBtn} activeOpacity={0.7}>
               <Ionicons name="add" size={24} color={iconColor} />
             </TouchableOpacity>
 
             <View style={[styles.divider, { backgroundColor: divider }]} />
 
-            <TouchableOpacity onPress={onZoomOut} style={styles.iconBtn} activeOpacity={0.7}>
+            <TouchableOpacity onPress={onZoomOut} testID="map-controls-zoom-out-btn" style={styles.iconBtn} activeOpacity={0.7}>
               <Ionicons name="remove" size={24} color={iconColor} />
             </TouchableOpacity>
           </Animated.View>
 
           {is3DEnabled && onRotateLeft && onRotateRight && (
-            <Animated.View style={[rotationAnim.animatedStyle, styles.panel, { backgroundColor: panelBg, borderColor: divider }]}>
-              <TouchableOpacity onPress={onRotateLeft} style={styles.iconBtn} activeOpacity={0.7}>
+            <Animated.View style={[rotationAnim.animatedStyle, styles.panel, SHADOW.md, { backgroundColor: panelBg, borderColor: divider }]}>
+              <TouchableOpacity onPress={onRotateLeft} testID="map-controls-rotate-left-btn" style={styles.iconBtn} activeOpacity={0.7}>
                 <Ionicons name="return-up-back" size={20} color="#3B82F6" />
               </TouchableOpacity>
               <View style={[styles.divider, { backgroundColor: divider }]} />
-              <TouchableOpacity onPress={onRotateRight} style={styles.iconBtn} activeOpacity={0.7}>
+              <TouchableOpacity onPress={onRotateRight} testID="map-controls-rotate-right-btn" style={styles.iconBtn} activeOpacity={0.7}>
                 <Ionicons name="return-up-forward" size={20} color="#3B82F6" />
               </TouchableOpacity>
             </Animated.View>
@@ -185,7 +193,15 @@ export function MapControls({
       {/* FAB toggle */}
       <TouchableOpacity
         onPress={toggle}
-        style={[styles.fab, { backgroundColor: expanded ? "#EF4444" : "#3B82F6", shadowColor: expanded ? "#EF4444" : "#3B82F6" }]}
+        testID="map-controls-fab-btn"
+        style={[
+          styles.fab,
+          SHADOW.md,
+          {
+            backgroundColor: expanded ? "#EF4444" : MAP_OVERLAY_LAYER_COLORS.primary,
+            shadowColor: expanded ? "#EF4444" : MAP_OVERLAY_LAYER_COLORS.primary,
+          },
+        ]}
         activeOpacity={0.85}
       >
         <Animated.View style={fabStyle}>
@@ -209,11 +225,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 6,
   },
   divider: {
     height: 1,
@@ -237,10 +248,6 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
     borderWidth: 2,
     borderColor: "white",
   },
@@ -248,26 +255,8 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "#3B82F6",
+    backgroundColor: MAP_OVERLAY_LAYER_COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#3B82F6",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  fabAmber: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#F59E0B",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#F59E0B",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
   },
 });

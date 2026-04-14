@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Text } from "~/components/ui/text";
+import { SHADOW, RADIUS } from "~/lib/design-tokens";
 
 import type { Area } from "~/features/areas/types/areas-types";
 import { ALL_AREAS } from "../constants/all-areas-data";
@@ -44,76 +45,39 @@ export function AddAreaModal({
       statusBarTranslucent
     >
       <View
-        style={{
-          flex: 1,
-          backgroundColor: "rgba(0,0,0,0.55)",
-          justifyContent: "flex-end",
-        }}
+        className="flex-1 justify-end"
+        style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
+        testID="areas-modal-add-overlay"
       >
         <View
+          className="bg-slate-50 dark:bg-slate-900 px-5"
           style={{
-            backgroundColor: "#F9FAFB",
-            borderTopLeftRadius: 28,
-            borderTopRightRadius: 28,
+            borderTopLeftRadius: RADIUS.sheet,
+            borderTopRightRadius: RADIUS.sheet,
             paddingTop: 12,
-            paddingHorizontal: 20,
             paddingBottom: Platform.OS === "ios" ? 40 : 20,
+            ...SHADOW.lg,
           }}
+          testID="areas-modal-add-sheet"
         >
           {/* Handle Bar */}
-          <View
-            style={{
-              width: 42,
-              height: 5,
-              backgroundColor: "#E5E7EB",
-              borderRadius: 999,
-              alignSelf: "center",
-              marginBottom: 14,
-            }}
-          />
+          <View className="w-10 h-1 bg-slate-200 dark:bg-slate-600 rounded-full self-center mb-3.5" />
 
           {/* Header */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <View style={{ flex: 1, paddingRight: 8 }}>
-              <Text
-                style={{
-                  fontSize: 20,
-                  fontWeight: "800",
-                  color: "#111827",
-                  letterSpacing: -0.3,
-                  marginBottom: 4,
-                }}
-              >
+          <View className="flex-row justify-between items-center mb-4" testID="areas-modal-add-header">
+            <View className="flex-1 pr-2">
+              <Text className="text-xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight mb-1">
                 Chọn khu vực theo dõi
               </Text>
-              <Text
-                style={{
-                  fontSize: 13,
-                  color: "#6B7280",
-                  fontWeight: "500",
-                }}
-              >
+              <Text className="text-sm text-slate-500 dark:text-slate-400 font-medium">
                 Chọn từ các khu vực hệ thống hoặc chọn trực tiếp trên bản đồ.
               </Text>
             </View>
             <TouchableOpacity
               onPress={onClose}
-              style={{
-                width: 36,
-                height: 36,
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 18,
-                backgroundColor: "#E5E7EB",
-              }}
+              className="w-9 h-9 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700"
               activeOpacity={0.7}
+              testID="areas-modal-add-close-button"
             >
               <Ionicons name="close" size={20} color="#4B5563" />
             </TouchableOpacity>
@@ -125,108 +89,48 @@ export function AddAreaModal({
             showsVerticalScrollIndicator={false}
           >
             {/* Section: Khu vực hệ thống */}
-            <View style={{ marginBottom: 20 }}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  marginBottom: 10,
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "700",
-                    color: "#374151",
-                    letterSpacing: 0.3,
-                  }}
-                >
+            <View className="mb-5">
+              <View className="flex-row justify-between mb-2.5 items-center">
+                <Text className="text-sm font-bold text-slate-700 dark:text-slate-300 tracking-wide">
                   KHU VỰC HỆ THỐNG
                 </Text>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 6,
-                  }}
-                >
+                <View className="flex-row items-center gap-1.5">
                   <Ionicons
                     name="information-circle-outline"
                     size={16}
                     color="#9CA3AF"
                   />
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: "#9CA3AF",
-                      fontWeight: "500",
-                    }}
-                  >
-                    Dữ liệu theo cảm biến & khu vực
+                  <Text className="text-xs text-slate-400 font-medium">
+                    Dữ liệu theo cảm biến &amp; khu vực
                   </Text>
                 </View>
               </View>
 
-              <View
-                style={{
-                  flexDirection: "row",
-                  flexWrap: "wrap",
-                  marginHorizontal: -6,
-                }}
-              >
+              <View className="flex-row flex-wrap -mx-1.5">
                 {systemAreas.map((area) => {
                   const isDanger = area.status === "danger";
                   const isWarning = area.status === "warning";
-                  const badgeColor = isDanger
-                    ? "#F97316"
-                    : isWarning
-                      ? "#F59E0B"
-                      : "#10B981";
-                  const bg = isDanger
-                    ? "#FEF2F2"
-                    : isWarning
-                      ? "#FFFBEB"
-                      : "#ECFDF5";
 
                   return (
                     <TouchableOpacity
                       key={area.id}
                       onPress={() => onSelectSystemArea?.(area.id)}
                       activeOpacity={0.85}
-                      style={{
-                        width: "50%",
-                        paddingHorizontal: 6,
-                        marginBottom: 12,
-                      }}
+                      className="w-1/2 px-1.5 mb-3"
+                      testID={`areas-modal-add-area-${area.id}`}
                     >
                       <View
-                        style={{
-                          borderRadius: 18,
-                          padding: 12,
-                          backgroundColor: bg,
-                          borderWidth: 1,
-                          borderColor: "rgba(0,0,0,0.03)",
-                        }}
+                        className={[
+                          "rounded-2xl p-3 border border-black/5",
+                          isDanger
+                            ? "bg-red-50 dark:bg-red-950/30"
+                            : isWarning
+                              ? "bg-amber-50 dark:bg-amber-950/30"
+                              : "bg-emerald-50 dark:bg-emerald-950/30",
+                        ].join(" ")}
                       >
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            marginBottom: 6,
-                            gap: 6,
-                          }}
-                        >
-                          <View
-                            style={{
-                              width: 24,
-                              height: 24,
-                              borderRadius: 12,
-                              backgroundColor: "rgba(15,23,42,0.06)",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
+                        <View className="flex-row items-center mb-1.5 gap-1.5">
+                          <View className="w-6 h-6 rounded-full bg-black/5 items-center justify-center">
                             <Ionicons
                               name="location-sharp"
                               size={15}
@@ -235,12 +139,7 @@ export function AddAreaModal({
                           </View>
                           <Text
                             numberOfLines={2}
-                            style={{
-                              flex: 1,
-                              fontSize: 13,
-                              fontWeight: "700",
-                              color: "#111827",
-                            }}
+                            className="flex-1 text-sm font-bold text-slate-900 dark:text-slate-50"
                           >
                             {area.name}
                           </Text>
@@ -248,47 +147,36 @@ export function AddAreaModal({
 
                         <Text
                           numberOfLines={2}
-                          style={{
-                            fontSize: 11,
-                            color: "#6B7280",
-                            marginBottom: 8,
-                          }}
+                          className="text-xs text-slate-500 dark:text-slate-400 mb-2"
                         >
                           {area.location}
                         </Text>
 
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
+                        <View className="flex-row justify-between items-center">
                           <View
-                            style={{
-                              paddingHorizontal: 8,
-                              paddingVertical: 3,
-                              borderRadius: 999,
-                              backgroundColor: badgeColor + "20",
-                            }}
+                            className={[
+                              "px-2 py-0.5 rounded-full",
+                              isDanger
+                                ? "bg-red-500/20"
+                                : isWarning
+                                  ? "bg-amber-500/20"
+                                  : "bg-emerald-500/20",
+                            ].join(" ")}
                           >
                             <Text
-                              style={{
-                                fontSize: 11,
-                                fontWeight: "700",
-                                color: badgeColor,
-                              }}
+                              className={[
+                                "text-xs font-bold",
+                                isDanger
+                                  ? "text-red-500"
+                                  : isWarning
+                                    ? "text-amber-500"
+                                    : "text-emerald-600",
+                              ].join(" ")}
                             >
                               {area.statusText}
                             </Text>
                           </View>
-                          <Text
-                            style={{
-                              fontSize: 11,
-                              color: "#4B5563",
-                              fontWeight: "600",
-                            }}
-                          >
+                          <Text className="text-xs text-slate-600 dark:text-slate-400 font-semibold">
                             {area.sensorCount} sensor
                           </Text>
                         </View>
@@ -302,38 +190,13 @@ export function AddAreaModal({
               <TouchableOpacity
                 onPress={onPickOnMap}
                 activeOpacity={0.85}
-                style={{
-                  marginTop: 8,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  paddingVertical: 12,
-                  borderRadius: 14,
-                  borderWidth: 1,
-                  borderColor: "#DBEAFE",
-                  backgroundColor: "#EFF6FF",
-                  gap: 8,
-                }}
+                className="mt-2 flex-row items-center justify-center py-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 gap-2"
+                testID="areas-modal-add-pick-on-map"
               >
-                <View
-                  style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: 13,
-                    backgroundColor: "#DBEAFE",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
+                <View className="w-6 h-6 rounded-full bg-blue-200 dark:bg-blue-800 items-center justify-center">
                   <Ionicons name="map-outline" size={16} color="#1D4ED8" />
                 </View>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "700",
-                    color: "#1D4ED8",
-                  }}
-                >
+                <Text className="text-sm font-bold text-blue-700 dark:text-blue-400">
                   Chọn khu vực bằng bản đồ
                 </Text>
               </TouchableOpacity>
@@ -341,27 +204,14 @@ export function AddAreaModal({
           </ScrollView>
 
           {/* Button đóng */}
-          <View style={{ marginTop: 4 }}>
+          <View className="mt-1">
             <TouchableOpacity
               onPress={onClose}
-              style={{
-                height: 50,
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 14,
-                backgroundColor: "#F3F4F6",
-                borderWidth: 1,
-                borderColor: "#E5E7EB",
-              }}
+              className="h-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
               activeOpacity={0.7}
+              testID="areas-modal-add-close-footer"
             >
-              <Text
-                style={{
-                  fontSize: 15,
-                  fontWeight: "700",
-                  color: "#6B7280",
-                }}
-              >
+              <Text className="text-base font-bold text-slate-500 dark:text-slate-400">
                 Đóng
               </Text>
             </TouchableOpacity>

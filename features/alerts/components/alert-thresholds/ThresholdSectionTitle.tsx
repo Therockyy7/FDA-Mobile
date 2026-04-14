@@ -1,31 +1,26 @@
+// features/alerts/components/alert-thresholds/ThresholdSectionTitle.tsx
+// Thin wrapper over shared SectionHeader for threshold section titles.
 import React from "react";
-import { Text } from "react-native";
+import { SectionHeader } from "~/components/ui/SectionHeader";
 
 interface ThresholdSectionTitleProps {
   title: string;
-  colors: {
+  colors?: {
     text: string;
   };
+  testID?: string;
 }
 
 export function ThresholdSectionTitle({
   title,
-  colors,
+  testID,
 }: ThresholdSectionTitleProps) {
   return (
-    <Text
-      style={{
-        marginTop: 6,
-        paddingHorizontal: 16,
-        paddingTop: 10,
-        paddingBottom: 6,
-        fontSize: 16,
-        fontWeight: "800",
-        color: colors.text,
-      }}
-    >
-      {title}
-    </Text>
+    <SectionHeader
+      title={title}
+      testID={testID}
+      className="mt-1.5 px-4 pt-2.5 pb-1.5"
+    />
   );
 }
 

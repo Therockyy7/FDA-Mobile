@@ -7,7 +7,7 @@ import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { getManeuverIcon } from "~/features/map/lib/navigation-utils";
 import type { GeoJsonInstruction } from "~/features/map/types/safe-route.types";
-import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { SHADOW, FLOOD_COLORS } from "~/lib/design-tokens";
 
 interface TopInstructionCardProps {
   instruction: GeoJsonInstruction | null;
@@ -25,17 +25,14 @@ export function TopInstructionCard({
   insetsTop,
 }: TopInstructionCardProps) {
   const { isDarkColorScheme } = useColorScheme();
-  const isDark = isDarkColorScheme;
   const iconName = instruction ? (getManeuverIcon(instruction.text) as any) : "navigate";
   const isClose = distanceToNextTurn < 100;
 
-  // Glassmorphism dark bg for nav card
-  const cardBg = isDark ? "rgba(15,30,60,0.92)" : "rgba(20,45,90,0.9)";
-  const iconBoxBg = isDark ? "rgba(59,130,246,0.25)" : "rgba(255,255,255,0.2)";
+  const cardBg = isDarkColorScheme ? "rgba(15,30,60,0.92)" : "rgba(20,45,90,0.9)";
+  const iconBoxBg = isDarkColorScheme ? "rgba(59,130,246,0.25)" : "rgba(255,255,255,0.2)";
   const distanceColor = isClose ? "#FCD34D" : "#93C5FD";
-  const textColor = "white";
-  const nextTextColor = isDark ? "#60A5FA" : "#93C5FD";
-  const dividerColor = isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.18)";
+  const nextTextColor = isDarkColorScheme ? "#60A5FA" : "#93C5FD";
+  const dividerColor = isDarkColorScheme ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.18)";
 
   return (
     <MotiView
@@ -43,8 +40,9 @@ export function TopInstructionCard({
       animate={{ opacity: 1, translateY: 0 }}
       transition={{ type: "spring", stiffness: 280, damping: 26 }}
       style={[styles.container, { paddingTop: insetsTop + 6 }]}
+      testID="map-nav-hud"
     >
-      <View style={[CARD_SHADOW, styles.card, { backgroundColor: cardBg }]}>
+      <View style={[SHADOW.md, styles.card, { backgroundColor: cardBg }]}>
         {instruction ? (
           <>
             {/* Primary instruction row */}
@@ -57,7 +55,7 @@ export function TopInstructionCard({
                   style={[
                     styles.instructionText,
                     isClose && styles.instructionTextClose,
-                    { color: textColor },
+                    { color: "white" },
                   ]}
                   numberOfLines={2}
                 >
@@ -91,7 +89,7 @@ export function TopInstructionCard({
           </>
         ) : (
           <View style={styles.calculatingRow}>
-            <Text style={[styles.calculating, { color: textColor }]}>Đang tính toán...</Text>
+            <Text style={[styles.calculating, { color: "white" }]}>Đang tính toán...</Text>
           </View>
         )}
       </View>
@@ -102,7 +100,14 @@ export function TopInstructionCard({
           animate={{ opacity: 1, scale: 1 }}
           style={styles.offRouteWarning}
         >
-          <View style={styles.offRouteInner}>
+          {/* FLOOD_COLORS.danger replaces hardcoded #DC2626; SHADOW.sm replaces inline shadow */}
+          <View
+            style={[
+              SHADOW.sm,
+              styles.offRouteInner,
+              { backgroundColor: FLOOD_COLORS.danger, shadowColor: FLOOD_COLORS.danger },
+            ]}
+          >
             <Ionicons name="warning" size={16} color="white" />
             <Text style={styles.offRouteText}>Bạn đã lạc đường! Hãy quay lại tuyến đường.</Text>
           </View>
@@ -186,18 +191,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   offRouteInner: {
-    backgroundColor: "#DC2626",
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    shadowColor: "#DC2626",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
   },
   offRouteText: {
     color: "white",

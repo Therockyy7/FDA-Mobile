@@ -9,13 +9,11 @@ import { Text } from "~/components/ui/text";
 import { FloodRoute } from "~/features/map/constants/map-data";
 import { getStatusColor } from "~/features/map/lib/map-utils";
 import {
-  CARD_SHADOW,
-  OVERLAY_SHADOW,
   PULSE_ANIM,
-  RADIUS,
   STATUS_BADGE,
   useMapColors,
 } from "~/features/map/lib/map-ui-utils";
+import { RADIUS, SHADOW } from "~/lib/design-tokens";
 
 interface RouteDetailCardProps {
   route: FloodRoute;

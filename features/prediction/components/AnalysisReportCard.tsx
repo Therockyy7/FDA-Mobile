@@ -2,9 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { MotiView } from "moti";
 import React, { useEffect, useState } from "react";
-import { DimensionValue, Text, TouchableOpacity, View } from "react-native";
+import { DimensionValue, TouchableOpacity, View } from "react-native";
+import { Text } from "~/components/ui/text";
 import Svg, { Circle } from "react-native-svg";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW } from "~/lib/design-tokens";
 
 // ==================== TYPES ====================
 
@@ -234,7 +235,6 @@ const CircularProgress = ({
 export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
   advice,
 }) => {
-  const { isDarkColorScheme } = useColorScheme();
   const [data, setData] = useState<ParsedAdvice | null>(null);
   const [expandedLogic, setExpandedLogic] = useState(false);
 
@@ -246,15 +246,9 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
 
   console.log("data AnalysisReportCard", data);
   const config = RISK_CONFIG[data.riskLevel];
-  const cardBg = isDarkColorScheme ? "bg-slate-800" : "bg-white";
-  const textColor = isDarkColorScheme ? "text-slate-100" : "text-gray-900";
-  const subTextColor = isDarkColorScheme ? "text-slate-400" : "text-gray-500";
-  const borderColor = isDarkColorScheme
-    ? "border-slate-700"
-    : "border-gray-100";
 
   return (
-    <View className="gap-4 mb-6">
+    <View testID="prediction-report-card" className="gap-4 mb-6">
       {/* 1. RISK OVERVIEW CARD */}
       <MotiView
         from={{ opacity: 0, scale: 0.95 }}
@@ -262,20 +256,13 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
         transition={{ type: "timing", duration: 500 }}
       >
         <View
-          className={`rounded-3xl overflow-hidden ${cardBg}`}
-          style={{
-            shadowColor: config.color,
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.15,
-            shadowRadius: 24,
-            elevation: 8,
-          }}
+          testID="prediction-report-risk-overview"
+          className="rounded-3xl overflow-hidden bg-white dark:bg-slate-800"
+          style={SHADOW.md}
         >
           <LinearGradient
             colors={
-              isDarkColorScheme
-                ? ["rgba(30, 41, 59, 0.8)", "rgba(15, 23, 42, 0.9)"]
-                : ["rgba(255, 255, 255, 0.4)", "rgba(255, 255, 255, 0.9)"]
+              ["rgba(255, 255, 255, 0.4)", "rgba(255, 255, 255, 0.9)"]
             }
             className="p-5"
           >
@@ -283,9 +270,7 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
               <CircularProgress score={data.riskScore} color={config.color} />
 
               <View className="flex-1 gap-2">
-                <Text
-                  className={`text-xs font-bold tracking-widest uppercase opacity-70 ${subTextColor}`}
-                >
+                <Text className="text-xs font-bold tracking-widest uppercase opacity-70 text-gray-500 dark:text-slate-400">
                   Mức độ rủi ro
                 </Text>
 
@@ -295,12 +280,18 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                 >
-                  <Text className="text-white font-black text-xl tracking-wide">
+                  <Text
+                    testID="prediction-report-risk-label"
+                    className="text-white font-black text-xl tracking-wide"
+                  >
                     {config.label}
                   </Text>
                 </LinearGradient>
 
-                <Text className={`text-sm leading-5 mt-1 ${textColor}`}>
+                <Text
+                  testID="prediction-report-summary"
+                  className="text-sm leading-5 mt-1 text-gray-900 dark:text-slate-100"
+                >
                   {data.summary || "Đang phân tích dữ liệu..."}
                 </Text>
               </View>
@@ -317,42 +308,42 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
           transition={{ delay: 200 }}
         >
           <View
-            className={`rounded-2xl p-4 ${cardBg} shadow-sm border ${borderColor}`}
+            testID="prediction-report-factors"
+            className="rounded-2xl p-4 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700"
+            style={SHADOW.sm}
           >
             <View className="flex-row items-center gap-2 mb-4">
-              <View
-                className={`w-8 h-8 rounded-lg items-center justify-center bg-[#007AFF]/10`}
-              >
+              <View className="w-8 h-8 rounded-lg items-center justify-center bg-blue-500/10">
                 <Ionicons name="analytics" size={18} color="#007AFF" />
               </View>
-              <Text className={`font-bold text-base ${textColor}`}>
+              <Text className="font-bold text-base text-gray-900 dark:text-slate-100">
                 Yếu tố phân tích
               </Text>
             </View>
 
             <View className="gap-4">
               {data.analysisFactors.map((factor, idx) => (
-                <View key={idx} className="gap-1">
+                <View key={idx} testID={`prediction-report-factor-${idx}`} className="gap-1">
                   <View className="flex-row justify-between items-center">
-                    <Text className={`font-semibold text-sm ${textColor}`}>
+                    <Text className="font-semibold text-sm text-gray-900 dark:text-slate-100">
                       {factor.label}
                     </Text>
                     {factor.value && (
-                      <Text className="font-bold text-[#007AFF]">
+                      <Text className="font-bold text-blue-500">
                         {factor.value}
                       </Text>
                     )}
                   </View>
-                  <Text className={`text-xs leading-5 ${subTextColor}`}>
+                  <Text className="text-xs leading-5 text-gray-500 dark:text-slate-400">
                     {factor.detail
                       .replace(factor.value || "", "")
                       .replace(/^\s*[-:]\s*/, "")}
                   </Text>
                   {/* Progress bar visual */}
                   {factor.value && (
-                    <View className="h-1.5 w-full bg-gray-100 rounded-full mt-1 overflow-hidden">
+                    <View className="h-1.5 w-full bg-gray-100 dark:bg-slate-700 rounded-full mt-1 overflow-hidden">
                       <View
-                        className="h-full bg-[#007AFF] rounded-full"
+                        className="h-full bg-blue-500 rounded-full"
                         style={{ width: factor.value as DimensionValue }}
                       />
                     </View>
@@ -371,17 +362,23 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
         transition={{ delay: 400 }}
       >
         <View
-          className={`rounded-2xl p-5 ${cardBg} shadow-sm border ${borderColor}`}
+          testID="prediction-report-recommendations"
+          className="rounded-2xl p-5 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700"
+          style={SHADOW.sm}
         >
           {/* Header */}
           <View className="flex-row items-center gap-2 mb-4">
             <View
-              style={{ backgroundColor: config.bgDark }}
-              className="w-8 h-8 rounded-lg items-center justify-center"
+              className={
+                data.riskLevel === "Low" ? "w-8 h-8 rounded-lg items-center justify-center bg-emerald-100 dark:bg-emerald-900/40" :
+                data.riskLevel === "Medium" ? "w-8 h-8 rounded-lg items-center justify-center bg-amber-100 dark:bg-amber-900/40" :
+                data.riskLevel === "High" ? "w-8 h-8 rounded-lg items-center justify-center bg-orange-100 dark:bg-orange-900/40" :
+                "w-8 h-8 rounded-lg items-center justify-center bg-red-100 dark:bg-red-900/40"
+              }
             >
               <Ionicons name={config.icon} size={18} color={config.color} />
             </View>
-            <Text className={`font-bold text-base ${textColor}`}>
+            <Text className="font-bold text-base text-gray-900 dark:text-slate-100">
               Khuyến nghị hành động
             </Text>
           </View>
@@ -391,7 +388,8 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
             {data.recommendations.map((rec, idx) => (
               <View
                 key={idx}
-                className={`flex-row gap-3 p-3 rounded-xl ${isDarkColorScheme ? "bg-white/5" : "bg-gray-50"}`}
+                testID={`prediction-report-rec-${idx}`}
+                className="flex-row gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/5"
               >
                 <Ionicons
                   name="checkmark-circle"
@@ -399,9 +397,7 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
                   color={config.color}
                   style={{ marginTop: 2 }}
                 />
-                <Text
-                  className={`flex-1 text-sm leading-5 font-medium ${textColor}`}
-                >
+                <Text className="flex-1 text-sm leading-5 font-medium text-gray-900 dark:text-slate-100">
                   {rec}
                 </Text>
               </View>
@@ -410,11 +406,10 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
             {/* Conclusion */}
             {data.conclusion && (
               <View
-                className={`mt-2 p-3 rounded-xl border-l-4 border-[#007AFF] ${isDarkColorScheme ? "bg-blue-900/20" : "bg-blue-50"}`}
+                testID="prediction-report-conclusion"
+                className="mt-2 p-3 rounded-xl border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/20"
               >
-                <Text
-                  className={`text-sm italic font-medium ${isDarkColorScheme ? "text-blue-200" : "text-blue-800"}`}
-                >
+                <Text className="text-sm italic font-medium text-blue-800 dark:text-blue-200">
                   &quot;{data.conclusion}&quot;
                 </Text>
               </View>
@@ -422,22 +417,22 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
           </View>
 
           {/* Collapsible System Logic */}
-          {/* System Logic Section */}
           {data.systemLogic.length > 0 && (
-            <View className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+            <View
+              testID="prediction-report-system-logic"
+              className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800"
+            >
               <TouchableOpacity
                 onPress={() => setExpandedLogic(!expandedLogic)}
                 className="flex-row items-center justify-between"
               >
-                <Text
-                  className={`text-xs font-semibold uppercase tracking-wider ${subTextColor}`}
-                >
+                <Text className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-400">
                   Chi tiết kỹ thuật
                 </Text>
                 <Ionicons
                   name={expandedLogic ? "chevron-up" : "chevron-down"}
                   size={16}
-                  color={isDarkColorScheme ? "#94A3B8" : "#64748B"}
+                  color="#94A3B8"
                 />
               </TouchableOpacity>
 
@@ -446,9 +441,7 @@ export const AnalysisReportCard: React.FC<AnalysisReportCardProps> = ({
                   {data.systemLogic.map((logic, idx) => (
                     <View key={idx} className="flex-row gap-2">
                       <View className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-2" />
-                      <Text
-                        className={`flex-1 text-xs leading-5 ${subTextColor} font-mono`}
-                      >
+                      <Text className="flex-1 text-xs leading-5 text-gray-500 dark:text-slate-400 font-mono">
                         {logic}
                       </Text>
                     </View>

@@ -18,6 +18,7 @@ export function ZoomControls({ onZoomIn, onZoomOut }: ZoomControlsProps) {
       {/* Zoom In */}
       <TouchableOpacity
         onPress={onZoomIn}
+        testID="map-controls-zoom-in-btn"
         style={{
           width: 50,
           height: 50,
@@ -34,6 +35,7 @@ export function ZoomControls({ onZoomIn, onZoomOut }: ZoomControlsProps) {
       {/* Zoom Out */}
       <TouchableOpacity
         onPress={onZoomOut}
+        testID="map-controls-zoom-out-btn"
         style={{
           width: 50,
           height: 50,

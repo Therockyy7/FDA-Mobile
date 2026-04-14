@@ -1,61 +1,63 @@
 // features/map/components/controls/layers/OverlayLayerItem.tsx
-import React from "react";
-import { Switch, View } from "react-native";
+import React, { useMemo } from "react";
+import { Switch, View, useColorScheme } from "react-native";
 import { Text } from "~/components/ui/text";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
+import { MAP_COLORS, MAP_OVERLAY_LAYER_COLORS } from "~/lib/design-tokens";
 
 interface OverlayLayerItemProps {
   label: string;
   description: string;
   value: boolean;
-  color: string;
+  /** Design token key: "primary" | "warning" | "purple" | "success" */
+  colorToken: keyof typeof MAP_OVERLAY_LAYER_COLORS;
   iconName: keyof typeof Ionicons.glyphMap | keyof typeof MaterialCommunityIcons.glyphMap;
   iconLibrary?: "ionicons" | "material";
   onToggle: () => void;
-  accentColor: string;
-  textColor: string;
-  subtextColor: string;
-  cardBg: string;
-  borderColor: string;
+  testID?: string;
 }
 
 export function OverlayLayerItem({
   label,
   description,
   value,
-  color,
+  colorToken,
   iconName,
   iconLibrary = "ionicons",
   onToggle,
-  accentColor,
-  textColor,
-  subtextColor,
-  cardBg,
-  borderColor,
+  testID,
 }: OverlayLayerItemProps) {
+  const isDark = useColorScheme() === "dark";
   const IconComponent = iconLibrary === "material" ? MaterialCommunityIcons : Ionicons;
+  const color = MAP_OVERLAY_LAYER_COLORS[colorToken];
+
+  const switchColors = useMemo(() => {
+    const palette = isDark ? MAP_COLORS.dark : MAP_COLORS.light;
+    return {
+      false: palette.border,
+      true: `${color}80`,
+    };
+  }, [isDark, color]);
+
+  const thumbColor = useMemo(() => {
+    return value ? color : (isDark ? "#64748B" : "#f4f3f4");
+  }, [value, color, isDark]);
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.row, { backgroundColor: cardBg }]}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+    <View testID={testID}>
+      <View className="flex-row items-center justify-between p-4 rounded-2xl bg-card">
+        <View className="flex-row items-center gap-3">
           <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              backgroundColor: `${color}20`,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-10 h-10 rounded-[10px] items-center justify-center"
+            style={{ backgroundColor: `${color}20` }}
           >
             <IconComponent name={iconName as any} size={20} color={color} />
           </View>
           <View>
-            <Text style={{ fontSize: 15, fontWeight: "600", color: textColor }}>
+            <Text className="text-[15px] font-semibold text-foreground">
               {label}
             </Text>
-            <Text style={{ fontSize: 12, color: subtextColor }}>
+            <Text className="text-xs text-muted-foreground">
               {description}
             </Text>
           </View>
@@ -63,23 +65,10 @@ export function OverlayLayerItem({
         <Switch
           value={value}
           onValueChange={onToggle}
-          trackColor={{ false: borderColor, true: `${accentColor}80` }}
-          thumbColor={value ? accentColor : "#f4f3f4"}
+          trackColor={switchColors}
+          thumbColor={thumbColor}
         />
       </View>
     </View>
   );
 }
-
-const styles = {
-  container: {
-    marginBottom: 0,
-  },
-  row: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-    padding: 16,
-    borderRadius: 16,
-  },
-};

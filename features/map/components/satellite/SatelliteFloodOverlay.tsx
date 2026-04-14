@@ -4,12 +4,13 @@
 // When clipBoundary is set (EWKB hex from admin area), only flood polygons
 // whose centroid falls inside the admin area boundary are rendered.
 
-import React, { useMemo } from "react";
+import React, { memo, useMemo } from "react";
 import { View } from "react-native";
 import { Marker, Polygon } from "react-native-maps";
 import { Text } from "~/components/ui/text";
 import { ewkbToMultiLatLngArrays, pointInPolygon } from "~/features/map/lib/ewkb-parser";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
+import { SHADOW } from "~/lib/design-tokens";
 import type { GeoJsonFeature } from "~/features/prediction/types/satellite.types";
 
 // GeoJSON [lng, lat] → react-native-maps { latitude, longitude }
@@ -105,7 +106,7 @@ function isRingInsideBoundary(
   return false;
 }
 
-export function SatelliteFloodOverlay() {
+export const SatelliteFloodOverlay = memo(function SatelliteFloodOverlay() {
   const { layers, visible, clipBoundary } = useSatelliteFloodStore();
 
   // Parse the clip boundary once (EWKB hex → array of polygons)
@@ -222,11 +223,7 @@ export function SatelliteFloodOverlay() {
               paddingVertical: 3,
               borderWidth: 1.5,
               borderColor: "#FFFFFF",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.06,
-              shadowRadius: 8,
-              elevation: 2,
+              ...SHADOW.sm,
             }}
           >
             <Text
@@ -244,5 +241,4 @@ export function SatelliteFloodOverlay() {
       ))}
     </>
   );
-}
-
+});

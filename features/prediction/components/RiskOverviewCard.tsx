@@ -2,9 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { MotiView } from "moti";
 import React, { useEffect, useState } from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { Text } from "~/components/ui/text";
+import { FLOOD_COLORS, SHADOW } from "~/lib/design-tokens";
 import { getRiskConfigByLevel } from "../types/prediction.types";
 
 interface RiskOverviewCardProps {
@@ -26,7 +27,6 @@ export function RiskOverviewCard({
   modelAgreementScore,
   uncertaintyLevel,
 }: RiskOverviewCardProps) {
-  const { isDarkColorScheme } = useColorScheme();
   const config = getRiskConfigByLevel(riskLevel);
   const percentValue = probability * 100;
   const [animatedPercentage, setAnimatedPercentage] = useState(0);
@@ -44,8 +44,25 @@ export function RiskOverviewCard({
   const circumference = radius * 2 * Math.PI;
   const progress = circumference - (animatedPercentage / 100) * circumference;
 
+  const agreementColor =
+    modelAgreementScore === undefined
+      ? FLOOD_COLORS.safe
+      : modelAgreementScore > 0.8
+        ? FLOOD_COLORS.safe
+        : modelAgreementScore > 0.5
+          ? FLOOD_COLORS.warning
+          : FLOOD_COLORS.danger;
+
+  const uncertaintyColor =
+    uncertaintyLevel === "high"
+      ? FLOOD_COLORS.danger
+      : uncertaintyLevel === "medium"
+        ? FLOOD_COLORS.warning
+        : FLOOD_COLORS.safe;
+
   return (
     <MotiView
+      testID="prediction-risk-card"
       from={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ type: "spring", damping: 20 }}
@@ -57,19 +74,13 @@ export function RiskOverviewCard({
         style={{
           borderRadius: 32,
           padding: 2,
+          ...SHADOW.lg,
           shadowColor: config.color,
-          shadowOffset: { width: 0, height: 12 },
-          shadowOpacity: 0.3,
-          shadowRadius: 24,
-          elevation: 12,
         }}
       >
         <View
-          style={{
-            backgroundColor: isDarkColorScheme ? "#0B1A33" : "#FFFFFF",
-            borderRadius: 30,
-            padding: 24,
-          }}
+          style={{ borderRadius: 30, padding: 24 }}
+          className="bg-white dark:bg-dark"
         >
           {/* Header */}
           <View
@@ -80,6 +91,7 @@ export function RiskOverviewCard({
             }}
           >
             <View
+              testID="prediction-risk-icon-box"
               style={{
                 width: 48,
                 height: 48,
@@ -97,10 +109,10 @@ export function RiskOverviewCard({
                 style={{
                   fontSize: 14,
                   fontWeight: "700",
-                  color: isDarkColorScheme ? "#94A3B8" : "#64748B",
                   textTransform: "uppercase",
                   letterSpacing: 1.2,
                 }}
+                className="text-slate-500 dark:text-slate-400"
               >
                 Đánh Giá Tổng Quan
               </Text>
@@ -117,6 +129,7 @@ export function RiskOverviewCard({
                 }}
               >
                 <Text
+                  testID="prediction-risk-level-label"
                   style={{
                     fontSize: 16,
                     fontWeight: "900",
@@ -131,14 +144,17 @@ export function RiskOverviewCard({
           </View>
 
           {/* Circular Progress */}
-          <View style={{ alignItems: "center", marginBottom: 16 }}>
+          <View
+            testID="prediction-risk-circle"
+            style={{ alignItems: "center", marginBottom: 16 }}
+          >
             <View style={{ width: size, height: size, position: "relative" }}>
               <Svg width={size} height={size}>
                 <Circle
                   cx={size / 2}
                   cy={size / 2}
                   r={radius}
-                  stroke={isDarkColorScheme ? "#334155" : "#E2E8F0"}
+                  stroke="#E2E8F0"
                   strokeWidth={strokeWidth}
                   fill="none"
                 />
@@ -167,6 +183,7 @@ export function RiskOverviewCard({
                 }}
               >
                 <Text
+                  testID="prediction-risk-probability"
                   style={{
                     fontSize: 42,
                     fontWeight: "900",
@@ -180,11 +197,11 @@ export function RiskOverviewCard({
                   style={{
                     fontSize: 12,
                     fontWeight: "700",
-                    color: isDarkColorScheme ? "#94A3B8" : "#64748B",
                     textTransform: "uppercase",
                     letterSpacing: 1,
                     marginTop: 4,
                   }}
+                  className="text-slate-500 dark:text-slate-400"
                 >
                   Xác Suất
                 </Text>
@@ -194,22 +211,23 @@ export function RiskOverviewCard({
 
           {/* Recommendation */}
           <View
+            testID="prediction-risk-recommendation"
             style={{
-              backgroundColor: `${config.color}15`,
               borderRadius: 16,
               padding: 16,
               borderLeftWidth: 4,
               borderLeftColor: config.color,
               marginBottom: 12,
+              backgroundColor: `${config.color}15`,
             }}
           >
             <Text
               style={{
                 fontSize: 15,
                 fontWeight: "600",
-                color: isDarkColorScheme ? "#E2E8F0" : "#334155",
                 lineHeight: 24,
               }}
+              className="text-slate-700 dark:text-slate-200"
             >
               {recommendation}
             </Text>
@@ -219,23 +237,24 @@ export function RiskOverviewCard({
           <View style={{ flexDirection: "row", gap: 8 }}>
             {/* Confidence */}
             <View
+              testID="prediction-risk-confidence"
               style={{
                 flex: 1,
-                backgroundColor: isDarkColorScheme ? "#334155" : "#F1F5F9",
                 borderRadius: 12,
                 padding: 12,
                 alignItems: "center",
               }}
+              className="bg-slate-100 dark:bg-slate-700"
             >
               <Text
                 style={{
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: "700",
-                  color: isDarkColorScheme ? "#94A3B8" : "#64748B",
                   textTransform: "uppercase",
                   letterSpacing: 0.8,
                   marginBottom: 4,
                 }}
+                className="text-slate-500 dark:text-slate-400"
               >
                 Độ Tin Cậy
               </Text>
@@ -243,8 +262,8 @@ export function RiskOverviewCard({
                 style={{
                   fontSize: 18,
                   fontWeight: "900",
-                  color: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
                 }}
+                className="text-slate-800 dark:text-slate-100"
               >
                 {(confidenceScore * 100).toFixed(0)}%
               </Text>
@@ -253,23 +272,24 @@ export function RiskOverviewCard({
             {/* Model Agreement */}
             {modelAgreementScore !== undefined && (
               <View
+                testID="prediction-risk-agreement"
                 style={{
                   flex: 1,
-                  backgroundColor: isDarkColorScheme ? "#334155" : "#F1F5F9",
                   borderRadius: 12,
                   padding: 12,
                   alignItems: "center",
                 }}
+                className="bg-slate-100 dark:bg-slate-700"
               >
                 <Text
                   style={{
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: "700",
-                    color: isDarkColorScheme ? "#94A3B8" : "#64748B",
                     textTransform: "uppercase",
                     letterSpacing: 0.8,
                     marginBottom: 4,
                   }}
+                  className="text-slate-500 dark:text-slate-400"
                 >
                   Mô Hình Đồng Ý
                 </Text>
@@ -277,7 +297,7 @@ export function RiskOverviewCard({
                   style={{
                     fontSize: 18,
                     fontWeight: "900",
-                    color: modelAgreementScore > 0.8 ? "#16A34A" : modelAgreementScore > 0.5 ? "#CA8A04" : "#DC2626",
+                    color: agreementColor,
                   }}
                 >
                   {(modelAgreementScore * 100).toFixed(0)}%
@@ -288,23 +308,24 @@ export function RiskOverviewCard({
             {/* Uncertainty */}
             {uncertaintyLevel && (
               <View
+                testID="prediction-risk-uncertainty"
                 style={{
                   flex: 1,
-                  backgroundColor: isDarkColorScheme ? "#334155" : "#F1F5F9",
                   borderRadius: 12,
                   padding: 12,
                   alignItems: "center",
                 }}
+                className="bg-slate-100 dark:bg-slate-700"
               >
                 <Text
                   style={{
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: "700",
-                    color: isDarkColorScheme ? "#94A3B8" : "#64748B",
                     textTransform: "uppercase",
                     letterSpacing: 0.8,
                     marginBottom: 4,
                   }}
+                  className="text-slate-500 dark:text-slate-400"
                 >
                   Độ Bất Định
                 </Text>
@@ -312,7 +333,7 @@ export function RiskOverviewCard({
                   style={{
                     fontSize: 14,
                     fontWeight: "800",
-                    color: uncertaintyLevel === "high" ? "#DC2626" : uncertaintyLevel === "medium" ? "#CA8A04" : "#16A34A",
+                    color: uncertaintyColor,
                     textTransform: "capitalize",
                   }}
                 >

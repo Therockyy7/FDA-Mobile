@@ -1,9 +1,7 @@
-
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Platform, StatusBar, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
 
 interface NotificationsHeaderProps {
   unreadCount: number;
@@ -14,28 +12,15 @@ export function NotificationsHeader({
   unreadCount,
   onFilterPress,
 }: NotificationsHeaderProps) {
-  const { isDarkColorScheme } = useColorScheme();
-
-  // Theme colors
-  const colors = {
-    background: isDarkColorScheme ? "#0B1A33" : "#FFFFFF",
-    border: isDarkColorScheme ? "#1E293B" : "#E5E7EB",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
-    buttonBg: isDarkColorScheme ? "#1E293B" : "#F3F4F6",
-    buttonIcon: isDarkColorScheme ? "#E2E8F0" : "#1F2937",
-  };
-
   return (
     <View
+      testID="notifications-header-container"
       style={{
         paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 8 : 54,
         paddingBottom: 16,
         paddingHorizontal: 16,
-        backgroundColor: colors.background,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
       }}
+      className="bg-white dark:bg-[#0B1A33] border-b border-slate-200 dark:border-slate-800"
     >
       <View
         style={{
@@ -48,37 +33,32 @@ export function NotificationsHeader({
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <View
+              testID="notifications-header-icon-box"
               style={{
                 width: 36,
                 height: 36,
                 borderRadius: 10,
-                backgroundColor: isDarkColorScheme ? "#1E3A8A" : "#EFF6FF",
                 alignItems: "center",
                 justifyContent: "center",
                 marginRight: 10,
               }}
+              className="bg-blue-50 dark:bg-blue-900"
             >
               <Ionicons name="notifications" size={20} color="#007AFF" />
             </View>
             <Text
-              style={{
-                fontSize: 20,
-                fontWeight: "800",
-                color: colors.text,
-              }}
+              testID="notifications-header-title"
+              style={{ fontSize: 20, fontWeight: "800" }}
+              className="text-slate-900 dark:text-slate-100"
             >
               Thông báo
             </Text>
           </View>
           {unreadCount > 0 && (
             <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "600",
-                color: colors.subtext,
-                marginTop: 4,
-                marginLeft: 46,
-              }}
+              testID="notifications-header-unread-count"
+              style={{ fontSize: 12, fontWeight: "600", marginTop: 4, marginLeft: 46 }}
+              className="text-slate-500 dark:text-slate-400"
             >
               {unreadCount} thông báo chưa đọc
             </Text>
@@ -86,18 +66,19 @@ export function NotificationsHeader({
         </View>
 
         <TouchableOpacity
+          testID="notifications-header-filter-button"
           onPress={onFilterPress}
           style={{
             width: 40,
             height: 40,
             borderRadius: 12,
-            backgroundColor: colors.buttonBg,
             alignItems: "center",
             justifyContent: "center",
           }}
+          className="bg-slate-100 dark:bg-slate-800"
           activeOpacity={0.7}
         >
-          <Ionicons name="filter" size={20} color={colors.buttonIcon} />
+          <Ionicons name="filter" size={20} className="text-slate-900 dark:text-slate-100" color="currentColor" />
         </TouchableOpacity>
       </View>
     </View>

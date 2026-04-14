@@ -1,85 +1,55 @@
 // features/map/components/controls/layers/AreaDisplayModeSelector.tsx
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import React from "react";
-import { TouchableOpacity, View } from "react-native";
+import React, { useMemo } from "react";
+import { TouchableOpacity, View, useColorScheme } from "react-native";
 import { Text } from "~/components/ui/text";
+import { MAP_ICON_COLORS } from "~/lib/design-tokens";
 
 interface AreaDisplayModeSelectorProps {
   selectedMode: "user" | "admin";
   onChange: (mode: "user" | "admin") => void;
-  accentColor: string;
-  textColor: string;
-  subtextColor: string;
-  cardBg: string;
-  borderColor: string;
-  isDarkColorScheme: boolean;
 }
 
 export function AreaDisplayModeSelector({
   selectedMode,
   onChange,
-  accentColor,
-  textColor,
-  subtextColor,
-  cardBg,
-  borderColor,
-  isDarkColorScheme,
 }: AreaDisplayModeSelectorProps) {
+  const isDark = useColorScheme() === "dark";
+
+  const iconColor = useMemo(() => ({
+    selected: isDark ? MAP_ICON_COLORS.dark.active : MAP_ICON_COLORS.light.active,
+    unselected: isDark ? MAP_ICON_COLORS.dark.inactive : MAP_ICON_COLORS.light.inactive,
+  }), [isDark]);
+
   return (
-    <View style={{ marginBottom: 24 }}>
-      <Text
-        style={{
-          fontSize: 14,
-          fontWeight: "600",
-          color: subtextColor,
-          marginBottom: 12,
-          letterSpacing: 0.5,
-        }}
-      >
+    <View className="mb-6" testID="map-layer-areadisplay-selector">
+      <Text className="text-sm font-semibold text-muted-foreground mb-3 tracking-wide">
         CHẾ ĐỘ KHU VỰC
       </Text>
 
-      <View style={{ flexDirection: "row", gap: 12 }}>
+      <View className="flex-row gap-3">
         {/* User Areas */}
         <TouchableOpacity
           onPress={() => onChange("user")}
-          style={{
-            flex: 1,
-            padding: 16,
-            borderRadius: 16,
-            backgroundColor: cardBg,
-            borderWidth: 2,
-            borderColor: selectedMode === "user" ? accentColor : borderColor,
-            alignItems: "center",
-            gap: 8,
-          }}
+          className={`flex-1 p-4 rounded-2xl bg-card border-2 items-center gap-2 ${
+            selectedMode === "user" ? "border-primary" : "border-border"
+          }`}
         >
           <View
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              backgroundColor:
-                selectedMode === "user"
-                  ? `${accentColor}20`
-                  : isDarkColorScheme ? "#475569" : "#E2E8F0",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className={`w-12 h-12 rounded-xl items-center justify-center ${
+              selectedMode === "user" ? "bg-primary/20" : "bg-muted dark:bg-muted"
+            }`}
           >
             <Ionicons
               name="person-circle"
               size={24}
-              color={selectedMode === "user" ? accentColor : subtextColor}
+              color={selectedMode === "user" ? iconColor.selected : iconColor.unselected}
             />
           </View>
           <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "600",
-              color: selectedMode === "user" ? accentColor : textColor,
-              textAlign: "center",
-            }}
+            className={`text-sm font-semibold text-center ${
+              selectedMode === "user" ? "text-primary" : "text-foreground"
+            }`}
           >
             Khu vực của tôi
           </Text>
@@ -88,62 +58,34 @@ export function AreaDisplayModeSelector({
         {/* Admin Areas */}
         <TouchableOpacity
           onPress={() => onChange("admin")}
-          style={{
-            flex: 1,
-            padding: 16,
-            borderRadius: 16,
-            backgroundColor: cardBg,
-            borderWidth: 2,
-            borderColor: selectedMode === "admin" ? accentColor : borderColor,
-            alignItems: "center",
-            gap: 8,
-          }}
+          className={`flex-1 p-4 rounded-2xl bg-card border-2 items-center gap-2 ${
+            selectedMode === "admin" ? "border-primary" : "border-border"
+          }`}
         >
           <View
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              backgroundColor:
-                selectedMode === "admin"
-                  ? `${accentColor}20`
-                  : isDarkColorScheme ? "#475569" : "#E2E8F0",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className={`w-12 h-12 rounded-xl items-center justify-center ${
+              selectedMode === "admin" ? "bg-primary/20" : "bg-muted dark:bg-muted"
+            }`}
           >
             <MaterialCommunityIcons
               name="shield-crown"
               size={24}
-              color={selectedMode === "admin" ? accentColor : subtextColor}
+              color={selectedMode === "admin" ? iconColor.selected : iconColor.unselected}
             />
           </View>
           <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "600",
-              color: selectedMode === "admin" ? accentColor : textColor,
-              textAlign: "center",
-            }}
+            className={`text-sm font-semibold text-center ${
+              selectedMode === "admin" ? "text-primary" : "text-foreground"
+            }`}
           >
             Dự báo AI
           </Text>
         </TouchableOpacity>
       </View>
 
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "flex-start",
-          padding: 12,
-          borderRadius: 12,
-          backgroundColor: `${accentColor}10`,
-          gap: 8,
-          marginTop: 12,
-        }}
-      >
-        <Ionicons name="information-circle" size={16} color={accentColor} />
-        <Text style={{ flex: 1, fontSize: 11, color: subtextColor, lineHeight: 16 }}>
+      <View className="flex-row items-start p-3 rounded-xl bg-primary/10 gap-2 mt-3">
+        <Ionicons name="information-circle" size={16} color={iconColor.selected} />
+        <Text className="flex-1 text-[11px] text-muted-foreground leading-4">
           {selectedMode === "user"
             ? "Hiển thị các khu vực bạn đã tạo"
             : "Hiển thị các khu vực được Admin phân tích sẵn với AI"}

@@ -44,7 +44,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <View className="flex-1 bg-slate-50 dark:bg-slate-900">
+    <View className="flex-1 bg-slate-50 dark:bg-slate-900" testID="home-screen">
       <StatusBar
         barStyle="dark-content"
         backgroundColor="transparent"
@@ -60,6 +60,7 @@ export default function HomeScreen() {
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
+        testID="home-scroll"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }

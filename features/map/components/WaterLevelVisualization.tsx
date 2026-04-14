@@ -14,7 +14,7 @@ import Animated, {
 import Svg, { Defs, LinearGradient, Path, Stop } from "react-native-svg";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { SHADOW } from "~/lib/design-tokens";
 
 interface WaterLevelVisualizationProps {
   waterLevel: number | null;
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 16,
     marginBottom: 16,
-    ...CARD_SHADOW,
+    ...SHADOW.sm,
   },
   header: {
     flexDirection: "row",

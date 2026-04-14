@@ -26,7 +26,7 @@ import {
 import { DANANG_CENTER, FLOOD_ROUTES } from "~/features/map/constants/map-data";
 import { STANDARD_MAP_STYLE } from "~/features/map/constants/map-style";
 import type { FloodSeverityFeature } from "~/features/map/types/map-layers.types";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW } from "~/lib/design-tokens";
 
 interface Props {
   mapRef: React.RefObject<MapView>;
@@ -123,9 +123,6 @@ export function MapContent({
   onAdminAreaPress,
   onDraftAreaCenterChange,
 }: Props) {
-  const { isDarkColorScheme } = useColorScheme();
-  const isDark = isDarkColorScheme;
-
   return (
     <MapView
       ref={mapRef}
@@ -281,10 +278,6 @@ const styles = StyleSheet.create({
     padding: 8,
     borderWidth: 3,
     borderColor: "white",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...SHADOW.sm,
   },
 });

@@ -2,24 +2,25 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { TouchableOpacity } from "react-native";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { MAP_OVERLAY_LAYER_COLORS } from "~/lib/design-tokens";
 
 interface LayersToggleButtonProps {
   onPress: () => void;
+  testID?: string;
 }
 
-export function LayersToggleButton({ onPress }: LayersToggleButtonProps) {
-  const { isDarkColorScheme } = useColorScheme();
-  const isDark = isDarkColorScheme;
-
+export function LayersToggleButton({ onPress, testID }: LayersToggleButtonProps) {
   return (
     <TouchableOpacity
       onPress={onPress}
+      testID={testID ?? "map-controls-layers-btn"}
+      accessibilityRole="button"
+      accessibilityLabel="Mở bảng lớp bản đồ"
       style={{
         width: 40,
         height: 40,
         borderRadius: 12,
-        backgroundColor: isDark ? "#3B82F6" : "#007AFF",
+        backgroundColor: MAP_OVERLAY_LAYER_COLORS.primary,
         alignItems: "center",
         justifyContent: "center",
       }}

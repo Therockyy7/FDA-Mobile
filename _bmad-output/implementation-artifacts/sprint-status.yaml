@@ -1,0 +1,105 @@
+# generated: 2026-04-14
+# last_updated: 2026-04-14
+# project: FDA-Mobile
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-04-14
+last_updated: 2026-04-14T14:00:00Z
+
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 0: Design System Foundation
+  epic-0: done
+  0-1-create-design-tokens: done
+  0-2-extend-tailwind-config-align-global-css: done
+  0-3-create-core-shared-components-badge-iconbutton-divider: done
+  0-4-create-layout-shared-components-sectionheader-listitem-pill-screenheader-avatar: done
+  0-5-create-barrel-export-and-migration-checklist: done
+  epic-0-retrospective: optional
+
+  # Epic 1: Tab Bar & Navigation Shell
+  epic-1: done
+  1-1-migrate-tab-bar-to-design-tokens: done
+  epic-1-retrospective: optional
+
+  # Epic 2: Home Screen
+  epic-2: in-progress
+  2-1-migrate-home-screen-header-and-banner-components: done
+  2-2-migrate-home-screen-content-sections-and-screen-file: done
+  epic-2-retrospective: optional
+
+  # Epic 3: Notifications Screen
+  epic-3: in-progress
+  3-1-migrate-notification-list-components: done
+  3-2-migrate-notification-header-metadata-and-screen-files: done
+  epic-3-retrospective: optional
+
+  # Epic 4: Alerts Screen
+  epic-4: in-progress
+  4-1-migrate-alert-history-components: done
+  4-2-migrate-alert-settings-and-thresholds-components: done
+  4-3-migrate-alert-root-components-and-screen-files: done
+  epic-4-retrospective: optional
+
+  # Epic 5: Areas Screen
+  epic-5: in-progress
+  5-1-migrate-areas-list-components: done
+  5-2-migrate-areas-detail-and-modal-components: done
+  5-3-migrate-areas-chart-components-and-screen-files: done
+  epic-5-retrospective: optional
+
+  # Epic 6: Prediction Screen
+  epic-6: in-progress
+  6-1-migrate-prediction-hero-and-risk-components: done
+  6-2-migrate-prediction-analysis-and-ai-cards: done
+  6-3-migrate-prediction-forecast-impact-cards-and-screen-file: done
+  epic-6-retrospective: optional
+
+  # Epic 7: Map Screen
+  epic-7: in-progress
+  7-1-migrate-map-controls-and-header-components: review
+  7-2-migrate-map-layer-sheet-and-overlay-components: done
+  7-3-migrate-map-station-and-area-card-components: done
+  7-4-migrate-map-route-navigation-and-report-components: done
+  7-5-migrate-map-root-components-map-ui-utils-and-screen-file: review
+  epic-7-retrospective: optional
+
+  # Epic 8: Maestro Testing Infrastructure
+  epic-8: in-progress
+  8-1-create-maestro-smoke-tests: ready-for-dev
+  8-2-create-maestro-feature-flows: backlog
+  epic-8-retrospective: optional

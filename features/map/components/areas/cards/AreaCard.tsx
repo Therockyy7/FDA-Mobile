@@ -1,16 +1,16 @@
 // features/map/components/areas/cards/AreaCard.tsx
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import React from "react";
+import React, { useMemo } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { formatTime } from "~/features/map/lib/formatters";
-import { RADIUS } from "~/features/map/lib/map-ui-utils";
 import {
   AREA_STATUS_COLORS,
   AREA_STATUS_ICONS,
   AREA_STATUS_LABELS,
   type AreaWithStatus,
 } from "~/features/map/types/map-layers.types";
+import { FLOOD_COLORS, MAP_COLORS, RADIUS, SHADOW } from "~/lib/design-tokens";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 interface AreaCardProps {
@@ -39,10 +39,10 @@ function severityIcon(status: string) {
   );
 }
 function waterColor(level: number) {
-  if (level >= 40) return "#EF4444";
-  if (level >= 20) return "#F97316";
-  if (level >= 10) return "#FBBF24";
-  return "#10B981";
+  if (level >= 40) return FLOOD_COLORS.danger;
+  if (level >= 20) return FLOOD_COLORS.warning;
+  if (level >= 10) return FLOOD_COLORS.warning;
+  return FLOOD_COLORS.safe;
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -51,15 +51,19 @@ function StationChip({
   code,
   level,
   color,
+  surfaceColor,
+  textColor,
 }: {
   code: string;
   level: number;
   color: string;
+  surfaceColor: string;
+  textColor: string;
 }) {
   return (
-    <View style={styles.chip}>
+    <View style={[styles.chip, { backgroundColor: surfaceColor }]}>
       <View style={[styles.chipDot, { backgroundColor: color }]} />
-      <Text style={styles.chipCode}>{code}</Text>
+      <Text style={[styles.chipCode, { color: textColor }]}>{code}</Text>
       <Text style={[styles.chipLevel, { color }]}>{level}cm</Text>
     </View>
   );
@@ -89,16 +93,28 @@ export function AreaCard({
   const wc = waterColor(maxLevel);
   const fill = Math.min((maxLevel / 150) * 100, 100);
 
+  const palette = isDark ? MAP_COLORS.dark : MAP_COLORS.light;
   const c = {
-    bg: isDark ? "#0F172A" : "#FFFFFF",
-    surface: isDark ? "#1E293B" : "#F8FAFC",
-    text: isDark ? "#F1F5F9" : "#1E2937",
-    muted: isDark ? "#64748B" : "#9CA3AF",
-    border: isDark ? "#334155" : "#E2E8F0",
+    bg: palette.card,
+    surface: isDark ? "#1E293B" : palette.background,
+    text: palette.text,
+    muted: palette.muted,
+    border: palette.border,
   };
 
+  // Memoize chip colors to avoid recomputation on every render
+  const chipColors = useMemo(
+    () =>
+      area.contributingStations?.slice(0, 4).map((s) => ({
+        code: s.stationCode,
+        level: s.waterLevel,
+        color: waterColor(s.waterLevel),
+      })) ?? [],
+    [area.contributingStations]
+  );
+
   return (
-    <View style={[styles.root, { backgroundColor: c.bg }]}>
+    <View testID="map-area-card" style={[styles.root, { backgroundColor: c.bg }]}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: color }]}>
         <View style={styles.headerLeft}>
@@ -187,7 +203,7 @@ export function AreaCard({
           <View style={[styles.metaItem, { backgroundColor: c.surface }]}>
             <Ionicons name="pulse" size={13} color={c.muted} />
             <Text style={[styles.metaVal, { color: c.text }]}>
-              {area.contributingStations.length}
+              {area.contributingStations?.length ?? 0}
             </Text>
             <Text style={[styles.metaLabel, { color: c.muted }]}>Trạm</Text>
           </View>
@@ -201,25 +217,27 @@ export function AreaCard({
         </View>
 
         {/* Station chips */}
-        {area.contributingStations.length > 0 && (
+        {area.contributingStations?.length > 0 && (
           <View style={styles.chipsSection}>
             <Text style={[styles.chipsLabel, { color: c.muted }]}>
               Trạm ảnh hưởng
             </Text>
             <View style={styles.chipsRow}>
-              {area.contributingStations.slice(0, 4).map((s, i) => (
+              {chipColors.map((chip, i) => (
                 <StationChip
-                  key={i}
-                  code={s.stationCode}
-                  level={s.waterLevel}
-                  color={waterColor(s.waterLevel)}
+                  key={`${chip.code}-${i}`}
+                  code={chip.code}
+                  level={chip.level}
+                  color={chip.color}
+                  surfaceColor={c.surface}
+                  textColor={c.text}
                 />
               ))}
-              {area.contributingStations.length > 4 && (
-                <View style={[styles.chip, styles.chipMore]}>
+              {(area.contributingStations?.length ?? 0) > 4 && (
+                <View style={[styles.chip, styles.chipMore, { backgroundColor: c.surface, borderColor: c.border }]}>
                   <Ionicons name="add" size={10} color={c.muted} />
                   <Text style={[styles.chipCode, { color: c.muted }]}>
-                    +{area.contributingStations.length - 4}
+                    +{(area.contributingStations?.length ?? 0) - 4}
                   </Text>
                 </View>
               )}
@@ -236,11 +254,13 @@ export function AreaCard({
                 styles.actionBtn,
                 styles.actionOutline,
                 styles.actionSmall,
+                { borderColor: c.border },
               ]}
               activeOpacity={0.75}
+              testID="map-area-action-edit-btn"
             >
-              <Ionicons name="pencil" size={13} color="#3B82F6" />
-              <Text style={styles.actionOutlineText}>Sửa</Text>
+              <Ionicons name="pencil" size={13} color={palette.accent} />
+              <Text style={[styles.actionOutlineText, { color: c.muted }]}>Sửa</Text>
             </TouchableOpacity>
           )}
           {onDelete && (
@@ -250,12 +270,14 @@ export function AreaCard({
                 styles.actionBtn,
                 styles.actionOutline,
                 styles.actionSmall,
+                { borderColor: c.border },
               ]}
               activeOpacity={0.75}
+              testID="map-area-action-delete-btn"
             >
-              <Ionicons name="trash" size={13} color="#EF4444" />
-              <Text style={styles.actionOutlineText}>Xóa</Text>
-            </TouchableOpacity> 
+              <Ionicons name="trash" size={13} color={FLOOD_COLORS.danger} />
+              <Text style={[styles.actionOutlineText, { color: c.muted }]}>Xóa</Text>
+            </TouchableOpacity>
           )}
           {onViewDetails && (
             <TouchableOpacity
@@ -266,6 +288,7 @@ export function AreaCard({
                 styles.actionPrimary,
               ]}
               activeOpacity={0.75}
+              testID="map-area-action-details-btn"
             >
               <Text style={styles.actionFillText}>Chi tiết</Text>
               <Ionicons name="chevron-forward" size={13} color="white" />
@@ -338,7 +361,7 @@ const styles = StyleSheet.create({
   waterVal: { fontSize: 26, fontWeight: "900", lineHeight: 30 },
   waterUnit: { fontSize: 13, fontWeight: "700" },
   waterRight: { flex: 1, paddingHorizontal: 12, paddingVertical: 10, gap: 4 },
-  waterRightLabel: { fontSize: 9, fontWeight: "700", letterSpacing: 0.6 },
+  waterRightLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 0.6 },
   progressRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   progressTrack: { flex: 1, height: 5, borderRadius: 3, overflow: "hidden" },
   progressFill: { height: "100%", borderRadius: 3 },
@@ -360,7 +383,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   metaVal: { fontSize: 14, fontWeight: "800" },
-  metaLabel: { fontSize: 9, fontWeight: "600" },
+  metaLabel: { fontSize: 11, fontWeight: "600" },
 
   // Chips
   chipsSection: { gap: 6 },
@@ -372,16 +395,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 20,
-    backgroundColor: "#F1F5F9",
     gap: 4,
   },
   chipDot: { width: 5, height: 5, borderRadius: 3 },
-  chipCode: { fontSize: 11, fontWeight: "700", color: "#1F2937" },
+  chipCode: { fontSize: 11, fontWeight: "700" },
   chipLevel: { fontSize: 11, fontWeight: "600" },
   chipMore: {
     backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
   },
 
   // Actions
@@ -396,13 +417,20 @@ const styles = StyleSheet.create({
   },
   actionOutline: {
     borderWidth: 1.5,
-    borderColor: "#E2E8F0",
     backgroundColor: "transparent",
   },
   actionSmall: { paddingHorizontal: 10 },
   actionPrimary: { flex: 1 },
-  actionOutlineText: { fontSize: 13, fontWeight: "700", color: "#64748B" },
+  actionOutlineText: { fontSize: 13, fontWeight: "700" },
   actionFillText: { fontSize: 13, fontWeight: "700", color: "white" },
 });
 
-export default React.memo(AreaCard, (p, n) => p.area?.id === n.area?.id);
+export default React.memo(
+  AreaCard,
+  (p, n) =>
+    p.area?.id === n.area?.id &&
+    p.onClose === n.onClose &&
+    p.onViewDetails === n.onViewDetails &&
+    p.onEdit === n.onEdit &&
+    p.onDelete === n.onDelete
+);

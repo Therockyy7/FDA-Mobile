@@ -18,7 +18,7 @@ export function MonitoredAreasSection({
   const router = useRouter();
 
   return (
-    <View className="px-4">
+    <View className="px-4" testID="home-areas-section">
       {/* Section Header */}
       <View className="flex-row items-center justify-between mb-3">
         <Text className="text-slate-900 dark:text-white text-lg font-bold">
@@ -27,6 +27,7 @@ export function MonitoredAreasSection({
         <TouchableOpacity
           onPress={() => router.push("/areas" as any)}
           activeOpacity={0.7}
+          testID="home-areas-view-all"
         >
           <Text className="text-sky-600 dark:text-sky-400 text-sm font-medium">
             Xem tất cả →

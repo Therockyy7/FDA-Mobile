@@ -25,6 +25,7 @@ import {
 import { Text } from "~/components/ui/text";
 import type { AdminArea } from "~/features/areas/types/admin-area.types";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW } from "~/lib/design-tokens";
 
 interface WardSelectionSheetProps {
   isOpen: boolean;
@@ -339,11 +340,7 @@ const styles = StyleSheet.create({
   sheet: {
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 16,
+    ...SHADOW.lg,
   },
   handleIndicatorContainer: {
     alignItems: "center",

@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LoginRequiredOverlay } from "~/features/auth/components/LoginRequiredOverlay";
 import { useAuthLoading, useUser } from "~/features/auth/stores/hooks";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { TAB_COLORS } from "~/lib/design-tokens";
 
 // Set initial route to map tab — previously this was the default tab (index.tsx)
 export const unstable_settings = {
@@ -23,12 +24,14 @@ const TabsLayout = () => {
   const loading = useAuthLoading();
   const router = useRouter();
   const [loginPromptVisible, setLoginPromptVisible] = useState(false);
-  const { isDarkColorScheme } = useColorScheme();
+  const { colorScheme } = useColorScheme();
+
   // Show loading while auth is initializing — must still render Tabs to avoid "Unmatched route"
   if (loading) {
+    const theme = TAB_COLORS[colorScheme];
     return (
-      <View style={{ flex: 1, backgroundColor: "#0B1A33", alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator color="#007AFF" />
+      <View testID="tabsLayout-loadingContainer" style={{ flex: 1, backgroundColor: theme.background, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator testID="tabsLayout-loadingIndicator" color={theme.active} />
       </View>
     );
   }
@@ -40,13 +43,8 @@ const TabsLayout = () => {
     }
   };
 
-  // Theme colors for tab bar
-  const tabBarColors = {
-    background: isDarkColorScheme ? "#0B1A33" : "#FFFFFF",
-    borderColor: isDarkColorScheme ? "#1E293B" : "#E2E8F0",
-    activeColor: isDarkColorScheme ? "#38BDF8" : "#007AFF",
-    inactiveColor: isDarkColorScheme ? "#64748B" : "#94A3B8",
-  };
+  // Theme colors for tab bar — sourced from design tokens
+  const theme = TAB_COLORS[colorScheme];
 
   // console.log("TABS layout, user?", !!user);
 
@@ -54,12 +52,12 @@ const TabsLayout = () => {
     <>
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: tabBarColors.activeColor,
-          tabBarInactiveTintColor: tabBarColors.inactiveColor,
+          tabBarActiveTintColor: theme.active,
+          tabBarInactiveTintColor: theme.inactive,
           tabBarStyle: {
-            backgroundColor: tabBarColors.background,
+            backgroundColor: theme.background,
             borderTopWidth: 1,
-            borderTopColor: tabBarColors.borderColor,
+            borderTopColor: theme.border,
             height: 60 + insets.bottom,
             paddingTop: 8,
             paddingBottom: insets.bottom > 0 ? 0 : 8,
@@ -107,6 +105,7 @@ const TabsLayout = () => {
             title: "Bản đồ",
             tabBarIcon: ({ focused }) => (
               <View
+                testID="tabbar-map-container"
                 style={{
                   top: Platform.OS === "ios" ? -10 : -15,
                   justifyContent: "center",
@@ -114,10 +113,10 @@ const TabsLayout = () => {
                   width: 58,
                   height: 58,
                   borderRadius: 29,
-                  backgroundColor: tabBarColors.background,
+                  backgroundColor: theme.background,
                   shadowColor: focused
-                    ? tabBarColors.activeColor
-                    : tabBarColors.inactiveColor,
+                    ? theme.active
+                    : theme.inactive,
                   shadowOffset: { width: 0, height: 0 },
                   shadowOpacity: 0.4,
                   shadowRadius: 10,
@@ -125,6 +124,7 @@ const TabsLayout = () => {
                 }}
               >
                 <View
+                  testID="tabbar-map-inner"
                   style={{
                     justifyContent: "center",
                     alignItems: "center",
@@ -132,8 +132,8 @@ const TabsLayout = () => {
                     height: 48,
                     borderRadius: 24,
                     backgroundColor: focused
-                      ? tabBarColors.activeColor
-                      : tabBarColors.inactiveColor,
+                      ? theme.active
+                      : theme.inactive,
                   }}
                 >
                   <Feather name="map" size={24} color="#FFFFFF" />
@@ -159,7 +159,10 @@ const TabsLayout = () => {
                 return;
               }
               // Force route to the root of the notifications tab to clear any cached detail screens
-              router.replace("/notifications");
+              // Only navigate if not already on the notifications root
+              if (router.canGoBack()) {
+                router.replace("/notifications");
+              }
             },
           }}
         />
@@ -170,6 +173,14 @@ const TabsLayout = () => {
             tabBarIcon: ({ color, size }) => (
               <Feather name="user" size={size} color={color} />
             ),
+          }}
+          listeners={{
+            tabPress: (e: any) => {
+              if (!isAuthenticated) {
+                e.preventDefault();
+                handleProtectedTabPress();
+              }
+            },
           }}
         />
       </Tabs>

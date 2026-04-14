@@ -1,20 +1,15 @@
 // features/home/components/WeatherInsightsSection.tsx
 import {
   Ionicons,
-  MaterialCommunityIcons
+  MaterialCommunityIcons,
 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
 import React, { useEffect, useMemo, useRef } from "react";
-import {
-  Animated,
-  Easing,
-  ScrollView,
-  View
-} from "react-native";
+import { Animated, Easing, ScrollView, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { SHADOW } from "~/lib/design-tokens";
 import type { AiRiskSummary, RainfallForecastItem } from "../types/home-types";
 import type { OpenMeteoResponse } from "../types/open-meteo.types";
 import {
@@ -31,85 +26,72 @@ interface Props {
 
 /* ────────── helpers ────────── */
 
-const getRainfallBarColor = (level: RainfallForecastItem["level"]): string => {
-  switch (level) {
-    case "none":
-      return "#94A3B8";
-    case "light":
-      return "#34D399";
-    case "moderate":
-      return "#FBBF24";
-    case "heavy":
-      return "#F97316";
-    case "extreme":
-      return "#EF4444";
-    default:
-      return "#94A3B8";
-  }
+// Rainfall level colors mapped to Tailwind tokens
+const RAINFALL_COLORS: Record<RainfallForecastItem["level"], string> = {
+  "none": "#94A3B8",     // slate-400
+  "light": "#34D399",    // emerald-400
+  "moderate": "#FBBF24", // amber-400
+  "heavy": "#F97316",    // orange-500
+  "extreme": "#EF4444",  // red-500
 };
 
 const getRainfallBarHeight = (amount: number): number =>
   Math.max(6, Math.min(40, (amount / 50) * 40));
 
-const getRiskColors = (level: AiRiskSummary["riskLevel"]) => {
-  switch (level) {
-    case "low":
-      return {
-        gradient: ["#059669", "#10B981"] as const,
-        shadow: "#10B981",
-      };
-    case "medium":
-      return {
-        gradient: ["#D97706", "#F59E0B"] as const,
-        shadow: "#F59E0B",
-      };
-    case "high":
-      return {
-        gradient: ["#DC2626", "#F87171"] as const,
-        shadow: "#EF4444",
-      };
-    case "critical":
-      return {
-        gradient: ["#7F1D1D", "#DC2626"] as const,
-        shadow: "#EF4444",
-      };
-  }
+// Risk level colors - map to design tokens (emerald, amber, red scale)
+const RISK_COLORS: Record<AiRiskSummary["riskLevel"], { gradient: [string, string]; shadow: string }> = {
+  "low": {
+    gradient: ["#059669", "#10B981"], // emerald-700, emerald-500
+    shadow: "#10B981",
+  },
+  "medium": {
+    gradient: ["#D97706", "#F59E0B"], // amber-600, amber-400
+    shadow: "#F59E0B",
+  },
+  "high": {
+    gradient: ["#DC2626", "#F87171"], // red-600, red-400
+    shadow: "#EF4444",                // red-500
+  },
+  "critical": {
+    gradient: ["#7F1D1D", "#DC2626"], // red-900, red-600
+    shadow: "#EF4444",                // red-500
+  },
+};
+
+// Soil moisture status colors (mapped to design tokens)
+const SOIL_STATUS_CONFIG: Record<string, { label: string; color: string; icon: string; description: string }> = {
+  saturated: {
+    label: "Bão hòa",
+    color: "#EF4444",   // red-500
+    icon: "water",
+    description: "Đất bão hòa nước – Nguy cơ ngập cao",
+  },
+  high: {
+    label: "Ẩm cao",
+    color: "#F97316",   // orange-500
+    icon: "water-outline",
+    description: "Đất ẩm – Khả năng thấm hút giảm",
+  },
+  normal: {
+    label: "Bình thường",
+    color: "#10B981",   // emerald-500
+    icon: "leaf",
+    description: "Đất có khả năng thấm hút tốt",
+  },
+  dry: {
+    label: "Khô",
+    color: "#F59E0B",   // amber-400
+    icon: "sunny",
+    description: "Đất khô – Thấm hút cực tốt nếu có mưa",
+  },
 };
 
 /** Get soil moisture status */
-function getSoilStatus(moisture: number): {
-  label: string;
-  color: string;
-  icon: string;
-  description: string;
-} {
-  if (moisture >= 0.4)
-    return {
-      label: "Bão hòa",
-      color: "#EF4444",
-      icon: "water",
-      description: "Đất bão hòa nước – Nguy cơ ngập cao",
-    };
-  if (moisture >= 0.3)
-    return {
-      label: "Ẩm cao",
-      color: "#F97316",
-      icon: "water-outline",
-      description: "Đất ẩm – Khả năng thấm hút giảm",
-    };
-  if (moisture >= 0.2)
-    return {
-      label: "Bình thường",
-      color: "#10B981",
-      icon: "leaf",
-      description: "Đất có khả năng thấm hút tốt",
-    };
-  return {
-    label: "Khô",
-    color: "#F59E0B",
-    icon: "sunny",
-    description: "Đất khô – Thấm hút cực tốt nếu có mưa",
-  };
+function getSoilStatus(moisture: number): { label: string; color: string; icon: string; description: string } {
+  if (moisture >= 0.4) return SOIL_STATUS_CONFIG.saturated;
+  if (moisture >= 0.3) return SOIL_STATUS_CONFIG.high;
+  if (moisture >= 0.2) return SOIL_STATUS_CONFIG.normal;
+  return SOIL_STATUS_CONFIG.dry;
 }
 
 /* ────────── weather animation map ────────── */
@@ -187,7 +169,6 @@ export function WeatherInsightsSection({
   aiRisk,
 }: Props) {
   const router = useRouter();
-  const { isDarkColorScheme } = useColorScheme();
 
   // Theme from current weather code
   const weatherCode = meteo.current.weather_code;
@@ -257,7 +238,7 @@ export function WeatherInsightsSection({
     }
   }, [aiRisk, pulseAnim]);
 
-  const riskColors = aiRisk ? getRiskColors(aiRisk.riskLevel) : null;
+  const riskColors = aiRisk ? RISK_COLORS[aiRisk.riskLevel] : null;
 
   // Weather-specific Lottie animation
   const weatherAnim = useMemo(
@@ -271,7 +252,7 @@ export function WeatherInsightsSection({
   const todayRainProb = meteo.daily.precipitation_probability_max[0];
 
   return (
-    <View className="px-4 py-2">
+    <View className="px-4 py-2" testID="home-weather-section">
       {/* ── Section Header ── */}
       <View className="flex-row items-center gap-2 mb-3">
         <View
@@ -288,7 +269,7 @@ export function WeatherInsightsSection({
           <Text className="text-slate-900 dark:text-white text-lg font-bold">
             Thời tiết Đà Nẵng
           </Text>
-          <Text className="text-slate-400 dark:text-slate-500 text-[10px]">
+          <Text className="text-slate-400 dark:text-slate-500 text-xs">
             Open-Meteo • Cập nhật lúc{" "}
             {new Date(meteo.current.time).toLocaleTimeString("vi-VN", {
               hour: "2-digit",
@@ -307,12 +288,10 @@ export function WeatherInsightsSection({
           borderRadius: 24,
           overflow: "hidden",
           marginBottom: 12,
+          ...SHADOW.lg,
           shadowColor: theme.color,
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.3,
-          shadowRadius: 16,
-          elevation: 8,
         }}
+        testID="home-weather-hero"
       >
         {/* ── Lottie ambient background ── */}
         <LottieView
@@ -341,6 +320,7 @@ export function WeatherInsightsSection({
                     lineHeight: 62,
                     letterSpacing: -2,
                   }}
+                  testID="home-weather-temperature"
                 >
                   {Math.round(meteo.current.temperature_2m)}°
                 </Text>
@@ -403,27 +383,19 @@ export function WeatherInsightsSection({
           <View className="flex-row gap-2" style={{ marginTop: 16 }}>
             {/* Humidity */}
             <View
-              className="flex-1 rounded-2xl p-3 flex-row items-center gap-2"
-              style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
+              className="flex-1 rounded-2xl p-3 flex-row items-center gap-2 bg-white/10"
+              testID="home-weather-humidity"
             >
               <MaterialCommunityIcons
                 name="water-percent"
                 size={18}
-                color="rgba(255,255,255,0.8)"
+                color="white"
               />
               <View>
-                <Text
-                  style={{
-                    color: "rgba(255,255,255,0.55)",
-                    fontSize: 9,
-                    fontWeight: "600",
-                  }}
-                >
+                <Text className="text-white/55 text-xs font-semibold">
                   Độ ẩm
                 </Text>
-                <Text
-                  style={{ color: "white", fontSize: 16, fontWeight: "800" }}
-                >
+                <Text className="text-white text-base font-extrabold">
                   {currentHumidity}%
                 </Text>
               </View>
@@ -431,52 +403,36 @@ export function WeatherInsightsSection({
 
             {/* Wind */}
             <View
-              className="flex-1 rounded-2xl p-3 flex-row items-center gap-2"
-              style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
+              className="flex-1 rounded-2xl p-3 flex-row items-center gap-2 bg-white/10"
+              testID="home-weather-wind"
             >
               <MaterialCommunityIcons
                 name="weather-windy"
                 size={18}
-                color="rgba(255,255,255,0.8)"
+                color="white"
               />
               <View>
-                <Text
-                  style={{
-                    color: "rgba(255,255,255,0.55)",
-                    fontSize: 9,
-                    fontWeight: "600",
-                  }}
-                >
+                <Text className="text-white/55 text-xs font-semibold">
                   Gió
                 </Text>
-                <Text
-                  style={{ color: "white", fontSize: 16, fontWeight: "800" }}
-                >
+                <Text className="text-white text-base font-extrabold">
                   {meteo.current.wind_speed_10m}
-                  <Text style={{ fontSize: 10, fontWeight: "600" }}> km/h</Text>
+                  <Text className="text-xs font-semibold"> km/h</Text>
                 </Text>
               </View>
             </View>
 
             {/* Rain probability */}
             <View
-              className="flex-1 rounded-2xl p-3 flex-row items-center gap-2"
-              style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
+              className="flex-1 rounded-2xl p-3 flex-row items-center gap-2 bg-white/10"
+              testID="home-weather-rain-prob"
             >
-              <Ionicons name="rainy" size={16} color="rgba(255,255,255,0.8)" />
+              <Ionicons name="rainy" size={16} color="white" />
               <View>
-                <Text
-                  style={{
-                    color: "rgba(255,255,255,0.55)",
-                    fontSize: 9,
-                    fontWeight: "600",
-                  }}
-                >
+                <Text className="text-white/55 text-xs font-semibold">
                   Mưa
                 </Text>
-                <Text
-                  style={{ color: "white", fontSize: 16, fontWeight: "800" }}
-                >
+                <Text className="text-white text-base font-extrabold">
                   {todayRainProb}%
                 </Text>
               </View>
@@ -485,16 +441,11 @@ export function WeatherInsightsSection({
         </View>
       </LinearGradient>
 
-      {/* ═══════════ 3) HOURLY FORECAST STRIP ═══════════ */}
+      {/* ═══════════ 2) HOURLY FORECAST STRIP ═══════════ */}
       <View
         className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 mb-3"
-        style={{
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          elevation: 2,
-        }}
+        style={SHADOW.sm}
+        testID="home-weather-hourly"
       >
         <View className="flex-row items-center justify-between px-4 pt-3 pb-2">
           <View className="flex-row items-center gap-2">
@@ -503,7 +454,7 @@ export function WeatherInsightsSection({
               Dự báo theo giờ
             </Text>
           </View>
-          <Text className="text-slate-400 dark:text-slate-500 text-[10px]">
+          <Text className="text-slate-400 dark:text-slate-500 text-xs">
             24 giờ tới
           </Text>
         </View>
@@ -525,14 +476,12 @@ export function WeatherInsightsSection({
                 key={idx}
                 className="items-center py-2 px-2.5 rounded-2xl"
                 style={{
-                  backgroundColor: isNow
-                    ? "rgba(6, 182, 212, 0.12)"
-                    : "transparent",
+                  backgroundColor: isNow ? "rgba(6, 182, 212, 0.12)" : "transparent",
                   minWidth: 54,
                 }}
               >
                 <Text
-                  className="text-[10px] font-bold"
+                  className="text-xs font-bold"
                   style={{ color: isNow ? "#06B6D4" : "#94A3B8" }}
                 >
                   {isNow
@@ -558,22 +507,10 @@ export function WeatherInsightsSection({
 
                 {hasRain && (
                   <View
-                    className="flex-row items-center gap-0.5 mt-1"
-                    style={{
-                      backgroundColor: "#3B82F620",
-                      paddingHorizontal: 4,
-                      paddingVertical: 1,
-                      borderRadius: 6,
-                    }}
+                    className="flex-row items-center gap-0.5 mt-1 bg-blue-500/10 px-1 py-0.5 rounded"
                   >
-                    <Ionicons name="rainy" size={8} color="#3B82F6" />
-                    <Text
-                      style={{
-                        color: "#3B82F6",
-                        fontSize: 8,
-                        fontWeight: "700",
-                      }}
-                    >
+                    <Ionicons name="rainy" size={11} color="#3B82F6" />
+                    <Text className="text-blue-600 text-xs font-bold">
                       {item.precipitation}mm
                     </Text>
                   </View>
@@ -587,13 +524,8 @@ export function WeatherInsightsSection({
       {/* ═══════════ 3) 7-DAY FORECAST ═══════════ */}
       <View
         className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 mb-3"
-        style={{
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          elevation: 2,
-        }}
+        style={SHADOW.sm}
+        testID="home-weather-7day"
       >
         <View className="flex-row items-center gap-2 mb-3">
           <MaterialCommunityIcons
@@ -646,11 +578,11 @@ export function WeatherInsightsSection({
               <View style={{ width: 52, alignItems: "center" }}>
                 {rainSum > 0 || rainProb > 10 ? (
                   <View className="flex-row items-center gap-0.5">
-                    <Ionicons name="rainy" size={10} color="#3B82F6" />
+                    <Ionicons name="rainy" size={11} color="#3B82F6" />
                     <Text
                       style={{
                         color: "#3B82F6",
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: "700",
                       }}
                     >
@@ -658,7 +590,7 @@ export function WeatherInsightsSection({
                     </Text>
                   </View>
                 ) : (
-                  <Text style={{ color: "#94A3B8", fontSize: 10 }}>—</Text>
+                  <Text style={{ color: "#94A3B8", fontSize: 11 }}>—</Text>
                 )}
               </View>
 
@@ -687,7 +619,6 @@ export function WeatherInsightsSection({
                     backgroundColor: "rgba(148,163,184,0.15)",
                   }}
                 >
-                  {/* Calculate position based on global min/max */}
                   <LinearGradient
                     colors={["#06B6D4", "#F59E0B"]}
                     start={{ x: 0, y: 0 }}
@@ -714,13 +645,8 @@ export function WeatherInsightsSection({
       {/* ═══════════ 4) SOIL MOISTURE + FLOOD RISK INDICATOR ═══════════ */}
       <View
         className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 mb-3"
-        style={{
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          elevation: 2,
-        }}
+        style={SHADOW.sm}
+        testID="home-weather-flood-index"
       >
         <View className="flex-row items-center gap-2 mb-3">
           <MaterialCommunityIcons name="waves" size={14} color="#06B6D4" />
@@ -738,6 +664,7 @@ export function WeatherInsightsSection({
               borderWidth: 1,
               borderColor: soilStatus.color + "25",
             }}
+            testID="home-weather-soil-moisture"
           >
             <View className="flex-row items-center gap-1.5 mb-2">
               <Ionicons
@@ -746,10 +673,9 @@ export function WeatherInsightsSection({
                 color={soilStatus.color}
               />
               <Text
+                className="text-xs font-bold uppercase"
                 style={{
                   color: soilStatus.color,
-                  fontSize: 10,
-                  fontWeight: "700",
                 }}
               >
                 ĐỘ ẨM ĐẤT
@@ -764,7 +690,7 @@ export function WeatherInsightsSection({
             >
               {(currentSoilMoisture * 100).toFixed(0)}%
             </Text>
-            <Text className="text-slate-500 dark:text-slate-400 text-[9px] mt-1">
+            <Text className="text-slate-500 dark:text-slate-400 text-xs mt-1">
               {soilStatus.description}
             </Text>
           </View>
@@ -779,6 +705,7 @@ export function WeatherInsightsSection({
               borderColor:
                 meteo.current.precipitation > 0 ? "#3B82F625" : "#10B98125",
             }}
+            testID="home-weather-precipitation"
           >
             <View className="flex-row items-center gap-1.5 mb-2">
               <Ionicons
@@ -787,27 +714,25 @@ export function WeatherInsightsSection({
                 color={meteo.current.precipitation > 0 ? "#3B82F6" : "#10B981"}
               />
               <Text
+                className="text-xs font-bold uppercase"
                 style={{
                   color:
                     meteo.current.precipitation > 0 ? "#3B82F6" : "#10B981",
-                  fontSize: 10,
-                  fontWeight: "700",
                 }}
               >
                 LƯỢNG MƯA
               </Text>
             </View>
             <Text
+              className="text-2xl font-black"
               style={{
-                fontSize: 22,
-                fontWeight: "900",
                 color: meteo.current.precipitation > 0 ? "#3B82F6" : "#10B981",
               }}
             >
               {meteo.daily.precipitation_sum[0]}
-              <Text style={{ fontSize: 12, fontWeight: "600" }}> mm</Text>
+              <Text className="text-xs font-semibold"> mm</Text>
             </Text>
-            <Text className="text-slate-500 dark:text-slate-400 text-[9px] mt-1">
+            <Text className="text-slate-500 dark:text-slate-400 text-xs mt-1">
               {meteo.current.precipitation > 0
                 ? "Đang có mưa – Theo dõi mực nước"
                 : "Không mưa – Nguy cơ ngập thấp"}
@@ -815,126 +740,119 @@ export function WeatherInsightsSection({
           </View>
         </View>
       </View>
-      {/* ═══════════ 5) LƯỢNG MƯA TRẠM ĐO (REDESIGNED) ═══════════ */}
-      {rainfallForecast.some((r) => r.amount > 0) && (
-        <LinearGradient
-          colors={
-            isDarkColorScheme ? ["#1E293B", "#0F172A"] : ["#F0F9FF", "#E0F2FE"]
-          }
-          style={{
-            borderRadius: 24,
-            padding: 18,
-            marginBottom: 12,
-            borderWidth: 1,
-            borderColor: isDarkColorScheme ? "#334155" : "#BAE6FD",
-            shadowColor: "#0EA5E9",
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: isDarkColorScheme ? 0.15 : 0.08,
-            shadowRadius: 16,
-            elevation: 4,
-          }}
-        >
-          <View className="flex-row items-center justify-between mb-6">
-            <View className="flex-row items-center gap-3">
-              <View
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 12,
-                  backgroundColor: "#0EA5E925",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <MaterialCommunityIcons
-                  name="weather-pouring"
-                  size={20}
-                  color="#0EA5E9"
-                />
-              </View>
-              <View>
-                <Text className="text-slate-900 dark:text-white text-[15px] font-extrabold pb-0.5">
-                  Lượng mưa trạm đo (mm)
-                </Text>
-                <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-medium mt-0.5">
-                  Theo số liệu thời gian thực
-                </Text>
-              </View>
-            </View>
-            <View
-              style={{
-                backgroundColor: "#0EA5E920",
-                paddingHorizontal: 12,
-                paddingVertical: 5,
-                borderRadius: 12,
-              }}
-            >
-              <Text
-                style={{
-                  color: "#0EA5E9",
-                  fontSize: 10,
-                  fontWeight: "900",
-                  letterSpacing: 0.5,
-                }}
-              >
-                LIVE
-              </Text>
-            </View>
-          </View>
 
+      {/* ═══════════ 5) LƯỢNG MƯA TRẠM ĐO ═══════════ */}
+      {rainfallForecast.some((r) => r.amount > 0) && (
+        <View
+          className="bg-sky-50 dark:bg-slate-800 rounded-3xl mb-3 border border-sky-200 dark:border-slate-700"
+          style={SHADOW.md}
+          testID="home-weather-rainfall-chart"
+        >
           <View
-            style={{
-              flexDirection: "row",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              height: 85,
-              paddingHorizontal: 4,
-            }}
+            style={{ padding: 18 }}
           >
-            {rainfallForecast.map((item, index) => {
-              const color = getRainfallBarColor(item.level);
-              const height = getRainfallBarHeight(item.amount) * 1.5;
-              const hasRain = item.amount > 0;
-              return (
-                <View key={index} style={{ alignItems: "center", flex: 1 }}>
-                  <Text
-                    style={{
-                      fontSize: 11,
-                      fontWeight: "900",
-                      color: hasRain ? color : "#94A3B8",
-                      marginBottom: 6,
-                    }}
-                  >
-                    {hasRain ? item.amount : "0"}
-                  </Text>
-                  <View
-                    style={{
-                      width: 16,
-                      height: Math.max(8, height),
-                      borderRadius: 8,
-                      backgroundColor: color,
-                      shadowColor: color,
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: hasRain ? 0.6 : 0,
-                      shadowRadius: 6,
-                      elevation: hasRain ? 4 : 0,
-                    }}
+            <View className="flex-row items-center justify-between mb-6">
+              <View className="flex-row items-center gap-3">
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 12,
+                    backgroundColor: "#0EA5E925",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name="weather-pouring"
+                    size={20}
+                    color="#0EA5E9"
                   />
-                  <Text
-                    style={{
-                      fontSize: 10,
-                      fontWeight: "700",
-                      color: isDarkColorScheme ? "#94A3B8" : "#64748B",
-                      marginTop: 10,
-                    }}
-                  >
-                    {item.hour}
+                </View>
+                <View>
+                  <Text className="text-slate-900 dark:text-white text-[15px] font-extrabold pb-0.5">
+                    Lượng mưa trạm đo (mm)
+                  </Text>
+                  <Text className="text-slate-500 dark:text-slate-400 text-xs font-medium mt-0.5">
+                    Theo số liệu thời gian thực
                   </Text>
                 </View>
-              );
-            })}
+              </View>
+              <View
+                style={{
+                  backgroundColor: "#0EA5E920",
+                  paddingHorizontal: 12,
+                  paddingVertical: 5,
+                  borderRadius: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#0EA5E9",
+                    fontSize: 11,
+                    fontWeight: "900",
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  LIVE
+                </Text>
+              </View>
+            </View>
+
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "flex-end",
+                justifyContent: "space-between",
+                height: 85,
+                paddingHorizontal: 4,
+              }}
+            >
+              {rainfallForecast.map((item, index) => {
+                const color = RAINFALL_COLORS[item.level];
+                const height = getRainfallBarHeight(item.amount) * 1.5;
+                const hasRain = item.amount > 0;
+                return (
+                  <View key={index} style={{ alignItems: "center", flex: 1 }}>
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        fontWeight: "900",
+                        color: hasRain ? color : "#94A3B8",
+                        marginBottom: 6,
+                      }}
+                    >
+                      {hasRain ? item.amount : "0"}
+                    </Text>
+                    <View
+                      style={{
+                        width: 16,
+                        height: Math.max(8, height),
+                        borderRadius: 8,
+                        backgroundColor: color,
+                        shadowColor: color,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: hasRain ? 0.6 : 0,
+                        shadowRadius: 6,
+                        elevation: hasRain ? 4 : 0,
+                      }}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        fontWeight: "700",
+                        color: "#64748B",
+                        marginTop: 10,
+                      }}
+                    >
+                      {item.hour}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
           </View>
-        </LinearGradient>
+        </View>
       )}
     </View>
   );
@@ -945,7 +863,6 @@ export function WeatherInsightsSection({
 // ──────────────────────────────────────────────
 
 export const WeatherInsightsSkeleton = () => {
-  const { isDarkColorScheme } = useColorScheme();
   const pulseAnim = useRef(new Animated.Value(0.4)).current;
 
   useEffect(() => {
@@ -965,9 +882,6 @@ export const WeatherInsightsSkeleton = () => {
     ).start();
   }, [pulseAnim]);
 
-  const skeletonBg = isDarkColorScheme ? "#1E293B" : "#E2E8F0";
-  const itemBorder = isDarkColorScheme ? "#334155" : "#F1F5F9";
-
   return (
     <View className="px-4 py-2 mt-4">
       {/* Header Skeleton */}
@@ -977,9 +891,10 @@ export const WeatherInsightsSkeleton = () => {
             width: 32,
             height: 32,
             borderRadius: 16,
-            backgroundColor: skeletonBg,
+            backgroundColor: "#E2E8F0",
             opacity: pulseAnim,
           }}
+          className="dark:bg-slate-700"
         />
         <View>
           <Animated.View
@@ -987,19 +902,21 @@ export const WeatherInsightsSkeleton = () => {
               width: 140,
               height: 18,
               borderRadius: 8,
-              backgroundColor: skeletonBg,
+              backgroundColor: "#E2E8F0",
               opacity: pulseAnim,
               marginBottom: 4,
             }}
+            className="dark:bg-slate-700"
           />
           <Animated.View
             style={{
               width: 100,
-              height: 10,
+              height: 12,
               borderRadius: 4,
-              backgroundColor: skeletonBg,
+              backgroundColor: "#E2E8F0",
               opacity: pulseAnim,
             }}
+            className="dark:bg-slate-700"
           />
         </View>
       </View>
@@ -1009,12 +926,12 @@ export const WeatherInsightsSkeleton = () => {
         style={{
           height: 200,
           borderRadius: 24,
-          backgroundColor: skeletonBg,
           opacity: pulseAnim,
           marginBottom: 12,
           padding: 20,
           justifyContent: "space-between",
         }}
+        className="bg-slate-200 dark:bg-slate-700"
       >
         <View className="flex-row items-center justify-between">
           <View>
@@ -1046,64 +963,35 @@ export const WeatherInsightsSkeleton = () => {
           />
         </View>
         <View className="flex-row gap-2 mt-4">
-          <View
-            style={{
-              flex: 1,
-              height: 48,
-              borderRadius: 16,
-              backgroundColor: "rgba(0,0,0,0.1)",
-            }}
-          />
-          <View
-            style={{
-              flex: 1,
-              height: 48,
-              borderRadius: 16,
-              backgroundColor: "rgba(0,0,0,0.1)",
-            }}
-          />
-          <View
-            style={{
-              flex: 1,
-              height: 48,
-              borderRadius: 16,
-              backgroundColor: "rgba(0,0,0,0.1)",
-            }}
-          />
+          {[1, 2, 3].map((i) => (
+            <View
+              key={i}
+              style={{
+                flex: 1,
+                height: 48,
+                borderRadius: 16,
+                backgroundColor: "rgba(0,0,0,0.1)",
+              }}
+            />
+          ))}
         </View>
       </Animated.View>
 
       {/* 2) HOURLY SKELETON */}
       <View
-        style={{
-          height: 120,
-          borderRadius: 20,
-          backgroundColor: isDarkColorScheme ? "#0F172A" : "white",
-          borderWidth: 1,
-          borderColor: itemBorder,
-          marginBottom: 12,
-        }}
+        className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 mb-3"
+        style={{ height: 120, borderRadius: 20 }}
       >
         <Animated.View
-          style={{
-            flex: 1,
-            backgroundColor: skeletonBg,
-            opacity: pulseAnim,
-            borderRadius: 20,
-          }}
+          style={{ flex: 1, borderRadius: 20, opacity: pulseAnim }}
+          className="bg-slate-200 dark:bg-slate-700"
         />
       </View>
 
       {/* 3) 7-DAY SKELETON */}
       <View
-        style={{
-          padding: 16,
-          borderRadius: 20,
-          backgroundColor: isDarkColorScheme ? "#0F172A" : "white",
-          borderWidth: 1,
-          borderColor: itemBorder,
-          marginBottom: 12,
-        }}
+        className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 mb-3"
+        style={{ padding: 16, borderRadius: 20 }}
       >
         <View className="flex-row items-center gap-2 mb-4">
           <Animated.View
@@ -1111,9 +999,9 @@ export const WeatherInsightsSkeleton = () => {
               width: 120,
               height: 14,
               borderRadius: 6,
-              backgroundColor: skeletonBg,
               opacity: pulseAnim,
             }}
+            className="bg-slate-200 dark:bg-slate-700"
           />
         </View>
         {[1, 2, 3].map((i) => (
@@ -1122,31 +1010,16 @@ export const WeatherInsightsSkeleton = () => {
             className="flex-row items-center justify-between py-2.5"
           >
             <Animated.View
-              style={{
-                width: 40,
-                height: 12,
-                borderRadius: 6,
-                backgroundColor: skeletonBg,
-                opacity: pulseAnim,
-              }}
+              style={{ width: 40, height: 12, borderRadius: 6, opacity: pulseAnim }}
+              className="bg-slate-200 dark:bg-slate-700"
             />
             <Animated.View
-              style={{
-                width: 24,
-                height: 24,
-                borderRadius: 12,
-                backgroundColor: skeletonBg,
-                opacity: pulseAnim,
-              }}
+              style={{ width: 24, height: 24, borderRadius: 12, opacity: pulseAnim }}
+              className="bg-slate-200 dark:bg-slate-700"
             />
             <Animated.View
-              style={{
-                width: 100,
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: skeletonBg,
-                opacity: pulseAnim,
-              }}
+              style={{ width: 100, height: 8, borderRadius: 4, opacity: pulseAnim }}
+              className="bg-slate-200 dark:bg-slate-700"
             />
           </View>
         ))}

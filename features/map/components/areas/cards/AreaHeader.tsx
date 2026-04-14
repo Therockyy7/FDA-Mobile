@@ -4,7 +4,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { RADIUS, STATUS_BADGE } from "~/features/map/lib/map-ui-utils";
+import { STATUS_BADGE } from "~/features/map/lib/map-ui-utils";
+import { RADIUS } from "~/lib/design-tokens";
 
 interface AreaHeaderProps {
   name: string;
@@ -27,7 +28,7 @@ export function AreaHeader({ name, addressText, statusColor, statusLabel, status
   const shimmerOpacity = shimmer.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 0.1, 0] });
 
   return (
-    <View style={styles.wrapper}>
+    <View testID="map-area-header" style={styles.wrapper}>
       <LinearGradient
         colors={[statusColor, `${statusColor}CC`]}
         start={{ x: 0, y: 0 }}

@@ -54,3 +54,6 @@ GoogleService-Info.plist
 claude-*.json
 .claude/
 # CLAUDE.md
+
+_bmad/
+.cursor/

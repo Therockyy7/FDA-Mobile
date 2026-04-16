@@ -332,10 +332,37 @@ export function useControlArea({
   const [isLoadingSearch, setIsLoadingSearch] = useState(false);
 
   // Step 1 -> Step 2: Confirm location, show name/address modal
-  const handleConfirmLocation = useCallback(() => {
+  const handleConfirmLocation = useCallback(async () => {
+    if (draftAreaCenter && !editingArea) {
+      try {
+        const reverseGeocode = await Location.reverseGeocodeAsync({
+          latitude: draftAreaCenter.latitude,
+          longitude: draftAreaCenter.longitude,
+        });
+
+        if (reverseGeocode.length > 0) {
+          const place = reverseGeocode[0];
+          const addressParts = [
+            place.streetNumber,
+            place.street,
+            place.district,
+            place.subregion,
+            place.city,
+          ].filter(Boolean);
+
+          const addressText = addressParts.join(", ");
+          if (addressText) {
+            setDraftAddress(addressText);
+          }
+        }
+      } catch (error) {
+        console.warn("Reverse geocoding failed on confirm:", error);
+      }
+    }
+
     setIsAdjustingRadius(false);
     setShowCreateAreaSheet(true);
-  }, []);
+  }, [draftAreaCenter, editingArea]);
 
   // Cancel Step 1: Cancel radius adjustment
   const handleCancelCreateArea = useCallback(() => {

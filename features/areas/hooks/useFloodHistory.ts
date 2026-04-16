@@ -80,10 +80,12 @@ export function useFloodHistory({
     return { startDate, endDate, granularity };
   }, []);
 
+  const stationIdsJoined = stationIds?.join(',') || '';
+
   const fetchData = useCallback(async () => {
-    // Enable if stationId, stationIds array, or areaId is provided
+    const currentStationIds = stationIdsJoined ? stationIdsJoined.split(',') : undefined;
     const hasStationId = !!stationId;
-    const hasStationIds = stationIds && stationIds.length > 0;
+    const hasStationIds = currentStationIds && currentStationIds.length > 0;
     const hasAreaId = !!areaId;
 
     if (!enabled || (!hasStationId && !hasStationIds && !hasAreaId)) {
@@ -98,7 +100,7 @@ export function useFloodHistory({
 
       const result = await AreaService.getFloodHistory({
         stationId,
-        stationIds,
+        stationIds: currentStationIds,
         areaId,
         startDate,
         endDate,
@@ -114,7 +116,7 @@ export function useFloodHistory({
     } finally {
       setIsLoading(false);
     }
-  }, [stationId, stationIds, areaId, period, enabled, getDateRange]);
+  }, [stationId, stationIdsJoined, areaId, period, enabled, getDateRange]);
 
   useEffect(() => {
     fetchData();

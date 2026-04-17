@@ -211,9 +211,9 @@ export default function CreatePostScreen() {
     setCurrentAreaId(foundId);
     setCurrentAreaName(foundName);
   }, []);
-  /** Fetch the official status for the resolved area */
-  const fetchAndCompareAreaStatus = useCallback(
-    async (chosenSeverity: Severity, areaId: string): Promise<AreaStatus | null> => {
+  /** Fetch + store area status (without comparing severity) */
+  const fetchAreaStatus = useCallback(
+    async (areaId: string): Promise<AreaStatus | null> => {
       setFetchingAreaStatus(true);
       try {
         const statusData = await AreaService.getAdministrativeAreaStatus(areaId);
@@ -234,6 +234,13 @@ export default function CreatePostScreen() {
     [currentAreaName]
   );
 
+  // Auto-fetch area status as soon as the area is resolved from GPS
+  useEffect(() => {
+    if (currentAreaId) {
+      fetchAreaStatus(currentAreaId);
+    }
+  }, [currentAreaId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   /** Called when user taps a severity button */
   const handleSeverityChange = useCallback(
     async (newSeverity: Severity) => {
@@ -243,10 +250,11 @@ export default function CreatePostScreen() {
         return;
       }
 
-      // Fetch the official status and compare
-      setFetchingAreaStatus(true);
-      const status = await fetchAndCompareAreaStatus(newSeverity, currentAreaId);
-      setFetchingAreaStatus(false);
+      // Use already-fetched status if available, otherwise fetch now
+      let status = areaStatus;
+      if (!status) {
+        status = await fetchAreaStatus(currentAreaId);
+      }
 
       if (!status) {
         // Can't compare → just apply
@@ -266,7 +274,7 @@ export default function CreatePostScreen() {
         setSeverity(newSeverity);
       }
     },
-    [currentAreaId, fetchAndCompareAreaStatus]
+    [currentAreaId, areaStatus, fetchAreaStatus]
   );
 
   /** User confirms mismatch and keeps their selected severity */

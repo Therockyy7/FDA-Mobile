@@ -54,10 +54,12 @@ export function useFloodStatistics({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
+  const stationIdsJoined = stationIds?.join(',') || '';
+
   const fetchData = useCallback(async () => {
-    // Enable if stationId, stationIds array, or areaId is provided
+    const currentStationIds = stationIdsJoined ? stationIdsJoined.split(',') : undefined;
     const hasStationId = !!stationId;
-    const hasStationIds = stationIds && stationIds.length > 0;
+    const hasStationIds = currentStationIds && currentStationIds.length > 0;
     const hasAreaId = !!areaId;
 
     if (!enabled || (!hasStationId && !hasStationIds && !hasAreaId)) {
@@ -72,7 +74,7 @@ export function useFloodStatistics({
 
       const result = await AreaService.getFloodStatistics({
         stationId,
-        stationIds,
+        stationIds: currentStationIds,
         areaId,
         period: apiPeriod,
         includeBreakdown,
@@ -92,7 +94,7 @@ export function useFloodStatistics({
     }
   }, [
     stationId,
-    stationIds,
+    stationIdsJoined,
     areaId,
     period,
     includeBreakdown,

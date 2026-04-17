@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1027352425965",
+    "project_id": "fda-notification-5f61c",
+    "storage_bucket": "fda-notification-5f61c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1027352425965:android:24fd26918d41a73f19e3e4",
+        "android_client_info": {
+          "package_name": "com.fda.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDIbaPz5g0_v3a4dGJ50BVXSz6qIheNHg0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1027352425965:android:e7a833afc7c8afdc19e3e4",
+        "android_client_info": {
+          "package_name": "fda.android.notification"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDIbaPz5g0_v3a4dGJ50BVXSz6qIheNHg0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

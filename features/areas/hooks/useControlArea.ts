@@ -7,6 +7,7 @@ import type MapView from "react-native-maps";
 import type { MapPressEvent, Region } from "react-native-maps";
 import { AreaService } from "~/features/areas/services/area.service";
 import type { AreaWithStatus } from "~/features/map/types/map-layers.types";
+import { useCurrentSubscription } from "~/features/plans/hooks/useCurrentSubscription";
 
 // Error types for better UX
 export type AreaErrorType = "duplicate" | "general" | null;
@@ -43,6 +44,10 @@ export function useControlArea({
   onAreaSubscribe,
   onAreaUnsubscribe,
 }: UseControlAreaParams) {
+  // Subscription check — Premium/Monitor bypasses the free 5-area limit
+  const { data: subscriptionData } = useCurrentSubscription();
+  const tierCode = subscriptionData?.subscription?.tierCode;
+  const isPremium = tierCode === "PREMIUM" || tierCode === "MONITOR";
   // Selected area state
   const [selectedArea, setSelectedArea] = useState<AreaWithStatus | null>(null);
 
@@ -154,7 +159,8 @@ export function useControlArea({
       // console.log(`📊 Area count: ${count}/${FREE_AREA_LIMIT}`);
       setCurrentAreaCount(count);
 
-      if (count >= FREE_AREA_LIMIT) {
+      // Premium/Monitor users have unlimited areas — skip the limit check
+      if (!isPremium && count >= FREE_AREA_LIMIT) {
         // Show premium limit modal instead of creation options
         // console.log("🔒 LIMIT REACHED! Showing premium modal...");
         setIsCheckingLimit(false);
@@ -162,7 +168,7 @@ export function useControlArea({
         return;
       }
 
-      // Under limit, show creation options
+      // Under limit (or Premium), show creation options
       // console.log("✅ Under limit, showing creation options...");
       setIsCheckingLimit(false);
       setShowCreationOptions(true);
@@ -172,7 +178,7 @@ export function useControlArea({
       setIsCheckingLimit(false);
       setShowCreationOptions(true);
     }
-  }, [clearSelections, isCheckingLimit]);
+  }, [clearSelections, isCheckingLimit, isPremium]);
 
   // NEW: Handle option selection (GPS or Search)
   const handleOptionSelect = useCallback(

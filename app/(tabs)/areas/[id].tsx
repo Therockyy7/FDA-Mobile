@@ -57,7 +57,7 @@ const formatDate = (dateString?: string) => {
 // Format radius
 const formatRadius = (meters: number) => {
   if (meters >= 1000) return `${(meters / 1000).toFixed(1)} km`;
-  return `${meters}m`;
+  return `${meters} m`;
 };
 
 // Format relative time
@@ -509,7 +509,9 @@ export default function AreaDetailScreen() {
                 style={{ fontSize: 16, fontWeight: "700", color: "white" }}
                 numberOfLines={1}
               >
-                {maxWaterLevel > 0 ? `${maxWaterLevel.toFixed(1)}m` : area.name}
+                {maxWaterLevel > 0
+                  ? `${maxWaterLevel.toFixed(1)}cm`
+                  : area.name}
               </Text>
               <View
                 style={{

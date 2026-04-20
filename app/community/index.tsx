@@ -5,6 +5,7 @@ import { MotiView } from "moti";
 import React, { useCallback, useState } from "react";
 
 import {
+  Alert,
   Image,
   Platform,
   RefreshControl,
@@ -22,7 +23,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
-import { useUser } from "~/features/auth/hooks/useAuth";
+import { useUser, useIsAuthenticated } from "~/features/auth/hooks/useAuth";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 import { PostCard } from "~/features/community/components/PostCard";
@@ -53,6 +54,25 @@ export default function CommunityScreen() {
   const [totalCount, setTotalCount] = useState(0);
   const currentUser = useUser();
   const myUserId = currentUser?.id ?? null;
+  const isAuthenticated = useIsAuthenticated();
+
+  const handleCreatePost = useCallback(() => {
+    if (!isAuthenticated) {
+      Alert.alert(
+        "Yêu cầu đăng nhập",
+        "Bạn cần đăng nhập để tạo báo cáo ngập lụt.",
+        [
+          { text: "Hủy", style: "cancel" },
+          {
+            text: "Đăng nhập",
+            onPress: () => router.push("/(auth)/sign-in" as any),
+          },
+        ]
+      );
+      return;
+    }
+    router.push("/community/create-post" as any);
+  }, [isAuthenticated, router]);
 
   // Reanimated shared value for scroll position
   const scrollY = useSharedValue(0);
@@ -206,7 +226,7 @@ export default function CommunityScreen() {
         style={{ paddingHorizontal: 16, marginTop: 12 }}
       >
         <TouchableOpacity
-          onPress={() => router.push("/community/create-post" as any)}
+          onPress={handleCreatePost}
           activeOpacity={0.92}
         >
           <View
@@ -434,7 +454,7 @@ export default function CommunityScreen() {
       </Text>
 
       <TouchableOpacity
-        onPress={() => router.push("/community/create-post" as any)}
+        onPress={handleCreatePost}
         activeOpacity={0.85}
         style={{ marginTop: 20 }}
       >

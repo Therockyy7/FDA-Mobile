@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { Text } from "~/components/ui/text";
 import { Ionicons } from "@expo/vector-icons";
-
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from "expo-location";
@@ -21,6 +20,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { CommunityService } from "~/features/community/services/community.service";
 import { COMMUNITY_REPORTS_QUERY_KEY } from "~/features/map/hooks/queries/useCommunityReportsQuery";
 import { AreaService } from "~/features/areas/services/area.service";
+import { useAuthStatus, useAuthLoading } from "~/features/auth/hooks/useAuth";
 
 type Severity = "low" | "medium" | "high";
 
@@ -78,6 +78,27 @@ export default function CreatePostScreen() {
   // Mismatch confirmation dialog
   const [mismatchDialogVisible, setMismatchDialogVisible] = useState(false);
   const [pendingSeverity, setPendingSeverity] = useState<Severity | null>(null);
+
+  // ── Auth guard ──
+  const authStatus = useAuthStatus();
+  const authLoading = useAuthLoading();
+
+  // ── Redirect unauthenticated users ──
+  useEffect(() => {
+    if (!authLoading && authStatus === "unauthenticated") {
+      Alert.alert(
+        "Yêu cầu đăng nhập",
+        "Bạn cần đăng nhập để tạo báo cáo ngập lụt.",
+        [
+          { text: "Hủy", style: "cancel", onPress: () => router.back() },
+          {
+            text: "Đăng nhập",
+            onPress: () => router.replace("/(auth)/sign-in" as any),
+          },
+        ]
+      );
+    }
+  }, [authLoading, authStatus, router]);
 
   // GPS + ward resolution on mount
   useEffect(() => {
@@ -382,6 +403,18 @@ export default function CreatePostScreen() {
       setUploadProgress(-1);
     }
   };
+
+  // ── Loading state while checking auth ──
+  if (authLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-900 items-center justify-center">
+        <ActivityIndicator size="large" color="#0EA5E9" />
+        <Text className="text-sm text-slate-500 dark:text-slate-400 mt-3">
+          Đang kiểm tra tài khoản...
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   if (showCamera) {
     return <CustomCamera onClose={() => setShowCamera(false)} onDone={handleMediaDone} />;

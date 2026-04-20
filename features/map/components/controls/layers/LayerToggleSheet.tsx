@@ -17,6 +17,7 @@ import { BaseMapSelector } from "./BaseMapSelector";
 import { AreaDisplayModeSelector } from "./AreaDisplayModeSelector";
 import { OverlayLayerItem } from "./OverlayLayerItem";
 import { OpacitySlider } from "./OpacitySlider";
+import { useCurrentSubscription } from "~/features/plans/hooks/useCurrentSubscription";
 
 interface LayerToggleSheetProps {
   visible: boolean;
@@ -38,6 +39,9 @@ function LayerToggleSheetContent({
 }) {
   const { isDarkColorScheme } = useColorScheme();
   const { settings, toggleOverlay, setBaseMap, setOpacity } = useFloodLayerSettings();
+  const { data: subscriptionData } = useCurrentSubscription();
+  const tierCode = subscriptionData?.subscription?.tierCode;
+  const isFreePlan = !tierCode || tierCode === "FREE";
 
   const colors = {
     background: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
@@ -123,6 +127,7 @@ function LayerToggleSheetContent({
               cardBg={colors.cardBg}
               borderColor={colors.border}
               isDarkColorScheme={isDarkColorScheme}
+              isFreePlan={isFreePlan}
             />
           )}
 

@@ -1,8 +1,8 @@
 // features/map/components/routes/cards/SafeRouteResultCard.tsx
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { formatDistance, formatDuration } from "~/features/map/lib/polyline-utils";
@@ -15,6 +15,7 @@ import {
 } from "~/features/map/types/safe-route.types";
 import { RouteRiskBar } from "./RouteRiskBar";
 import { FloodZoneBanner } from "./FloodZoneBanner";
+import type { TransportMode } from "~/features/map/types/routing.types";
 
 interface SafeRouteResultCardProps {
   route: DecodedRoute;
@@ -26,6 +27,11 @@ interface SafeRouteResultCardProps {
   isUsingGPSOrigin?: boolean;
   /** True when the current user is not logged in — shows a login hint banner */
   isGuest?: boolean;
+  /** Transport mode switcher */
+  transportMode?: TransportMode;
+  onModeChange?: (mode: TransportMode) => void;
+  onFindRoute?: () => void;
+  isLoading?: boolean;
 }
 
 export function SafeRouteResultCard({
@@ -37,6 +43,10 @@ export function SafeRouteResultCard({
   onStartNavigation,
   isUsingGPSOrigin = false,
   isGuest = false,
+  transportMode,
+  onModeChange,
+  onFindRoute,
+  isLoading = false,
 }: SafeRouteResultCardProps) {
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
@@ -74,6 +84,39 @@ export function SafeRouteResultCard({
           <Ionicons name="close-circle" size={22} color={muted} />
         </TouchableOpacity>
       </View>
+
+      {/* Transport mode switcher */}
+      {transportMode && onModeChange && (
+        <View style={styles.modeContainer}>
+          <View style={styles.modePills}>
+            {(
+              [
+                { mode: "car" as TransportMode, icon: <Ionicons name="car" size={15} color={transportMode === "car" ? "white" : muted} /> },
+                { mode: "motorbike" as TransportMode, icon: <MaterialCommunityIcons name="motorbike" size={15} color={transportMode === "motorbike" ? "white" : muted} /> },
+                { mode: "bicycle" as TransportMode, icon: <Ionicons name="bicycle" size={15} color={transportMode === "bicycle" ? "white" : muted} /> },
+                { mode: "walk" as TransportMode, icon: <Ionicons name="walk" size={15} color={transportMode === "walk" ? "white" : muted} /> },
+              ]
+            ).map(({ mode, icon }) => (
+              <TouchableOpacity
+                key={mode}
+                onPress={() => {
+                  onModeChange(mode);
+                  // onModeChange is handleSwitchModeAndFind — sets mode AND re-searches
+                }}
+                disabled={isLoading}
+                activeOpacity={0.8}
+                style={[
+                  styles.modePill,
+                  transportMode === mode && styles.modePillActive,
+                ]}
+              >
+                {icon}
+              </TouchableOpacity>
+            ))}
+          </View>
+          {isLoading && <ActivityIndicator size="small" color="#2563EB" style={{ marginLeft: 8 }} />}
+        </View>
+      )}
 
       {/* Stats row */}
       <View style={styles.statsRow}>
@@ -169,6 +212,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 14,
+  },
+  modeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  modePills: {
+    flexDirection: "row",
+    backgroundColor: "#F3F4F6",
+    borderRadius: 999,
+    padding: 3,
+  },
+  modePill: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modePillActive: {
+    backgroundColor: "#2563EB",
   },
   statusBadge: {
     flexDirection: "row",

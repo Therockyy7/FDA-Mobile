@@ -53,14 +53,32 @@ export const initializeAuth = createAsyncThunk<
       refreshToken,
       expiresAt: (await AsyncStorage.getItem(EXPIRES_AT_KEY)) || undefined,
     };
-  } catch {
-    // Token expired or invalid → clear storage
-    await AsyncStorage.multiRemove([
-      ACCESS_TOKEN_KEY,
-      REFRESH_TOKEN_KEY,
-      USER_DATA_KEY,
-      EXPIRES_AT_KEY,
-    ]);
+  } catch (err: any) {
+    const status = err?.response?.status;
+    const isAuthError = status === 401 || status === 403;
+
+    if (isAuthError) {
+      // Token thực sự invalid/expired → clear và logout
+      await AsyncStorage.multiRemove([
+        ACCESS_TOKEN_KEY,
+        REFRESH_TOKEN_KEY,
+        USER_DATA_KEY,
+        EXPIRES_AT_KEY,
+      ]);
+      return { isAuthenticated: false, user: null };
+    }
+
+    // Lỗi mạng hoặc server error → dùng cached user, giữ token
+    if (user) {
+      return {
+        isAuthenticated: true,
+        user,
+        accessToken,
+        refreshToken,
+        expiresAt: (await AsyncStorage.getItem(EXPIRES_AT_KEY)) || undefined,
+      };
+    }
+
     return { isAuthenticated: false, user: null };
   }
 });

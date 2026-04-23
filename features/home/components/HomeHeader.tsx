@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { Platform, StatusBar, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { useOfflineBannerPadding } from "~/components/OfflineBanner";
 import { useUser } from "~/features/auth/stores/hooks";
 import { useTranslation } from "~/features/i18n";
 import { useColorScheme } from "~/lib/useColorScheme";
@@ -21,6 +22,7 @@ export function HomeHeader({ notificationCount = 0, meteo }: HomeHeaderProps) {
   const { isDarkColorScheme } = useColorScheme();
   const user = useUser();
   const { t, locale } = useTranslation();
+  const offlinePadding = useOfflineBannerPadding();
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -47,7 +49,7 @@ export function HomeHeader({ notificationCount = 0, meteo }: HomeHeaderProps) {
       style={{
         backgroundColor: colors.background,
         paddingTop:
-          Platform.OS === "ios" ? 50 : (StatusBar.currentHeight || 0) + 12,
+          (Platform.OS === "ios" ? 50 : (StatusBar.currentHeight || 0) + 12) + offlinePadding,
         paddingBottom: 14,
         paddingHorizontal: 20,
         borderBottomWidth: 1,

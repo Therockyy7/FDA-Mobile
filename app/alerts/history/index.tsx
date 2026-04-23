@@ -24,6 +24,7 @@ import { useAlertHistoryInfiniteQuery } from "~/features/alerts/hooks/useAlertHi
 import type { AlertHistoryItem } from "~/features/alerts/types/alert-history.types";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { useTranslation } from "~/features/i18n";
+import { CachedDataBadge } from "~/components/CachedDataBadge";
 
 export default function AlertHistoryScreen() {
   const router = useRouter();
@@ -238,6 +239,8 @@ export default function AlertHistoryScreen() {
         }}
         topInset={insets.top}
       />
+
+      <CachedDataBadge />
 
       <View
         style={{

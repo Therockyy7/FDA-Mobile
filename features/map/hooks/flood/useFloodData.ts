@@ -141,6 +141,8 @@ export function useFloodData(
     isLoading,
     isFetching,
     refetch,
+    dataUpdatedAt,
+    fetchStatus,
   } = useFloodSeverityQuery(params ?? null, enabled);
   const realtimeUpdates = useFloodRealtimeStore((s) => s.updates);
 
@@ -171,5 +173,5 @@ export function useFloodData(
     [restData, realtimeUpdates],
   );
 
-  return { floodSeverity, isLoading, isFetching, refetch };
+  return { floodSeverity, isLoading, isFetching, refetch, dataUpdatedAt, fetchStatus };
 }

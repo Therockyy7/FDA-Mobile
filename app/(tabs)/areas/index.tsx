@@ -15,6 +15,7 @@ import {
     View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useOfflineBannerPadding } from "~/components/OfflineBanner";
 import { TabLoadingScreen } from "~/components/ui/TabLoadingScreen";
 import { Text } from "~/components/ui/text";
 import type { NotificationChannels } from "~/features/alerts/types/alert-settings.types";
@@ -50,6 +51,7 @@ const DEFAULT_ALERT_CHANNELS: NotificationChannels = {
 export default function AreasScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const offlinePadding = useOfflineBannerPadding();
   const { isDarkColorScheme } = useColorScheme();
   const { t } = useTranslation();
 
@@ -297,9 +299,9 @@ export default function AreasScreen() {
         }
         style={{
           paddingTop:
-            Platform.OS === "android"
+            (Platform.OS === "android"
               ? (StatusBar.currentHeight || 0) + 12
-              : insets.top + 8,
+              : insets.top + 8) + offlinePadding,
           paddingBottom: 16,
           paddingHorizontal: 20,
           borderBottomWidth: 1,

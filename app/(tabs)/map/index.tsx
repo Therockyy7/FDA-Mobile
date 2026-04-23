@@ -4,34 +4,45 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback } from "react";
-import { StatusBar, TouchableOpacity, View, ActivityIndicator, InteractionManager } from "react-native";
+import {
+  ActivityIndicator,
+  InteractionManager,
+  StatusBar,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
+import { Text } from "~/components/ui/text";
 import {
   MapLoadingOverlay,
   NavigationHUD,
   PickOnMapOverlay,
   StreetViewHint,
 } from "~/features/map/components/overlays";
-import { Text } from "~/components/ui/text";
-import { ewkbToLatLngArray, getBoundsFromCoords } from "~/features/map/lib/ewkb-parser";
+import {
+  ewkbToLatLngArray,
+  getBoundsFromCoords,
+} from "~/features/map/lib/ewkb-parser";
 import type { LatLng } from "~/features/map/types/safe-route.types";
 import { DANANG_CENTER } from "~/features/map/constants/map-data";
 import type { TransportMode } from "~/features/map/types/routing.types";
 
+import { ConfirmDeleteModal } from "~/features/areas/components/ConfirmDeleteModal";
+import { useIsAuthenticated } from "~/features/auth/hooks/useAuth";
+import { StaticAreaTarget } from "~/features/map/components/areas/overlays/StaticAreaTarget";
 import { MapContent } from "~/features/map/components/MapContent";
 import { MapFloatingUI } from "~/features/map/components/MapFloatingUI";
 import { MapHeaderSwitch } from "~/features/map/components/MapHeaderSwitch";
 import { MapSheets } from "~/features/map/components/MapSheets";
-import { ConfirmDeleteModal } from "~/features/areas/components/ConfirmDeleteModal";
 import { useMapScreen } from "~/features/map/hooks/useMapScreen";
 import { useMapScreenState } from "~/features/map/hooks/useMapScreenState";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
-import { useIsAuthenticated } from "~/features/auth/hooks/useAuth";
-import { StaticAreaTarget } from "~/features/map/components/areas/overlays/StaticAreaTarget";
+
 
 export default function MapScreen() {
   // Single aggregated state
   const s = useMapScreenState();
+
   const router = useRouter();
   const isGuest = !useIsAuthenticated();
 
@@ -51,7 +62,6 @@ export default function MapScreen() {
     handleCloseCommunityReport,
     handleRegionChange,
     handleMapTouchStart,
-
   } = useMapScreen({
     settings: s.settings,
     refreshFloodSeverity: s.refreshFloodSeverity,
@@ -103,7 +113,6 @@ export default function MapScreen() {
     floodSeverity: s.floodSeverity,
   });
 
-
   // Reset station card khi user rời khỏi tab map
   const { setSelectedStationId } = s;
   useFocusEffect(
@@ -145,81 +154,92 @@ export default function MapScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0B1A33" }}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-      <Tabs.Screen 
-        options={{ 
-          tabBarStyle: (
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="transparent"
+        translucent
+      />
+      <Tabs.Screen
+        options={{
+          tabBarStyle:
             (s.isAdjustingRadius && !s.nav.isNavigating) ||
             s.isRoutingUIVisible ||
             s.safeRoute.hasResults ||
             s.showResultCard ||
             s.nav.isNavigating
-          ) ? { display: "none" } : undefined 
-        }} 
+              ? { display: "none" }
+              : undefined,
+        }}
       />
 
       {/* Header — hide when community report sheet is open or viewing AI Prediction Map */}
       {!s.showCommunityReportSheet && !s.params.returnToPrediction && (
         <MapHeaderSwitch
-        isRoutingUIVisible={s.isRoutingUIVisible}
-        openRouting={s.openRouting}
-        navIsNavigating={s.nav.isNavigating}
-        safeRouteHasResults={s.safeRoute.hasResults}
-        originText={s.originText}
-        onOriginChange={s.setOriginText}
-        onOriginClear={() => { s.setOriginText(""); s.setStartCoord(null); }}
-        isUsingGPSOrigin={s.isUsingGPSOrigin}
-        onUseGPSAsOrigin={s.selectGPSAsOrigin}
-        onPickOriginOnMap={s.startPickingOrigin}
-        hasOriginCoord={s.startCoord !== null}
-        onOriginPlaceSelected={(coord: LatLng) => {
-          s.setStartCoord(coord);
-          s.openRouting();
-          s.mapRef.current?.animateToRegion(
-            {
-              latitude: coord.latitude,
-              longitude: coord.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            },
-            500,
-          );
-        }}
-        destinationText={s.destinationText}
-        onDestinationChange={s.setDestinationText}
-        onDestinationClear={() => { s.setDestinationText(""); s.setEndCoord(null); }}
-        isUsingGPSDest={s.isUsingGPSDest}
-        onUseGPSAsDest={() => {
-          if (s.userLocation) {
-            s.selectGPSAsDestination(s.userLocation);
+          isRoutingUIVisible={s.isRoutingUIVisible}
+          openRouting={s.openRouting}
+          navIsNavigating={s.nav.isNavigating}
+          safeRouteHasResults={s.safeRoute.hasResults}
+          originText={s.originText}
+          onOriginChange={s.setOriginText}
+          onOriginClear={() => {
+            s.setOriginText("");
+            s.setStartCoord(null);
+          }}
+          isUsingGPSOrigin={s.isUsingGPSOrigin}
+          onUseGPSAsOrigin={s.selectGPSAsOrigin}
+          onPickOriginOnMap={s.startPickingOrigin}
+          hasOriginCoord={s.startCoord !== null}
+          onOriginPlaceSelected={(coord: LatLng) => {
+            s.setStartCoord(coord);
             s.openRouting();
-          }
-        }}
-        onPickDestinationOnMap={s.startPickingDestination}
-        hasDestinationCoord={s.endCoord !== null}
-        onDestinationPlaceSelected={(coord: LatLng) => {
-          s.setEndCoord(coord);
-          s.openRouting();
-          s.mapRef.current?.animateToRegion(
-            {
-              latitude: coord.latitude,
-              longitude: coord.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            },
-            500,
-          );
-        }}
-        onSwap={s.swapOriginDestination}
-        transportMode={s.transportMode}
-        onModeChange={s.setTransportMode}
-        onFindRoute={handleFindRoute}
-        safeRouteIsLoading={s.safeRoute.isLoading}
-        safeRouteError={s.safeRoute.error}
-        onCloseRouting={handleCloseRouting}
-        userLocation={s.userLocation}
-        selectGPSAsDestination={s.selectGPSAsDestination}
-      />
+            s.mapRef.current?.animateToRegion(
+              {
+                latitude: coord.latitude,
+                longitude: coord.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              },
+              500,
+            );
+          }}
+          destinationText={s.destinationText}
+          onDestinationChange={s.setDestinationText}
+          onDestinationClear={() => {
+            s.setDestinationText("");
+            s.setEndCoord(null);
+          }}
+          isUsingGPSDest={s.isUsingGPSDest}
+          onUseGPSAsDest={() => {
+            if (s.userLocation) {
+              s.selectGPSAsDestination(s.userLocation);
+              s.openRouting();
+            }
+          }}
+          onPickDestinationOnMap={s.startPickingDestination}
+          hasDestinationCoord={s.endCoord !== null}
+          onDestinationPlaceSelected={(coord: LatLng) => {
+            s.setEndCoord(coord);
+            s.openRouting();
+            s.mapRef.current?.animateToRegion(
+              {
+                latitude: coord.latitude,
+                longitude: coord.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              },
+              500,
+            );
+          }}
+          onSwap={s.swapOriginDestination}
+          transportMode={s.transportMode}
+          onModeChange={s.setTransportMode}
+          onFindRoute={handleFindRoute}
+          safeRouteIsLoading={s.safeRoute.isLoading}
+          safeRouteError={s.safeRoute.error}
+          onCloseRouting={handleCloseRouting}
+          userLocation={s.userLocation}
+          selectGPSAsDestination={s.selectGPSAsDestination}
+        />
       )}
 
       <View style={{ flex: 1, position: "relative" }}>
@@ -233,7 +253,7 @@ export default function MapScreen() {
               // Clear Map view states
               s.setSelectedAdminArea(null);
               s.setAreaDisplayMode("user");
-              
+
               // PERF: Release all satellite polygons immediately to free up RAM.
               // This is crucial to reduce the heavy memory footprint of thousands of Polygons
               useSatelliteFloodStore.getState().clear();
@@ -271,32 +291,37 @@ export default function MapScreen() {
             </Text>
           </TouchableOpacity>
         )}
+
         {/* Loading Overlay */}
         <MapLoadingOverlay visible={s.isLoading} />
 
         {/* AI Finding Area Overlay */}
         {s.isFindingArea && (
-          <View style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: [{ translateX: -70 }, { translateY: -35 }],
-            backgroundColor: "rgba(11, 26, 51, 0.8)",
-            paddingHorizontal: 20,
-            paddingVertical: 12,
-            borderRadius: 16,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-            zIndex: 1000,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.25,
-            shadowRadius: 12,
-            elevation: 10,
-          }}>
+          <View
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: [{ translateX: -70 }, { translateY: -35 }],
+              backgroundColor: "rgba(11, 26, 51, 0.8)",
+              paddingHorizontal: 20,
+              paddingVertical: 12,
+              borderRadius: 16,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+              zIndex: 1000,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 12,
+              elevation: 10,
+            }}
+          >
             <ActivityIndicator size="small" color="#A855F7" />
-            <Text style={{ color: "white", fontSize: 13, fontWeight: "600" }}>Tìm khu vực...</Text>
+            <Text style={{ color: "white", fontSize: 13, fontWeight: "600" }}>
+              Tìm khu vực...
+            </Text>
           </View>
         )}
 
@@ -373,49 +398,66 @@ export default function MapScreen() {
 
         {/* Static center crosshair and radius overlay used while adjusting radius */}
         {s.isAdjustingRadius && (
-          <StaticAreaTarget 
-            radiusMeters={s.draftAreaRadius} 
-            region={s.region} 
+          <StaticAreaTarget
+            radiusMeters={s.draftAreaRadius}
+            region={s.region}
           />
         )}
 
         {/* Floating UI — hide when sheet open, ward selection, or viewing AI Prediction Map */}
-        {!s.showWardSelectionSheet && !s.showCommunityReportSheet && !s.params.returnToPrediction && (
-          <MapFloatingUI
-            selectedRoute={s.selectedRoute}
-            selectedZone={s.selectedZone}
-            selectedArea={s.selectedArea}
-            selectedStationId={s.selectedStationId}
-            isRoutingUIVisible={s.isRoutingUIVisible}
-            safeRouteHasResults={s.safeRoute.hasResults}
-            isAdjustingRadius={s.isAdjustingRadius}
-            showCreateAreaSheet={s.showCreateAreaSheet}
-            showCreateAreaButton={!isGuest && s.viewMode === "zones" && !s.isRoutingUIVisible && !s.selectedArea && !s.isAdjustingRadius && !s.showCreateAreaSheet}
-            onCreateArea={s.handleStartCreateArea}
-            onZoomIn={s.zoomIn}
-            onZoomOut={s.zoomOut}
-            onMyLocation={() => s.goToMyLocation(s.userLocation)}
-            is3DEnabled={s.is3DEnabled}
-            onToggle3D={s.toggle3DView}
-            showLegendState={s.showLegend}
-            onShowLegend={s.toggleLegend}
-            onRotateLeft={() => s.rotateCamera("left")}
-            onRotateRight={() => s.rotateCamera("right")}
-            streetViewLocation={s.streetViewLocation}
-            onClearStreetView={() => s.setStreetViewLocation(null)}
-            onShowLayers={() => s.setShowLayerSheet(true)}
-            showAiSelectButton={!isGuest && s.areaDisplayMode === "admin" && !s.isRoutingUIVisible}
-            onShowWardSelection={() => s.setShowWardSelectionSheet(true)}
-            selectedAdminAreaName={s.selectedAdminArea ? (s.selectedAdminArea as any).name : null}
-            onClearAdminArea={() => {
-              s.setSelectedAdminArea(null);
-              s.setShowAdminAreaConfirmModal(false);
-            }}
-          />
-        )}
+        {!s.showWardSelectionSheet &&
+          !s.showCommunityReportSheet &&
+          !s.params.returnToPrediction && (
+            <MapFloatingUI
+              selectedRoute={s.selectedRoute}
+              selectedZone={s.selectedZone}
+              selectedArea={s.selectedArea}
+              selectedStationId={s.selectedStationId}
+              isRoutingUIVisible={s.isRoutingUIVisible}
+              safeRouteHasResults={s.safeRoute.hasResults}
+              isAdjustingRadius={s.isAdjustingRadius}
+              showCreateAreaSheet={s.showCreateAreaSheet}
+              showCreateAreaButton={
+                !isGuest &&
+                s.viewMode === "zones" &&
+                !s.isRoutingUIVisible &&
+                !s.selectedArea &&
+                !s.isAdjustingRadius &&
+                !s.showCreateAreaSheet
+              }
+              onCreateArea={s.handleStartCreateArea}
+              onZoomIn={s.zoomIn}
+              onZoomOut={s.zoomOut}
+              onMyLocation={() => s.goToMyLocation(s.userLocation)}
+              is3DEnabled={s.is3DEnabled}
+              onToggle3D={s.toggle3DView}
+              showLegendState={s.showLegend}
+              onShowLegend={s.toggleLegend}
+              onRotateLeft={() => s.rotateCamera("left")}
+              onRotateRight={() => s.rotateCamera("right")}
+              streetViewLocation={s.streetViewLocation}
+              onClearStreetView={() => s.setStreetViewLocation(null)}
+              onShowLayers={() => s.setShowLayerSheet(true)}
+              showAiSelectButton={
+                !isGuest &&
+                s.areaDisplayMode === "admin" &&
+                !s.isRoutingUIVisible
+              }
+              onShowWardSelection={() => s.setShowWardSelectionSheet(true)}
+              selectedAdminAreaName={
+                s.selectedAdminArea ? (s.selectedAdminArea as any).name : null
+              }
+              onClearAdminArea={() => {
+                s.setSelectedAdminArea(null);
+                s.setShowAdminAreaConfirmModal(false);
+              }}
+            />
+          )}
 
         {/* Street View Hint */}
-        <StreetViewHint visible={!!s.streetViewLocation && !s.isRoutingUIVisible} />
+        <StreetViewHint
+          visible={!!s.streetViewLocation && !s.isRoutingUIVisible}
+        />
 
         {/* Camera FAB — quick flood report */}
         {!s.isRoutingUIVisible &&
@@ -426,31 +468,33 @@ export default function MapScreen() {
           !s.showWardSelectionSheet &&
           !s.showCommunityReportSheet &&
           !s.params.returnToPrediction && (
-          <TouchableOpacity
-            onPress={() => router.push("/community/create-post?openCamera=true" as any)}
-            activeOpacity={0.85}
-            style={{
-              position: "absolute",
-              left: 16,
-              bottom: 24,
-              width: 56,
-              height: 56,
-              borderRadius: 28,
-              backgroundColor: "#6366F1",
-              alignItems: "center",
-              justifyContent: "center",
-              shadowColor: "#6366F1",
-              shadowOffset: { width: 0, height: 6 },
-              shadowOpacity: 0.4,
-              shadowRadius: 10,
-              elevation: 8,
-              borderWidth: 2.5,
-              borderColor: "white",
-            }}
-          >
-            <Ionicons name="camera" size={26} color="white" />
-          </TouchableOpacity>
-        )}
+            <TouchableOpacity
+              onPress={() =>
+                router.push("/community/create-post?openCamera=true" as any)
+              }
+              activeOpacity={0.85}
+              style={{
+                position: "absolute",
+                left: 16,
+                bottom: 24,
+                width: 56,
+                height: 56,
+                borderRadius: 28,
+                backgroundColor: "#6366F1",
+                alignItems: "center",
+                justifyContent: "center",
+                shadowColor: "#6366F1",
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.4,
+                shadowRadius: 10,
+                elevation: 8,
+                borderWidth: 2.5,
+                borderColor: "white",
+              }}
+            >
+              <Ionicons name="camera" size={26} color="white" />
+            </TouchableOpacity>
+          )}
 
         {/* Sheets */}
         {!s.nav.isNavigating && !s.params.returnToPrediction && (

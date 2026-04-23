@@ -13,6 +13,8 @@ export function useFloodSeverityQuery(
     queryKey: [FLOOD_SEVERITY_QUERY_KEY, params],
     queryFn: () => MapService.getFloodSeverity(params ?? undefined),
     enabled: enabled && params !== null,
-    staleTime: 30_000,
+    staleTime: 5 * 60_000,
+    gcTime: 24 * 60 * 60_000,
+    networkMode: "offlineFirst",
   });
 }

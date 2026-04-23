@@ -2,6 +2,7 @@
 // Logout thunk
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { ProfileService } from "~/features/profile/services/profile.service";
 import { AuthService } from "../../services/auth.service";
 import { clearAuthData } from "../../lib/auth-helpers";
 
@@ -9,6 +10,14 @@ import { clearAuthData } from "../../lib/auth-helpers";
  * Sign out - clears session and storage.
  */
 export const signOut = createAsyncThunk("auth/signOut", async () => {
+  // Clear FCM token on backend BEFORE logout — accessToken is still valid here.
+  // Doing this after logout would fail because the token gets revoked.
+  try {
+    await ProfileService.updateFcmToken(null);
+  } catch {
+    // Don't block logout if this fails (e.g. offline)
+  }
+
   try {
     await AuthService.logout(false);
   } catch {

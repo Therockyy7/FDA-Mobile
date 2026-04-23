@@ -164,90 +164,93 @@ export function useHomeWeatherData() {
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      // 1) Get user's first area for prediction + flood history
-      let userArea: Area | null = null;
-      try {
-        const areas = await AreaService.getAreas();
-        if (areas.length > 0) {
-          userArea = areas[0];
-        }
-      } catch {
+      // Tầng 1: getAreas và getForecast hoàn toàn độc lập — bắn song song
+      const [areasResult, meteoResult] = await Promise.allSettled([
+        AreaService.getAreas(),
+        WeatherService.getForecast(),
+      ]);
+
+      const userArea =
+        areasResult.status === "fulfilled" && areasResult.value.length > 0
+          ? areasResult.value[0]
+          : null;
+
+      if (areasResult.status === "rejected") {
         console.warn("⚠️ Could not fetch user areas");
       }
 
-      // 2) Fetch real weather from Open-Meteo
       let meteo: OpenMeteoResponse | null = null;
-      try {
-        meteo = await WeatherService.getForecast();
+      if (meteoResult.status === "fulfilled") {
+        meteo = meteoResult.value;
         console.log("🌦 Open-Meteo data loaded:", meteo.current.temperature_2m + "°C");
-      } catch {
+      } else {
         console.warn("⚠️ Could not fetch Open-Meteo weather");
       }
 
-      // 3) Fetch flood history for rainfall forecast
       let rainfallForecast: RainfallForecastItem[] = getEmptyForecast();
+      let aiRisk: AiRiskSummary | null = null;
+
       if (userArea) {
-        try {
-          const history = await AreaService.getFloodHistory({
+        const { latitude, longitude } = userArea;
+
+        // Tầng 2: getFloodHistory và reverseGeocodeAsync đều cần userArea nhưng độc lập nhau — song song
+        const [historyResult, geoResult] = await Promise.allSettled([
+          AreaService.getFloodHistory({
             areaId: userArea.id,
             granularity: "hourly",
             limit: 6,
-          });
-          rainfallForecast = deriveRainfallForecast(history);
-        } catch {
+          }),
+          Location.reverseGeocodeAsync({ latitude, longitude }),
+        ]);
+
+        if (historyResult.status === "fulfilled") {
+          rainfallForecast = deriveRainfallForecast(historyResult.value);
+        } else {
           console.warn("⚠️ Could not fetch flood history for rainfall");
         }
-      }
 
-      // 4) Fetch AI prediction
-      let aiRisk: AiRiskSummary | null = null;
-      if (userArea) {
+        // Tầng 3: Gom tất cả từ khóa tìm kiếm (geo + fallback, loại trùng) rồi bắn song song
+        let geoCandidates: string[] = [];
+        if (geoResult.status === "fulfilled" && geoResult.value.length > 0) {
+          const geo = geoResult.value[0];
+          geoCandidates = [
+            geo.district, // Often maps to ward level in expo-location VN
+            geo.name,
+            geo.city,
+            geo.subregion,
+          ].filter(Boolean) as string[];
+        } else {
+          console.warn("⚠️ Reverse geocoding failed for prediction mapping");
+        }
+
+        const seen = new Set(geoCandidates);
+        const fallbackTerms = [userArea.addressText, userArea.name]
+          .filter(Boolean)
+          .filter((t) => !seen.has(t)) as string[];
+        const allCandidates = [...geoCandidates, ...fallbackTerms];
+
+        let adminAreaId: string | null = null;
+        if (allCandidates.length > 0) {
+          const adminResults = await Promise.allSettled(
+            allCandidates.map((term) =>
+              AreaService.getAdminAreas({ searchTerm: term, pageSize: 5 })
+            )
+          );
+
+          // Duyệt theo thứ tự ưu tiên gốc: geo candidates trước, fallback sau
+          for (const result of adminResults) {
+            if (
+              result.status === "fulfilled" &&
+              result.value.administrativeAreas.length > 0
+            ) {
+              adminAreaId = result.value.administrativeAreas[0].id;
+              break;
+            }
+          }
+        }
+
+        // Tầng 4: Phải chờ adminAreaId — tuần tự
         try {
-          // IMPORTANT: Prediction AI requires an AdminArea ID (Ward), not a custom Area ID.
-          // We must map coordinates to an administrative area.
-          let adminAreaId: string | null = null;
-
-          // Strategy 1: Reverse Geocode to get candidate ward names
-          const { latitude, longitude } = userArea;
-          try {
-            const [geo] = await Location.reverseGeocodeAsync({ latitude, longitude });
-            if (geo) {
-              const candidates = [
-                geo.district, // Often maps to ward level in expo-location VN
-                geo.name,
-                geo.city,
-                geo.subregion,
-              ].filter(Boolean) as string[];
-
-              for (const term of candidates) {
-                if (adminAreaId) break;
-                const adminRes = await AreaService.getAdminAreas({
-                  searchTerm: term,
-                  pageSize: 5,
-                });
-                if (adminRes.administrativeAreas.length > 0) {
-                  adminAreaId = adminRes.administrativeAreas[0].id;
-                  // console.log(`✅ Mapped user area to admin ward: ${adminRes.administrativeAreas[0].name} for prediction`);
-                }
-              }
-            }
-          } catch (geoErr) {
-            console.warn("⚠️ Reverse geocoding failed for prediction mapping:", geoErr);
-          }
-
-          // Strategy 2: Fallback to searching by user-provided name/address if Strategy 1 failed
-          if (!adminAreaId) {
-            const fallbackTerms = [userArea.addressText, userArea.name].filter(Boolean);
-            for (const term of fallbackTerms) {
-              if (adminAreaId) break;
-              const adminRes = await AreaService.getAdminAreas({ searchTerm: term, pageSize: 5 });
-              if (adminRes.administrativeAreas.length > 0) {
-                adminAreaId = adminRes.administrativeAreas[0].id;
-              }
-            }
-          }
-
-          // Use found adminAreaId or fallback to custom area ID (which will likely 404 but it's the last resort)
           const targetPredictionId = adminAreaId || userArea.id;
           const prediction = await PredictionService.getFloodRiskPrediction(targetPredictionId);
           aiRisk = predictionToRiskSummary(prediction);

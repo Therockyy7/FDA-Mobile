@@ -9,7 +9,8 @@ import {
   Theme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { Stack, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
@@ -27,7 +28,10 @@ import { useInAppNotification } from "~/features/alerts/fcm/useInAppNotification
 import { initializeAuth } from "~/features/auth/stores/auth.slice";
 import { useNotificationNavigation } from "~/features/notifications/lib/useNotificationNavigation";
 import { SatelliteLoadingPill } from "~/features/prediction/components/SatelliteLoadingPill";
+import { OfflineBanner } from "~/components/OfflineBanner";
 
+import { QUERY_GC_TIME, persistOptions } from "~/lib/query-persister";
+import { useOfflineSync } from "~/lib/hooks/useOfflineSync";
 import { NAV_THEME } from "~/lib/constants";
 import { useColorScheme } from "~/lib/useColorScheme";
 import "../global.css";
@@ -44,7 +48,14 @@ const DARK_THEME: Theme = {
 
 export { ErrorBoundary } from "expo-router";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      gcTime: QUERY_GC_TIME,
+      networkMode: "offlineFirst",
+    },
+  },
+});
 
 const useIsomorphicLayoutEffect =
   Platform.OS === "web" && typeof window === "undefined"
@@ -66,6 +77,9 @@ function RootStack() {
 
   const dispatch = useAppDispatch();
   const authLoading = useAppSelector((state) => state.auth.loading);
+
+  // FE-45: auto-sync all queries when device reconnects
+  useOfflineSync();
 
   const navigateToNotification = useNotificationNavigation();
 
@@ -165,6 +179,9 @@ function RootStack() {
 
             {/* 🛰️ Satellite analysis background progress pill */}
             <SatelliteLoadingPill />
+
+            {/* 📡 Offline banner */}
+            <OfflineBanner />
           </View>
         </ThemeProvider>
       </SafeAreaProvider>
@@ -178,9 +195,9 @@ export default function RootLayout() {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <QueryClientProvider client={queryClient}>
+        <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
           <RootStack />
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
       </PersistGate>
     </Provider>
   );

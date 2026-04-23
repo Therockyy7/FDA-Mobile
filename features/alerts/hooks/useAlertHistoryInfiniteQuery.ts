@@ -24,5 +24,7 @@ export const useAlertHistoryInfiniteQuery = ({
       return undefined;
     },
     initialPageParam: 1,
+    gcTime: 24 * 60 * 60_000,
+    networkMode: "offlineFirst",
   });
 };

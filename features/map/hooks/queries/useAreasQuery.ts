@@ -11,6 +11,8 @@ export function useAreasQuery() {
     queryKey: [AREAS_QUERY_KEY],
     queryFn: (): Promise<AreaWithStatus[]> => AreaService.getAreasWithStatus(),
     staleTime: 60_000,
+    gcTime: 24 * 60 * 60_000,
+    networkMode: "offlineFirst",
   });
 }
 

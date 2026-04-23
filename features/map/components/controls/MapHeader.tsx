@@ -1,6 +1,7 @@
 // features/map/components/controls/MapHeader.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { Platform, StatusBar, View } from "react-native";
+import { useOfflineBannerPadding } from "~/components/OfflineBanner";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { CreateAreaButton } from "./CreateAreaButton";
@@ -26,6 +27,7 @@ export function MapHeader({
   showCreateAreaButton = false,
 }: MapHeaderProps) {
   const { isDarkColorScheme } = useColorScheme();
+  const offlinePadding = useOfflineBannerPadding();
 
   const colors = {
     background: isDarkColorScheme ? "#0B1A33" : "#FFFFFF",
@@ -39,7 +41,7 @@ export function MapHeader({
       style={{
         backgroundColor: colors.background,
         paddingTop:
-          Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 8 : 54,
+          (Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 8 : 54) + offlinePadding,
         paddingBottom: 12,
         paddingHorizontal: 16,
         borderBottomWidth: 1,

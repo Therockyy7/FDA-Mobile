@@ -29,10 +29,10 @@ export const initializeAuth = createAsyncThunk<
     return { isAuthenticated: false, user: null };
   }
 
-  try {
-    // Quick: load from storage first for fast UI
-    let user: User | null = storedUser ? JSON.parse(storedUser) : null;
+  // Quick: load from storage first for fast UI (available in catch fallback)
+  let user: User | null = storedUser ? JSON.parse(storedUser) : null;
 
+  try {
     // Then fetch latest from API
     const res = await ProfileService.getProfile();
     user = res.data.profile as User;

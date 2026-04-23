@@ -59,8 +59,6 @@ export default function AlertHistoryScreen() {
   const [severityDropdownOpen, setSeverityDropdownOpen] = useState(false);
 
   // ── Infinite scroll query (main data) ──────────────────────────────────
-  const { isOnline } = useNetworkStatus();
-
   const {
     data,
     isLoading,
@@ -69,7 +67,6 @@ export default function AlertHistoryScreen() {
     fetchNextPage,
     refetch,
     isRefetching,
-    dataUpdatedAt: alertsUpdatedAt,
   } = useAlertHistoryInfiniteQuery({
     pageSize: PAGE_SIZE,
     severity: activeSeverity === "all" ? undefined : activeSeverity,
@@ -242,10 +239,7 @@ export default function AlertHistoryScreen() {
         topInset={insets.top}
       />
 
-      <CachedDataBadge
-        dataUpdatedAt={alertsUpdatedAt}
-        visible={!isOnline && alertsUpdatedAt > 0}
-      />
+      <CachedDataBadge />
 
       <View
         style={{

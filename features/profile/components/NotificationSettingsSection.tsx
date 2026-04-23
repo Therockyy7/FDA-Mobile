@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Switch, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { useTranslation } from "~/features/i18n";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 type NotificationItem = {
@@ -41,6 +42,7 @@ const NotificationSettingsSection: React.FC<Props> = ({
   setWeeklyReport,
 }) => {
   const { isDarkColorScheme } = useColorScheme();
+  const { t } = useTranslation();
 
   const colors = {
     background: isDarkColorScheme ? "#0B1A33" : "#F8FAFC",
@@ -61,8 +63,8 @@ const NotificationSettingsSection: React.FC<Props> = ({
       iconColor: "#EF4444",
       iconBgLight: "#FEE2E2",
       iconBgDark: "#7F1D1D",
-      title: "Cảnh báo khẩn cấp",
-      description: "Nhận thông báo nguy hiểm ngay lập tức",
+      title: t("settings.notification.emergency"),
+      description: t("settings.notification.emergency.desc"),
       value: emergencyAlerts,
       onValueChange: setEmergencyAlerts,
       trackColorOn: "#FCA5A5",
@@ -74,8 +76,8 @@ const NotificationSettingsSection: React.FC<Props> = ({
       iconColor: "#007AFF",
       iconBgLight: "#DBEAFE",
       iconBgDark: "#1E3A5F",
-      title: "Cập nhật thời tiết",
-      description: "Dự báo mưa và thời tiết hàng ngày",
+      title: t("settings.notification.weather"),
+      description: t("settings.notification.weather.desc"),
       value: weatherUpdates,
       onValueChange: setWeatherUpdates,
       trackColorOn: "#93C5FD",
@@ -87,8 +89,8 @@ const NotificationSettingsSection: React.FC<Props> = ({
       iconColor: "#F59E0B",
       iconBgLight: "#FEF3C7",
       iconBgDark: "#78350F",
-      title: "Cảnh báo giao thông",
-      description: "Tình trạng ngập đường và tắc đường",
+      title: t("settings.notification.traffic"),
+      description: t("settings.notification.traffic.desc"),
       value: trafficAlerts,
       onValueChange: setTrafficAlerts,
       trackColorOn: "#FDE68A",
@@ -100,8 +102,8 @@ const NotificationSettingsSection: React.FC<Props> = ({
       iconColor: "#8B5CF6",
       iconBgLight: "#EDE9FE",
       iconBgDark: "#4C1D95",
-      title: "Báo cáo tuần",
-      description: "Tổng kết tình hình hàng tuần qua email",
+      title: t("settings.notification.weekly"),
+      description: t("settings.notification.weekly.desc"),
       value: weeklyReport,
       onValueChange: setWeeklyReport,
       trackColorOn: "#C4B5FD",
@@ -127,7 +129,7 @@ const NotificationSettingsSection: React.FC<Props> = ({
           <Ionicons name="notifications" size={16} color={colors.sectionTitle} />
         </View>
         <Text style={{ fontSize: 17, fontWeight: "800", color: colors.text }}>
-          Tùy chọn thông báo
+          {t("settings.notification.title")}
         </Text>
       </View>
 
@@ -242,7 +244,7 @@ const NotificationSettingsSection: React.FC<Props> = ({
             lineHeight: 16,
           }}
         >
-          Bạn có thể tắt tất cả thông báo trong cài đặt hệ thống của điện thoại
+          {t("settings.notification.systemHint")}
         </Text>
       </View>
     </View>

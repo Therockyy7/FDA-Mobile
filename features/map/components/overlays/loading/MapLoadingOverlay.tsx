@@ -13,6 +13,7 @@ import Animated, {
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { OVERLAY_SHADOW } from "~/features/map/lib/map-ui-utils";
+import { useTranslation } from "~/features/i18n";
 import { LoadingDot } from "./LoadingDot";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -24,10 +25,12 @@ interface MapLoadingOverlayProps {
 
 export function MapLoadingOverlay({
   visible,
-  message = "Đang tải bản đồ...",
+  message,
 }: MapLoadingOverlayProps) {
   const { isDarkColorScheme } = useColorScheme();
   const isDark = isDarkColorScheme;
+  const { t } = useTranslation();
+  const displayMessage = message || t("map.loading");
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.8);
   const textOpacity = useSharedValue(0.6);
@@ -117,10 +120,10 @@ export function MapLoadingOverlay({
         </View>
 
         <Animated.Text style={[styles.message, { color: colors.textPrimary }, textStyle]}>
-          {message}
+          {displayMessage}
         </Animated.Text>
 
-        <Text style={[styles.hint, { color: colors.textSecondary }]}>Hệ thống cảnh báo ngập lụt</Text>
+        <Text style={[styles.hint, { color: colors.textSecondary }]}>{t("map.loading.hint")}</Text>
       </Animated.View>
     </Animated.View>
   );

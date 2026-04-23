@@ -6,6 +6,7 @@ import { Dimensions, View } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { Text } from "~/components/ui/text";
 import type { FloodTrendsData } from "~/features/areas/types/flood-history.types";
+import { useTranslation } from "~/features/i18n";
 import { LoadingChart } from "./LoadingChart";
 
 const screenWidth = Dimensions.get("window").width;
@@ -30,6 +31,7 @@ export function FloodTrendChart({
   isDark = false,
   height = 260,
 }: FloodTrendChartProps) {
+  const { t } = useTranslation();
   const colors = {
     background: isDark ? "#1E293B" : "#FFFFFF",
     text: isDark ? "#F1F5F9" : "#1F2937",
@@ -85,7 +87,7 @@ export function FloodTrendChart({
       <LoadingChart
         height={height}
         isDark={isDark}
-        message="Đang tải xu hướng..."
+        message={t("chart.trend.loading")}
       />
     );
   }
@@ -105,7 +107,7 @@ export function FloodTrendChart({
       >
         <Ionicons name="trending-up-outline" size={40} color={colors.subtext} />
         <Text style={{ color: colors.subtext, marginTop: 12, fontSize: 14 }}>
-          Không có dữ liệu xu hướng
+          {t("chart.trend.noData")}
         </Text>
       </View>
     );
@@ -136,10 +138,10 @@ export function FloodTrendChart({
       >
         <View>
           <Text style={{ fontSize: 14, fontWeight: "700", color: colors.text }}>
-            Xu hướng mực nước cao nhất
+            {t("chart.trend.title")}
           </Text>
           <Text style={{ fontSize: 11, color: colors.subtext, marginTop: 2 }}>
-            {data.dataPoints.length} ngày gần đây
+            {data.dataPoints.length} {t("chart.trend.recentDays")}
           </Text>
         </View>
 
@@ -148,7 +150,7 @@ export function FloodTrendChart({
           <Text style={{ fontSize: 18, fontWeight: "800", color: colors.text }}>
             {Number(data.summary.maxWaterLevel).toLocaleString("vi-VN", { maximumFractionDigits: 2 })} cm
           </Text>
-          <Text style={{ fontSize: 10, color: colors.subtext }}>Cao nhất</Text>
+          <Text style={{ fontSize: 10, color: colors.subtext }}>{t("chart.stats.max")}</Text>
         </View>
       </View>
 
@@ -201,7 +203,7 @@ export function FloodTrendChart({
               }}
             >
               {avgChange > 0 ? "+" : ""}
-              {avgChange.toFixed(0)}% mực nước
+              {avgChange.toFixed(0)}% {t("chart.trend.waterLevel")}
             </Text>
           </View>
 
@@ -245,7 +247,7 @@ export function FloodTrendChart({
               }}
             >
               {floodHoursChange > 0 ? "+" : ""}
-              {floodHoursChange.toFixed(0)}% giờ ngập
+              {floodHoursChange.toFixed(0)}% {t("chart.trend.floodHours")}
             </Text>
           </View>
         </View>
@@ -313,8 +315,8 @@ export function FloodTrendChart({
                 {point && (
                   <Text style={{ fontSize: 9, color: colors.subtext }}>
                     {point.floodHours > 0
-                      ? `${point.floodHours} giờ ngập`
-                      : "Không ngập"}
+                      ? `${point.floodHours} ${t("chart.trend.floodHours")}`
+                      : t("chart.trend.noFlood")}
                   </Text>
                 )}
               </View>
@@ -340,7 +342,7 @@ export function FloodTrendChart({
             <Text style={{ fontWeight: "700", color: colors.text }}>
               {data.summary.totalFloodHours}
             </Text>{" "}
-            giờ ngập tổng
+            {t("chart.trend.totalFloodHours")}
           </Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -349,7 +351,7 @@ export function FloodTrendChart({
             <Text style={{ fontWeight: "700", color: colors.text }}>
               {data.summary.daysWithFlooding}
             </Text>{" "}
-            ngày có ngập
+            {t("chart.trend.floodDays")}
           </Text>
         </View>
       </View>

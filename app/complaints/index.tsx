@@ -21,6 +21,7 @@ import { complaintService } from "~/features/complaints/services/complaint.servi
 import { Complaint } from "~/features/complaints/types/complaint-types";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { StatusFilter, StatusOption } from "~/components/ui/status-filter";
+import { useTranslation } from "~/features/i18n";
 
 const HEADER_MAX_HEIGHT = 135;
 const HEADER_MIN_HEIGHT = 50;
@@ -36,40 +37,45 @@ const STATUS_CONFIG: Record<
 };
 
 const StatusBadge = ({ status, isDark }: { status: "open" | "resolved" | "rejected"; isDark: boolean }) => {
+  const { t } = useTranslation();
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.open;
   return (
     <View style={[styles.badge, { backgroundColor: isDark ? cfg.darkBg : cfg.bg }]}>
       <View style={[styles.badgeDot, { backgroundColor: cfg.dot }]} />
-      <Text style={[styles.badgeText, { color: cfg.text }]}>{cfg.label}</Text>
+      <Text style={[styles.badgeText, { color: cfg.text }]}>{t(`complaints.status.${status}`)}</Text>
     </View>
   );
 };
 
 // ─── Empty State ──────────────────────────────────────────────────────────────
-const EmptyState = ({ colors, isDark, onNew }: { colors: Record<string, string>; isDark: boolean; onNew: () => void }) => (
-  <View style={styles.emptyWrapper}>
-    <View style={[styles.emptyRing, { borderColor: isDark ? "#334155" : "#CBD5E1" }]}>
-      <View style={[styles.emptyInner, { backgroundColor: colors.iconBg }]}>
-        <Ionicons name="chatbubbles-outline" size={42} color={colors.accent} />
+const EmptyState = ({ colors, isDark, onNew }: { colors: Record<string, string>; isDark: boolean; onNew: () => void }) => {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.emptyWrapper}>
+      <View style={[styles.emptyRing, { borderColor: isDark ? "#334155" : "#CBD5E1" }]}>
+        <View style={[styles.emptyInner, { backgroundColor: colors.iconBg }]}>
+          <Ionicons name="chatbubbles-outline" size={42} color={colors.accent} />
+        </View>
       </View>
+
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>{t("complaints.empty.title")}</Text>
+      <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
+        {t("complaints.empty.subtitle")}
+      </Text>
+
+      <TouchableOpacity style={[styles.emptyBtn, { backgroundColor: colors.accent }]} onPress={onNew} activeOpacity={0.82}>
+        <Ionicons name="add-circle-outline" size={18} color="#FFF" style={{ marginRight: 8 }} />
+        <Text style={styles.emptyBtnText}>{t("complaints.empty.btn")}</Text>
+      </TouchableOpacity>
     </View>
-
-    <Text style={[styles.emptyTitle, { color: colors.text }]}>Chưa có khiếu nại nào</Text>
-    <Text style={[styles.emptySubtitle, { color: colors.subtext }]}>
-      Nếu bạn gặp sự cố về đăng ký hoặc thanh toán, hãy tạo khiếu nại để chúng tôi hỗ trợ.
-    </Text>
-
-    <TouchableOpacity style={[styles.emptyBtn, { backgroundColor: colors.accent }]} onPress={onNew} activeOpacity={0.82}>
-      <Ionicons name="add-circle-outline" size={18} color="#FFF" style={{ marginRight: 8 }} />
-      <Text style={styles.emptyBtnText}>Tạo khiếu nại ngay</Text>
-    </TouchableOpacity>
-  </View>
-);
+  );
+};
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function ComplaintsScreen() {
   const { isDarkColorScheme } = useColorScheme();
   const isDark = isDarkColorScheme;
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
@@ -109,10 +115,10 @@ export default function ComplaintsScreen() {
   );
 
   const filterOptions: StatusOption<"open" | "resolved" | "rejected">[] = [
-    { value: "all", label: "Tất cả", count: records.length },
-    { value: "open", label: "Đang xử lý", count: openCount },
-    { value: "resolved", label: "Đã giải quyết", count: resolvedCount },
-    { value: "rejected", label: "Bị từ chối", count: rejectedCount },
+    { value: "all", label: t("complaints.filter.all"), count: records.length },
+    { value: "open", label: t("complaints.status.open"), count: openCount },
+    { value: "resolved", label: t("complaints.status.resolved"), count: resolvedCount },
+    { value: "rejected", label: t("complaints.status.rejected"), count: rejectedCount },
   ];
 
   const handleRefresh = async () => {
@@ -125,11 +131,11 @@ export default function ComplaintsScreen() {
     setIsSubmitting(true);
     try {
       await complaintService.createComplaint({ subject, description, paymentId });
-      toast.success("Gửi khiếu nại thành công. Chúng tôi sẽ sớm phản hồi cho bạn.");
+      toast.success(t("complaints.successMsg"));
       setIsModalVisible(false);
       queryClient.invalidateQueries({ queryKey: ["complaints", "my"] });
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Lỗi tạo khiếu nại. Vui lòng thử lại sau.");
+      toast.error(error.response?.data?.message || t("complaints.errorMsg"));
     } finally {
       setIsSubmitting(false);
     }
@@ -191,7 +197,7 @@ export default function ComplaintsScreen() {
           </TouchableOpacity>
 
           <Animated.Text style={[styles.headerTitle, { color: colors.text, fontSize: titleSize as any }]}>
-            Hỗ trợ & Khiếu nại
+            {t("complaints.headerTitle")}
           </Animated.Text>
 
           <View style={styles.backBtn} />
@@ -199,7 +205,7 @@ export default function ComplaintsScreen() {
 
         <Animated.View style={{ opacity: subtitleOpacity, paddingHorizontal: 20, paddingBottom: 6 }}>
           <Text style={{ fontSize: 13, color: colors.subtext }}>
-            {records.length > 0 ? `${openCount} khiếu nại đang chờ xử lý` : "Phiếu hỗ trợ của bạn"}
+            {records.length > 0 ? t("complaints.headerSubtitle.pending").replace("{count}", openCount.toString()) : t("complaints.headerSubtitle.empty")}
           </Text>
         </Animated.View>
 
@@ -230,7 +236,7 @@ export default function ComplaintsScreen() {
           <View style={styles.centerState}>
             <ActivityIndicator color={colors.accent} size="large" />
             <Text style={[styles.stateText, { color: colors.subtext, marginTop: 14 }]}>
-              Đang tải danh sách khiếu nại...
+              {t("complaints.loading")}
             </Text>
           </View>
         )}
@@ -240,13 +246,13 @@ export default function ComplaintsScreen() {
             <View style={[styles.errorIconWrap, { backgroundColor: "rgba(239,68,68,0.1)" }]}>
               <Ionicons name="alert-circle-outline" size={40} color={colors.danger} />
             </View>
-            <Text style={[styles.stateTitle, { color: colors.text }]}>Không thể tải dữ liệu</Text>
+            <Text style={[styles.stateTitle, { color: colors.text }]}>{t("complaints.state.errorTitle")}</Text>
             <Text style={[styles.stateText, { color: colors.subtext }]}>
-              Vui lòng kiểm tra kết nối internet và thử lại.
+              {t("complaints.state.errorSub")}
             </Text>
             <TouchableOpacity style={[styles.retryBtn, { backgroundColor: colors.accent }]} onPress={() => refetch()}>
               <Ionicons name="refresh-outline" size={15} color="#FFF" style={{ marginRight: 6 }} />
-              <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 14 }}>Thử lại</Text>
+              <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 14 }}>{t("complaints.state.retryBtn")}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -260,15 +266,15 @@ export default function ComplaintsScreen() {
             <View style={[styles.emptyInner, { backgroundColor: colors.iconBg, width: 80, height: 80, borderRadius: 40 }]}>
               <Ionicons name="filter-outline" size={32} color={colors.accent} />
             </View>
-            <Text style={[styles.stateTitle, { color: colors.text }]}>Không khớp bộ lọc</Text>
+            <Text style={[styles.stateTitle, { color: colors.text }]}>{t("complaints.state.noFilterTitle")}</Text>
             <Text style={[styles.stateText, { color: colors.subtext }]}>
-              {`Không tìm thấy khiếu nại nào ở trạng thái "${filterOptions.find(o => o.value === statusFilter)?.label}".`}
+              {t("complaints.state.noFilterSub").replace("{status}", filterOptions.find(o => o.value === statusFilter)?.label || "")}
             </Text>
             <TouchableOpacity 
               style={[styles.retryBtn, { backgroundColor: isDark ? "#334155" : "#F1F5F9", marginTop: 16 }]} 
               onPress={() => setStatusFilter("all")}
             >
-              <Text style={{ color: colors.text, fontWeight: "700" }}>Xóa bộ lọc</Text>
+              <Text style={{ color: colors.text, fontWeight: "700" }}>{t("complaints.state.clearFilter")}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -296,7 +302,7 @@ export default function ComplaintsScreen() {
                     <View style={[styles.adminResponseBox, { backgroundColor: colors.background, borderColor: colors.border }]}>
                       <View style={styles.adminHeader}>
                         <Ionicons name="headset" size={14} color={colors.accent} style={{ marginRight: 6 }} />
-                        <Text style={[styles.adminTitle, { color: colors.accent }]}>Phản hồi từ Admin</Text>
+                        <Text style={[styles.adminTitle, { color: colors.accent }]}>{t("complaints.adminResponse")}</Text>
                       </View>
                       <Text style={[styles.adminResponseText, { color: colors.text }]}>{r.adminResponse}</Text>
                     </View>
@@ -316,7 +322,7 @@ export default function ComplaintsScreen() {
           onPress={() => setIsModalVisible(true)}
         >
           <Ionicons name="add" size={24} color="#FFF" />
-          <Text style={styles.fabText}>Tạo mới</Text>
+          <Text style={styles.fabText}>{t("complaints.fab.create")}</Text>
         </TouchableOpacity>
       )}
 

@@ -19,32 +19,35 @@ import { Input } from "~/components/ui/input";
 import { Text } from "~/components/ui/text";
 import { AuthService } from "~/features/auth/services/auth.service";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { useTranslation } from "~/features/i18n";
 
-const passwordSchema = z
+const createPasswordSchema = (t: any) => z
   .object({
     newPassword: z
       .string()
-      .min(8, "Mật khẩu phải có ít nhất 8 ký tự")
-      .regex(/[A-Z]/, "Mật khẩu phải có ít nhất 1 chữ in hoa")
-      .regex(/[a-z]/, "Mật khẩu phải có ít nhất 1 chữ thường")
-      .regex(/[0-9]/, "Mật khẩu phải có ít nhất 1 số")
+      .min(8, t("auth.error.passwordLength"))
+      .regex(/[A-Z]/, t("auth.error.passwordUpper"))
+      .regex(/[a-z]/, t("auth.error.passwordLower"))
+      .regex(/[0-9]/, t("auth.error.passwordNumber"))
       .regex(
         /[!@#$%^&*(),.?":{}|<>]/,
-        "Mật khẩu phải có ít nhất 1 ký tự đặc biệt",
+        t("auth.error.passwordSpecial"),
       ),
-    confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
+    confirmPassword: z.string().min(1, t("auth.error.confirmRequired")),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Mật khẩu xác nhận không khớp",
+    message: t("auth.error.confirmMismatch"),
     path: ["confirmPassword"],
   });
 
-type PasswordFormData = z.infer<typeof passwordSchema>;
+type PasswordFormData = z.infer<ReturnType<typeof createPasswordSchema>>;
 
 export default function SetNewPasswordScreen() {
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
   const { email } = useLocalSearchParams<{ email: string }>();
+  const { t } = useTranslation();
+  const passwordSchema = React.useMemo(() => createPasswordSchema(t), [t]);
 
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -70,9 +73,9 @@ export default function SetNewPasswordScreen() {
         confirmPassword: data.confirmPassword,
       });
 
-      Alert.alert("Thành công", "Mật khẩu đã được thiết lập thành công!", [
+      Alert.alert(t("common.success"), t("auth.success.passwordSet"), [
         {
-          text: "Tiếp tục",
+          text: t("common.continue"),
           onPress: () => router.replace("/(tabs)/map"),
         },
       ]);
@@ -80,18 +83,18 @@ export default function SetNewPasswordScreen() {
       console.log(err);
       const message =
         err?.response?.data?.message ||
-        "Không thể đặt mật khẩu. Vui lòng thử lại.";
+        t("auth.error.setPassword");
       setError("root", { message });
     }
   };
 
   const handleSkip = () => {
     Alert.alert(
-      "Bỏ qua thiết lập mật khẩu?",
-      "Bạn có thể thiết lập mật khẩu sau trong phần Cài đặt.",
+      t("auth.skipPassword.title"),
+      t("auth.skipPassword.desc"),
       [
-        { text: "Hủy", style: "cancel" },
-        { text: "Bỏ qua", onPress: () => router.replace("/(tabs)/map") },
+        { text: t("common.cancel"), style: "cancel" },
+        { text: t("common.skip"), onPress: () => router.replace("/(tabs)/map") },
       ],
     );
   };
@@ -163,7 +166,7 @@ export default function SetNewPasswordScreen() {
               }}
               activeOpacity={0.7}
             >
-              <Text style={{ color: "white", fontWeight: "600" }}>Bỏ qua</Text>
+              <Text style={{ color: "white", fontWeight: "600" }}>{t("common.skip")}</Text>
             </TouchableOpacity>
           </View>
 
@@ -194,7 +197,7 @@ export default function SetNewPasswordScreen() {
                 textAlign: "center",
               }}
             >
-              Thiết lập mật khẩu
+              {t("auth.setPassword.title")}
             </Text>
             <Text
               style={{
@@ -206,7 +209,7 @@ export default function SetNewPasswordScreen() {
                 paddingHorizontal: 40,
               }}
             >
-              Thiết lập mật khẩu để đăng nhập nhanh hơn trong những lần sau
+              {t("auth.setPassword.subtitle")}
             </Text>
           </View>
 
@@ -239,8 +242,7 @@ export default function SetNewPasswordScreen() {
                   lineHeight: 18,
                 }}
               >
-                💡 Mật khẩu phải có ít nhất 8 ký tự, bao gồm: chữ hoa, chữ
-                thường, số và ký tự đặc biệt.
+                {t("auth.setPassword.hint")}
               </Text>
             </View>
 
@@ -255,7 +257,7 @@ export default function SetNewPasswordScreen() {
                   marginLeft: 4,
                 }}
               >
-                MẬT KHẨU MỚI
+                {t("auth.newPasswordLabel")}
               </Text>
               <Controller
                 control={control}
@@ -286,7 +288,7 @@ export default function SetNewPasswordScreen() {
                         value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
-                        placeholder="Nhập mật khẩu mới"
+                        placeholder={t("auth.newPasswordPlaceholder")}
                         placeholderTextColor={colors.subtext}
                         secureTextEntry={!showNewPassword}
                         style={{
@@ -354,7 +356,7 @@ export default function SetNewPasswordScreen() {
                   marginLeft: 4,
                 }}
               >
-                XÁC NHẬN MẬT KHẨU
+                {t("auth.confirmPasswordLabel")}
               </Text>
               <Controller
                 control={control}
@@ -385,7 +387,7 @@ export default function SetNewPasswordScreen() {
                         value={value}
                         onChangeText={onChange}
                         onBlur={onBlur}
-                        placeholder="Nhập lại mật khẩu mới"
+                        placeholder={t("auth.confirmPasswordPlaceholder")}
                         placeholderTextColor={colors.subtext}
                         secureTextEntry={!showConfirmPassword}
                         style={{
@@ -498,7 +500,7 @@ export default function SetNewPasswordScreen() {
                 <Text
                   style={{ color: "white", fontSize: 17, fontWeight: "700" }}
                 >
-                  {isSubmitting ? "Đang xử lý..." : "Thiết lập mật khẩu"}
+                  {isSubmitting ? t("common.processing") : t("auth.setPassword.title")}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>

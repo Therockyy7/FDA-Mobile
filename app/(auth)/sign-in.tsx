@@ -20,6 +20,7 @@ import { Text } from "~/components/ui/text";
 import { AuthService } from "~/features/auth/services/auth.service";
 import { signInByGoogle } from "~/features/auth/stores/auth.slice";
 import { useAuthLoading } from "~/features/auth/stores/hooks";
+import { useTranslation } from "~/features/i18n";
 import { useAppDispatch } from "../hooks";
 
 type FormData = {
@@ -31,6 +32,7 @@ export default function SignInScreen() {
   const dispatch = useAppDispatch();
   const loading = useAuthLoading();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const { t } = useTranslation();
 
   const {
     control,
@@ -62,7 +64,7 @@ export default function SignInScreen() {
       router.replace("/(tabs)/map");
     } catch (error: any) {
       console.error("Google Login Error:", error);
-      Alert.alert("Lỗi", "Đăng nhập Google thất bại.");
+      Alert.alert(t("common.error"), t("auth.googleLoginFail"));
     } finally {
       setIsGoogleLoading(false);
     }
@@ -72,7 +74,7 @@ export default function SignInScreen() {
     const identifier = data.identifier?.trim();
     if (!identifier) {
       setError("identifier", {
-        message: "Vui lòng nhập email hoặc số điện thoại",
+        message: t("auth.error.identifierRequired"),
       });
       return;
     }
@@ -115,7 +117,7 @@ export default function SignInScreen() {
       }
     } catch (err: any) {
       setError("root", {
-        message: err?.response?.data?.message || "Lỗi kiểm tra tài khoản.",
+        message: err?.response?.data?.message || t("auth.error.checkAccount"),
       });
     }
   };
@@ -178,7 +180,7 @@ export default function SignInScreen() {
                   textAlign: "center",
                 }}
               >
-                Lũ An Toàn
+                {t("app.name")}
               </Text>
               <Text
                 style={{
@@ -188,7 +190,7 @@ export default function SignInScreen() {
                   fontSize: 15,
                 }}
               >
-                Kết nối • Cứu trợ • An toàn
+                {t("app.tagline")}
               </Text>
             </View>
 
@@ -213,7 +215,7 @@ export default function SignInScreen() {
                   marginBottom: 24,
                 }}
               >
-                Đăng nhập
+                {t("auth.signIn")}
               </Text>
 
               {/* Account Input - Pill Style */}
@@ -227,7 +229,7 @@ export default function SignInScreen() {
                     marginLeft: 4,
                   }}
                 >
-                  Email hoặc Số điện thoại
+                  {t("auth.emailOrPhone")}
                 </Text>
 
                 <Controller
@@ -257,7 +259,7 @@ export default function SignInScreen() {
                         <TextInput
                           value={value}
                           onChangeText={onChange}
-                          placeholder="Nhập email hoặc số điện thoại"
+                          placeholder={t("auth.emailOrPhone.placeholder")}
                           placeholderTextColor="#64748B"
                           keyboardType="email-address"
                           autoCapitalize="none"
@@ -334,7 +336,7 @@ export default function SignInScreen() {
                     <Text
                       style={{ color: "white", fontSize: 17, fontWeight: "600" }}
                     >
-                      Tiếp tục
+                      {t("common.continue")}
                     </Text>
                     <Ionicons
                       name="arrow-forward"
@@ -363,7 +365,7 @@ export default function SignInScreen() {
                     fontWeight: "500",
                   }}
                 >
-                  Hoặc đăng nhập với
+                  {t("auth.orSignInWith")}
                 </Text>
                 <View style={{ flex: 1, height: 1, backgroundColor: "#334155" }} />
               </View>
@@ -397,7 +399,7 @@ export default function SignInScreen() {
                         marginLeft: 12,
                       }}
                     >
-                      Tiếp tục với Google
+                      {t("auth.continueWithGoogle")}
                     </Text>
                   </>
                 )}
@@ -413,9 +415,10 @@ export default function SignInScreen() {
                     lineHeight: 20,
                   }}
                 >
-                  Bằng việc tiếp tục, bạn đồng ý với{" "}
-                  <Text style={{ color: "#38BDF8" }}>Điều khoản dịch vụ</Text> và{" "}
-                  <Text style={{ color: "#38BDF8" }}>Chính sách bảo mật</Text>.
+                  {t("auth.terms.prefix")}{" "}
+                  <Text style={{ color: "#38BDF8" }}>{t("auth.terms.tos")}</Text>{" "}
+                  {t("auth.terms.and")}{" "}
+                  <Text style={{ color: "#38BDF8" }}>{t("auth.terms.privacy")}</Text>.
                 </Text>
               </View>
             </View>

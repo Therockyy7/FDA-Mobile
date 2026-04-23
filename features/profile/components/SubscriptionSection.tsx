@@ -4,8 +4,9 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { ActivityIndicator, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
-import { useColorScheme } from "~/lib/useColorScheme";
+import { useTranslation } from "~/features/i18n";
 import { UserSubscription } from "~/features/plans/types/plans-types";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 type Props = {
   subscription: UserSubscription | null;
@@ -16,19 +17,27 @@ type Props = {
 
 const getTierColor = (tierCode: string) => {
   switch ((tierCode || "").toUpperCase()) {
-    case "FREE": return "#325f9c";
-    case "PREMIUM": return "#007AFF";
-    case "MONITOR": return "#8B5CF6";
-    default: return "#325f9c";
+    case "FREE":
+      return "#325f9c";
+    case "PREMIUM":
+      return "#007AFF";
+    case "MONITOR":
+      return "#8B5CF6";
+    default:
+      return "#325f9c";
   }
 };
 
 const getTierIcon = (tierCode: string): keyof typeof Ionicons.glyphMap => {
   switch ((tierCode || "").toUpperCase()) {
-    case "FREE": return "cloud";
-    case "PREMIUM": return "flash";
-    case "MONITOR": return "shield";
-    default: return "cube";
+    case "FREE":
+      return "cloud";
+    case "PREMIUM":
+      return "flash";
+    case "MONITOR":
+      return "shield";
+    default:
+      return "cube";
   }
 };
 
@@ -39,19 +48,27 @@ const formatPrice = (price: number): string => {
 
 const getStatusLabel = (status: string) => {
   switch ((status || "").toLowerCase()) {
-    case "active": return "Đang hoạt động";
-    case "cancelled": return "Đã hủy";
-    case "expired": return "Đã hết hạn";
-    default: return status;
+    case "active":
+      return "Đang hoạt động";
+    case "cancelled":
+      return "Đã hủy";
+    case "expired":
+      return "Đã hết hạn";
+    default:
+      return status;
   }
 };
 
 const getStatusColor = (status: string) => {
   switch ((status || "").toLowerCase()) {
-    case "active": return "#10B981";
-    case "cancelled": return "#F59E0B";
-    case "expired": return "#EF4444";
-    default: return "#64748B";
+    case "active":
+      return "#10B981";
+    case "cancelled":
+      return "#F59E0B";
+    case "expired":
+      return "#EF4444";
+    default:
+      return "#64748B";
   }
 };
 
@@ -63,6 +80,7 @@ const SubscriptionSection: React.FC<Props> = ({
 }) => {
   const { isDarkColorScheme } = useColorScheme();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const colors = {
     background: isDarkColorScheme ? "#0F172A" : "#F8FAFB",
@@ -74,19 +92,27 @@ const SubscriptionSection: React.FC<Props> = ({
     sectionTitle: isDarkColorScheme ? "#38BDF8" : "#007AFF",
   };
 
-  const tierColor = subscription ? getTierColor(subscription.tierCode || subscription.tier || "") : colors.subtext;
-  const tierIcon = subscription ? getTierIcon(subscription.tierCode || subscription.tier || "") : "help-circle";
+  const tierColor = subscription
+    ? getTierColor(subscription.tierCode || subscription.tier || "")
+    : colors.subtext;
+  const tierIcon = subscription
+    ? getTierIcon(subscription.tierCode || subscription.tier || "")
+    : "help-circle";
 
   return (
     <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
       {/* Section Header */}
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+      <View
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}
+      >
         <View
           style={{
             width: 32,
             height: 32,
             borderRadius: 10,
-            backgroundColor: isDarkColorScheme ? "rgba(96, 165, 250, 0.15)" : "rgba(59, 130, 246, 0.1)",
+            backgroundColor: isDarkColorScheme
+              ? "rgba(96, 165, 250, 0.15)"
+              : "rgba(59, 130, 246, 0.1)",
             alignItems: "center",
             justifyContent: "center",
             marginRight: 10,
@@ -95,7 +121,7 @@ const SubscriptionSection: React.FC<Props> = ({
           <Ionicons name="pricetag" size={16} color={colors.sectionTitle} />
         </View>
         <Text style={{ fontSize: 17, fontWeight: "800", color: colors.text }}>
-          Gói dịch vụ
+          {t("subscription.title")}
         </Text>
       </View>
 
@@ -119,7 +145,7 @@ const SubscriptionSection: React.FC<Props> = ({
           <View style={{ padding: 24, alignItems: "center" }}>
             <ActivityIndicator size="small" color={colors.sectionTitle} />
             <Text style={{ marginTop: 8, color: colors.subtext, fontSize: 13 }}>
-              Đang tải thông tin gói...
+              {t("subscription.loading")}
             </Text>
           </View>
         )}
@@ -127,8 +153,15 @@ const SubscriptionSection: React.FC<Props> = ({
         {/* Error */}
         {!isLoading && error && (
           <View style={{ padding: 16 }}>
-            <Text style={{ color: "#EF4444", fontSize: 13, textAlign: "center", marginBottom: 8 }}>
-              Không thể tải thông tin gói dịch vụ
+            <Text
+              style={{
+                color: "#EF4444",
+                fontSize: 13,
+                textAlign: "center",
+                marginBottom: 8,
+              }}
+            >
+              {t("subscription.error")}
             </Text>
             {onRetry && (
               <TouchableOpacity
@@ -142,7 +175,11 @@ const SubscriptionSection: React.FC<Props> = ({
                 onPress={onRetry}
                 activeOpacity={0.8}
               >
-                <Text style={{ color: "#FFFFFF", fontWeight: "600", fontSize: 13 }}>Thử lại</Text>
+                <Text
+                  style={{ color: "#FFFFFF", fontWeight: "600", fontSize: 13 }}
+                >
+                  {t("common.retry")}
+                </Text>
               </TouchableOpacity>
             )}
           </View>
@@ -152,11 +189,18 @@ const SubscriptionSection: React.FC<Props> = ({
         {!isLoading && !error && (
           <>
             <TouchableOpacity
-              style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16 }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: 16,
+              }}
               onPress={() => router.push("/plans/current")}
               activeOpacity={0.7}
             >
-              <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
+              >
                 {/* Icon */}
                 <View
                   style={{
@@ -174,13 +218,31 @@ const SubscriptionSection: React.FC<Props> = ({
 
                 {/* Plan Name + Status */}
                 <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                    <Text style={{ fontSize: 17, fontWeight: "800", color: colors.text }}>
-                      {subscription?.planName || "Chưa có gói"}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 17,
+                        fontWeight: "800",
+                        color: colors.text,
+                      }}
+                    >
+                      {subscription?.planName || t("subscription.noPlan")}
                     </Text>
                   </View>
                   {subscription && (
-                    <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginTop: 2,
+                      }}
+                    >
                       <View
                         style={{
                           backgroundColor: getStatusColor(subscription.status),
@@ -189,8 +251,27 @@ const SubscriptionSection: React.FC<Props> = ({
                           borderRadius: 20,
                         }}
                       >
-                        <Text style={{ fontSize: 11, fontWeight: "700", color: "#FFFFFF" }}>
-                          {getStatusLabel(subscription.status)}
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontWeight: "700",
+                            color: "#FFFFFF",
+                          }}
+                        >
+                          {(() => {
+                            switch (
+                              (subscription?.status || "").toLowerCase()
+                            ) {
+                              case "active":
+                                return t("subscription.status.active");
+                              case "cancelled":
+                                return t("subscription.status.cancelled");
+                              case "expired":
+                                return t("subscription.status.expired");
+                              default:
+                                return subscription?.status;
+                            }
+                          })()}
                         </Text>
                       </View>
                     </View>
@@ -199,7 +280,11 @@ const SubscriptionSection: React.FC<Props> = ({
               </View>
 
               {/* Chevron */}
-              <Ionicons name="chevron-forward" size={20} color={colors.subtext} />
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={colors.subtext}
+              />
             </TouchableOpacity>
 
             {/* View Plans CTA */}
@@ -216,9 +301,22 @@ const SubscriptionSection: React.FC<Props> = ({
               onPress={() => router.push("/plans")}
               activeOpacity={0.7}
             >
-              <Ionicons name="pricetag-outline" size={16} color={colors.sectionTitle} style={{ marginRight: 6 }} />
-              <Text style={{ fontSize: 14, fontWeight: "700", color: colors.sectionTitle }}>
-                {subscription ? "Xem & So sánh các gói" : "Xem các gói dịch vụ"}
+              <Ionicons
+                name="pricetag-outline"
+                size={16}
+                color={colors.sectionTitle}
+                style={{ marginRight: 6 }}
+              />
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "700",
+                  color: colors.sectionTitle,
+                }}
+              >
+                {subscription
+                  ? t("subscription.viewAll")
+                  : t("subscription.viewPlans")}
               </Text>
             </TouchableOpacity>
           </>

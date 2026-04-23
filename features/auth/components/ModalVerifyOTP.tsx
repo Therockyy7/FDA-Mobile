@@ -11,6 +11,7 @@ import {
 import { OtpInput } from "react-native-otp-entry";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
+import { useTranslation } from "~/features/i18n";
 
 interface ModalVerifyOTPProps {
   visible: boolean;
@@ -36,6 +37,7 @@ const ModalVerifyOTP: React.FC<ModalVerifyOTPProps> = ({
   error,
 }) => {
   const [countdown, setCountdown] = useState(30);
+  const { t } = useTranslation();
 
   useEffect(() => {
     let timer: any;
@@ -81,11 +83,11 @@ const ModalVerifyOTP: React.FC<ModalVerifyOTPProps> = ({
                 </View>
 
                 <Text className="text-2xl font-bold text-slate-900 dark:text-white text-center">
-                  Xác thực bảo mật
+                  {t("otp.secureTitle")}
                 </Text>
 
                 <Text className="text-base text-slate-500 dark:text-slate-400 mt-2 text-center px-2">
-                  Nhập mã 6 số chúng tôi vừa gửi tới{"\n"}
+                  {t("otp.sentTo")}{"\n"}
                   <Text className="font-bold text-slate-900 dark:text-slate-200 text-lg">
                     {phone}
                   </Text>
@@ -142,7 +144,7 @@ const ModalVerifyOTP: React.FC<ModalVerifyOTPProps> = ({
                 {/* Resend Link */}
                 <View className="flex-row items-center justify-center mb-6">
                   <Text className="text-slate-500 text-sm font-medium mr-1">
-                    Chưa nhận được mã?
+                    {t("otp.notReceived")}
                   </Text>
                   <TouchableOpacity
                     onPress={handleResendClick}
@@ -154,8 +156,8 @@ const ModalVerifyOTP: React.FC<ModalVerifyOTPProps> = ({
                       }`}
                     >
                       {countdown > 0
-                        ? `Gửi lại sau ${countdown}s`
-                        : "Gửi lại ngay"}
+                        ? t("otp.resendIn", { seconds: countdown })
+                        : t("otp.resendNow")}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -167,7 +169,7 @@ const ModalVerifyOTP: React.FC<ModalVerifyOTPProps> = ({
                   className="w-full h-14 rounded-2xl bg-primary shadow-lg shadow-blue-500/30"
                 >
                   <Text className="text-white text-lg font-bold">
-                    {loading ? "Đang xử lý..." : "Xác nhận"}
+                    {loading ? t("common.processing") : t("common.confirm")}
                   </Text>
                 </Button>
               </View>

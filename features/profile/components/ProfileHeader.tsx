@@ -22,6 +22,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useOfflineBannerPadding } from "~/components/OfflineBanner";
 import { Text } from "~/components/ui/text";
+import { useTranslation } from "~/features/i18n";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 type Props = {
@@ -51,6 +52,7 @@ const ProfileHeader: React.FC<Props> = ({
 }) => {
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
+  const { t, locale } = useTranslation();
 
   const insets = useSafeAreaInsets();
   const offlinePadding = useOfflineBannerPadding();
@@ -59,7 +61,7 @@ const ProfileHeader: React.FC<Props> = ({
   const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
 
   const formattedDate = createdAt
-    ? new Date(createdAt).toLocaleDateString("vi-VN", {
+    ? new Date(createdAt).toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
@@ -381,7 +383,7 @@ const ProfileHeader: React.FC<Props> = ({
 
           {/* Email */}
           <Text style={{ fontSize: 13, fontWeight: "500", color: "rgba(255,255,255,0.7)", marginTop: 6 }}>
-            {email || "Chưa cập nhật email"}
+            {email || t("profile.email.notSet")}
           </Text>
 
           {/* Stats Row */}
@@ -428,7 +430,7 @@ const ProfileHeader: React.FC<Props> = ({
                   shadowRadius: 4,
                 }} />
               <Text style={{ fontSize: 11, fontWeight: "600", color: status === "ACTIVE" ? "#86EFAC" : "rgba(255,255,255,0.7)" }}>
-                {status === "ACTIVE" ? "Online" : "Offline"}
+                {status === "ACTIVE" ? t("profile.status.online") : t("profile.status.offline")}
               </Text>
             </View>
           </View>

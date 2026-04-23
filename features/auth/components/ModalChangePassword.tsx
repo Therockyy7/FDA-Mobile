@@ -10,6 +10,7 @@ import {
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Text } from "~/components/ui/text";
+import { useTranslation } from "~/features/i18n";
 
 export interface ModalChangePasswordProps {
   visible: boolean;
@@ -35,27 +36,28 @@ const ModalChangePassword: React.FC<ModalChangePasswordProps> = ({
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const { t } = useTranslation();
 
   const handleConfirm = () => {
     setLocalError(null);
 
     if (requireCurrentPassword && !currentPassword.trim()) {
-      setLocalError("Vui lòng nhập mật khẩu hiện tại");
+      setLocalError(t("password.error.currentRequired"));
       return;
     }
 
     if (!newPassword.trim()) {
-      setLocalError("Vui lòng nhập mật khẩu mới");
+      setLocalError(t("password.error.newRequired"));
       return;
     }
 
     if (newPassword.length < 6) {
-      setLocalError("Mật khẩu mới phải có ít nhất 6 ký tự");
+      setLocalError(t("password.error.min"));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setLocalError("Mật khẩu xác nhận không khớp");
+      setLocalError(t("password.error.mismatch"));
       return;
     }
 
@@ -95,12 +97,12 @@ const ModalChangePassword: React.FC<ModalChangePasswordProps> = ({
             <View className="items-center mb-4">
               <View className="h-1 w-12 bg-gray-300 rounded-full mb-4" />
               <Text className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
-                {requireCurrentPassword ? "Đổi mật khẩu" : "Tạo mật khẩu"}
+                {requireCurrentPassword ? t("password.change.title") : t("password.set.title")}
               </Text>
               <Text className="text-sm text-text-secondary-light dark:text-text-secondary-dark mt-2 text-center">
                 {requireCurrentPassword
-                  ? "Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật."
-                  : "Tài khoản của bạn chưa có mật khẩu. Hãy tạo mật khẩu mới."}
+                  ? t("password.change.desc")
+                  : t("password.set.desc")}
               </Text>
             </View>
 
@@ -109,13 +111,13 @@ const ModalChangePassword: React.FC<ModalChangePasswordProps> = ({
               {requireCurrentPassword && (
                 <View className="gap-2">
                   <Text className="text-sm font-medium text-text-primary-light dark:text-text-primary-dark">
-                    Mật khẩu hiện tại
+                    {t("password.current")}
                   </Text>
                   <View className="flex-row items-center">
                     <Input
                       value={currentPassword}
                       onChangeText={setCurrentPassword}
-                      placeholder="Nhập mật khẩu hiện tại"
+                      placeholder={t("password.placeholder.current")}
                       secureTextEntry={!showCurrent}
                       className="flex-1 h-12 rounded-l-lg rounded-r-none bg-input-light dark:bg-input-dark border border-border-light dark:border-border-dark pr-2"
                     />
@@ -137,13 +139,13 @@ const ModalChangePassword: React.FC<ModalChangePasswordProps> = ({
               {/* New password */}
               <View className="gap-2">
                 <Text className="text-sm font-medium text-text-primary-light dark:text-text-primary-dark">
-                  Mật khẩu mới
+                  {t("password.new")}
                 </Text>
                 <View className="flex-row items-center">
                   <Input
                     value={newPassword}
                     onChangeText={setNewPassword}
-                    placeholder="Nhập mật khẩu mới"
+                    placeholder={t("password.placeholder.new")}
                     secureTextEntry={!showNew}
                     className="flex-1 h-12 rounded-l-lg rounded-r-none bg-input-light dark:bg-input-dark border border-border-light dark:border-border-dark pr-2"
                   />
@@ -164,13 +166,13 @@ const ModalChangePassword: React.FC<ModalChangePasswordProps> = ({
               {/* Confirm password */}
               <View className="gap-2">
                 <Text className="text-sm font-medium text-text-primary-light dark:text-text-primary-dark">
-                  Xác nhận mật khẩu mới
+                  {t("password.confirm")}
                 </Text>
                 <View className="flex-row items-center">
                   <Input
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
-                    placeholder="Nhập lại mật khẩu mới"
+                    placeholder={t("password.placeholder.confirm")}
                     secureTextEntry={!showConfirm}
                     className="flex-1 h-12 rounded-l-lg rounded-r-none bg-input-light dark:bg-input-dark border border-border-light dark:border-border-dark pr-2"
                   />
@@ -204,10 +206,10 @@ const ModalChangePassword: React.FC<ModalChangePasswordProps> = ({
                 >
                   <Text className="text-white font-semibold">
                     {loading
-                      ? "Đang cập nhật..."
+                      ? t("common.updating")
                       : requireCurrentPassword
-                        ? "Cập nhật mật khẩu"
-                        : "Tạo mật khẩu"}
+                        ? t("password.change.submit")
+                        : t("password.set.submit")}
                   </Text>
                 </Button>
 
@@ -218,7 +220,7 @@ const ModalChangePassword: React.FC<ModalChangePasswordProps> = ({
                   disabled={loading}
                 >
                   <Text className="text-text-secondary-light dark:text-text-secondary-dark font-medium">
-                    Hủy
+                    {t("common.cancel")}
                   </Text>
                 </TouchableOpacity>
               </View>

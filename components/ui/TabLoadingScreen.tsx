@@ -13,6 +13,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { useTranslation } from "~/features/i18n";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -23,9 +24,11 @@ interface TabLoadingScreenProps {
 
 export function TabLoadingScreen({
   visible,
-  message = "Đang tải...",
+  message,
 }: TabLoadingScreenProps) {
   const { isDarkColorScheme } = useColorScheme();
+  const { t } = useTranslation();
+  const displayMessage = message || t("common.loading");
 
   // Animation values
   const opacity = useSharedValue(0);
@@ -139,11 +142,11 @@ export function TabLoadingScreen({
         <Animated.Text
           style={[styles.message, textStyle, { color: colors.text }]}
         >
-          {message}
+          {displayMessage}
         </Animated.Text>
 
         <Text style={[styles.hint, { color: colors.subtext }]}>
-          Vui lòng chờ trong giây lát
+          {t("common.pleaseWait")}
         </Text>
       </Animated.View>
     </Animated.View>

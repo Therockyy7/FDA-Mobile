@@ -4,6 +4,7 @@ import LottieView from "lottie-react-native";
 import React from "react";
 import { View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { useTranslation } from "~/features/i18n";
 
 interface LoadingChartProps {
   height?: number;
@@ -14,8 +15,10 @@ interface LoadingChartProps {
 export function LoadingChart({
   height = 200,
   isDark = false,
-  message = "Đang tải biểu đồ...",
+  message,
 }: LoadingChartProps) {
+  const { t } = useTranslation();
+  const displayMessage = message || t("chart.loading");
   return (
     <View
       style={{
@@ -73,7 +76,7 @@ export function LoadingChart({
           marginTop: 8,
         }}
       >
-        {message}
+        {displayMessage}
       </Text>
 
       {/* Skeleton chart lines */}

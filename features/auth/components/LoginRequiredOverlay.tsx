@@ -1,4 +1,5 @@
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "~/features/i18n";
 
 type LoginRequiredOverlayProps = {
   visible: boolean;
@@ -7,13 +8,13 @@ type LoginRequiredOverlayProps = {
   onSignUp: () => void;
 };
 
-// Có thể tách ra file riêng: features/auth/components/LoginRequiredOverlay.tsx
 export const LoginRequiredOverlay = ({
   visible,
   onClose,
   onLogin,
   onSignUp,
 }: LoginRequiredOverlayProps) => {
+  const { t } = useTranslation();
   return (
     <Modal
       visible={visible}
@@ -23,17 +24,17 @@ export const LoginRequiredOverlay = ({
     >
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <Text style={styles.title}>Yêu cầu đăng nhập</Text>
+          <Text style={styles.title}>{t("auth.loginRequired.title")}</Text>
           <Text style={styles.desc}>
-            Đăng nhập để truy cập khu vực, nhận thông báo và quản lý tài khoản.
+            {t("auth.loginRequired.desc")}
           </Text>
 
           <TouchableOpacity style={styles.primaryBtn} onPress={onLogin}>
-            <Text style={styles.primaryText}>Đăng nhập</Text>
+            <Text style={styles.primaryText}>{t("auth.signIn")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Text style={styles.closeText}>Để sau</Text>
+            <Text style={styles.closeText}>{t("auth.loginRequired.later")}</Text>
           </TouchableOpacity>
         </View>
       </View>

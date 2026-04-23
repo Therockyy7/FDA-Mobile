@@ -21,23 +21,27 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
+import { LoadingDot } from "./LoadingDot";
+import { useTranslation } from "~/features/i18n";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 interface AreaCreationLoadingOverlayProps {
   visible: boolean;
   message?: string;
-  subMessage?: string;
+  onCancel?: () => void;
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export function AreaCreationLoadingOverlay({
   visible,
-  message = "Đang tải...",
-  subMessage = "Vui lòng chờ trong giây lát",
+  message,
+  onCancel,
 }: AreaCreationLoadingOverlayProps) {
   const { isDarkColorScheme } = useColorScheme();
+  const { t } = useTranslation();
+  const displayMessage = message || t("common.loading");
 
   // Animations
   const iconScale = useSharedValue(1);
@@ -46,8 +50,8 @@ export function AreaCreationLoadingOverlay({
 
   const colors = {
     cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
-    text: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
-    subtext: isDarkColorScheme ? "#94A3B8" : "#6B7280",
+    textPrimary: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
+    textSecondary: isDarkColorScheme ? "#94A3B8" : "#6B7280",
     border: isDarkColorScheme ? "#334155" : "#E2E8F0",
     overlay: isDarkColorScheme ? "rgba(0, 0, 0, 0.7)" : "rgba(0, 0, 0, 0.5)",
   };
@@ -97,6 +101,10 @@ export function AreaCreationLoadingOverlay({
 
   const pulseAnimatedStyle = useAnimatedStyle(() => ({
     opacity: pulseOpacity.value,
+  }));
+  
+  const textStyle = useAnimatedStyle(() => ({
+    opacity: 1,
   }));
 
   if (!visible) return null;
@@ -163,9 +171,12 @@ export function AreaCreationLoadingOverlay({
         />
 
         {/* Text */}
-        <Text style={[styles.message, { color: colors.text }]}>{message}</Text>
-        <Text style={[styles.subMessage, { color: colors.subtext }]}>
-          {subMessage}
+        <Animated.Text style={[styles.message, { color: colors.textPrimary }, textStyle]}>
+          {displayMessage}
+        </Animated.Text>
+
+        <Text style={[styles.subMessage, { color: colors.textSecondary }]}>
+          {t("common.pleaseWait")}
         </Text>
 
         {/* Progress Dots */}

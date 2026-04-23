@@ -14,10 +14,12 @@ import PricingPlansList from "~/features/plans/components/PricingPlansList";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { useTranslation } from "~/features/i18n";
 
 export default function GuestProfileScreen() {
   const { isDarkColorScheme } = useColorScheme();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const {
     data: plansData,
@@ -49,16 +51,16 @@ export default function GuestProfileScreen() {
       >
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.headerTitle}>Hồ sơ của bạn</Text>
+            <Text style={styles.headerTitle}>{t("profile.guest.headerTitle")}</Text>
             <Text style={styles.headerSubtitle}>
-              Khám phá các gói dịch vụ cảnh báo ngay
+              {t("profile.guest.headerSubtitle")}
             </Text>
           </View>
           <TouchableOpacity
              style={styles.loginBtn}
              onPress={() => router.push("/(auth)/sign-in")}
           >
-             <Text style={styles.loginBtnText}>Đăng nhập</Text>
+             <Text style={styles.loginBtnText}>{t("auth.signIn")}</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -80,7 +82,7 @@ export default function GuestProfileScreen() {
           <View style={styles.stateContainer}>
             <ActivityIndicator size="large" color="#007AFF" />
             <Text style={[styles.stateText, { color: colors.subtext }]}>
-              Đang tải danh sách các gói...
+              {t("plans.loading")}
             </Text>
           </View>
         )}
@@ -90,14 +92,14 @@ export default function GuestProfileScreen() {
           <View style={styles.stateContainer}>
             <Ionicons name="cloud-offline" size={48} color={colors.subtext} />
             <Text style={[styles.stateTitle, { color: colors.text }]}>
-              Không thể tải bảng giá
+              {t("plans.loadError")}
             </Text>
             <TouchableOpacity
               style={styles.retryButton}
               onPress={() => refetchPlans()}
               activeOpacity={0.8}
             >
-              <Text style={styles.retryButtonText}>Thử lại</Text>
+              <Text style={styles.retryButtonText}>{t("common.retry")}</Text>
             </TouchableOpacity>
           </View>
         )}

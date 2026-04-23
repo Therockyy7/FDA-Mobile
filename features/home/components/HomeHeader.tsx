@@ -7,6 +7,7 @@ import { Platform, StatusBar, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useOfflineBannerPadding } from "~/components/OfflineBanner";
 import { useUser } from "~/features/auth/stores/hooks";
+import { useTranslation } from "~/features/i18n";
 import { useColorScheme } from "~/lib/useColorScheme";
 import type { OpenMeteoResponse } from "../types/open-meteo.types";
 import { getWeatherTheme } from "../types/open-meteo.types";
@@ -16,25 +17,21 @@ interface HomeHeaderProps {
   meteo?: OpenMeteoResponse | null;
 }
 
-export function HomeHeader({
-  notificationCount = 0,
-  meteo,
-}: HomeHeaderProps) {
+export function HomeHeader({ notificationCount = 0, meteo }: HomeHeaderProps) {
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
   const user = useUser();
+  const { t, locale } = useTranslation();
   const offlinePadding = useOfflineBannerPadding();
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Chào buổi sáng";
-    if (hour < 18) return "Chào buổi chiều";
-    return "Chào buổi tối";
+    if (hour < 12) return t("home.greeting.morning");
+    if (hour < 18) return t("home.greeting.afternoon");
+    return t("home.greeting.evening");
   };
 
-  const currentTemp = meteo
-    ? Math.round(meteo.current.temperature_2m)
-    : null;
+  const currentTemp = meteo ? Math.round(meteo.current.temperature_2m) : null;
   const weatherTheme = meteo
     ? getWeatherTheme(meteo.current.weather_code)
     : null;
@@ -127,7 +124,7 @@ export function HomeHeader({
                 letterSpacing: -0.5,
               }}
             >
-              Đà Nẵng
+              {t("home.greeting.city")}
               {currentTemp !== null && (
                 <Text style={{ color: weatherTheme?.color || colors.subtext }}>
                   {" "}
@@ -160,7 +157,7 @@ export function HomeHeader({
                 <Text
                   style={{ color: "white", fontSize: 13, fontWeight: "700" }}
                 >
-                  Đăng nhập
+                  {t("auth.signIn")}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -180,11 +177,7 @@ export function HomeHeader({
               }}
               activeOpacity={0.7}
             >
-              <Ionicons
-                name="notifications"
-                size={20}
-                color={colors.subtext}
-              />
+              <Ionicons name="notifications" size={20} color={colors.subtext} />
               {notificationCount > 0 && (
                 <View
                   style={{
@@ -223,7 +216,8 @@ export function HomeHeader({
             marginTop: 12,
             paddingVertical: 8,
             paddingHorizontal: 14,
-            backgroundColor: weatherTheme.color + (isDarkColorScheme ? "18" : "10"),
+            backgroundColor:
+              weatherTheme.color + (isDarkColorScheme ? "18" : "10"),
             borderRadius: 12,
             borderWidth: 1,
             borderColor: weatherTheme.color + "25",
@@ -246,10 +240,12 @@ export function HomeHeader({
               flex: 1,
             }}
           >
-            {weatherTheme.labelVn}
+            {weatherTheme.labelVn && locale === "vi"
+              ? weatherTheme.labelVn
+              : weatherTheme.label || weatherTheme.labelVn}
             {meteo && meteo.current.precipitation > 0
-              ? ` • Đang mưa ${meteo.current.precipitation}mm`
-              : " • Không có mưa"}
+              ? ` • ${t("home.weather.raining").replace("{amount}", String(meteo.current.precipitation))}`
+              : ` • ${t("home.weather.noRain")}`}
           </Text>
           {currentTemp !== null && (
             <View style={{ flexDirection: "row", alignItems: "center" }}>

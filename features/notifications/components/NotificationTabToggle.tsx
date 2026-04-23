@@ -1,11 +1,11 @@
+import * as Haptics from "expo-haptics";
 import React, { useEffect } from "react";
-import { StyleSheet, TouchableOpacity, View, Dimensions } from "react-native";
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
+import { Dimensions, StyleSheet, TouchableOpacity, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 
@@ -53,25 +53,37 @@ const NotificationTabToggle: React.FC<Props> = ({ activeTab, onChange }) => {
 
   return (
     <View style={styles.outerContainer}>
-      <View style={[styles.container, { backgroundColor: colors.containerBg, width: TOGGLE_WIDTH }]}>
-        <Animated.View 
-            style={[
-                styles.indicator, 
-                indicatorStyle, 
-                { backgroundColor: colors.indicator, width: INDICATOR_WIDTH }
-            ]} 
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: colors.containerBg, width: TOGGLE_WIDTH },
+        ]}
+      >
+        <Animated.View
+          style={[
+            styles.indicator,
+            indicatorStyle,
+            { backgroundColor: colors.indicator, width: INDICATOR_WIDTH },
+          ]}
         />
-        
+
         <TouchableOpacity
           style={styles.tab}
           onPress={() => handleToggle("alerts")}
           activeOpacity={1}
         >
-          <Text style={[
-            styles.tabText, 
-            { color: activeTab === "alerts" ? colors.activeText : colors.inactiveText }
-          ]}>
-            Lịch sử cảnh báo
+          <Text
+            style={[
+              styles.tabText,
+              {
+                color:
+                  activeTab === "alerts"
+                    ? colors.activeText
+                    : colors.inactiveText,
+              },
+            ]}
+          >
+            Lịch sử
           </Text>
         </TouchableOpacity>
 
@@ -80,10 +92,17 @@ const NotificationTabToggle: React.FC<Props> = ({ activeTab, onChange }) => {
           onPress={() => handleToggle("news")}
           activeOpacity={1}
         >
-          <Text style={[
-            styles.tabText, 
-            { color: activeTab === "news" ? colors.activeText : colors.inactiveText }
-          ]}>
+          <Text
+            style={[
+              styles.tabText,
+              {
+                color:
+                  activeTab === "news"
+                    ? colors.activeText
+                    : colors.inactiveText,
+              },
+            ]}
+          >
             Tin tức & Cập nhật
           </Text>
         </TouchableOpacity>

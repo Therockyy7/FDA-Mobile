@@ -24,7 +24,6 @@ import { useAlertHistoryInfiniteQuery } from "~/features/alerts/hooks/useAlertHi
 import type { AlertHistoryItem } from "~/features/alerts/types/alert-history.types";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { CachedDataBadge } from "~/components/CachedDataBadge";
-import { useNetworkStatus } from "~/lib/hooks/useNetworkStatus";
 
 export default function AlertHistoryScreen() {
   const router = useRouter();

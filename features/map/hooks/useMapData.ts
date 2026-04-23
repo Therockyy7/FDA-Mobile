@@ -44,7 +44,7 @@ export function useMapData(communityParams?: NearbyFloodReportsParams) {
 
   // Flood severity data (REST + SignalR real-time merge)
   // When settings is undefined (before Zustand hydrate), fallback to true so API is called.
-  const { floodSeverity, isLoading: floodLoading, refetch: refetchFloodSeverity } = useFloodData(
+  const { floodSeverity, isLoading: floodLoading, refetch: refetchFloodSeverity, dataUpdatedAt: floodDataUpdatedAt, fetchStatus: floodFetchStatus } = useFloodData(
     undefined,
     settings?.overlays?.flood ?? true,
   );
@@ -124,6 +124,8 @@ export function useMapData(communityParams?: NearbyFloodReportsParams) {
     // Flood
     floodSeverity,
     floodLoading,
+    floodDataUpdatedAt,
+    floodFetchStatus,
     refreshFloodSeverity,
     // User areas
     areas,

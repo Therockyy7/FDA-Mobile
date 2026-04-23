@@ -20,6 +20,8 @@ export function useCommunityReportsQuery(
     },
     enabled: enabled && params !== null,
     staleTime: 30_000,          // Don't refetch within 30s — community data is near-realtime via SignalR anyway
+    gcTime: 24 * 60 * 60_000,
+    networkMode: "offlineFirst",
     refetchInterval: 120_000,   // Background refresh every 2 min (was 60s — halved to reduce load)
     refetchOnWindowFocus: false, // Don't refetch on app focus — prevents burst on tab switch
   });

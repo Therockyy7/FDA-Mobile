@@ -21,7 +21,6 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { LoadingDot } from "./LoadingDot";
 import { useTranslation } from "~/features/i18n";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
@@ -29,6 +28,7 @@ import { useColorScheme } from "~/lib/useColorScheme";
 interface AreaCreationLoadingOverlayProps {
   visible: boolean;
   message?: string;
+  subMessage?: string;
   onCancel?: () => void;
 }
 
@@ -37,11 +37,13 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 export function AreaCreationLoadingOverlay({
   visible,
   message,
+  subMessage,
   onCancel,
 }: AreaCreationLoadingOverlayProps) {
   const { isDarkColorScheme } = useColorScheme();
   const { t } = useTranslation();
   const displayMessage = message || t("common.loading");
+  const displaySubMessage = subMessage || t("common.pleaseWait");
 
   // Animations
   const iconScale = useSharedValue(1);
@@ -176,7 +178,7 @@ export function AreaCreationLoadingOverlay({
         </Animated.Text>
 
         <Text style={[styles.subMessage, { color: colors.textSecondary }]}>
-          {t("common.pleaseWait")}
+          {displaySubMessage}
         </Text>
 
         {/* Progress Dots */}

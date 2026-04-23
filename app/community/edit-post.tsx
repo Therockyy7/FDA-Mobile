@@ -17,6 +17,7 @@ import * as Location from "expo-location";
 import { CustomCamera, CapturedMedia } from "~/components/CustomCamera";
 import { CommunityService } from "~/features/community/services/community.service";
 import { Post } from "~/features/community/types/post-types";
+import { useTranslation } from "~/features/i18n";
 
 type Severity = "low" | "medium" | "high";
 
@@ -30,6 +31,7 @@ interface ExistingMedia {
 export default function EditPostScreen() {
   const { postId } = useLocalSearchParams<{ postId: string }>();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -117,7 +119,7 @@ export default function EditPostScreen() {
         }
       } catch (error) {
         console.error("Lỗi load post:", error);
-        Alert.alert("Lỗi", "Không thể tải thông tin bài đăng");
+        Alert.alert(t("common.error"), t("community.post.loadError"));
       } finally {
         setLoading(false);
       }
@@ -150,7 +152,7 @@ export default function EditPostScreen() {
     // At least one of: description, new media, or keep existing media
     const hasContent = description.trim() || newMediaList.length > 0 || existingMedia.length > 0;
     if (!hasContent) {
-      Alert.alert("Lỗi", "Vui lòng nhập nội dung hoặc thêm hình ảnh");
+      Alert.alert(t("common.error"), t("community.post.emptyContentError"));
       return;
     }
 
@@ -172,15 +174,15 @@ export default function EditPostScreen() {
       });
 
       if (response.success) {
-        Alert.alert("Thành công", "Bài đăng đã được cập nhật", [
-          { text: "OK", onPress: () => router.back() },
+        Alert.alert(t("common.success"), t("community.post.updateSuccess"), [
+          { text: t("common.ok"), onPress: () => router.back() },
         ]);
       } else {
-        Alert.alert("Lỗi", response.message);
+        Alert.alert(t("common.error"), response.message);
       }
     } catch (error: any) {
       console.error("Lỗi update:", error);
-      Alert.alert("Lỗi", "Không thể cập nhật bài đăng");
+      Alert.alert(t("common.error"), t("community.post.updateError"));
     } finally {
       setSubmitting(false);
     }
@@ -191,7 +193,7 @@ export default function EditPostScreen() {
     return (
       <SafeAreaView className="flex-1 bg-slate-100 dark:bg-slate-950 items-center justify-center">
         <ActivityIndicator size="large" color="#0EA5E9" />
-        <Text className="text-slate-500 mt-2">Đang tải...</Text>
+        <Text className="text-slate-500 mt-2">{t("common.loading")}</Text>
       </SafeAreaView>
     );
   }
@@ -218,7 +220,7 @@ export default function EditPostScreen() {
               <Ionicons name="close" size={22} color="#0B1A33" />
             </TouchableOpacity>
             <Text className="text-slate-900 dark:text-white font-semibold text-base">
-              Chỉnh sửa bài đăng
+              {t("community.post.edit")}
             </Text>
             <TouchableOpacity
               onPress={handleSubmit}
@@ -230,7 +232,7 @@ export default function EditPostScreen() {
               {submitting ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
-                <Text className="text-xs font-semibold text-white">Lưu</Text>
+                <Text className="text-xs font-semibold text-white">{t("common.save")}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -247,14 +249,14 @@ export default function EditPostScreen() {
                 ? locationAddress
                 : currentLocation
                 ? `${currentLocation.coords.latitude.toFixed(6)}, ${currentLocation.coords.longitude.toFixed(6)}`
-                : "Không có vị trí"}
+                : t("community.post.noLocation")}
             </Text>
           </View>
 
           {/* Severity selector */}
           <View className="mb-4">
             <Text className="text-sm text-slate-700 dark:text-slate-300 mb-2">
-              Mức độ ngập lụt
+              {t("community.post.level")}
             </Text>
             <View className="flex-row gap-2">
               {(["low", "medium", "high"] as Severity[]).map((level) => (
@@ -282,7 +284,7 @@ export default function EditPostScreen() {
                         : "text-slate-600 dark:text-slate-400"
                     }`}
                   >
-                    {level === "low" ? "Thấp" : level === "medium" ? "Trung bình" : "Cao"}
+                    {level === "low" ? t("alerts.severity.low") : level === "medium" ? t("alerts.severity.medium") : t("alerts.severity.high")}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -291,10 +293,10 @@ export default function EditPostScreen() {
 
           {/* Description input */}
           <Text className="text-sm text-slate-700 dark:text-slate-300 mb-2">
-            Mô tả
+            {t("community.post.description")}
           </Text>
           <TextInput
-            placeholder="Mô tả tình hình ngập lụt..."
+            placeholder={t("community.post.descriptionPlaceholder")}
             placeholderTextColor="#94A3B8"
             multiline
             value={description}
@@ -307,7 +309,7 @@ export default function EditPostScreen() {
           {existingMedia.length > 0 && (
             <View className="mb-4">
               <Text className="text-sm text-slate-700 dark:text-slate-300 mb-2">
-                Hình ảnh hiện tại
+                {t("community.post.currentImages")}
               </Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View className="flex-row gap-2">
@@ -341,7 +343,7 @@ export default function EditPostScreen() {
             <View className="flex-row items-center gap-2 mb-4 bg-red-50 dark:bg-red-900/20 p-3 rounded-xl">
               <Ionicons name="trash" size={16} color="#EF4444" />
               <Text className="text-sm text-red-600 dark:text-red-400">
-                {mediaToDelete.length} hình ảnh sẽ bị xóa khi lưu
+                {mediaToDelete.length} {t("community.post.imagesToDeleteInfo")}
               </Text>
             </View>
           )}
@@ -350,7 +352,7 @@ export default function EditPostScreen() {
           {newMediaList.length > 0 && (
             <View className="mb-4">
               <Text className="text-sm text-slate-700 dark:text-slate-300 mb-2">
-                Hình ảnh mới
+                {t("community.post.newImages")}
               </Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View className="flex-row gap-2">
@@ -386,7 +388,7 @@ export default function EditPostScreen() {
           >
             <Ionicons name="camera" size={20} color="#22C55E" />
             <Text className="text-sm text-slate-700 dark:text-slate-300">
-              Thêm hình ảnh / Video
+              {t("community.post.addMedia")}
             </Text>
           </TouchableOpacity>
 
@@ -394,7 +396,7 @@ export default function EditPostScreen() {
           <View className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl flex-row gap-2">
             <Ionicons name="information-circle" size={18} color="#0EA5E9" />
             <Text className="text-xs text-blue-700 dark:text-blue-400 flex-1">
-              Chỉnh sửa sẽ được cập nhật ngay lập tức. Hình ảnh mới sẽ được thêm vào, hình ảnh được đánh dấu xóa sẽ bị loại bỏ.
+              {t("community.post.editInfo")}
             </Text>
           </View>
         </View>

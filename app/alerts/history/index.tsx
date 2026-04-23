@@ -23,11 +23,13 @@ import { useAlertHistoryData } from "~/features/alerts/hooks/useAlertHistoryData
 import { useAlertHistoryInfiniteQuery } from "~/features/alerts/hooks/useAlertHistoryInfiniteQuery";
 import type { AlertHistoryItem } from "~/features/alerts/types/alert-history.types";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { useTranslation } from "~/features/i18n";
 
 export default function AlertHistoryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isDarkColorScheme } = useColorScheme();
+  const { t } = useTranslation();
   const PAGE_SIZE = 10;
 
   const colors = useMemo(
@@ -128,9 +130,9 @@ export default function AlertHistoryScreen() {
     yesterday.setDate(today.getDate() - 1);
 
     const getTitle = (date: Date) => {
-      if (isSameDay(date, today)) return "Hôm nay";
-      if (isSameDay(date, yesterday)) return "Hôm qua";
-      return date.toLocaleDateString("vi-VN");
+      if (isSameDay(date, today)) return t("alerts.today");
+      if (isSameDay(date, yesterday)) return t("alerts.yesterday");
+      return date.toLocaleDateString();
     };
 
     sorted.forEach((item) => {
@@ -207,13 +209,13 @@ export default function AlertHistoryScreen() {
     if (isLoading) {
       return (
         <View style={{ paddingVertical: 24, alignItems: "center" }}>
-          <AlertHistorySectionTitle title="Đang tải..." color={colors.subtext} />
+          <AlertHistorySectionTitle title={t("alerts.history.loading")} color={colors.subtext} />
         </View>
       );
     }
     return (
       <View style={{ paddingVertical: 24, alignItems: "center" }}>
-        <AlertHistorySectionTitle title="Không có cảnh báo nào" color={colors.subtext} />
+        <AlertHistorySectionTitle title={t("alerts.history.empty")} color={colors.subtext} />
       </View>
     );
   };
@@ -226,7 +228,7 @@ export default function AlertHistoryScreen() {
       />
 
       <AlertHistoryHeader
-        title="Lịch sử cảnh báo"
+        title={t("alerts.history")}
         onBack={() => router.back()}
         colors={{
           text: colors.text,
@@ -268,7 +270,7 @@ export default function AlertHistoryScreen() {
             onToggleDropdown={() => setSeverityDropdownOpen((prev) => !prev)}
             onSelectSeverity={(severity) => {
               if (severity !== "all" && severityCounts[severity] === 0) {
-                Alert.alert("Không có dữ liệu", "Không có cảnh báo cho mức này.");
+                Alert.alert(t("alerts.history.noDataForLevel"), t("alerts.history.noDataForLevel"));
                 return;
               }
               setActiveSeverity(severity);

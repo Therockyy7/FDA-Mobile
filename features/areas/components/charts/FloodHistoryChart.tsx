@@ -6,6 +6,7 @@ import { Dimensions, View } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import { Text } from "~/components/ui/text";
 import type { FloodHistoryData } from "~/features/areas/types/flood-history.types";
+import { useTranslation } from "~/features/i18n";
 import { LoadingChart } from "./LoadingChart";
 
 const screenWidth = Dimensions.get("window").width;
@@ -48,6 +49,7 @@ export function FloodHistoryChart({
   isDark = false,
   height = 220,
 }: FloodHistoryChartProps) {
+  const { t } = useTranslation();
   const colors = {
     background: isDark ? "#1E293B" : "#FFFFFF",
     text: isDark ? "#F1F5F9" : "#1F2937",
@@ -115,7 +117,7 @@ export function FloodHistoryChart({
       >
         <Ionicons name="analytics-outline" size={40} color={colors.subtext} />
         <Text style={{ color: colors.subtext, marginTop: 12, fontSize: 14 }}>
-          Không có dữ liệu lịch sử
+          {t("chart.history.noData")}
         </Text>
       </View>
     );
@@ -141,10 +143,10 @@ export function FloodHistoryChart({
       >
         <View>
           <Text style={{ fontSize: 14, fontWeight: "700", color: colors.text }}>
-            Mực nước theo thời gian
+            {t("chart.history.title")}
           </Text>
           <Text style={{ fontSize: 11, color: colors.subtext, marginTop: 2 }}>
-            {data.metadata.totalDataPoints} điểm dữ liệu
+            {data.metadata.totalDataPoints} {t("chart.history.dataPoints")}
           </Text>
         </View>
 
@@ -292,12 +294,12 @@ export function FloodHistoryChart({
               }}
             >
               {key === "safe"
-                ? "An toàn"
+                ? t("severity.safe")
                 : key === "caution"
-                  ? "Chú ý"
+                  ? t("severity.caution")
                   : key === "warning"
-                    ? "Cảnh báo"
-                    : "Nguy hiểm"}
+                    ? t("severity.warning")
+                    : t("severity.critical")}
             </Text>
           </View>
         ))}

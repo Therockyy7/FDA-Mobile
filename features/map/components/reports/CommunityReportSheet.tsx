@@ -4,6 +4,7 @@ import { StyleSheet, View, ActivityIndicator, Text } from "react-native";
 import { NearbyFloodReport, CommunityService } from "~/features/community/services/community.service";
 import { PostCard } from "~/features/community/components/PostCard";
 import { transformFloodReportToPost } from "~/features/community/types/post-types";
+import { useTranslation } from "~/features/i18n";
 
 interface CommunityReportSheetProps {
   report: NearbyFloodReport;
@@ -14,6 +15,7 @@ export function CommunityReportSheet({ report, onClose }: CommunityReportSheetPr
   const [fullReport, setFullReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     let cancelled = false;
@@ -50,7 +52,7 @@ export function CommunityReportSheet({ report, onClose }: CommunityReportSheetPr
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#10B981" />
-        <Text style={styles.loadingText}>Đang tải báo cáo...</Text>
+        <Text style={styles.loadingText}>{t("community.report.loading")}</Text>
       </View>
     );
   }
@@ -60,9 +62,9 @@ export function CommunityReportSheet({ report, onClose }: CommunityReportSheetPr
     const fallbackPost = {
       id: report.id,
       authorId: "",
-      authorName: "Người dùng FDA",
+      authorName: t("community.report.author"),
       createdAt: report.createdAt,
-      content: `Báo cáo ngập lụt tại toạ độ (${report.latitude.toFixed(5)}, ${report.longitude.toFixed(5)})`,
+      content: `${t("community.report.floodAt")} (${report.latitude.toFixed(5)}, ${report.longitude.toFixed(5)})`,
       waterLevelStatus: (
         report.severity === "high" ? "danger" :
         report.severity === "medium" ? "warning" : "safe"

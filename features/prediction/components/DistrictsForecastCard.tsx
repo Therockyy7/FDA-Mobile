@@ -7,11 +7,12 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { AreaService } from "~/features/areas/services/area.service";
+import { useTranslation } from "~/features/i18n";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 import { PredictionService } from "../services/prediction.service";
-import { getRiskConfigByLevel } from "../types/prediction.types";
 import type { PredictionResponse } from "../types/prediction.types";
+import { getRiskConfigByLevel } from "../types/prediction.types";
 
 // ─────────────────────────────────────────────────────────────
 // Skeleton sub-component
@@ -24,9 +25,17 @@ const DistrictsForecastSkeleton = () => {
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 0.4, duration: 900, useNativeDriver: true }),
-      ])
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 900,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0.4,
+          duration: 900,
+          useNativeDriver: true,
+        }),
+      ]),
     ).start();
   }, [pulseAnim]);
 
@@ -35,37 +44,145 @@ const DistrictsForecastSkeleton = () => {
   const border = isDarkColorScheme ? "#334155" : "#F1F5F9";
 
   return (
-    <View style={{ paddingHorizontal: 16, paddingVertical: 4, paddingBottom: 24 }}>
+    <View
+      style={{ paddingHorizontal: 16, paddingVertical: 4, paddingBottom: 24 }}
+    >
       {/* Header skeleton */}
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 12,
+        }}
+      >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Animated.View style={{ width: 4, height: 16, borderRadius: 2, backgroundColor: skBg, opacity: pulseAnim }} />
+          <Animated.View
+            style={{
+              width: 4,
+              height: 16,
+              borderRadius: 2,
+              backgroundColor: skBg,
+              opacity: pulseAnim,
+            }}
+          />
           <View>
-            <Animated.View style={{ width: 150, height: 14, borderRadius: 6, backgroundColor: skBg, opacity: pulseAnim, marginBottom: 4 }} />
-            <Animated.View style={{ width: 100, height: 10, borderRadius: 4, backgroundColor: skBg, opacity: pulseAnim }} />
+            <Animated.View
+              style={{
+                width: 150,
+                height: 14,
+                borderRadius: 6,
+                backgroundColor: skBg,
+                opacity: pulseAnim,
+                marginBottom: 4,
+              }}
+            />
+            <Animated.View
+              style={{
+                width: 100,
+                height: 10,
+                borderRadius: 4,
+                backgroundColor: skBg,
+                opacity: pulseAnim,
+              }}
+            />
           </View>
         </View>
-        <Animated.View style={{ width: 60, height: 28, borderRadius: 14, backgroundColor: skBg, opacity: pulseAnim }} />
+        <Animated.View
+          style={{
+            width: 60,
+            height: 28,
+            borderRadius: 14,
+            backgroundColor: skBg,
+            opacity: pulseAnim,
+          }}
+        />
       </View>
 
       {/* Hero card skeleton */}
-      <Animated.View style={{ height: 160, borderRadius: 20, backgroundColor: skBg, opacity: pulseAnim, marginBottom: 10 }} />
+      <Animated.View
+        style={{
+          height: 160,
+          borderRadius: 20,
+          backgroundColor: skBg,
+          opacity: pulseAnim,
+          marginBottom: 10,
+        }}
+      />
 
       {/* Stats row skeleton */}
       <View style={{ flexDirection: "row", gap: 8, marginBottom: 10 }}>
         {[1, 2, 3].map((i) => (
-          <Animated.View key={i} style={{ flex: 1, height: 64, borderRadius: 14, backgroundColor: skBg, opacity: pulseAnim }} />
+          <Animated.View
+            key={i}
+            style={{
+              flex: 1,
+              height: 64,
+              borderRadius: 14,
+              backgroundColor: skBg,
+              opacity: pulseAnim,
+            }}
+          />
         ))}
       </View>
 
       {/* Timeline skeleton */}
-      <View style={{ backgroundColor: cardBg, borderRadius: 16, borderWidth: 1, borderColor: border, padding: 12 }}>
-        <Animated.View style={{ width: 120, height: 11, borderRadius: 5, backgroundColor: skBg, opacity: pulseAnim, marginBottom: 10 }} />
+      <View
+        style={{
+          backgroundColor: cardBg,
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: border,
+          padding: 12,
+        }}
+      >
+        <Animated.View
+          style={{
+            width: 120,
+            height: 11,
+            borderRadius: 5,
+            backgroundColor: skBg,
+            opacity: pulseAnim,
+            marginBottom: 10,
+          }}
+        />
         {[1, 2].map((i) => (
-          <View key={i} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8 }}>
-            <Animated.View style={{ width: 30, height: 10, borderRadius: 4, backgroundColor: skBg, opacity: pulseAnim }} />
-            <Animated.View style={{ width: 80, height: 8, borderRadius: 4, backgroundColor: skBg, opacity: pulseAnim }} />
-            <Animated.View style={{ width: 36, height: 18, borderRadius: 8, backgroundColor: skBg, opacity: pulseAnim }} />
+          <View
+            key={i}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingVertical: 8,
+            }}
+          >
+            <Animated.View
+              style={{
+                width: 30,
+                height: 10,
+                borderRadius: 4,
+                backgroundColor: skBg,
+                opacity: pulseAnim,
+              }}
+            />
+            <Animated.View
+              style={{
+                width: 80,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: skBg,
+                opacity: pulseAnim,
+              }}
+            />
+            <Animated.View
+              style={{
+                width: 36,
+                height: 18,
+                borderRadius: 8,
+                backgroundColor: skBg,
+                opacity: pulseAnim,
+              }}
+            />
           </View>
         ))}
       </View>
@@ -81,7 +198,11 @@ function getRiskGradient(riskLevel: string): readonly [string, string] {
   const upper = riskLevel?.toUpperCase() ?? "";
   if (upper.includes("CAO") || upper.includes("HIGH") || upper.includes("CAM"))
     return ["#DC2626", "#F87171"] as const;
-  if (upper.includes("VANG") || upper.includes("MODERATE") || upper.includes("MED"))
+  if (
+    upper.includes("VANG") ||
+    upper.includes("MODERATE") ||
+    upper.includes("MED")
+  )
     return ["#D97706", "#FBBF24"] as const;
   if (upper.includes("CRITICAL") || upper.includes("RAT"))
     return ["#7F1D1D", "#DC2626"] as const;
@@ -133,7 +254,7 @@ function scoreAreaMatch(areaName: string, searchTerm: string): number {
 /** Given a list of admin areas and a search term, return the best-matching one or null */
 function pickBestArea(
   areas: { id: string; name: string }[],
-  term: string
+  term: string,
 ): { id: string; name: string } | null {
   let best: { id: string; name: string } | null = null;
   let bestScore = 0;
@@ -171,15 +292,22 @@ const FORECAST_CACHE_TTL_MS = 5 * 60 * 1000;
 export function DistrictsForecastCard() {
   const { isDarkColorScheme } = useColorScheme();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const [loadState, setLoadState] = useState<LoadState>(() => {
-    if (_cachedForecast && Date.now() - _cacheTimestamp < FORECAST_CACHE_TTL_MS) {
+    if (
+      _cachedForecast &&
+      Date.now() - _cacheTimestamp < FORECAST_CACHE_TTL_MS
+    ) {
       return "done";
     }
     return "idle";
   });
   const [data, setData] = useState<LocalForecastData | null>(() => {
-    if (_cachedForecast && Date.now() - _cacheTimestamp < FORECAST_CACHE_TTL_MS) {
+    if (
+      _cachedForecast &&
+      Date.now() - _cacheTimestamp < FORECAST_CACHE_TTL_MS
+    ) {
       return _cachedForecast;
     }
     return null;
@@ -198,7 +326,11 @@ export function DistrictsForecastCard() {
   const fetchForecast = useCallback(async (forceRefresh = false) => {
     try {
       // ── Cache-first: if cached data is fresh and not a forced refresh, use it ──
-      if (!forceRefresh && _cachedForecast && Date.now() - _cacheTimestamp < FORECAST_CACHE_TTL_MS) {
+      if (
+        !forceRefresh &&
+        _cachedForecast &&
+        Date.now() - _cacheTimestamp < FORECAST_CACHE_TTL_MS
+      ) {
         setData(_cachedForecast);
         setLoadState("done");
         return;
@@ -211,7 +343,7 @@ export function DistrictsForecastCard() {
       setLoadState("location");
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        setErrorMsg("Ứng dụng cần quyền truy cập vị trí");
+        setErrorMsg(t("home.forecast.needLocation"));
         setLoadState("error");
         return;
       }
@@ -223,7 +355,9 @@ export function DistrictsForecastCard() {
 
       // ── Step 2: Reverse geocode to get ward/district name ──
       const [geo] = await Location.reverseGeocodeAsync({ latitude, longitude });
-      const locationLabel = geo ? formatLocationName(geo) : "Vị trí hiện tại";
+      const locationLabel = geo
+        ? formatLocationName(geo)
+        : t("home.forecast.currentLocation");
 
       // ── Step 3: Find matching ADMINISTRATIVE AREA ──
       // IMPORTANT: PredictionService requires IDs from /api/v1/admin/administrative-areas
@@ -237,7 +371,8 @@ export function DistrictsForecastCard() {
       const candidateTerms: string[] = [];
       if (geo) {
         if (geo.district) candidateTerms.push(geo.district);
-        if (geo.name && geo.name !== geo.district) candidateTerms.push(geo.name);
+        if (geo.name && geo.name !== geo.district)
+          candidateTerms.push(geo.name);
         if (geo.city) candidateTerms.push(geo.city);
         if (geo.subregion) candidateTerms.push(geo.subregion);
       }
@@ -257,10 +392,14 @@ export function DistrictsForecastCard() {
             if (best) {
               areaId = best.id;
               areaName = best.name;
-              console.log(`✅ [DistrictsForecastCard] Best match: "${best.name}" (${best.id}) for term "${term}"`);
+              console.log(
+                `✅ [DistrictsForecastCard] Best match: "${best.name}" (${best.id}) for term "${term}"`,
+              );
             } else {
               // All results scored 0 for this term — skip; next term may be better
-              console.log(`⚠️ [DistrictsForecastCard] No good match in ${adminRes.administrativeAreas.length} results for "${term}"`);
+              console.log(
+                `⚠️ [DistrictsForecastCard] No good match in ${adminRes.administrativeAreas.length} results for "${term}"`,
+              );
             }
           }
         } catch {
@@ -270,9 +409,14 @@ export function DistrictsForecastCard() {
 
       // ── Fallback: load ALL wards and score against every candidate term ──
       if (!areaId) {
-        console.warn("⚠️ No area found via candidate terms — running full-list scoring fallback...");
+        console.warn(
+          "⚠️ No area found via candidate terms — running full-list scoring fallback...",
+        );
         try {
-          const allRes = await AreaService.getAdminAreas({ pageNumber: 1, pageSize: 100 });
+          const allRes = await AreaService.getAdminAreas({
+            pageNumber: 1,
+            pageSize: 100,
+          });
           if (allRes.administrativeAreas.length > 0) {
             // Score each area against ALL candidate terms, take the highest
             let topScore = 0;
@@ -289,7 +433,9 @@ export function DistrictsForecastCard() {
             const chosen = topArea ?? allRes.administrativeAreas[0];
             areaId = chosen.id;
             areaName = chosen.name;
-            console.log(`⚠️ [DistrictsForecastCard] Fallback chose "${chosen.name}" (score=${topScore})`);
+            console.log(
+              `⚠️ [DistrictsForecastCard] Fallback chose "${chosen.name}" (score=${topScore})`,
+            );
           }
         } catch {
           console.warn("⚠️ Could not fetch admin areas list");
@@ -297,7 +443,7 @@ export function DistrictsForecastCard() {
       }
 
       if (!areaId) {
-        setErrorMsg("Không tìm thấy khu vực phù hợp");
+        setErrorMsg(t("home.forecast.noAreaFound"));
         setLoadState("error");
         return;
       }
@@ -306,7 +452,12 @@ export function DistrictsForecastCard() {
       setLoadState("prediction");
       const prediction = await PredictionService.getFloodRiskPrediction(areaId);
 
-      const newData: LocalForecastData = { areaId, areaName, locationLabel, prediction };
+      const newData: LocalForecastData = {
+        areaId,
+        areaName,
+        locationLabel,
+        prediction,
+      };
 
       // Save to module-level cache so tab switches don't re-trigger the full pipeline
       _cachedForecast = newData;
@@ -316,7 +467,7 @@ export function DistrictsForecastCard() {
       setLoadState("done");
     } catch (err: any) {
       console.error("❌ DistrictsForecastCard error:", err);
-      setErrorMsg(err?.message || "Không thể tải dự báo");
+      setErrorMsg(err?.message || t("home.forecast.loadError"));
       setLoadState("error");
     }
   }, []);
@@ -346,12 +497,28 @@ export function DistrictsForecastCard() {
             gap: 8,
           }}
         >
-          <MaterialCommunityIcons name="reload" size={22} color={themeConfig.subtext} />
-          <Text style={{ fontSize: 13, color: themeConfig.subtext, textAlign: "center" }}>
-            {errorMsg ?? "Không thể tải dự báo"}
+          <MaterialCommunityIcons
+            name="reload"
+            size={22}
+            color={themeConfig.subtext}
+          />
+          <Text
+            style={{
+              fontSize: 13,
+              color: themeConfig.subtext,
+              textAlign: "center",
+            }}
+          >
+            {errorMsg ?? t("home.forecast.loadError")}
           </Text>
-          <Text style={{ fontSize: 11, color: themeConfig.primary, fontWeight: "700" }}>
-            Chạm để thử lại
+          <Text
+            style={{
+              fontSize: 11,
+              color: themeConfig.primary,
+              fontWeight: "700",
+            }}
+          >
+            {t("home.forecast.tapToRetry")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -389,7 +556,14 @@ export function DistrictsForecastCard() {
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <View style={{ width: 4, height: 36, borderRadius: 2, backgroundColor: themeConfig.primary }} />
+          <View
+            style={{
+              width: 4,
+              height: 36,
+              borderRadius: 2,
+              backgroundColor: themeConfig.primary,
+            }}
+          />
           <View>
             <Text
               style={{
@@ -399,12 +573,18 @@ export function DistrictsForecastCard() {
                 letterSpacing: -0.3,
               }}
             >
-              Dự Báo Vị Trí Của Bạn
+              {t("home.forecast.title")}
             </Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+            >
               <Ionicons name="location" size={10} color={themeConfig.primary} />
               <Text
-                style={{ fontSize: 10, color: themeConfig.subtext, fontWeight: "500" }}
+                style={{
+                  fontSize: 10,
+                  color: themeConfig.subtext,
+                  fontWeight: "500",
+                }}
                 numberOfLines={1}
               >
                 {locationLabel}
@@ -427,8 +607,14 @@ export function DistrictsForecastCard() {
           }}
         >
           <Ionicons name="sync" size={12} color={themeConfig.subtext} />
-          <Text style={{ fontSize: 10, color: themeConfig.subtext, fontWeight: "600" }}>
-            Cập nhật
+          <Text
+            style={{
+              fontSize: 10,
+              color: themeConfig.subtext,
+              fontWeight: "600",
+            }}
+          >
+            {t("home.forecast.update")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -452,12 +638,34 @@ export function DistrictsForecastCard() {
           end={{ x: 1, y: 1 }}
           style={{ borderRadius: 20, padding: 18 }}
         >
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 12,
+            }}
+          >
             <View>
-              <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: "600", letterSpacing: 1 }}>
-                NGUY CƠ NGẬP LỤT
+              <Text
+                style={{
+                  color: "rgba(255,255,255,0.7)",
+                  fontSize: 10,
+                  fontWeight: "600",
+                  letterSpacing: 1,
+                }}
+              >
+                {t("home.forecast.floodRisk")}
               </Text>
-              <Text style={{ color: "white", fontSize: 22, fontWeight: "900", letterSpacing: -0.5, marginTop: 2 }}>
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 22,
+                  fontWeight: "900",
+                  letterSpacing: -0.5,
+                  marginTop: 2,
+                }}
+              >
                 {areaName}
               </Text>
             </View>
@@ -489,24 +697,53 @@ export function DistrictsForecastCard() {
                 justifyContent: "center",
               }}
             >
-              <Text style={{ color: "white", fontSize: 22, fontWeight: "900", letterSpacing: -1 }}>
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 22,
+                  fontWeight: "900",
+                  letterSpacing: -1,
+                }}
+              >
                 {probability}%
               </Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text
-                style={{ color: "rgba(255,255,255,0.85)", fontSize: 12, lineHeight: 18 }}
+                style={{
+                  color: "rgba(255,255,255,0.85)",
+                  fontSize: 12,
+                  lineHeight: 18,
+                }}
                 numberOfLines={3}
               >
                 {prediction.aiConsultant?.finalSummary
                   ? prediction.aiConsultant.finalSummary.slice(0, 100) + "..."
-                  : forecast?.aiPrediction?.impact?.recommendation ?? "Theo dõi bản tin cập nhật để nắm bắt tình hình."}
+                  : (forecast?.aiPrediction?.impact?.recommendation ??
+                    t("home.forecast.defaultRecommendation"))}
               </Text>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6 }}>
-                <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 9, fontWeight: "700" }}>
-                  Xem chi tiết
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
+                  marginTop: 6,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "rgba(255,255,255,0.6)",
+                    fontSize: 9,
+                    fontWeight: "700",
+                  }}
+                >
+                  {t("home.forecast.viewDetails")}
                 </Text>
-                <Ionicons name="chevron-forward" size={10} color="rgba(255,255,255,0.6)" />
+                <Ionicons
+                  name="chevron-forward"
+                  size={10}
+                  color="rgba(255,255,255,0.6)"
+                />
               </View>
             </View>
           </View>
@@ -533,8 +770,14 @@ export function DistrictsForecastCard() {
             {precipNow}
             <Text style={{ fontSize: 9 }}>mm</Text>
           </Text>
-          <Text style={{ fontSize: 9, color: themeConfig.subtext, fontWeight: "500" }}>
-            Lượng mưa
+          <Text
+            style={{
+              fontSize: 9,
+              color: themeConfig.subtext,
+              fontWeight: "500",
+            }}
+          >
+            {t("home.forecast.precipitation")}
           </Text>
         </View>
 
@@ -551,13 +794,23 @@ export function DistrictsForecastCard() {
             gap: 4,
           }}
         >
-          <MaterialCommunityIcons name="water-percent" size={18} color="#6366F1" />
+          <MaterialCommunityIcons
+            name="water-percent"
+            size={18}
+            color="#6366F1"
+          />
           <Text style={{ fontSize: 15, fontWeight: "800", color: "#6366F1" }}>
             {humidity}
             <Text style={{ fontSize: 9 }}>%</Text>
           </Text>
-          <Text style={{ fontSize: 9, color: themeConfig.subtext, fontWeight: "500" }}>
-            Độ ẩm
+          <Text
+            style={{
+              fontSize: 9,
+              color: themeConfig.subtext,
+              fontWeight: "500",
+            }}
+          >
+            {t("home.forecast.humidity")}
           </Text>
         </View>
 
@@ -579,8 +832,14 @@ export function DistrictsForecastCard() {
             {Math.round(soilSaturation * 100)}
             <Text style={{ fontSize: 9 }}>%</Text>
           </Text>
-          <Text style={{ fontSize: 9, color: themeConfig.subtext, fontWeight: "500" }}>
-            Bão hòa đất
+          <Text
+            style={{
+              fontSize: 9,
+              color: themeConfig.subtext,
+              fontWeight: "500",
+            }}
+          >
+            {t("home.forecast.soilSaturation")}
           </Text>
         </View>
       </View>
@@ -611,9 +870,19 @@ export function DistrictsForecastCard() {
               paddingBottom: 6,
             }}
           >
-            <Ionicons name="time-outline" size={12} color={themeConfig.primary} />
-            <Text style={{ fontSize: 11, fontWeight: "700", color: themeConfig.subtext }}>
-              DỰ BÁO THEO KHUNG GIỜ
+            <Ionicons
+              name="time-outline"
+              size={12}
+              color={themeConfig.primary}
+            />
+            <Text
+              style={{
+                fontSize: 11,
+                fontWeight: "700",
+                color: themeConfig.subtext,
+              }}
+            >
+              {t("home.forecast.hourlyRisk")}
             </Text>
           </View>
 
@@ -630,13 +899,23 @@ export function DistrictsForecastCard() {
                   paddingVertical: 10,
                   borderTopWidth: 1,
                   borderTopColor: themeConfig.border,
-                  backgroundColor: idx % 2 === 1
-                    ? (isDarkColorScheme ? "rgba(51,65,85,0.3)" : "#F8FAFC")
-                    : "transparent",
+                  backgroundColor:
+                    idx % 2 === 1
+                      ? isDarkColorScheme
+                        ? "rgba(51,65,85,0.3)"
+                        : "#F8FAFC"
+                      : "transparent",
                 }}
               >
                 {/* Horizon label */}
-                <Text style={{ width: 36, fontSize: 12, fontWeight: "800", color: themeConfig.primary }}>
+                <Text
+                  style={{
+                    width: 36,
+                    fontSize: 12,
+                    fontWeight: "800",
+                    color: themeConfig.primary,
+                  }}
+                >
                   {w.horizon}
                 </Text>
 
@@ -646,7 +925,9 @@ export function DistrictsForecastCard() {
                     style={{
                       height: 6,
                       borderRadius: 3,
-                      backgroundColor: isDarkColorScheme ? "#1E293B" : "#E2E8F0",
+                      backgroundColor: isDarkColorScheme
+                        ? "#1E293B"
+                        : "#E2E8F0",
                       overflow: "hidden",
                     }}
                   >
@@ -662,19 +943,41 @@ export function DistrictsForecastCard() {
                 </View>
 
                 {/* Percent + risk label */}
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 6, minWidth: 80, justifyContent: "flex-end" }}>
-                  <Text style={{ fontSize: 14, fontWeight: "900", color: wCfg.color }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                    minWidth: 80,
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "900",
+                      color: wCfg.color,
+                    }}
+                  >
                     {prob}%
                   </Text>
                   <View
                     style={{
-                      backgroundColor: isDarkColorScheme ? `${wCfg.color}20` : `${wCfg.color}15`,
+                      backgroundColor: isDarkColorScheme
+                        ? `${wCfg.color}20`
+                        : `${wCfg.color}15`,
                       paddingHorizontal: 6,
                       paddingVertical: 2,
                       borderRadius: 6,
                     }}
                   >
-                    <Text style={{ fontSize: 9, fontWeight: "700", color: wCfg.color }}>
+                    <Text
+                      style={{
+                        fontSize: 9,
+                        fontWeight: "700",
+                        color: wCfg.color,
+                      }}
+                    >
                       {w.status}
                     </Text>
                   </View>

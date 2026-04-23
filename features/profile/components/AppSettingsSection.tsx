@@ -1,8 +1,13 @@
 // features/profile/components/AppSettingsSection.tsx
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Switch, View } from "react-native";
+import { Pressable, Switch, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { useTranslation } from "~/features/i18n";
+import {
+  useLocale,
+  useSetLocale,
+} from "~/features/i18n/stores/useLanguageStore";
 
 type Props = {
   darkMode: boolean;
@@ -21,6 +26,10 @@ const AppSettingsSection: React.FC<Props> = ({
   soundEnabled,
   setSoundEnabled,
 }) => {
+  const { t } = useTranslation();
+  const locale = useLocale();
+  const setLocale = useSetLocale();
+
   // Dynamic colors based on dark mode state
   const colors = {
     background: darkMode ? "#1E293B" : "white",
@@ -43,7 +52,7 @@ const AppSettingsSection: React.FC<Props> = ({
           marginLeft: 4,
         }}
       >
-        Cài đặt ứng dụng
+        {t("settings.app.title")}
       </Text>
 
       <View
@@ -97,7 +106,7 @@ const AppSettingsSection: React.FC<Props> = ({
                     color: colors.text,
                   }}
                 >
-                  {darkMode ? "Chế độ tối" : "Chế độ sáng"}
+                  {darkMode ? t("settings.darkMode") : t("settings.lightMode")}
                 </Text>
                 <Text
                   style={{
@@ -106,7 +115,9 @@ const AppSettingsSection: React.FC<Props> = ({
                     color: colors.subtext,
                   }}
                 >
-                  {darkMode ? "Bảo vệ mắt vào ban đêm" : "Giao diện sáng, rõ ràng"}
+                  {darkMode
+                    ? t("settings.darkMode.desc")
+                    : t("settings.lightMode.desc")}
                 </Text>
               </View>
             </View>
@@ -118,6 +129,123 @@ const AppSettingsSection: React.FC<Props> = ({
             thumbColor={"white"}
             ios_backgroundColor="#D1D5DB"
           />
+        </View>
+
+        <View style={{ height: 1, backgroundColor: colors.divider }} />
+
+        {/* Language */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: 16,
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 4,
+              }}
+            >
+              <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  backgroundColor: darkMode ? "#1E3A8A" : "#DBEAFE",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Ionicons
+                  name="language"
+                  size={20}
+                  color={darkMode ? "#93C5FD" : "#2563EB"}
+                />
+              </View>
+              <View style={{ marginLeft: 12, flex: 1 }}>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    fontWeight: "700",
+                    color: colors.text,
+                  }}
+                >
+                  {t("settings.language")}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "500",
+                    color: colors.subtext,
+                  }}
+                >
+                  {t("settings.language.desc")}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          <View
+            style={{
+              flexDirection: "row",
+              borderRadius: 10,
+              backgroundColor: darkMode ? "#0B1A33" : "#F3F4F6",
+              padding: 3,
+            }}
+          >
+            <Pressable
+              onPress={() => setLocale("vi")}
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 8,
+                backgroundColor:
+                  locale === "vi"
+                    ? darkMode
+                      ? "#2563EB"
+                      : "#2563EB"
+                    : "transparent",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: "700",
+                  color: locale === "vi" ? "white" : colors.subtext,
+                }}
+              >
+                VI
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setLocale("en")}
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 8,
+                backgroundColor:
+                  locale === "en"
+                    ? darkMode
+                      ? "#2563EB"
+                      : "#2563EB"
+                    : "transparent",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: "700",
+                  color: locale === "en" ? "white" : colors.subtext,
+                }}
+              >
+                EN
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={{ height: 1, backgroundColor: colors.divider }} />
@@ -159,7 +287,7 @@ const AppSettingsSection: React.FC<Props> = ({
                     color: colors.text,
                   }}
                 >
-                  Tự động cập nhật
+                  {t("settings.autoRefresh")}
                 </Text>
                 <Text
                   style={{
@@ -168,7 +296,7 @@ const AppSettingsSection: React.FC<Props> = ({
                     color: colors.subtext,
                   }}
                 >
-                  Làm mới dữ liệu mỗi 5 phút
+                  {t("settings.autoRefresh.desc")}
                 </Text>
               </View>
             </View>
@@ -221,7 +349,7 @@ const AppSettingsSection: React.FC<Props> = ({
                     color: colors.text,
                   }}
                 >
-                  Âm thanh
+                  {t("settings.sound")}
                 </Text>
                 <Text
                   style={{
@@ -230,7 +358,7 @@ const AppSettingsSection: React.FC<Props> = ({
                     color: colors.subtext,
                   }}
                 >
-                  Phát âm báo khi có cảnh báo
+                  {t("settings.sound.desc")}
                 </Text>
               </View>
             </View>

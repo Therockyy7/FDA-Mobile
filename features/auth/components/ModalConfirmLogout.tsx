@@ -3,6 +3,7 @@ import { Modal, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "~/components/ui/text";
 import { Button } from "~/components/ui/button";
+import { useTranslation } from "~/features/i18n";
 
 interface ModalConfirmLogoutProps {
   visible: boolean;
@@ -17,6 +18,7 @@ const ModalConfirmLogout: React.FC<ModalConfirmLogoutProps> = ({
   onConfirm,
   onClose,
 }) => {
+  const { t } = useTranslation();
   return (
     <Modal
       visible={visible}
@@ -35,10 +37,10 @@ const ModalConfirmLogout: React.FC<ModalConfirmLogoutProps> = ({
             </View>
             
             <Text className="text-xl font-bold text-slate-900 dark:text-white text-center">
-              Đăng xuất?
+              {t("profile.logout.title")}?
             </Text>
             <Text className="text-base text-slate-500 dark:text-slate-400 text-center mt-2 px-2">
-              Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?
+              {t("profile.logout.confirm")}
             </Text>
           </View>
 
@@ -51,7 +53,7 @@ const ModalConfirmLogout: React.FC<ModalConfirmLogoutProps> = ({
               activeOpacity={0.7}
             >
               <Text className="text-slate-700 dark:text-slate-300 font-semibold text-base">
-                Huỷ
+                {t("common.cancel")}
               </Text>
             </TouchableOpacity>
 
@@ -61,7 +63,7 @@ const ModalConfirmLogout: React.FC<ModalConfirmLogoutProps> = ({
               className="flex-1 h-12 rounded-xl bg-red-500 shadow-lg shadow-red-500/30 border-0"
             >
               <Text className="text-white font-bold text-base">
-                {loading ? "Đang xử lý..." : "Đăng xuất"}
+                {loading ? t("common.processing") : t("auth.signOut")}
               </Text>
             </Button>
           </View>

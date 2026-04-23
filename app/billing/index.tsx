@@ -18,6 +18,7 @@ import { paymentService } from "~/features/payment/services/payment.service";
 import { PaymentRecord } from "~/features/payment/types/payment-types";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { StatusFilter, StatusOption } from "~/components/ui/status-filter";
+import { useTranslation } from "~/features/i18n";
 
 const PAGE_SIZE = 10;
 const HEADER_MAX_HEIGHT = 130;
@@ -127,6 +128,7 @@ export default function BillingScreen() {
   const insets = useSafeAreaInsets();
   const scrollY = useRef(new Animated.Value(0)).current;
   const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "pending" | "cancelled">("all");
+  const { t } = useTranslation();
 
   const colors = {
     background: isDark ? "#0F172A" : "#F8FAFB",
@@ -277,7 +279,7 @@ export default function BillingScreen() {
           <View style={styles.centerState}>
             <ActivityIndicator color={colors.accent} size="large" />
             <Text style={[styles.stateText, { color: colors.subtext, marginTop: 14 }]}>
-              Đang tải lịch sử thanh toán...
+            {t("billing.loading")}
             </Text>
           </View>
         )}
@@ -299,7 +301,7 @@ export default function BillingScreen() {
               onPress={() => refetch()}
             >
               <Ionicons name="refresh-outline" size={15} color="#FFF" style={{ marginRight: 6 }} />
-              <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 14 }}>Thử lại</Text>
+              <Text style={styles.retryBtn}>{t("common.retry")}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -344,13 +346,13 @@ export default function BillingScreen() {
                 </View>
                 <Text style={[styles.stateText, { color: colors.text, fontWeight: "700", fontSize: 16 }]}>Không khớp kết quả</Text>
                 <Text style={[styles.stateText, { color: colors.subtext, fontSize: 13, marginTop: 4 }]}>
-                  Không có giao dịch nào ở trang này khớp với bộ lọc.
+                  {t("billing.emptyFilter")}
                 </Text>
                 <TouchableOpacity 
                   style={[styles.retryBtn, { backgroundColor: isDark ? "#334155" : "#F1F5F9", marginTop: 16 }]} 
                   onPress={() => setStatusFilter("all")}
                 >
-                  <Text style={{ color: colors.text, fontWeight: "700" }}>Xóa bộ lọc</Text>
+                  <Text style={{ color: colors.text, fontWeight: "700" }}>{t("billing.clearFilter")}</Text>
                 </TouchableOpacity>
               </View>
             )}

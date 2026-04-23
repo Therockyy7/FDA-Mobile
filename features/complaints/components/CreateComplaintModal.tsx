@@ -19,6 +19,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { Text } from "~/components/ui/text";
 import { paymentService } from "~/features/payment/services/payment.service";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { useTranslation } from "~/features/i18n";
 
 type Props = {
   visible: boolean;
@@ -36,6 +37,7 @@ const CreateComplaintModal: React.FC<Props> = ({
   const { isDarkColorScheme } = useColorScheme();
   const isDark = isDarkColorScheme;
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
@@ -117,9 +119,9 @@ const CreateComplaintModal: React.FC<Props> = ({
                     <Ionicons name="chatbubbles-outline" size={24} color={colors.accent} />
                   </View>
                   <View style={styles.headerTextContainer}>
-                    <Text style={[styles.title, { color: colors.text }]}>Tạo khiếu nại</Text>
+                    <Text style={[styles.title, { color: colors.text }]}>{t("complaints.create")}</Text>
                     <Text style={[styles.subtitle, { color: colors.subtext }]}>
-                      Gửi phản hồi hoặc báo lỗi liên quan đến gói cước của bạn.
+                      {t("complaints.create.subtitle")}
                     </Text>
                   </View>
                 </View>
@@ -130,7 +132,7 @@ const CreateComplaintModal: React.FC<Props> = ({
                     <View style={styles.centerState}>
                       <ActivityIndicator color={colors.accent} size="large" />
                       <Text style={[styles.stateText, { color: colors.subtext, marginTop: 12 }]}>
-                        Đang lấy thông tin giao dịch...
+                        {t("complaints.create.loadingPayments")}
                       </Text>
                     </View>
                   ) : isError ? (
@@ -138,9 +140,9 @@ const CreateComplaintModal: React.FC<Props> = ({
                       <View style={[styles.centerIcon, { backgroundColor: colors.dangerBg }]}>
                         <Ionicons name="alert-circle-outline" size={32} color={colors.danger} />
                       </View>
-                      <Text style={[styles.stateTitle, { color: colors.text }]}>Đã có lỗi xảy ra</Text>
+                      <Text style={[styles.stateTitle, { color: colors.text }]}>{t("common.error")}</Text>
                       <Text style={[styles.stateText, { color: colors.subtext }]}>
-                        Không thể lấy lịch sử giao dịch. Vui lòng thử lại sau.
+                        {t("complaints.create.errorHistory")}
                       </Text>
                     </View>
                   ) : !hasHistory ? (
@@ -148,15 +150,15 @@ const CreateComplaintModal: React.FC<Props> = ({
                       <View style={[styles.centerIcon, { backgroundColor: colors.iconBg }]}>
                         <Ionicons name="receipt-outline" size={36} color={colors.accent} />
                       </View>
-                      <Text style={[styles.stateTitle, { color: colors.text }]}>Chưa có giao dịch</Text>
+                      <Text style={[styles.stateTitle, { color: colors.text }]}>{t("complaints.create.noHistoryTitle")}</Text>
                       <Text style={[styles.stateText, { color: colors.subtext }]}>
-                        Bạn cần có ít nhất 1 lần thanh toán gói cước thành công để có thể gửi khiếu nại.
+                        {t("complaints.create.noHistoryDesc")}
                       </Text>
                     </View>
                   ) : (
                     <>
                       {/* Payment Selection */}
-                      <Text style={[styles.sectionTitle, { color: colors.text }]}>CHỌN GIAO DỊCH LIÊN QUAN</Text>
+                      <Text style={[styles.sectionTitle, { color: colors.text }]}>{t("complaints.create.selectPayment")}</Text>
                       <ScrollView 
                         horizontal 
                         showsHorizontalScrollIndicator={false} 
@@ -197,7 +199,7 @@ const CreateComplaintModal: React.FC<Props> = ({
                       </ScrollView>
 
                       {/* Subject Input */}
-                      <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 16 }]}>TIÊU ĐỀ KHIẾU NẠI</Text>
+                      <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 16 }]}>{t("complaints.create.subjectLabel")}</Text>
                       <TextInput
                         style={[
                           styles.input,
@@ -207,7 +209,7 @@ const CreateComplaintModal: React.FC<Props> = ({
                             color: colors.text,
                           },
                         ]}
-                        placeholder="Ví dụ: Thanh toán thành công nhưng chưa nâng gói"
+                        placeholder={t("complaints.create.subjectPlaceholder")}
                         placeholderTextColor={colors.subtext}
                         value={subject}
                         onChangeText={setSubject}
@@ -215,7 +217,7 @@ const CreateComplaintModal: React.FC<Props> = ({
                       />
 
                       {/* Description Input */}
-                      <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 16 }]}>MÔ TẢ CHI TIẾT LỖI</Text>
+                      <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 16 }]}>{t("complaints.create.descLabel")}</Text>
                       <TextInput
                         style={[
                           styles.textArea,
@@ -225,7 +227,7 @@ const CreateComplaintModal: React.FC<Props> = ({
                             color: colors.text,
                           },
                         ]}
-                        placeholder="Mô tả sự cố bạn đang gặp phải..."
+                        placeholder={t("complaints.create.descPlaceholder")}
                         placeholderTextColor={colors.subtext}
                         value={description}
                         onChangeText={setDescription}
@@ -244,7 +246,7 @@ const CreateComplaintModal: React.FC<Props> = ({
                     onPress={onClose}
                     disabled={loading}
                   >
-                    <Text style={[styles.btnText, { color: colors.text }]}>Đóng</Text>
+                    <Text style={[styles.btnText, { color: colors.text }]}>{t("common.close")}</Text>
                   </TouchableOpacity>
 
                   {hasHistory && !isError && (
@@ -263,7 +265,7 @@ const CreateComplaintModal: React.FC<Props> = ({
                       {loading ? (
                         <ActivityIndicator color="#FFF" size="small" />
                       ) : (
-                        <Text style={[styles.btnText, { color: "#FFF" }]}>Gửi khiếu nại</Text>
+                        <Text style={[styles.btnText, { color: "#FFF" }]}>{t("complaints.submit")}</Text>
                       )}
                     </TouchableOpacity>
                   )}

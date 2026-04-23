@@ -77,7 +77,7 @@ const getRiskColors = (level: AiRiskSummary["riskLevel"]) => {
 };
 
 /** Get soil moisture status */
-function getSoilStatus(moisture: number): {
+function getSoilStatus(moisture: number, t: any): {
   label: string;
   color: string;
   icon: string;
@@ -85,30 +85,30 @@ function getSoilStatus(moisture: number): {
 } {
   if (moisture >= 0.4)
     return {
-      label: "Bão hòa",
+      label: t("home.soil.saturated"),
       color: "#EF4444",
       icon: "water",
-      description: "Đất bão hòa nước – Nguy cơ ngập cao",
+      description: t("home.soil.saturatedDesc"),
     };
   if (moisture >= 0.3)
     return {
-      label: "Ẩm cao",
+      label: t("home.soil.highMoisture"),
       color: "#F97316",
       icon: "water-outline",
-      description: "Đất ẩm – Khả năng thấm hút giảm",
+      description: t("home.soil.highMoistureDesc"),
     };
   if (moisture >= 0.2)
     return {
-      label: "Bình thường",
+      label: t("home.soil.normal"),
       color: "#10B981",
       icon: "leaf",
-      description: "Đất có khả năng thấm hút tốt",
+      description: t("home.soil.normalDesc"),
     };
   return {
-    label: "Khô",
+    label: t("home.soil.dry"),
     color: "#F59E0B",
     icon: "sunny",
-    description: "Đất khô – Thấm hút cực tốt nếu có mưa",
+    description: t("home.soil.dryDesc"),
   };
 }
 
@@ -181,6 +181,8 @@ function getWeatherAnimation(code: number): WeatherAnimDef {
 
 /* ────────── component ────────── */
 
+import { useTranslation } from "~/features/i18n";
+
 export function WeatherInsightsSection({
   meteo,
   rainfallForecast,
@@ -188,6 +190,7 @@ export function WeatherInsightsSection({
 }: Props) {
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
+  const { t } = useTranslation();
 
   // Theme from current weather code
   const weatherCode = meteo.current.weather_code;
@@ -208,7 +211,7 @@ export function WeatherInsightsSection({
   // Current soil moisture
   const currentSoilMoisture =
     meteo.hourly.soil_moisture_3_to_9cm[currentHourIdx] ?? 0;
-  const soilStatus = getSoilStatus(currentSoilMoisture);
+  const soilStatus = getSoilStatus(currentSoilMoisture, t);
 
   // Next 24 hours of hourly data
   const next24Hours = useMemo(() => {
@@ -286,10 +289,10 @@ export function WeatherInsightsSection({
         </View>
         <View>
           <Text className="text-slate-900 dark:text-white text-lg font-bold">
-            Thời tiết Đà Nẵng
+            {t("home.weather.title")}
           </Text>
           <Text className="text-slate-400 dark:text-slate-500 text-[10px]">
-            Open-Meteo • Cập nhật lúc{" "}
+            {t("home.weather.updateTime")}{" "}
             {new Date(meteo.current.time).toLocaleTimeString("vi-VN", {
               hour: "2-digit",
               minute: "2-digit",
@@ -373,7 +376,7 @@ export function WeatherInsightsSection({
                   marginTop: 4,
                 }}
               >
-                Cao {todayMax}° / Thấp {todayMin}°
+                {t("home.weather.high")} {todayMax}° / {t("home.weather.low")} {todayMin}°
               </Text>
             </View>
 
@@ -419,7 +422,7 @@ export function WeatherInsightsSection({
                     fontWeight: "600",
                   }}
                 >
-                  Độ ẩm
+                  {t("home.weather.humidity")}
                 </Text>
                 <Text
                   style={{ color: "white", fontSize: 16, fontWeight: "800" }}
@@ -447,7 +450,7 @@ export function WeatherInsightsSection({
                     fontWeight: "600",
                   }}
                 >
-                  Gió
+                  {t("home.weather.wind")}
                 </Text>
                 <Text
                   style={{ color: "white", fontSize: 16, fontWeight: "800" }}
@@ -472,7 +475,7 @@ export function WeatherInsightsSection({
                     fontWeight: "600",
                   }}
                 >
-                  Mưa
+                  {t("home.weather.rain")}
                 </Text>
                 <Text
                   style={{ color: "white", fontSize: 16, fontWeight: "800" }}
@@ -500,11 +503,11 @@ export function WeatherInsightsSection({
           <View className="flex-row items-center gap-2">
             <Ionicons name="time-outline" size={14} color="#0EA5E9" />
             <Text className="text-slate-800 dark:text-slate-200 text-sm font-bold">
-              Dự báo theo giờ
+              {t("home.weather.hourlyForecast")}
             </Text>
           </View>
           <Text className="text-slate-400 dark:text-slate-500 text-[10px]">
-            24 giờ tới
+            {t("home.weather.next24h")}
           </Text>
         </View>
 
@@ -536,7 +539,7 @@ export function WeatherInsightsSection({
                   style={{ color: isNow ? "#06B6D4" : "#94A3B8" }}
                 >
                   {isNow
-                    ? "Bây giờ"
+                    ? t("home.weather.now")
                     : `${String(item.hour).padStart(2, "0")}:00`}
                 </Text>
 
@@ -602,7 +605,7 @@ export function WeatherInsightsSection({
             color="#8B5CF6"
           />
           <Text className="text-slate-800 dark:text-slate-200 text-sm font-bold">
-            Dự báo 7 ngày
+            {t("home.weather.7dayForecast")}
           </Text>
         </View>
 
@@ -629,7 +632,7 @@ export function WeatherInsightsSection({
                   className="text-xs font-bold"
                   style={{ color: isToday ? "#06B6D4" : "#64748B" }}
                 >
-                  {isToday ? "H.nay" : getDayNameVn(day)}
+                  {isToday ? t("home.weather.today") : getDayNameVn(day)}
                 </Text>
               </View>
 
@@ -725,7 +728,7 @@ export function WeatherInsightsSection({
         <View className="flex-row items-center gap-2 mb-3">
           <MaterialCommunityIcons name="waves" size={14} color="#06B6D4" />
           <Text className="text-slate-800 dark:text-slate-200 text-sm font-bold">
-            Chỉ số ngập lụt
+            {t("home.weather.floodIndex")}
           </Text>
         </View>
 
@@ -752,7 +755,7 @@ export function WeatherInsightsSection({
                   fontWeight: "700",
                 }}
               >
-                ĐỘ ẨM ĐẤT
+                {t("home.weather.soilMoisture")}
               </Text>
             </View>
             <Text
@@ -794,7 +797,7 @@ export function WeatherInsightsSection({
                   fontWeight: "700",
                 }}
               >
-                LƯỢNG MƯA
+                {t("home.weather.precipitation")}
               </Text>
             </View>
             <Text

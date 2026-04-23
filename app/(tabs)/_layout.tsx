@@ -6,6 +6,7 @@ import { ActivityIndicator, Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LoginRequiredOverlay } from "~/features/auth/components/LoginRequiredOverlay";
 import { useAuthLoading, useUser } from "~/features/auth/stores/hooks";
+import { useTranslation } from "~/features/i18n";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 // Set initial route to map tab — previously this was the default tab (index.tsx)
@@ -24,6 +25,7 @@ const TabsLayout = () => {
   const router = useRouter();
   const [loginPromptVisible, setLoginPromptVisible] = useState(false);
   const { isDarkColorScheme } = useColorScheme();
+  const { t } = useTranslation();
   // Show loading while auth is initializing — must still render Tabs to avoid "Unmatched route"
   if (loading) {
     return (
@@ -74,7 +76,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="home/index"
           options={{
-            title: "Trang chủ",
+            title: t("tab.home"),
             tabBarIcon: ({ color, size }) => (
               <Feather name="home" size={size} color={color} />
             ),
@@ -84,7 +86,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="areas"
           options={{
-            title: "Khu vực",
+            title: t("tab.areas"),
             tabBarIcon: ({ color, size }) => (
               <Feather name="compass" size={size} color={color} />
             ),
@@ -104,7 +106,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="map/index"
           options={{
-            title: "Bản đồ",
+            title: t("tab.map"),
             tabBarIcon: ({ focused }) => (
               <View
                 style={{
@@ -146,7 +148,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="notifications"
           options={{
-            title: "Thông báo",
+            title: t("tab.notifications"),
             tabBarIcon: ({ color, size }) => (
               <Feather name="bell" size={size} color={color} />
             ),
@@ -166,7 +168,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="profile"
           options={{
-            title: "Hồ sơ",
+            title: t("tab.profile"),
             tabBarIcon: ({ color, size }) => (
               <Feather name="user" size={size} color={color} />
             ),

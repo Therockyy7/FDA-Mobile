@@ -21,6 +21,7 @@ import PricingPlansList from "~/features/plans/components/PricingPlansList";
 import { useCurrentSubscription } from "~/features/plans/hooks/useCurrentSubscription";
 import { usePricingPlans } from "~/features/plans/hooks/usePricingPlans";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { useTranslation } from "~/features/i18n";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const IS_MOBILE = SCREEN_WIDTH < 768;
@@ -30,6 +31,7 @@ export default function PlansScreen() {
   const { isDarkColorScheme } = useColorScheme();
   const user = useUser();
   const isAuthenticated = !!user;
+  const { t } = useTranslation();
 
   const {
     data: plansData,
@@ -88,7 +90,7 @@ export default function PlansScreen() {
             >
               <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Bảng giá</Text>
+            <Text style={styles.headerTitle}>{t("plans.title")}</Text>
             <View style={{ width: 40 }} />
           </View>
         </SafeAreaView>
@@ -114,7 +116,7 @@ export default function PlansScreen() {
           <View style={styles.stateContainer}>
             <ActivityIndicator size="large" color="#007AFF" />
             <Text style={[styles.stateText, { color: colors.subtext }]}>
-              Đang tải thông tin bảng giá...
+              {t("plans.loadingInfo")}
             </Text>
           </View>
         )}
@@ -124,17 +126,17 @@ export default function PlansScreen() {
           <View style={styles.stateContainer}>
             <Ionicons name="cloud-offline" size={48} color={colors.subtext} />
             <Text style={[styles.stateTitle, { color: colors.text }]}>
-              Không thể tải thông tin gói cước
+              {t("plans.loadError")}
             </Text>
             <Text style={[styles.stateSubtitle, { color: colors.subtext }]}>
-              Vui lòng kiểm tra kết nối internet và thử lại.
+              {t("common.retry")}
             </Text>
             <TouchableOpacity
               style={styles.retryButton}
               onPress={() => refetchPlans()}
               activeOpacity={0.8}
             >
-              <Text style={styles.retryButtonText}>Thử lại</Text>
+              <Text style={styles.retryButtonText}>{t("common.retry")}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -148,10 +150,10 @@ export default function PlansScreen() {
               color={colors.subtext}
             />
             <Text style={[styles.stateTitle, { color: colors.text }]}>
-              Không có gói cước nào
+              {t("plans.empty")}
             </Text>
             <Text style={[styles.stateSubtitle, { color: colors.subtext }]}>
-              Không có thông tin bảng giá tại thời điểm này.
+              {t("plans.emptyDesc")}
             </Text>
           </View>
         )}

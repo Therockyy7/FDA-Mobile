@@ -31,6 +31,7 @@ import type {
     AreaStatusResponse,
 } from "~/features/map/types/map-layers.types";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { useTranslation } from "~/features/i18n";
 
 // Areas with their status
 interface AreaWithStatus {
@@ -50,6 +51,7 @@ export default function AreasScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isDarkColorScheme } = useColorScheme();
+  const { t } = useTranslation();
 
   // State
   const [areas, setAreas] = useState<AreaWithStatus[]>([]);
@@ -240,12 +242,12 @@ export default function AreasScreen() {
         );
         setEditingArea(null);
       } catch (error: any) {
-        Alert.alert("Lỗi", error?.message || "Không thể cập nhật vùng");
+        Alert.alert(t("common.error"), error?.message || t("common.error"));
       } finally {
         setIsEditing(false);
       }
     },
-    [editingArea],
+    [editingArea, t],
   );
 
   // Navigate to detail
@@ -330,7 +332,7 @@ export default function AreasScreen() {
               <Text
                 style={{ fontSize: 24, fontWeight: "800", color: colors.text }}
               >
-                Vùng theo dõi
+                {t("areas.title")}
               </Text>
             </View>
             <Text
@@ -341,7 +343,7 @@ export default function AreasScreen() {
                 marginLeft: 48,
               }}
             >
-              {areas.length} vùng đã tạo
+              {areas.length} {t("areas.title").toLowerCase()}
             </Text>
           </View>
 
@@ -369,30 +371,10 @@ export default function AreasScreen() {
                     color: colors.text,
                   }}
                 >
-                  Lịch sử
+                  {t("alerts.history")}
                 </Text>
               </View>
             </TouchableOpacity>
-            {/* <TouchableOpacity onPress={handleCreateArea} activeOpacity={0.8}>
-              <LinearGradient
-                colors={["#10B981", "#059669"]}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 6,
-                  paddingVertical: 10,
-                  paddingHorizontal: 14,
-                  borderRadius: 12,
-                }}
-              >
-                <Ionicons name="add-circle" size={18} color="white" />
-                <Text
-                  style={{ fontSize: 13, fontWeight: "700", color: "white" }}
-                >
-                  Tạo mới
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity> */}
           </View>
         </View>
 
@@ -421,7 +403,7 @@ export default function AreasScreen() {
                 color: activeTab === "my-areas" ? "#007AFF" : colors.subtext,
               }}
             >
-              Khu vực của tôi
+              {t("areas.myAreas")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -441,7 +423,7 @@ export default function AreasScreen() {
                 color: activeTab === "admin-areas" ? "#007AFF" : colors.subtext,
               }}
             >
-              Khu vực hệ thống
+              {t("areas.systemAreas")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -452,7 +434,7 @@ export default function AreasScreen() {
         (isLoading ? (
           <TabLoadingScreen
             visible={isLoading}
-            message="Đang tải vùng theo dõi..."
+            message={t("areas.detail.loadingAreas")}
           />
         ) : areas.length === 0 ? (
           <View
@@ -488,7 +470,7 @@ export default function AreasScreen() {
                 marginBottom: 8,
               }}
             >
-              Chưa có vùng nào
+              {t("areas.empty.title")}
             </Text>
             <Text
               style={{
@@ -498,7 +480,7 @@ export default function AreasScreen() {
                 marginBottom: 24,
               }}
             >
-              Tạo vùng theo dõi để nhận cảnh báo mực nước trong khu vực của bạn
+              {t("areas.empty.desc")}
             </Text>
             <TouchableOpacity onPress={handleCreateArea} activeOpacity={0.8}>
               <LinearGradient
@@ -516,7 +498,7 @@ export default function AreasScreen() {
                 <Text
                   style={{ fontSize: 15, fontWeight: "700", color: "white" }}
                 >
-                  Tạo vùng đầu tiên
+                  {t("areas.empty.cta")}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -572,7 +554,7 @@ export default function AreasScreen() {
                 color: colors.subtext,
               }}
             >
-              Đang tải...
+              {t("common.loading")}
             </Text>
           ) : (
             adminAreas.map((area) => (
@@ -599,7 +581,7 @@ export default function AreasScreen() {
                 color: colors.subtext,
               }}
             >
-              Chưa có khu vực nào.
+              {t("areas.empty.title")}.
             </Text>
           )}
         </ScrollView>
@@ -626,7 +608,7 @@ export default function AreasScreen() {
       {/* Error Modal */}
       <ErrorModal
         visible={errorModalVisible}
-        title="Không thể xóa vùng"
+        title={t("common.error")}
         message={errorMessage}
         onClose={() => setErrorModalVisible(false)}
       />

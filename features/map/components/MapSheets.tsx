@@ -67,7 +67,11 @@ interface Props {
     getSelectedRoute: () => any;
     floodWarnings: any[];
     metadata: any;
+    isLoading: boolean;
   };
+  transportMode: any;
+  onModeChange: (m: any) => void;
+  onFindRoute: () => void;
   nav: { isNavigating: boolean };
   router: { push: (path: any) => void };
   isUsingGPSOrigin: boolean;
@@ -139,6 +143,9 @@ export function MapSheets({
   nav,
   router,
   isUsingGPSOrigin,
+  transportMode,
+  onModeChange,
+  onFindRoute,
   onCloseAreaCard,
   onStartEditArea,
   onDeleteArea,
@@ -244,6 +251,10 @@ export function MapSheets({
             selectedIndex={safeRoute.selectedRouteIndex}
             onSelectRoute={onSelectRoute}
             onExitRouting={onExitRouting}
+            transportMode={transportMode}
+            onModeChange={(m) => { onModeChange(m); }}
+            onFindRoute={onFindRoute}
+            isLoading={safeRoute.isLoading}
           />
           {showResultCard && (
             <SafeRouteResultCard
@@ -255,6 +266,10 @@ export function MapSheets({
               onStartNavigation={onStartNavigation}
               isUsingGPSOrigin={isUsingGPSOrigin}
               isGuest={isGuest}
+              transportMode={transportMode}
+              onModeChange={(m) => { onModeChange(m); }}
+              onFindRoute={onFindRoute}
+              isLoading={safeRoute.isLoading}
             />
           )}
         </View>

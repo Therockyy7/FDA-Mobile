@@ -24,6 +24,8 @@ import {
   getBoundsFromCoords,
 } from "~/features/map/lib/ewkb-parser";
 import type { LatLng } from "~/features/map/types/safe-route.types";
+import { DANANG_CENTER } from "~/features/map/constants/map-data";
+import type { TransportMode } from "~/features/map/types/routing.types";
 
 import { CachedDataBadge } from "~/components/CachedDataBadge";
 import { ConfirmDeleteModal } from "~/features/areas/components/ConfirmDeleteModal";
@@ -124,6 +126,23 @@ export default function MapScreen() {
         setSelectedStationId(null);
       };
     }, [setSelectedStationId]),
+  );
+
+  /**
+   * Đổi phương tiện và tự động tìm lại tuyến đường ngay — không cần quay lại màn hình chọn.
+   * Gọi findRoute trực tiếp với mode mới thay vì dựa vào state cũ trong closure.
+   */
+  const handleSwitchModeAndFind = useCallback(
+    async (newMode: TransportMode) => {
+      s.setTransportMode(newMode);
+      const fallback = { latitude: DANANG_CENTER.latitude, longitude: DANANG_CENTER.longitude };
+      const start = s.isUsingGPSOrigin
+        ? (s.userLocation ?? fallback)
+        : (s.startCoord ?? s.userLocation ?? fallback);
+      if (!s.endCoord) return;
+      await s.safeRoute.findRoute(start, s.endCoord, newMode, 2, !isGuest);
+    },
+    [s.isUsingGPSOrigin, s.userLocation, s.startCoord, s.endCoord, s.setTransportMode, s.safeRoute, isGuest],
   );
 
   const handleSelectWard = (area: any) => {
@@ -536,6 +555,9 @@ export default function MapScreen() {
             nav={s.nav}
             router={s.router}
             isUsingGPSOrigin={s.isUsingGPSOrigin}
+            transportMode={s.transportMode}
+            onModeChange={handleSwitchModeAndFind}
+            onFindRoute={handleFindRoute}
             onCloseAreaCard={s.handleCloseAreaCard}
             onStartEditArea={s.handleStartEditArea}
             onDeleteArea={s.handleDeleteArea}

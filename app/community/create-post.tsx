@@ -21,6 +21,7 @@ import { CommunityService } from "~/features/community/services/community.servic
 import { COMMUNITY_REPORTS_QUERY_KEY } from "~/features/map/hooks/queries/useCommunityReportsQuery";
 import { AreaService } from "~/features/areas/services/area.service";
 import { useAuthStatus, useAuthLoading } from "~/features/auth/hooks/useAuth";
+import { useTranslation } from "~/features/i18n";
 
 type Severity = "low" | "medium" | "high";
 
@@ -58,6 +59,7 @@ interface AreaStatus {
 export default function CreatePostScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const { openCamera } = useLocalSearchParams<{ openCamera?: string }>();
   const [content, setContent] = useState("");
   const [severity, setSeverity] = useState<Severity>("medium");
@@ -87,12 +89,12 @@ export default function CreatePostScreen() {
   useEffect(() => {
     if (!authLoading && authStatus === "unauthenticated") {
       Alert.alert(
-        "Yêu cầu đăng nhập",
-        "Bạn cần đăng nhập để tạo báo cáo ngập lụt.",
+        t("auth.loginRequired.title"),
+        t("auth.loginRequired.createPostDesc"),
         [
-          { text: "Hủy", style: "cancel", onPress: () => router.back() },
+          { text: t("common.cancel"), style: "cancel", onPress: () => router.back() },
           {
-            text: "Đăng nhập",
+            text: t("auth.signIn"),
             onPress: () => router.replace("/(auth)/sign-in" as any),
           },
         ]
@@ -106,7 +108,7 @@ export default function CreatePostScreen() {
       setLocationLoading(true);
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Cần quyền vị trí", "Cần quyền vị trí để báo cáo ngập lụt chính xác!");
+        Alert.alert(t("community.post.locationRequiredTitle"), t("community.post.locationRequiredDesc"));
         setLocationLoading(false);
         return;
       }
@@ -143,7 +145,7 @@ export default function CreatePostScreen() {
         }
       } catch (error) {
         console.error("Lỗi lấy vị trí:", error);
-        Alert.alert("Lỗi", "Không thể lấy vị trí hiện tại");
+        Alert.alert(t("common.error"), t("community.post.locationFetchError"));
       } finally {
         setLocationLoading(false);
       }
@@ -326,7 +328,7 @@ export default function CreatePostScreen() {
 
   const handleSubmit = async () => {
     if (!currentLocation) {
-      Alert.alert("Lỗi", "Chưa lấy được vị trí. Vui lòng thử lại!");
+      Alert.alert(t("common.error"), t("community.post.noLocationError"));
       return;
     }
     if (!canSubmit) return;
@@ -373,30 +375,30 @@ export default function CreatePostScreen() {
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: [COMMUNITY_REPORTS_QUERY_KEY] });
         Alert.alert(
-          "Thành công",
+          t("common.success"),
           response.status === "hidden"
-            ? "Báo cáo của bạn đã được ghi nhận nhưng sẽ được kiểm duyệt trước khi hiển thị."
-            : "Báo cáo ngập lụt đã được đăng thành công!",
-          [{ text: "OK", onPress: () => router.replace("/community" as any) }]
+            ? t("community.post.successHidden")
+            : t("community.post.successVisible"),
+          [{ text: t("common.ok"), onPress: () => router.replace("/community" as any) }]
         );
       } else {
-        Alert.alert("Lỗi", response.message);
+        Alert.alert(t("common.error"), response.message);
       }
     } catch (error: any) {
       console.error("Lỗi submit:", error);
       if (error.response?.status === 413) {
         Alert.alert(
-          "File quá lớn",
-          "Tổng dung lượng ảnh/video quá lớn. Vui lòng gửi file nhẹ hơn (Tối đa 50MB cho video)."
+          t("community.post.fileTooLargeTitle"),
+          t("community.post.fileTooLargeDesc")
         );
       } else if (error.response?.status === 429) {
         const retryAfter = error.response?.data?.retryAfterSeconds || 3;
         Alert.alert(
-          "Quá nhanh",
-          `Bạn đăng bài quá nhanh. Vui lòng thử lại sau ${Math.ceil(retryAfter / 60)} phút.`
+          t("community.post.tooFastTitle"),
+          `${t("community.post.tooFastDesc")} ${Math.ceil(retryAfter / 60)} ${t("common.minute")}.`
         );
       } else {
-        Alert.alert("Lỗi", "Không thể đăng báo cáo. Vui lòng thử lại.");
+        Alert.alert(t("common.error"), t("community.post.createError"));
       }
     } finally {
       setSubmitting(false);
@@ -410,7 +412,7 @@ export default function CreatePostScreen() {
       <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-900 items-center justify-center">
         <ActivityIndicator size="large" color="#0EA5E9" />
         <Text className="text-sm text-slate-500 dark:text-slate-400 mt-3">
-          Đang kiểm tra tài khoản...
+          {t("auth.checking")}
         </Text>
       </SafeAreaView>
     );
@@ -431,12 +433,12 @@ export default function CreatePostScreen() {
       icon: isHigher ? "warning" : "information-circle",
       iconColor: isHigher ? "#F59E0B" : "#0EA5E9",
       badgeBg: isHigher ? "#FEF3C7" : "#E0F2FE",
-      officialLabel: API_STATUS_LABEL[areaStatus.status] ?? areaStatus.status,
-      userLabel: SEVERITY_LABEL[pendingSeverity],
+      officialLabel: t(`areas.status.${areaStatus.status.toLowerCase()}` as any) ?? areaStatus.status,
+      userLabel: t(`alerts.severity.${pendingSeverity}` as any),
       areaName: areaStatus.areaName,
       message: isHigher
-        ? `Hệ thống đang ghi nhận khu vực "${areaStatus.areaName}" ở mức "${API_STATUS_LABEL[areaStatus.status]}", nhưng bạn chọn mức "${SEVERITY_LABEL[pendingSeverity]}" (cao hơn thực tế). Bạn có chắc chắn muốn báo cáo ở mức này không?`
-        : `Hệ thống đang ghi nhận khu vực "${areaStatus.areaName}" ở mức "${API_STATUS_LABEL[areaStatus.status]}", nhưng bạn chọn mức "${SEVERITY_LABEL[pendingSeverity]}" (thấp hơn thực tế). Bạn có muốn điều chỉnh lại không?`,
+        ? t("community.post.mismatchHigher").replace("{area}", areaStatus.areaName).replace("{official}", t(`areas.status.${areaStatus.status.toLowerCase()}` as any)).replace("{user}", t(`alerts.severity.${pendingSeverity}` as any))
+        : t("community.post.mismatchLower").replace("{area}", areaStatus.areaName).replace("{official}", t(`areas.status.${areaStatus.status.toLowerCase()}` as any)).replace("{user}", t(`alerts.severity.${pendingSeverity}` as any)),
     };
   })();
 
@@ -450,7 +452,7 @@ export default function CreatePostScreen() {
               <Ionicons name="close" size={22} color="#0B1A33" />
             </TouchableOpacity>
             <Text className="text-slate-900 dark:text-white font-semibold text-base">
-              Tạo báo cáo
+              {t("community.post.createTitle")}
             </Text>
             <TouchableOpacity
               onPress={handleSubmit}
@@ -467,7 +469,7 @@ export default function CreatePostScreen() {
                   )}
                 </View>
               ) : (
-                <Text className="text-xs font-semibold text-white">Đăng</Text>
+                <Text className="text-xs font-semibold text-white">{t("community.post.submit")}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -481,12 +483,12 @@ export default function CreatePostScreen() {
             />
             <Text className="text-xs text-slate-500 dark:text-slate-400 flex-1" numberOfLines={1}>
               {locationLoading
-                ? "Đang lấy vị trí..."
+                ? t("community.post.fetchingLocation")
                 : locationAddress
                 ? locationAddress
                 : currentLocation
                 ? `${currentLocation.coords.latitude.toFixed(6)}, ${currentLocation.coords.longitude.toFixed(6)}`
-                : "Chưa lấy được vị trí"}
+                : t("community.post.noLocationError")}
             </Text>
             {currentAreaName && !locationLoading && (
               <View className="bg-sky-100 dark:bg-sky-900/30 px-2 py-0.5 rounded-full">
@@ -501,8 +503,8 @@ export default function CreatePostScreen() {
           <View className="flex-row items-center gap-3 mb-4">
             <View className="w-9 h-9 rounded-full bg-slate-300 dark:bg-slate-700" />
             <View>
-              <Text className="text-slate-900 dark:text-white text-sm font-semibold">Bạn</Text>
-              <Text className="text-xs text-slate-400 dark:text-slate-500">Báo cáo ngập lụt</Text>
+              <Text className="text-slate-900 dark:text-white text-sm font-semibold">{t("community.post.you")}</Text>
+              <Text className="text-xs text-slate-400 dark:text-slate-500">{t("community.post.floodReport")}</Text>
             </View>
           </View>
 
@@ -510,13 +512,13 @@ export default function CreatePostScreen() {
           <View className="mb-4">
             <View className="flex-row items-center justify-between mb-2">
               <Text className="text-sm text-slate-700 dark:text-slate-300">
-                Mức độ ngập lụt
+                {t("community.post.level")}
               </Text>
               {fetchingAreaStatus && (
                 <View className="flex-row items-center gap-1.5">
                   <ActivityIndicator size="small" color="#0EA5E9" />
                   <Text className="text-[10px] text-slate-400 dark:text-slate-500">
-                    Đang kiểm tra khu vực...
+                    {t("community.post.checkingArea")}
                   </Text>
                 </View>
               )}
@@ -548,7 +550,7 @@ export default function CreatePostScreen() {
                         : "text-slate-600 dark:text-slate-400"
                     }`}
                   >
-                    {level === "low" ? "Thấp" : level === "medium" ? "Trung bình" : "Cao"}
+                    {level === "low" ? t("alerts.severity.low") : level === "medium" ? t("alerts.severity.medium") : t("alerts.severity.high")}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -575,7 +577,7 @@ export default function CreatePostScreen() {
                   }
                 />
                 <Text className="text-[11px] text-slate-600 dark:text-slate-400 flex-1">
-                  <Text className="font-semibold">{areaStatus.areaName}</Text> — hệ thống:{" "}
+                  <Text className="font-semibold">{areaStatus.areaName}</Text> — {t("community.post.systemLabel")}{" "}
                   <Text
                     className={
                       areaStatus.status === "Safe"
@@ -585,7 +587,7 @@ export default function CreatePostScreen() {
                         : "text-red-600 dark:text-red-400 font-bold"
                     }
                   >
-                    {API_STATUS_LABEL[areaStatus.status]}
+                    {t(`areas.status.${areaStatus.status.toLowerCase()}` as any)}
                   </Text>
                 </Text>
               </View>
@@ -594,7 +596,7 @@ export default function CreatePostScreen() {
 
           {/* Content input */}
           <TextInput
-            placeholder="Mô tả tình hình ngập lụt tại khu vực..."
+            placeholder={t("community.post.descriptionPlaceholder")}
             placeholderTextColor="#94A3B8"
             multiline
             value={content}
@@ -629,7 +631,7 @@ export default function CreatePostScreen() {
                     </TouchableOpacity>
                     {index === 0 && (
                       <View className="absolute bottom-1 left-1 bg-black/50 px-2 py-0.5 rounded">
-                        <Text className="text-white text-[10px]">Bìa</Text>
+                        <Text className="text-white text-[10px]">{t("community.post.cover")}</Text>
                       </View>
                     )}
                   </View>
@@ -641,7 +643,7 @@ export default function CreatePostScreen() {
           {/* Tools */}
           <View className="mt-5 rounded-2xl bg-white dark:bg-slate-800 px-4 py-3">
             <Text className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-              Thêm vào báo cáo
+              {t("community.post.addToReport")}
             </Text>
             <View className="flex-row items-center justify-between">
               <TouchableOpacity
@@ -650,13 +652,13 @@ export default function CreatePostScreen() {
               >
                 <Ionicons name="camera" size={20} color="#22C55E" />
                 <Text className="text-xs text-slate-700 dark:text-slate-200">
-                  Chụp ảnh / Video
+                  {t("community.post.takePhoto")}
                 </Text>
               </TouchableOpacity>
               <View className="flex-row items-center gap-2">
                 <Ionicons name="location" size={20} color="#0EA5E9" />
                 <Text className="text-xs text-slate-700 dark:text-slate-200">
-                  {currentLocation ? "Đã có vị trí" : "Chưa có vị trí"}
+                  {currentLocation ? t("community.post.hasLocation") : t("community.post.noLocation")}
                 </Text>
               </View>
             </View>
@@ -724,7 +726,7 @@ export default function CreatePostScreen() {
                 marginBottom: 8,
               }}
             >
-              Mức độ không khớp
+              {t("community.post.mismatchTitle")}
             </Text>
 
             {/* Comparison row */}
@@ -748,7 +750,7 @@ export default function CreatePostScreen() {
                   }}
                 >
                   <Text style={{ fontSize: 9, color: "#94A3B8", fontWeight: "600", marginBottom: 2 }}>
-                    HỆ THỐNG
+                    {t("community.post.systemUpper")}
                   </Text>
                   <Text
                     style={{
@@ -781,7 +783,7 @@ export default function CreatePostScreen() {
                   }}
                 >
                   <Text style={{ fontSize: 9, color: "#94A3B8", fontWeight: "600", marginBottom: 2 }}>
-                    BẠN CHỌN
+                    {t("community.post.youSelected")}
                   </Text>
                   <Text
                     style={{
@@ -828,7 +830,7 @@ export default function CreatePostScreen() {
                 }}
               >
                 <Text style={{ fontSize: 14, fontWeight: "700", color: "#64748B" }}>
-                  Điều chỉnh lại
+                  {t("community.post.changeSelection")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -842,7 +844,7 @@ export default function CreatePostScreen() {
                 }}
               >
                 <Text style={{ fontSize: 14, fontWeight: "700", color: "white" }}>
-                  Vẫn tiếp tục
+                  {t("community.post.keepSelection")}
                 </Text>
               </TouchableOpacity>
             </View>

@@ -15,11 +15,13 @@ import {
   WeatherInsightsSkeleton,
 } from "~/features/home/components/WeatherInsightsSection";
 import { useHomeWeatherData } from "~/features/home/hooks/useHomeWeatherData";
+import { useTranslation } from "~/features/i18n";
 import { DistrictsForecastCard } from "~/features/prediction/components/DistrictsForecastCard";
 
 export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { t } = useTranslation();
 
   const {
     meteo,
@@ -51,7 +53,7 @@ export default function HomeScreen() {
         translucent
       />
 
-      <TabLoadingScreen visible={isLoading} message="Đang tải..." />
+      <TabLoadingScreen visible={isLoading} message={t("common.loading")} />
 
       {/* Header with real weather */}
       <HomeHeader notificationCount={0} meteo={meteo} />

@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { ActivityIndicator, TextInput, TouchableOpacity, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { useTranslation } from "~/features/i18n";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 type Props = {
@@ -40,7 +41,8 @@ const ProfileInfoSection: React.FC<Props> = ({
   isCheckingPassword,
 }) => {
   const { isDarkColorScheme } = useColorScheme();
-  
+  const { t } = useTranslation();
+
   const colors = {
     cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
     textMain: isDarkColorScheme ? "#F1F5F9" : "#1F2937",
@@ -57,7 +59,7 @@ const ProfileInfoSection: React.FC<Props> = ({
         case 'google': return 'Google Account';
         case 'facebook': return 'Facebook';
         case 'apple': return 'Apple ID';
-        default: return 'Tài khoản thường';
+        default: return t("profile.provider.local");
     }
   };
 
@@ -72,7 +74,7 @@ const ProfileInfoSection: React.FC<Props> = ({
           marginLeft: 4,
         }}
       >
-        Thông tin cá nhân
+        {t("profile.info.title")}
       </Text>
 
       {/* Provider Info (Read only) */}
@@ -80,7 +82,7 @@ const ProfileInfoSection: React.FC<Props> = ({
         <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: isDarkColorScheme ? "rgba(59, 130, 246, 0.15)" : '#EFF6FF', padding: 14, borderRadius: 16, marginBottom: 16 }}>
             <Ionicons name="logo-google" size={20} color={isDarkColorScheme ? "#60A5FA" : "#007AFF"} />
             <Text style={{ marginLeft: 10, color: isDarkColorScheme ? '#93C5FD' : '#1E40AF', fontWeight: '600', fontSize: 14 }}>
-                Đăng nhập qua {getProviderName(provider)}
+                {t("profile.provider.signedInVia", { provider: getProviderName(provider) })}
             </Text>
         </View>
       )}
@@ -104,7 +106,7 @@ const ProfileInfoSection: React.FC<Props> = ({
         <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
             <Ionicons name="person-outline" size={16} color={colors.textSub} style={{ marginRight: 6 }} />
-            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.textSub }}>Họ và tên</Text>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.textSub }}>{t("profile.info.fullName")}</Text>
           </View>
           <TextInput
             value={fullName}
@@ -117,7 +119,7 @@ const ProfileInfoSection: React.FC<Props> = ({
               paddingVertical: 8,
               paddingHorizontal: 0,
             }}
-            placeholder="Nhập họ tên"
+            placeholder={t("auth.fullName.placeholder")}
             placeholderTextColor={isDarkColorScheme ? "#64748B" : "#9CA3AF"}
           />
         </View>
@@ -129,12 +131,12 @@ const ProfileInfoSection: React.FC<Props> = ({
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Ionicons name="mail-outline" size={16} color={colors.textSub} style={{ marginRight: 6 }} />
-                <Text style={{ fontSize: 13, fontWeight: "600", color: colors.textSub }}>Email</Text>
+                <Text style={{ fontSize: 13, fontWeight: "600", color: colors.textSub }}>{t("profile.info.email")}</Text>
             </View>
             {isEmailVerified && (
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                      <Ionicons name="checkmark-circle" size={14} color="#10B981" />
-                     <Text style={{ fontSize: 11, color: '#10B981', marginLeft: 4, fontWeight: '700' }}>Đã xác thực</Text>
+                     <Text style={{ fontSize: 11, color: '#10B981', marginLeft: 4, fontWeight: '700' }}>{t("profile.info.verified")}</Text>
                 </View>
             )}
           </View>
@@ -159,17 +161,17 @@ const ProfileInfoSection: React.FC<Props> = ({
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Ionicons name="call-outline" size={16} color={colors.textSub} style={{ marginRight: 6 }} />
-                <Text style={{ fontSize: 13, fontWeight: "600", color: colors.textSub }}>Số điện thoại</Text>
+                <Text style={{ fontSize: 13, fontWeight: "600", color: colors.textSub }}>{t("profile.info.phone")}</Text>
             </View>
             {isPhoneVerified ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                      <Ionicons name="checkmark-circle" size={14} color="#10B981" />
-                     <Text style={{ fontSize: 11, color: '#10B981', marginLeft: 4, fontWeight: '700' }}>Đã xác thực</Text>
+                     <Text style={{ fontSize: 11, color: '#10B981', marginLeft: 4, fontWeight: '700' }}>{t("profile.info.verified")}</Text>
                 </View>
             ) : phone ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                      <Ionicons name="alert-circle" size={14} color="#F59E0B" />
-                     <Text style={{ fontSize: 11, color: '#F59E0B', marginLeft: 4, fontWeight: '700' }}>Chưa xác thực</Text>
+                     <Text style={{ fontSize: 11, color: '#F59E0B', marginLeft: 4, fontWeight: '700' }}>{t("profile.info.notVerified")}</Text>
                 </View>
             ) : null}
           </View>
@@ -187,7 +189,7 @@ const ProfileInfoSection: React.FC<Props> = ({
                 paddingVertical: 8,
                 paddingHorizontal: 0,
               }}
-              placeholder="Nhập số điện thoại"
+              placeholder={t("auth.phone.placeholder")}
               placeholderTextColor={isDarkColorScheme ? "#64748B" : "#9CA3AF"}
             />
             {/* Nút Xác nhận */}
@@ -202,7 +204,7 @@ const ProfileInfoSection: React.FC<Props> = ({
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={{ color: '#007AFF', fontWeight: '700', fontSize: 13 }}>Xác thực</Text>
+                <Text style={{ color: '#007AFF', fontWeight: '700', fontSize: 13 }}>{t("profile.info.verifyPhone")}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -214,7 +216,7 @@ const ProfileInfoSection: React.FC<Props> = ({
         <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
             <Ionicons name="location-outline" size={16} color={colors.textSub} style={{ marginRight: 6 }} />
-            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.textSub }}>Địa chỉ</Text>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.textSub }}>{t("profile.info.address")}</Text>
           </View>
           <TextInput
             value={address}
@@ -231,7 +233,7 @@ const ProfileInfoSection: React.FC<Props> = ({
               minHeight: 50,
               textAlignVertical: "top",
             }}
-            placeholder="Nhập địa chỉ của bạn"
+            placeholder={t("profile.address.placeholder")}
             placeholderTextColor={isDarkColorScheme ? "#64748B" : "#9CA3AF"}
           />
         </View>
@@ -275,7 +277,7 @@ const ProfileInfoSection: React.FC<Props> = ({
               flex: 1
             }}
           >
-            {isCheckingPassword ? "Đang kiểm tra..." : "Đổi hoặc thiết lập mật khẩu"}
+            {isCheckingPassword ? t("profile.password.checking") : t("profile.password.changeOrSet")}
           </Text>
           <Ionicons name="chevron-forward" size={18} color={colors.textSub} />
         </TouchableOpacity>

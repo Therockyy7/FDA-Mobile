@@ -11,10 +11,12 @@ import {
 } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { useTranslation } from "~/features/i18n";
 
 export function CommunityBanner() {
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
+  const { t } = useTranslation();
 
   // Subtle shimmer animation for the report button
   const shimmerAnim = useRef(new Animated.Value(0)).current;
@@ -117,7 +119,7 @@ export function CommunityBanner() {
                       letterSpacing: -0.3,
                     }}
                   >
-                    Cộng đồng Đà Nẵng
+                    {t("home.community.title")}
                   </Text>
                   <Text
                     style={{
@@ -127,7 +129,7 @@ export function CommunityBanner() {
                       marginTop: 1,
                     }}
                   >
-                    Báo cáo & theo dõi ngập lụt thời gian thực
+                    {t("home.community.subtitle")}
                   </Text>
                 </View>
               </View>
@@ -166,7 +168,7 @@ export function CommunityBanner() {
                       fontWeight: "600",
                     }}
                   >
-                    Cảnh báo
+                    {t("home.community.alert")}
                   </Text>
                 </View>
                 <Ionicons
@@ -216,7 +218,7 @@ export function CommunityBanner() {
                     fontWeight: "700",
                   }}
                 >
-                  Báo cáo ngập
+                  {t("home.community.reportFlood")}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -258,7 +260,7 @@ export function CommunityBanner() {
                   fontWeight: "700",
                 }}
               >
-                Bản đồ ngập
+                {t("home.community.floodMap")}
               </Text>
             </View>
           </TouchableOpacity>
@@ -305,8 +307,7 @@ export function CommunityBanner() {
             }}
             numberOfLines={2}
           >
-            Thấy điểm ngập? Chụp ảnh & chia sẻ trên Cộng đồng để cảnh báo
-            mọi người!
+            {t("home.community.tip")}
           </Text>
           <Ionicons
             name="arrow-forward-circle"

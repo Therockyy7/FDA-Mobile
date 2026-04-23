@@ -22,10 +22,12 @@ import NotificationTabToggle from "~/features/notifications/components/Notificat
 import { useNotificationHistory } from "~/features/notifications/hooks/useNotificationHistory";
 import { NotificationItem } from "~/features/notifications/types/notifications-types";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { useTranslation } from "~/features/i18n";
 
 export default function NotificationsScreen() {
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
+  const { t } = useTranslation();
   
   // Tab state: "alerts" | "news"
   const [activeTab, setActiveTab] = useState<"alerts" | "news">("alerts");
@@ -81,8 +83,8 @@ export default function NotificationsScreen() {
   const markAllMutation = useMarkAllNewsRead();
   const handleMarkAllRead = () => {
     markAllMutation.mutate(undefined, {
-      onSuccess: () => Alert.alert("Thành công", "Đã đánh dấu tất cả là đã đọc."),
-      onError: () => Alert.alert("Lỗi", "Không thể cập nhật trạng thái đã đọc."),
+      onSuccess: () => Alert.alert(t("common.success"), t("notif.markAllReadSuccess")),
+      onError: () => Alert.alert(t("common.error"), t("notif.markAllReadError")),
     });
   };
 
@@ -158,7 +160,7 @@ export default function NotificationsScreen() {
             }}
           >
             <Text style={{ fontSize: 13, fontWeight: "600", color: "#007AFF" }}>
-              {markAllMutation.isPending ? "Đang xử lý..." : "✓ Đánh dấu tất cả đã đọc"}
+              {markAllMutation.isPending ? t("common.processing") : `✓ ${t("notif.markAllRead")}`}
             </Text>
           </TouchableOpacity>
         </View>

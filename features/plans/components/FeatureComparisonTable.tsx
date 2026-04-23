@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { PricingPlan } from "../types/plans-types";
+import { useTranslation } from "~/features/i18n";
 
 type Props = {
   plans: PricingPlan[];
@@ -12,11 +13,11 @@ type Props = {
 const PLAN_ORDER = ["FREE", "PREMIUM", "MONITOR"] as const;
 const BRAND = "#007AFF";
 
-const PLAN_LABELS: Record<string, string> = {
-  FREE: "Miễn phí",
+const getPlanLabels = (t: any): Record<string, string> => ({
+  FREE: t("plans.tier.free", "Miễn phí"),
   PREMIUM: "Premium",
   MONITOR: "Monitor",
-};
+});
 
 /** Same tiers as enterprise column in PricingCard — hide from comparison table. */
 const PLAN_CODES_HIDDEN_FROM_COMPARISON = new Set(["MONITOR", "ENTERPRISE"]);
@@ -34,10 +35,10 @@ interface FeatureRow {
   getValue: (plan: PricingPlan) => string | null;
 }
 
-const COMPARISON_ROWS: FeatureRow[] = [
+const getComparisonRows = (t: any): FeatureRow[] => [
   {
     key: "monitored_areas_max",
-    label: "Số vùng theo dõi",
+    label: t("plans.comparison.monitoredAreas"),
     getValue: (plan) => {
       const v = plan.features?.find((f) => f.featureKey === "monitored_areas_max")?.featureValue;
       return v || "—";
@@ -45,42 +46,42 @@ const COMPARISON_ROWS: FeatureRow[] = [
   },
   {
     key: "alert_channels",
-    label: "Kênh thông báo",
+    label: t("plans.comparison.alertChannels"),
     getValue: (plan) => {
       const v = plan.features?.find((f) => f.featureKey === "alert_channels")?.featureValue;
       if (!v) return "—";
-      if (v.includes("Webhook")) return "Tất cả + Webhook";
-      if (v.includes("SMS")) return "Push, Email, SMS";
-      return "Push, Email";
+      if (v.includes("Webhook")) return t("plans.comparison.allAndWebhook");
+      if (v.includes("SMS")) return t("plans.comparison.pushEmailSms");
+      return t("plans.comparison.pushEmail");
     },
   },
   {
     key: "ai_predictions",
-    label: "Dự báo AI",
+    label: t("plans.comparison.aiPredictions"),
     getValue: (plan) => {
       const v = plan.features?.find((f) => f.featureKey === "ai_predictions")?.featureValue;
-      if (!v || v === "Không") return "—";
-      return v === "Có" || v === "Đầy đủ" ? "Có" : v;
+      if (!v || v === "Không" || v === "No") return "—";
+      return v === "Có" || v === "Yes" || v === "Đầy đủ" || v === "Full" ? t("plans.comparison.yes") : v;
     },
   },
   {
     key: "safe_routes",
-    label: "Tìm đường an toàn",
+    label: t("plans.comparison.safeRoutes"),
     getValue: (plan) => {
       const v = plan.features?.find((f) => f.featureKey === "safe_routes")?.featureValue;
-      if (!v || v === "Không") return "—";
-      return v === "Có" ? "Có" : v;
+      if (!v || v === "Không" || v === "No") return "—";
+      return v === "Có" || v === "Yes" ? t("plans.comparison.yes") : v;
     },
   },
   {
     key: "community_reports",
-    label: "Báo cáo cộng đồng",
+    label: t("plans.comparison.communityReports"),
     getValue: (plan) => {
       const v = plan.features?.find((f) => f.featureKey === "community_reports")?.featureValue;
       if (!v) return "—";
-      if (v.includes("huy hiệu")) return "Có (Uy tín cao)";
-      if (v.includes("Kiểm duyệt")) return "Kiểm duyệt";
-      return "Có";
+      if (v.includes("huy hiệu") || v.includes("Rep")) return t("plans.comparison.yesHighReputation");
+      if (v.includes("Kiểm duyệt") || v.includes("Moderated")) return t("plans.comparison.moderated");
+      return t("plans.comparison.yes");
     },
   },
 ];
@@ -124,7 +125,10 @@ const Cell: React.FC<{ value: string | null; planCode: string; isDark: boolean }
 
 const FeatureComparisonTable: React.FC<Props> = ({ plans }) => {
   const { isDarkColorScheme } = useColorScheme();
+  const { t } = useTranslation();
   const isDark = isDarkColorScheme;
+
+  const COMPARISON_ROWS = getComparisonRows(t);
 
   const sortedPlans = [...plans].sort((a, b) => {
     const aIdx = PLAN_ORDER.indexOf((a.code || "").toUpperCase() as typeof PLAN_ORDER[number]);
@@ -148,7 +152,7 @@ const FeatureComparisonTable: React.FC<Props> = ({ plans }) => {
     <View style={styles.container}>
       {/* Section title */}
       <Text style={[styles.title, { color: colors.text }]}>
-        So sánh chi tiết
+        {t("plans.comparison.title")}
       </Text>
 
       {/* Table */}
@@ -174,7 +178,7 @@ const FeatureComparisonTable: React.FC<Props> = ({ plans }) => {
                     isHighlight && styles.planLabelBold,
                   ]}
                 >
-                  {PLAN_LABELS[plan.code || "FREE"] ?? plan.name}
+                  {getPlanLabels(t)[plan.code || "FREE"] ?? plan.name}
                 </Text>
               </View>
             );

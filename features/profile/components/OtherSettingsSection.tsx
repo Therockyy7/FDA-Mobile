@@ -3,10 +3,12 @@ import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "~/components/ui/text";
+import { useTranslation } from "~/features/i18n";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 const OtherSettingsSection: React.FC = () => {
   const { isDarkColorScheme } = useColorScheme();
+  const { t } = useTranslation();
 
   const colors = {
     cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
@@ -27,7 +29,7 @@ const OtherSettingsSection: React.FC = () => {
           marginLeft: 4,
         }}
       >
-        Khác
+        {t("settings.other.title")}
       </Text>
 
       <View
@@ -75,7 +77,7 @@ const OtherSettingsSection: React.FC = () => {
                 marginLeft: 12,
               }}
             >
-              Trung tâm trợ giúp
+              {t("settings.other.help")}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.textSub} />
@@ -114,7 +116,7 @@ const OtherSettingsSection: React.FC = () => {
                 marginLeft: 12,
               }}
             >
-              Chính sách bảo mật
+              {t("settings.other.privacy")}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.textSub} />
@@ -153,7 +155,7 @@ const OtherSettingsSection: React.FC = () => {
                 marginLeft: 12,
               }}
             >
-              Về ứng dụng
+              {t("settings.other.about")}
             </Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center" }}>

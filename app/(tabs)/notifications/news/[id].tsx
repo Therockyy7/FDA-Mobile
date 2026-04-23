@@ -18,6 +18,7 @@ import { useMarkNewsRead } from "~/features/news/hooks/useMarkNewsRead";
 import { useNewsDetail } from "~/features/news/hooks/useNewsDetail";
 import { NewsPriority } from "~/features/news/types/news-types";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { useTranslation } from "~/features/i18n";
 
 const getPriorityConfig = (priority: NewsPriority) => {
   switch (priority) {
@@ -38,6 +39,7 @@ export default function NewsDetailScreen() {
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
   const { width } = useWindowDimensions();
+  const { t } = useTranslation();
 
   const newsId = typeof id === "string" ? id : id?.[0] || "";
 
@@ -69,7 +71,7 @@ export default function NewsDetailScreen() {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background }}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={{ marginTop: 12, color: colors.subtext }}>Đang tải tin tức...</Text>
+        <Text style={{ marginTop: 12, color: colors.subtext }}>{t("notif.news.loading")}</Text>
       </View>
     );
   }
@@ -93,10 +95,10 @@ export default function NewsDetailScreen() {
           <Ionicons name="alert-circle-outline" size={50} color="#F59E0B" />
         </View>
         <Text style={{ fontSize: 20, fontWeight: "800", color: colors.text, marginBottom: 8, textAlign: "center" }}>
-          Không tìm thấy bài viết
+          {t("common.notFound")}
         </Text>
         <Text style={{ fontSize: 14, color: colors.subtext, textAlign: "center", marginBottom: 24 }}>
-          Tin tức này không tồn tại hoặc đã bị xóa
+          {t("common.notFoundDesc")}
         </Text>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -107,7 +109,7 @@ export default function NewsDetailScreen() {
             borderRadius: 12,
           }}
         >
-          <Text style={{ color: "white", fontSize: 15, fontWeight: "700" }}>Quay lại</Text>
+          <Text style={{ color: "white", fontSize: 15, fontWeight: "700" }}>{t("common.goBack")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -302,13 +304,13 @@ export default function NewsDetailScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <Ionicons name="eye-outline" size={16} color={colors.subtext} />
             <Text style={{ fontSize: 14, color: colors.subtext }}>
-              {article.viewCount} lượt xem
+              {article.viewCount} {t("common.views")}
             </Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <Ionicons name="book-outline" size={16} color={colors.subtext} />
             <Text style={{ fontSize: 14, color: colors.subtext }}>
-              {article.readCount} lượt đọc
+              {article.readCount} {t("common.reads")}
             </Text>
           </View>
         </View>

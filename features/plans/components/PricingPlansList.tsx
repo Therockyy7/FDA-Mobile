@@ -3,6 +3,7 @@ import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { useTranslation } from "~/features/i18n";
 import { BillingCycle, PricingPlan, UserSubscription } from "../types/plans-types";
 import BillingToggle from "./BillingToggle";
 import FeatureComparisonTable from "./FeatureComparisonTable";
@@ -46,6 +47,7 @@ const PricingPlansList: React.FC<Props> = ({
   const isDark = isDarkColorScheme;
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
 
@@ -65,12 +67,12 @@ const PricingPlansList: React.FC<Props> = ({
   const handleActionPress = (plan: PricingPlan) => {
     if (!isAuthenticated) {
       Alert.alert(
-        "Đăng nhập để tiếp tục",
-        "Bạn cần đăng nhập để nâng cấp gói dịch vụ.",
+        t("auth.loginRequired.title"),
+        t("auth.loginRequired.descUpgrade"),
         [
-          { text: "Hủy", style: "cancel" },
+          { text: t("common.cancel"), style: "cancel" },
           {
-            text: "Đăng nhập",
+            text: t("auth.login"),
             onPress: () => router.push("/(auth)/sign-in" as any),
           },
         ],
@@ -121,10 +123,10 @@ const PricingPlansList: React.FC<Props> = ({
           },
         });
       } else {
-        Alert.alert("Lỗi", response.message || "Không thể tạo thanh toán.");
+        Alert.alert(t("common.error"), response.message || t("plans.payment.createError"));
       }
     } catch {
-      Alert.alert("Lỗi", "Đã có sự cố xảy ra. Vui lòng thử lại sau.");
+      Alert.alert(t("common.error"), t("common.error.generic"));
     } finally {
       setPaymentLoading(false);
     }
@@ -139,12 +141,12 @@ const PricingPlansList: React.FC<Props> = ({
         await queryClient.invalidateQueries({
           queryKey: plansSubscriptionCurrentQueryKey,
         });
-        Alert.alert("Hạ cấp thành công", "Gói dịch vụ đã về Miễn phí.");
+        Alert.alert(t("plans.downgrade.success"), t("plans.downgrade.successDesc"));
       } else {
-        Alert.alert("Lỗi", response.message || "Không thể hạ cấp.");
+        Alert.alert(t("common.error"), response.message || t("plans.downgrade.error"));
       }
     } catch {
-      Alert.alert("Lỗi", "Vui lòng thử lại sau.");
+      Alert.alert(t("common.error"), t("common.error.generic"));
     } finally {
       setDowngradeLoading(false);
     }

@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { Alert, Dimensions, ScrollView, StatusBar, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { useTranslation } from "~/features/i18n";
 import { AlertSettingsService } from "../services/alert-settings.service";
 import type {
     AlertSettingsColors,
@@ -40,6 +41,7 @@ export function AlertSettings({
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isDarkColorScheme } = useColorScheme();
+  const { t } = useTranslation();
   const normalizeTime = (time: string) =>
     time.length === 5 ? `${time}:00` : time;
   // Form state
@@ -121,9 +123,9 @@ export function AlertSettings({
     label: string;
     color: string;
   }[] = [
-    { value: "Caution", label: "Chú ý", color: "#F59E0B" },
-    { value: "Warning", label: "Cảnh báo", color: "#F97316" },
-    { value: "Critical", label: "Nguy hiểm", color: "#EF4444" },
+    { value: "Caution", label: t("alerts.severity.caution"), color: "#F59E0B" },
+    { value: "Warning", label: t("alerts.severity.warning"), color: "#F97316" },
+    { value: "Critical", label: t("alerts.severity.critical"), color: "#EF4444" },
   ];
 
   const [activeTimeField, setActiveTimeField] = useState<
@@ -195,11 +197,11 @@ export function AlertSettings({
         JSON.stringify(settings),
       );
 
-      Alert.alert("Thành công", "Cài đặt cảnh báo đã được lưu", [
+      Alert.alert(t("common.success"), t("alerts.settings.saveSuccess"), [
         { text: "OK", onPress: () => router.back() },
       ]);
     } catch (error: any) {
-      Alert.alert("Lỗi", error?.message || "Không thể lưu cài đặt");
+      Alert.alert(t("common.error"), error?.message || t("alerts.settings.saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -219,7 +221,7 @@ export function AlertSettings({
       >
         <AlertSettingsHeader
           areaName={areaName}
-          description="Thiết lập cảnh báo cho khu vực bạn đã lưu"
+          description={t("alerts.settings.desc")}
           onBack={() => router.back()}
           onThresholdPress={() =>
             router.push({
@@ -262,7 +264,7 @@ export function AlertSettings({
       <TimePickerModal
         visible={activeTimeField !== null}
         title={
-          activeTimeField === "start" ? "Chọn giờ bắt đầu" : "Chọn giờ kết thúc"
+          activeTimeField === "start" ? t("alerts.settings.chooseStartTime") : t("alerts.settings.chooseEndTime")
         }
         value={timePickerValue}
         onConfirm={(date) => applyTimePicker(date)}

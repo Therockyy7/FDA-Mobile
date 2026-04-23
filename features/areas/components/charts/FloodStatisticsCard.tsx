@@ -7,6 +7,7 @@ import { View } from "react-native";
 import { PieChart } from "react-native-gifted-charts";
 import { Text } from "~/components/ui/text";
 import type { FloodStatisticsData } from "~/features/areas/types/flood-history.types";
+import { useTranslation } from "~/features/i18n";
 import { LoadingChart } from "./LoadingChart";
 
 interface FloodStatisticsCardProps {
@@ -15,29 +16,30 @@ interface FloodStatisticsCardProps {
   isDark?: boolean;
 }
 
+// Labels moved to i18n - use t() inside component
 const SEVERITY_CONFIG = {
   safe: {
     color: "#10B981",
     bg: "#D1FAE5",
-    label: "An toàn",
+    key: "severity.safe" as const,
     icon: "checkmark-circle",
   },
   caution: {
     color: "#FBBF24",
     bg: "#FEF3C7",
-    label: "Chú ý",
+    key: "severity.caution" as const,
     icon: "alert-circle",
   },
   warning: {
     color: "#F97316",
     bg: "#FFEDD5",
-    label: "Cảnh báo",
+    key: "severity.warning" as const,
     icon: "warning",
   },
   critical: {
     color: "#EF4444",
     bg: "#FEE2E2",
-    label: "Nguy hiểm",
+    key: "severity.critical" as const,
     icon: "alert",
   },
 };
@@ -47,6 +49,7 @@ export function FloodStatisticsCard({
   isLoading = false,
   isDark = false,
 }: FloodStatisticsCardProps) {
+  const { t } = useTranslation();
   const colors = {
     background: isDark ? "#1E293B" : "#FFFFFF",
     text: isDark ? "#F1F5F9" : "#1F2937",
@@ -92,7 +95,7 @@ export function FloodStatisticsCard({
       <LoadingChart
         height={320}
         isDark={isDark}
-        message="Đang tải thống kê..."
+        message={t("chart.stats.loading")}
       />
     );
   }
@@ -112,7 +115,7 @@ export function FloodStatisticsCard({
       >
         <Ionicons name="stats-chart-outline" size={40} color={colors.subtext} />
         <Text style={{ color: colors.subtext, marginTop: 12, fontSize: 14 }}>
-          Không có dữ liệu thống kê
+          {t("chart.stats.noData")}
         </Text>
       </View>
     );
@@ -146,11 +149,11 @@ export function FloodStatisticsCard({
             <Text
               style={{ fontSize: 14, fontWeight: "700", color: colors.text }}
             >
-              Thống kê mực nước
+              {t("chart.stats.title")}
             </Text>
             <Text style={{ fontSize: 11, color: colors.subtext, marginTop: 2 }}>
-              {new Date(data.periodStart).toLocaleDateString("vi-VN")} -{" "}
-              {new Date(data.periodEnd).toLocaleDateString("vi-VN")}
+              {new Date(data.periodStart).toLocaleDateString()} -{" "}
+              {new Date(data.periodEnd).toLocaleDateString()}
             </Text>
           </View>
           {dataQuality && (
@@ -179,7 +182,7 @@ export function FloodStatisticsCard({
                         : "#DC2626",
                 }}
               >
-                {dataQuality.completeness.toFixed(1)}% dữ liệu
+                {dataQuality.completeness.toFixed(1)}% {t("chart.stats.dataQuality")}
               </Text>
             </View>
           )}
@@ -231,7 +234,7 @@ export function FloodStatisticsCard({
                   style={{ fontSize: 11, color: colors.subtext }}
                   numberOfLines={1}
                 >
-                  Cao nhất
+                  {t("chart.stats.max")}
                 </Text>
                 <Text
                   style={{ fontSize: 17, fontWeight: "800", color: "#EF4444" }}
@@ -279,7 +282,7 @@ export function FloodStatisticsCard({
                   style={{ fontSize: 11, color: colors.subtext }}
                   numberOfLines={1}
                 >
-                  Thấp nhất
+                  {t("chart.stats.min")}
                 </Text>
                 <Text
                   style={{ fontSize: 17, fontWeight: "800", color: "#10B981" }}
@@ -323,7 +326,7 @@ export function FloodStatisticsCard({
                   style={{ fontSize: 11, color: colors.subtext }}
                   numberOfLines={1}
                 >
-                  Trung bình
+                  {t("chart.stats.avg")}
                 </Text>
                 <Text
                   style={{ fontSize: 17, fontWeight: "800", color: "#007AFF" }}
@@ -367,7 +370,7 @@ export function FloodStatisticsCard({
                   style={{ fontSize: 11, color: colors.subtext }}
                   numberOfLines={1}
                 >
-                  Tổng giờ ngập
+                  {t("chart.stats.totalFloodHours")}
                 </Text>
                 <Text
                   style={{ fontSize: 17, fontWeight: "800", color: "#F97316" }}
@@ -392,7 +395,7 @@ export function FloodStatisticsCard({
                 marginBottom: 12,
               }}
             >
-              Phân bổ mức cảnh báo
+              {t("chart.stats.severityBreakdown")}
             </Text>
 
             <View
@@ -422,7 +425,7 @@ export function FloodStatisticsCard({
                         {summary.totalReadings}
                       </Text>
                       <Text style={{ fontSize: 9, color: colors.subtext }}>
-                        điểm đo
+                        {t("chart.stats.dataPoints")}
                       </Text>
                     </View>
                   )}
@@ -463,7 +466,7 @@ export function FloodStatisticsCard({
                       <Text
                         style={{ fontSize: 12, color: colors.subtext, flex: 1 }}
                       >
-                        {config.label}
+                        {t(config.key)}
                       </Text>
                       <Text
                         style={{
@@ -497,7 +500,7 @@ export function FloodStatisticsCard({
               <Text
                 style={{ fontSize: 11, color: colors.subtext, marginBottom: 8 }}
               >
-                So với kỳ trước
+                {t("chart.stats.comparison")}
               </Text>
               <View style={{ flexDirection: "row", gap: 12 }}>
                 {comparison.avgLevelChange !== undefined && (
@@ -551,7 +554,7 @@ export function FloodStatisticsCard({
                       {comparison.avgLevelChange.toFixed(0)}%
                     </Text>
                     <Text style={{ fontSize: 11, color: colors.subtext }}>
-                      mực nước
+                      {t("chart.trend.waterLevel")}
                     </Text>
                   </View>
                 )}
@@ -606,7 +609,7 @@ export function FloodStatisticsCard({
                       {comparison.floodHoursChange.toFixed(0)}%
                     </Text>
                     <Text style={{ fontSize: 11, color: colors.subtext }}>
-                      giờ ngập
+                      {t("chart.trend.floodHours")}
                     </Text>
                   </View>
                 )}

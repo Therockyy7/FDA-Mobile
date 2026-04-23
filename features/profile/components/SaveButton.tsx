@@ -2,6 +2,7 @@ import React from "react";
 import { TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { Text } from "~/components/ui/text";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "~/features/i18n";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 type Props = {
@@ -11,6 +12,7 @@ type Props = {
 
 const SaveButton: React.FC<Props> = ({ onPress, loading = false }) => {
   const { isDarkColorScheme } = useColorScheme();
+  const { t } = useTranslation();
 
   const colors = {
     gradientStart: loading ? "#93C5FD" : "#2563EB",
@@ -54,7 +56,7 @@ const SaveButton: React.FC<Props> = ({ onPress, loading = false }) => {
               letterSpacing: 0.5,
             }}
           >
-            {loading ? "Đang lưu..." : "Lưu Thay Đổi"}
+            {loading ? t("common.saving") : t("profile.save")}
           </Text>
         </LinearGradient>
       </TouchableOpacity>

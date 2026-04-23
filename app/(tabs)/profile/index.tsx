@@ -20,6 +20,7 @@ import { useRouter } from "expo-router";
 import { useAppDispatch } from "~/app/hooks";
 import { useSignOut, useUser } from "~/features/auth/stores/hooks";
 import ComplaintsSection from "~/features/complaints/components/ComplaintsSection";
+import { useTranslation } from "~/features/i18n";
 import BillingHistorySection from "~/features/payment/components/BillingHistorySection";
 import { useCurrentSubscription } from "~/features/plans/hooks/useCurrentSubscription";
 import AppSettingsSection from "~/features/profile/components/AppSettingsSection";
@@ -45,6 +46,7 @@ function ProfileScreenContent() {
   const signOut = useSignOut();
   const user = useUser();
   const { isDarkColorScheme, setColorScheme } = useColorScheme();
+  const { t } = useTranslation();
 
   // Reanimated shared value for smooth scroll animation (UI thread)
   const scrollY = useSharedValue(0);
@@ -55,7 +57,7 @@ function ProfileScreenContent() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("Đang cập nhật...");
+  const [address, setAddress] = useState("");
 
   const [newAvatarUri, setNewAvatarUri] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -115,8 +117,8 @@ function ProfileScreenContent() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
       Alert.alert(
-        "Quyền truy cập",
-        "Cần cấp quyền truy cập thư viện ảnh để thay đổi avatar.",
+        t("profile.avatar.permission"),
+        t("profile.avatar.permissionMsg"),
       );
       return;
     }
@@ -177,7 +179,7 @@ function ProfileScreenContent() {
         await AsyncStorage.setItem("user_data", JSON.stringify(updatedProfile));
 
         setNewAvatarUri(null);
-        Alert.alert("Thành công", "Cập nhật hồ sơ thành công!");
+        Alert.alert(t("common.success"), t("profile.save.success"));
       }
     } catch (err: any) {
       console.error("API Error:", err);
@@ -188,8 +190,8 @@ function ProfileScreenContent() {
       }
 
       const message =
-        err?.response?.data?.message || "Lỗi cập nhật. Vui lòng thử lại.";
-      Alert.alert("Lỗi", message);
+        err?.response?.data?.message || t("profile.save.error");
+      Alert.alert(t("common.error"), message);
     } finally {
       setIsUpdating(false);
     }
@@ -205,7 +207,7 @@ function ProfileScreenContent() {
       router.replace("/(tabs)/map");
     } catch (err) {
       console.error("Logout error:", err);
-      Alert.alert("Lỗi", "Có lỗi xảy ra khi đăng xuất.");
+      Alert.alert(t("common.error"), t("profile.logout.error"));
 
       setIsLoggingOut(false);
       setShowLogoutModal(false);
@@ -216,7 +218,7 @@ function ProfileScreenContent() {
   const handleOpenChangePassword = async () => {
     const identifier = user?.email || user?.phoneNumber;
     if (!identifier) {
-      Alert.alert("Lỗi", "Không tìm thấy thông tin tài khoản.");
+      Alert.alert(t("common.error"), t("profile.password.notFoundAccount"));
       return;
     }
 
@@ -255,7 +257,7 @@ function ProfileScreenContent() {
       } else {
         // User chưa có password -> dùng API set-password
         if (!user?.email) {
-          setChangePwError("Không tìm thấy email tài khoản.");
+          setChangePwError(t("profile.password.notFoundEmail"));
           return;
         }
         await AuthService.setPassWord({
@@ -265,10 +267,10 @@ function ProfileScreenContent() {
         });
       }
 
-      Alert.alert("Thành công", "Mật khẩu đã được cập nhật!");
+      Alert.alert(t("common.success"), t("profile.password.success"));
       setShowChangePassword(false);
     } catch (err: any) {
-      const message = err?.response?.data?.message || "Không thể đổi mật khẩu.";
+      const message = err?.response?.data?.message || t("profile.password.error");
       setChangePwError(message);
     } finally {
       setChangePwLoading(false);
@@ -283,15 +285,15 @@ function ProfileScreenContent() {
       setShowPhoneOTPModal(true);
     } catch (err: any) {
       Alert.alert(
-        "Lỗi",
-        err?.response?.data?.message || "Không thể gửi mã OTP.",
+        t("common.error"),
+        err?.response?.data?.message || t("profile.phone.otpError"),
       );
     }
   };
 
   const handleVerifyPhoneOTP = async () => {
     if (phoneOtp.length < 6) {
-      setPhoneOtpError("Vui lòng nhập đủ mã OTP");
+      setPhoneOtpError(t("profile.phone.otpMissing"));
       return;
     }
     setPhoneOtpLoading(true);
@@ -308,10 +310,10 @@ function ProfileScreenContent() {
         setOriginalPhone(phone);
         setShowPhoneOTPModal(false);
         setPhoneOtp("");
-        Alert.alert("Thành công", "Số điện thoại đã được cập nhật!");
+        Alert.alert(t("common.success"), t("profile.phone.updateSuccess"));
       }
     } catch (err: any) {
-      setPhoneOtpError(err?.response?.data?.message || "Xác thực thất bại.");
+      setPhoneOtpError(err?.response?.data?.message || t("profile.phone.otpVerifyFail"));
     } finally {
       setPhoneOtpLoading(false);
     }
@@ -322,14 +324,14 @@ function ProfileScreenContent() {
       await ProfileService.sendPhoneOTP(phone);
       setPhoneOtpError(null);
       setPhoneOtp("");
-      Alert.alert("Thông báo", "Mã xác thực mới đã được gửi!");
+      Alert.alert(t("common.info"), t("profile.phone.otpResent"));
     } catch {
-      Alert.alert("Lỗi", "Không thể gửi lại OTP.");
+      Alert.alert(t("common.error"), t("profile.phone.otpResendFail"));
     }
   };
 
   const displayAvatar = newAvatarUri || user?.avatarUrl;
-  const displayName = fullName || user?.email || "Người dùng";
+  const displayName = fullName || user?.email || t("profile.user");
 
   // Subscription data
   const {

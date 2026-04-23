@@ -13,7 +13,7 @@ export const signOut = createAsyncThunk("auth/signOut", async () => {
   // Clear FCM token on backend BEFORE logout — accessToken is still valid here.
   // Doing this after logout would fail because the token gets revoked.
   try {
-    await ProfileService.updateFcmToken(null);
+    await ProfileService.updateFcmToken("123");
   } catch {
     // Don't block logout if this fails (e.g. offline)
   }

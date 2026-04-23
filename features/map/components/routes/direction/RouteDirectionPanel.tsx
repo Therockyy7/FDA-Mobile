@@ -11,6 +11,8 @@ import {
 } from "react-native";
 import { Image as RNImage } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { CachedDataBadge } from "~/components/CachedDataBadge";
+import { useOfflineBannerPadding } from "~/components/OfflineBanner";
 import { Text } from "~/components/ui/text";
 import type { LatLng } from "~/features/map/types/safe-route.types";
 import type { User } from "~/features/auth/stores/auth.slice";
@@ -53,6 +55,7 @@ export function RouteDirectionPanel({
   onLoginPress,
 }: RouteDirectionPanelProps & { user: User | null; onProfilePress?: () => void; isGuest?: boolean; onLoginPress?: () => void; isExpanded?: boolean; onExpand?: () => void }) {
   const insets = useSafeAreaInsets();
+  const offlinePadding = useOfflineBannerPadding();
   const [searchTarget, setSearchTarget] = useState<"origin" | "dest" | null>(null);
 
   if (!visible) return null;
@@ -95,7 +98,7 @@ export function RouteDirectionPanel({
   };
 
   const topPadding =
-    Platform.OS === "android" ? (StatusBar.currentHeight ?? 0) + 4 : insets.top;
+    (Platform.OS === "android" ? (StatusBar.currentHeight ?? 0) + 4 : insets.top) + offlinePadding;
 
   // ─── IDLE: Single pill ───────────────────────────────
   if (!isReady) {
@@ -109,8 +112,10 @@ export function RouteDirectionPanel({
             right: 0,
             zIndex: 50,
             paddingHorizontal: 16,
+            gap: 6,
           }}
         >
+          <CachedDataBadge />
           <View
             style={{
               flexDirection: "row",

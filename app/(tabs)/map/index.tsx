@@ -27,9 +27,6 @@ import type { LatLng } from "~/features/map/types/safe-route.types";
 import { DANANG_CENTER } from "~/features/map/constants/map-data";
 import type { TransportMode } from "~/features/map/types/routing.types";
 
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CachedDataBadge } from "~/components/CachedDataBadge";
-import { OFFLINE_BANNER_HEIGHT } from "~/components/OfflineBanner";
 import { ConfirmDeleteModal } from "~/features/areas/components/ConfirmDeleteModal";
 import { useIsAuthenticated } from "~/features/auth/hooks/useAuth";
 import { StaticAreaTarget } from "~/features/map/components/areas/overlays/StaticAreaTarget";
@@ -37,20 +34,15 @@ import { MapContent } from "~/features/map/components/MapContent";
 import { MapFloatingUI } from "~/features/map/components/MapFloatingUI";
 import { MapHeaderSwitch } from "~/features/map/components/MapHeaderSwitch";
 import { MapSheets } from "~/features/map/components/MapSheets";
-import { useFloodCacheTime } from "~/features/map/hooks/queries/useFloodCacheTime";
 import { useMapScreen } from "~/features/map/hooks/useMapScreen";
 import { useMapScreenState } from "~/features/map/hooks/useMapScreenState";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
-import { useNetworkStatus } from "~/lib/hooks/useNetworkStatus";
+
 
 export default function MapScreen() {
   // Single aggregated state
   const s = useMapScreenState();
 
-  // Offline cache badge
-  const { isOnline } = useNetworkStatus();
-  const floodDataUpdatedAt = useFloodCacheTime();
-  const { top: safeTop } = useSafeAreaInsets();
   const router = useRouter();
   const isGuest = !useIsAuthenticated();
 
@@ -299,22 +291,6 @@ export default function MapScreen() {
             </Text>
           </TouchableOpacity>
         )}
-        {/* Cached data badge — sits below OfflineBanner, safe-area-aware */}
-        <View
-          style={{
-            position: "absolute",
-            top: safeTop + OFFLINE_BANNER_HEIGHT,
-            zIndex: 200,
-            left: 0,
-            right: 0,
-            alignItems: "center",
-          }}
-        >
-          <CachedDataBadge
-            dataUpdatedAt={floodDataUpdatedAt}
-            visible={!isOnline && floodDataUpdatedAt > 0}
-          />
-        </View>
 
         {/* Loading Overlay */}
         <MapLoadingOverlay visible={s.isLoading} />

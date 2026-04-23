@@ -4,12 +4,14 @@ import { useNetworkStore } from "~/lib/stores/useNetworkStore";
 export interface NetworkStatus {
   isOnline: boolean;
   justReconnected: boolean;
+  offlineSince: number;
 }
 
 export function useNetworkStatus(): NetworkStatus {
   const isOnline = useNetworkStore((s) => s.isOnline);
   const justReconnected = useNetworkStore((s) => s.justReconnected);
-  return { isOnline, justReconnected };
+  const offlineSince = useNetworkStore((s) => s.offlineSince);
+  return { isOnline, justReconnected, offlineSince };
 }
 
 export function onReconnect(callback: () => void): () => void {

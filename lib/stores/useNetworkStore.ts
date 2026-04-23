@@ -4,11 +4,13 @@ import { create } from "zustand";
 interface NetworkStore {
   isOnline: boolean;
   justReconnected: boolean;
+  offlineSince: number; // timestamp when device went offline, 0 if online
 }
 
 export const useNetworkStore = create<NetworkStore>(() => ({
   isOnline: true,
   justReconnected: false,
+  offlineSince: 0,
 }));
 
 // Offline = isConnected:false (1 event, immediate, reliable)
@@ -27,12 +29,12 @@ NetInfo.addEventListener(({ isConnected, isInternetReachable }) => {
   if (prev === online) return;
 
   if (online) {
-    useNetworkStore.setState({ isOnline: true, justReconnected: true });
+    useNetworkStore.setState({ isOnline: true, justReconnected: true, offlineSince: 0 });
     setTimeout(() => useNetworkStore.setState({ justReconnected: false }), 0);
   } else {
     // Only go offline when isConnected:false — not during transient reconnect events
     if (isConnected === false) {
-      useNetworkStore.setState({ isOnline: false });
+      useNetworkStore.setState({ isOnline: false, offlineSince: Date.now() });
     }
   }
 });

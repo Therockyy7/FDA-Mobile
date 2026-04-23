@@ -1,17 +1,15 @@
 // features/map/components/MapHeaderSwitch.tsx
 // Thin wrapper — reads user from auth store and renders RouteDirectionPanel.
 
-import React from "react";
 import { useRouter } from "expo-router";
-import { RouteDirectionPanel } from "~/features/map/components/routes";
 import { useUser } from "~/features/auth/stores/hooks";
+import { RouteDirectionPanel } from "~/features/map/components/routes";
 import type { TransportMode } from "~/features/map/types/routing.types";
 import type { LatLng } from "~/features/map/types/safe-route.types";
 
 interface Props {
   navIsNavigating: boolean;
   safeRouteHasResults: boolean;
-  // RouteDirectionPanel
   originText: string;
   onOriginChange: (t: string) => void;
   onOriginClear: () => void;

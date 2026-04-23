@@ -27,7 +27,9 @@ import type { LatLng } from "~/features/map/types/safe-route.types";
 import { DANANG_CENTER } from "~/features/map/constants/map-data";
 import type { TransportMode } from "~/features/map/types/routing.types";
 
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CachedDataBadge } from "~/components/CachedDataBadge";
+import { OFFLINE_BANNER_HEIGHT } from "~/components/OfflineBanner";
 import { ConfirmDeleteModal } from "~/features/areas/components/ConfirmDeleteModal";
 import { useIsAuthenticated } from "~/features/auth/hooks/useAuth";
 import { StaticAreaTarget } from "~/features/map/components/areas/overlays/StaticAreaTarget";
@@ -48,6 +50,7 @@ export default function MapScreen() {
   // Offline cache badge
   const { isOnline } = useNetworkStatus();
   const floodDataUpdatedAt = useFloodCacheTime();
+  const { top: safeTop } = useSafeAreaInsets();
   const router = useRouter();
   const isGuest = !useIsAuthenticated();
 
@@ -296,12 +299,11 @@ export default function MapScreen() {
             </Text>
           </TouchableOpacity>
         )}
-        {/* Cached data badge — visible only when offline */}
+        {/* Cached data badge — sits below OfflineBanner, safe-area-aware */}
         <View
           style={{
             position: "absolute",
-            top: 8,
-            alignSelf: "center",
+            top: safeTop + OFFLINE_BANNER_HEIGHT,
             zIndex: 200,
             left: 0,
             right: 0,

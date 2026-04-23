@@ -3,6 +3,17 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-na
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNetworkStore } from "~/lib/stores/useNetworkStore";
 
+// Use in screens that need to push content below the banner when offline.
+// Map screen is excluded — it uses absolute layout and manages insets itself.
+export function useOfflineBannerPadding(): number {
+  const isOnline = useNetworkStore((s) => s.isOnline);
+  return isOnline ? 0 : OFFLINE_BANNER_HEIGHT;
+}
+
+// Height of the banner pill (mt-2 + py-2.5 + text) — used by consumers to offset
+// sibling elements that should appear below the banner when it's visible.
+export const OFFLINE_BANNER_HEIGHT = 52;
+
 export function OfflineBanner() {
   const isOnline = useNetworkStore((s) => s.isOnline);
   const insets = useSafeAreaInsets();

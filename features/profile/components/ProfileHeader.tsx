@@ -20,6 +20,7 @@ import Animated, {
   useAnimatedStyle,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useOfflineBannerPadding } from "~/components/OfflineBanner";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 
@@ -52,6 +53,7 @@ const ProfileHeader: React.FC<Props> = ({
   const { isDarkColorScheme } = useColorScheme();
 
   const insets = useSafeAreaInsets();
+  const offlinePadding = useOfflineBannerPadding();
   const statusBarHeight = Platform.OS === "android" ? StatusBar.currentHeight || insets.top : insets.top;
   const HEADER_MIN_HEIGHT = Math.max(80, statusBarHeight + 50); // Ensure minimal space for buttons
   const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
@@ -183,7 +185,7 @@ const ProfileHeader: React.FC<Props> = ({
         end={{ x: 1, y: 1 }}
         style={{
           flex: 1,
-          paddingTop: statusBarHeight + 10,
+          paddingTop: statusBarHeight + 10 + offlinePadding,
           paddingHorizontal: 16,
         }}
       >

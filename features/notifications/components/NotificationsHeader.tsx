@@ -3,6 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Platform, StatusBar, View } from "react-native";
 import { Text } from "~/components/ui/text";
+import { useOfflineBannerPadding } from "~/components/OfflineBanner";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 interface NotificationsHeaderProps {
@@ -15,6 +16,7 @@ export function NotificationsHeader({
   onFilterPress,
 }: NotificationsHeaderProps) {
   const { isDarkColorScheme } = useColorScheme();
+  const offlinePadding = useOfflineBannerPadding();
 
   // Theme colors synchronized with HomeHeader
   const colors = {
@@ -30,7 +32,7 @@ export function NotificationsHeader({
       style={{
         backgroundColor: colors.background,
         paddingTop:
-          Platform.OS === "ios" ? 50 : (StatusBar.currentHeight || 0) + 12,
+          (Platform.OS === "ios" ? 50 : (StatusBar.currentHeight || 0) + 12) + offlinePadding,
         paddingBottom: 14,
         paddingHorizontal: 20,
         borderBottomWidth: 1,

@@ -20,7 +20,13 @@ import {
   usePlaceSearch,
   type PlacePrediction,
 } from "~/features/map/hooks/usePlaceSearch";
+import {
+  usePlaceSearchHistoryItems,
+  usePlaceSearchHistoryStore,
+} from "~/features/map/stores/usePlaceSearchHistoryStore";
+import type { PlaceSearchHistoryItem } from "~/features/map/stores/usePlaceSearchHistoryStore";
 import type { LatLng } from "~/features/map/types/safe-route.types";
+import { PlaceSearchHistoryList } from "./place-search-history-list";
 
 interface PlaceSearchSheetProps {
   visible: boolean;
@@ -59,6 +65,10 @@ export function PlaceSearchSheet({
     getPlaceDetail,
     clearSearch,
   } = usePlaceSearch();
+  const historyItems = usePlaceSearchHistoryItems();
+  const addHistoryItem = usePlaceSearchHistoryStore((s) => s.addItem);
+  const removeHistoryItem = usePlaceSearchHistoryStore((s) => s.removeItem);
+  const clearHistory = usePlaceSearchHistoryStore((s) => s.clearAll);
 
   useEffect(() => {
     if (visible) {
@@ -73,10 +83,34 @@ export function PlaceSearchSheet({
     Keyboard.dismiss();
     const detail = await getPlaceDetail(prediction);
     if (detail) {
+      addHistoryItem({
+        placeId: detail.placeId || prediction.placeId,
+        name: detail.name || prediction.mainText,
+        address: detail.address || prediction.fullText,
+        latitude: detail.coordinate.latitude,
+        longitude: detail.coordinate.longitude,
+      });
       onSelectPlace(detail.coordinate, detail.name || detail.address);
       clearSearch();
       onClose();
     }
+  };
+
+  const handleSelectHistory = (item: PlaceSearchHistoryItem) => {
+    Keyboard.dismiss();
+    addHistoryItem({
+      placeId: item.placeId,
+      name: item.name,
+      address: item.address,
+      latitude: item.latitude,
+      longitude: item.longitude,
+    });
+    onSelectPlace(
+      { latitude: item.latitude, longitude: item.longitude },
+      item.name || item.address,
+    );
+    clearSearch();
+    onClose();
   };
 
   // When user presses "search" on keyboard, auto-select first result
@@ -341,8 +375,19 @@ export function PlaceSearchSheet({
             </View>
           )}
 
+          {/* Recent searches */}
+          {query.length < 2 && predictions.length === 0 && historyItems.length > 0 && (
+            <PlaceSearchHistoryList
+              items={historyItems}
+              isDark={isDark}
+              onSelect={handleSelectHistory}
+              onRemove={removeHistoryItem}
+              onClearAll={clearHistory}
+            />
+          )}
+
           {/* Hint */}
-          {query.length < 2 && predictions.length === 0 && (
+          {query.length < 2 && predictions.length === 0 && historyItems.length === 0 && (
             <View
               style={{
                 alignItems: "center",

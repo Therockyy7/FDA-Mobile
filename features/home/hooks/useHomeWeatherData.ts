@@ -1,13 +1,12 @@
 // features/home/hooks/useHomeWeatherData.ts
-import { useCallback, useEffect, useState } from "react";
 import * as Location from "expo-location";
+import { useCallback, useEffect, useState } from "react";
 import { AreaService } from "~/features/areas/services/area.service";
 import { PredictionService } from "~/features/prediction/services/prediction.service";
 import type { PredictionResponse } from "~/features/prediction/types/prediction.types";
 import { WeatherService } from "../services/weather.service";
 import type { AiRiskSummary, RainfallForecastItem } from "../types/home-types";
 import type { OpenMeteoResponse } from "../types/open-meteo.types";
-import type { Area } from "~/features/map/types/map-layers.types";
 
 export interface HomeWeatherState {
   meteo: OpenMeteoResponse | null;
@@ -109,7 +108,11 @@ function predictionToRiskSummary(pred: PredictionResponse): AiRiskSummary {
     const { weather, saturation, terrain } = ai.components;
     const scores = [
       { name: "rainfall", val: weather?.contribution ?? 0, label: "Lượng mưa" },
-      { name: "saturation", val: saturation?.saturation_level ?? 0, label: "Độ bão hòa" },
+      {
+        name: "saturation",
+        val: saturation?.saturation_level ?? 0,
+        label: "Độ bão hòa",
+      },
       { name: "terrain", val: terrain?.drainage_risk ?? 0, label: "Địa hình" },
     ];
     scores.sort((a, b) => b.val - a.val);
@@ -143,7 +146,10 @@ const HOME_WEATHER_CACHE_TTL_MS = 5 * 60 * 1000;
 
 export function useHomeWeatherData() {
   const [state, setState] = useState<HomeWeatherState>(() => {
-    if (_cachedHomeWeather && Date.now() - _homeWeatherTimestamp < HOME_WEATHER_CACHE_TTL_MS) {
+    if (
+      _cachedHomeWeather &&
+      Date.now() - _homeWeatherTimestamp < HOME_WEATHER_CACHE_TTL_MS
+    ) {
       return _cachedHomeWeather;
     }
     return {
@@ -156,7 +162,11 @@ export function useHomeWeatherData() {
   });
 
   const fetchData = useCallback(async (forceRefresh = false) => {
-    if (!forceRefresh && _cachedHomeWeather && Date.now() - _homeWeatherTimestamp < HOME_WEATHER_CACHE_TTL_MS) {
+    if (
+      !forceRefresh &&
+      _cachedHomeWeather &&
+      Date.now() - _homeWeatherTimestamp < HOME_WEATHER_CACHE_TTL_MS
+    ) {
       setState(_cachedHomeWeather);
       return;
     }
@@ -182,7 +192,10 @@ export function useHomeWeatherData() {
       let meteo: OpenMeteoResponse | null = null;
       if (meteoResult.status === "fulfilled") {
         meteo = meteoResult.value;
-        console.log("🌦 Open-Meteo data loaded:", meteo.current.temperature_2m + "°C");
+        console.log(
+          "🌦 Open-Meteo data loaded:",
+          meteo.current.temperature_2m + "°C",
+        );
       } else {
         console.warn("⚠️ Could not fetch Open-Meteo weather");
       }
@@ -233,8 +246,8 @@ export function useHomeWeatherData() {
         if (allCandidates.length > 0) {
           const adminResults = await Promise.allSettled(
             allCandidates.map((term) =>
-              AreaService.getAdminAreas({ searchTerm: term, pageSize: 5 })
-            )
+              AreaService.getAdminAreas({ searchTerm: term, pageSize: 5 }),
+            ),
           );
 
           // Duyệt theo thứ tự ưu tiên gốc: geo candidates trước, fallback sau
@@ -252,7 +265,8 @@ export function useHomeWeatherData() {
         // Tầng 4: Phải chờ adminAreaId — tuần tự
         try {
           const targetPredictionId = adminAreaId || userArea.id;
-          const prediction = await PredictionService.getFloodRiskPrediction(targetPredictionId);
+          const prediction =
+            await PredictionService.getFloodRiskPrediction(targetPredictionId);
           aiRisk = predictionToRiskSummary(prediction);
         } catch (err) {
           console.warn("⚠️ Could not fetch AI prediction:", err);

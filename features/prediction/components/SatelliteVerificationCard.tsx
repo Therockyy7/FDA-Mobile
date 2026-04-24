@@ -836,7 +836,9 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
               Chế độ Fusion (Khuyến nghị)
             </Text>
             <Text style={{ fontSize: 11, color: muted, lineHeight: 16 }}>
-              Kết hợp S1 + S2 → độ chính xác tối đa. Mất ~60–90 giây.
+              {useFusion
+                ? "S1 + S2 → độ chính xác tối đa. ~90–120 giây."
+                : "Chỉ S2 (optical) → nhanh hơn ~40%. ~30–60 giây."}
             </Text>
           </View>
           <View
@@ -930,11 +932,11 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
           end={{ x: 1, y: 0 }}
           style={{
             borderRadius: 16,
-            padding: 16,
-            flexDirection: "row",
+            paddingVertical: 14,
+            paddingHorizontal: 16,
             alignItems: "center",
             justifyContent: "center",
-            gap: 10,
+            gap: 4,
             shadowColor: "#A855F7",
             shadowOffset: { width: 0, height: 8 },
             shadowOpacity: 0.4,
@@ -942,36 +944,65 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
             elevation: 8,
           }}
         >
-          <Ionicons name="planet-outline" size={20} color="#FFFFFF" />
-          <Text
-            style={{
-              fontSize: 15,
-              fontWeight: "900",
-              color: "#FFFFFF",
-              letterSpacing: 0.3,
-            }}
-          >
-            Phân tích vệ tinh Prithvi
-          </Text>
           <View
             style={{
-              backgroundColor: "rgba(255,255,255,0.2)",
-              borderRadius: 8,
-              paddingHorizontal: 8,
-              paddingVertical: 3,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
             }}
           >
-            <Text style={{ fontSize: 10, fontWeight: "700", color: "#FFFFFF" }}>
-              {useFusion ? "S1 + S2" : "S2 only"}
+            <Ionicons name="planet-outline" size={20} color="#FFFFFF" />
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: "900",
+                color: "#FFFFFF",
+                letterSpacing: 0.3,
+              }}
+            >
+              Phân tích vệ tinh Prithvi
             </Text>
           </View>
+          <Text
+            style={{
+              fontSize: 11,
+              fontWeight: "600",
+              color: "rgba(255,255,255,0.85)",
+            }}
+          >
+            {useFusion ? "S1 + S2 · ~90–120s" : "S2 only · ~30–60s"}
+          </Text>
         </LinearGradient>
       </TouchableOpacity>
     </View>
   );
 
   // ── Loading UI ──
-  const renderLoading = () => (
+  const renderLoading = () => {
+    const TOTAL_SECS = useFusion ? 120 : 60;
+    const progressPct = Math.min(elapsedSeconds / TOTAL_SECS, 1);
+
+    const phases = useFusion
+      ? [
+          { label: "Tải ảnh từ vệ tinh Copernicus", startSec: 0, endSec: 10 },
+          { label: "Chạy model Prithvi ViT (S1 Radar)", startSec: 10, endSec: 50 },
+          { label: "Chạy model Prithvi ViT (S2 Optical)", startSec: 50, endSec: 85 },
+          { label: "Fusion & lọc địa hình", startSec: 85, endSec: 105 },
+          { label: "Xuất GeoJSON & thumbnail", startSec: 105, endSec: 120 },
+        ]
+      : [
+          { label: "Tải ảnh từ vệ tinh Copernicus", startSec: 0, endSec: 8 },
+          { label: "Chạy model Prithvi ViT (S2 Optical)", startSec: 8, endSec: 40 },
+          { label: "Lọc địa hình & nước thường trú", startSec: 40, endSec: 52 },
+          { label: "Xuất GeoJSON & thumbnail", startSec: 52, endSec: 60 },
+        ];
+
+    const currentPhaseIdx = phases.findLastIndex(
+      (p) => elapsedSeconds >= p.startSec,
+    );
+    const currentPhase = phases[Math.max(currentPhaseIdx, 0)];
+
+    return (
     <MotiView
       from={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -1033,93 +1064,128 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
               lineHeight: 18,
             }}
           >
-            AI Prithvi đang phân tích ảnh Sentinel từ không gian.{"\n"}
-            Quá trình này có thể mất 60–120 giây.
+            {currentPhase.label}
           </Text>
         </View>
 
-        {/* Elapsed time */}
-        <View
-          style={{
-            backgroundColor: isDark ? "#1E293B" : "#F3E8FF",
-            borderRadius: 12,
-            paddingHorizontal: 16,
-            paddingVertical: 8,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
-          <Ionicons name="time-outline" size={14} color="#A855F7" />
-          <Text
+        {/* Progress bar */}
+        <View style={{ width: "100%", gap: 6 }}>
+          <View
             style={{
-              fontSize: 13,
-              fontWeight: "700",
-              color: isDark ? "#D8B4FE" : "#7C3AED",
+              width: "100%",
+              height: 6,
+              backgroundColor: isDark ? "#1E293B" : "#EDE9FE",
+              borderRadius: 3,
+              overflow: "hidden",
             }}
           >
-            {elapsedSeconds}s đã trôi qua
-          </Text>
+            <MotiView
+              animate={{ width: `${Math.round(progressPct * 100)}%` }}
+              transition={{ type: "timing", duration: 800 }}
+              style={{
+                height: "100%",
+                backgroundColor: "#A855F7",
+                borderRadius: 3,
+              }}
+            />
+          </View>
+          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              <Ionicons name="time-outline" size={11} color="#A855F7" />
+              <Text style={{ fontSize: 11, fontWeight: "700", color: isDark ? "#D8B4FE" : "#7C3AED" }}>
+                {elapsedSeconds}s
+              </Text>
+            </View>
+            <Text style={{ fontSize: 11, color: muted }}>
+              {Math.round(progressPct * 100)}% · ~{TOTAL_SECS}s tổng
+            </Text>
+          </View>
         </View>
 
         {/* Steps indicator */}
         <View style={{ gap: 8, width: "100%" }}>
-          {[
-            {
-              label: "Tải ảnh từ vệ tinh Copernicus",
-              done: elapsedSeconds >= 5,
-            },
-            { label: "Chạy mô hình Prithvi ViT", done: elapsedSeconds >= 30 },
-            {
-              label: "Lọc địa hình & nước thường trú",
-              done: elapsedSeconds >= 60,
-            },
-            { label: "Xuất GeoJSON & thumbnail", done: elapsedSeconds >= 80 },
-          ].map((step, i) => (
-            <View
-              key={i}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
+          {phases.map((phase, i) => {
+            const done = elapsedSeconds >= phase.endSec;
+            const active = !done && elapsedSeconds >= phase.startSec;
+            return (
               <View
+                key={i}
                 style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: 10,
-                  backgroundColor: step.done
-                    ? "#A855F7"
-                    : isDark
-                      ? "#334155"
-                      : "#E9D5FF",
+                  flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "center",
+                  gap: 10,
                 }}
               >
-                {step.done ? (
-                  <Ionicons name="checkmark" size={11} color="#FFFFFF" />
-                ) : (
-                  <ActivityIndicator size="small" color="#A855F7" />
-                )}
+                <View
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    backgroundColor: done
+                      ? "#A855F7"
+                      : active
+                        ? "rgba(168,85,247,0.2)"
+                        : isDark
+                          ? "#334155"
+                          : "#E9D5FF",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderWidth: active ? 1.5 : 0,
+                    borderColor: active ? "#A855F7" : "transparent",
+                  }}
+                >
+                  {done ? (
+                    <Ionicons name="checkmark" size={11} color="#FFFFFF" />
+                  ) : active ? (
+                    <ActivityIndicator size="small" color="#A855F7" />
+                  ) : null}
+                </View>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: done || active ? "700" : "400",
+                    color: done
+                      ? isDark ? "#D8B4FE" : "#7C3AED"
+                      : active
+                        ? isDark ? "#C4B5FD" : "#6D28D9"
+                        : muted,
+                    flex: 1,
+                  }}
+                >
+                  {phase.label}
+                </Text>
               </View>
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: step.done ? "700" : "500",
-                  color: step.done ? (isDark ? "#D8B4FE" : "#7C3AED") : muted,
-                  flex: 1,
-                }}
-              >
-                {step.label}
-              </Text>
-            </View>
-          ))}
+            );
+          })}
+        </View>
+
+        {/* Cache hint */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            backgroundColor: isDark ? "#1E293B" : "#F3E8FF",
+            borderRadius: 10,
+            paddingHorizontal: 12,
+            paddingVertical: 7,
+          }}
+        >
+          <Ionicons name="flash-outline" size={12} color="#A855F7" />
+          <Text style={{ fontSize: 11, color: isDark ? "#C4B5FD" : "#7C3AED" }}>
+            Kết quả được lưu cache 30 phút
+          </Text>
         </View>
       </View>
     </MotiView>
-  );
+    );
+  };
 
   // ── Error UI ──
   const renderError = () => (

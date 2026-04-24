@@ -10,7 +10,7 @@ import { AreaService } from "~/features/areas/services/area.service";
 import { useTranslation } from "~/features/i18n";
 import { useColorScheme } from "~/lib/useColorScheme";
 
-import { PredictionService } from "../services/prediction.service";
+import { usePredictionQuery } from "../hooks/queries/usePredictionQuery";
 import type { PredictionResponse } from "../types/prediction.types";
 import { getRiskConfigByLevel } from "../types/prediction.types";
 
@@ -274,45 +274,49 @@ function pickBestArea(
 
 type LoadState = "idle" | "location" | "area" | "prediction" | "done" | "error";
 
-interface LocalForecastData {
+interface AreaInfo {
   areaId: string;
   areaName: string;
   locationLabel: string;
+}
+
+interface LocalForecastData extends AreaInfo {
   prediction: PredictionResponse;
 }
 
 // ─────────────────────────────────────────────────────────────
-// Module-level cache — persists across tab switches (unlike useState which resets on unmount)
+// Module-level cache for the resolved admin area — keeps the GPS
+// permission + geocode + admin-area scoring pipeline from re-running
+// on every tab switch. Prediction data itself lives in React Query.
 // ─────────────────────────────────────────────────────────────
-let _cachedForecast: LocalForecastData | null = null;
-let _cacheTimestamp = 0;
-/** Minimum ms before allowing a background re-fetch (5 minutes) */
-const FORECAST_CACHE_TTL_MS = 5 * 60 * 1000;
+let _cachedAreaInfo: AreaInfo | null = null;
+let _areaCacheTimestamp = 0;
+/** Minimum ms before re-running the geocode pipeline (5 minutes) */
+const AREA_CACHE_TTL_MS = 5 * 60 * 1000;
 
 export function DistrictsForecastCard() {
   const { isDarkColorScheme } = useColorScheme();
   const router = useRouter();
   const { t } = useTranslation();
 
-  const [loadState, setLoadState] = useState<LoadState>(() => {
+  const [areaInfo, setAreaInfo] = useState<AreaInfo | null>(() => {
     if (
-      _cachedForecast &&
-      Date.now() - _cacheTimestamp < FORECAST_CACHE_TTL_MS
+      _cachedAreaInfo &&
+      Date.now() - _areaCacheTimestamp < AREA_CACHE_TTL_MS
     ) {
-      return "done";
-    }
-    return "idle";
-  });
-  const [data, setData] = useState<LocalForecastData | null>(() => {
-    if (
-      _cachedForecast &&
-      Date.now() - _cacheTimestamp < FORECAST_CACHE_TTL_MS
-    ) {
-      return _cachedForecast;
+      return _cachedAreaInfo;
     }
     return null;
   });
+  const [areaLoadState, setAreaLoadState] = useState<LoadState>(() =>
+    _cachedAreaInfo && Date.now() - _areaCacheTimestamp < AREA_CACHE_TTL_MS
+      ? "done"
+      : "idle",
+  );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const predictionQuery = usePredictionQuery(areaInfo?.areaId);
+  const isFetchingArea = useRef(false);
 
   const themeConfig = {
     cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
@@ -323,28 +327,29 @@ export function DistrictsForecastCard() {
     primary: "#6366F1",
   };
 
-  const fetchForecast = useCallback(async (forceRefresh = false) => {
+  const fetchAreaInfo = useCallback(async (forceRefresh = false) => {
+    if (isFetchingArea.current) return;
+    isFetchingArea.current = true;
     try {
-      // ── Cache-first: if cached data is fresh and not a forced refresh, use it ──
+      // ── Cache-first: if cached area is fresh, reuse it ──
       if (
         !forceRefresh &&
-        _cachedForecast &&
-        Date.now() - _cacheTimestamp < FORECAST_CACHE_TTL_MS
+        _cachedAreaInfo &&
+        Date.now() - _areaCacheTimestamp < AREA_CACHE_TTL_MS
       ) {
-        setData(_cachedForecast);
-        setLoadState("done");
+        setAreaInfo(_cachedAreaInfo);
+        setAreaLoadState("done");
         return;
       }
 
       setErrorMsg(null);
-      setData(null);
-
+      setAreaInfo(null);
       // ── Step 1: Request location permission & get coords ──
-      setLoadState("location");
+      setAreaLoadState("location");
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         setErrorMsg(t("home.forecast.needLocation"));
-        setLoadState("error");
+        setAreaLoadState("error");
         return;
       }
 
@@ -362,7 +367,7 @@ export function DistrictsForecastCard() {
       // ── Step 3: Find matching ADMINISTRATIVE AREA ──
       // IMPORTANT: PredictionService requires IDs from /api/v1/admin/administrative-areas
       // NOT from /api/v1/areas/me (user areas). These are completely different systems.
-      setLoadState("area");
+      setAreaLoadState("area");
       let areaId: string | null = null;
       let areaName: string = locationLabel;
 
@@ -444,48 +449,69 @@ export function DistrictsForecastCard() {
 
       if (!areaId) {
         setErrorMsg(t("home.forecast.noAreaFound"));
-        setLoadState("error");
+        setAreaLoadState("error");
         return;
       }
 
-      // ── Step 4: Fetch prediction ──
-      setLoadState("prediction");
-      const prediction = await PredictionService.getFloodRiskPrediction(areaId);
+      const newAreaInfo: AreaInfo = { areaId, areaName, locationLabel };
+      _cachedAreaInfo = newAreaInfo;
+      _areaCacheTimestamp = Date.now();
 
-      const newData: LocalForecastData = {
-        areaId,
-        areaName,
-        locationLabel,
-        prediction,
-      };
-
-      // Save to module-level cache so tab switches don't re-trigger the full pipeline
-      _cachedForecast = newData;
-      _cacheTimestamp = Date.now();
-
-      setData(newData);
-      setLoadState("done");
+      setAreaInfo(newAreaInfo);
+      setAreaLoadState("done");
     } catch (err: any) {
       console.error("❌ DistrictsForecastCard error:", err);
       setErrorMsg(err?.message || t("home.forecast.loadError"));
-      setLoadState("error");
+      setAreaLoadState("error");
+    } finally {
+      isFetchingArea.current = false;
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
-    fetchForecast();
-  }, [fetchForecast]);
+    if (areaLoadState === "idle") {
+      fetchAreaInfo();
+    }
+  }, [areaLoadState, fetchAreaInfo]);
 
-  // ── Loading state → Skeleton ──
-  const isLoading = loadState !== "done" && loadState !== "error";
+  const handleRefresh = useCallback(
+    (forceRefresh: boolean) => {
+      if (forceRefresh || !areaInfo) {
+        fetchAreaInfo(forceRefresh);
+      } else {
+        predictionQuery.refetch();
+      }
+    },
+    [areaInfo, fetchAreaInfo, predictionQuery],
+  );
+
+  // ── Loading / error derivation ──
+  const isAreaLoading =
+    areaLoadState !== "done" && areaLoadState !== "error";
+  const isLoading =
+    isAreaLoading ||
+    (!!areaInfo && predictionQuery.isLoading && !predictionQuery.data);
   if (isLoading) return <DistrictsForecastSkeleton />;
 
+  const predictionError = predictionQuery.error
+    ? (predictionQuery.error as Error).message || t("home.forecast.loadError")
+    : null;
+  const data: LocalForecastData | null =
+    areaInfo && predictionQuery.data
+      ? {
+          areaId: areaInfo.areaId,
+          areaName: areaInfo.areaName,
+          locationLabel: areaInfo.locationLabel,
+          prediction: predictionQuery.data,
+        }
+      : null;
+
   // ── Error state ──
-  if (loadState === "error" || !data) {
+  if (areaLoadState === "error" || predictionError || !data) {
     return (
       <View style={{ paddingHorizontal: 16, paddingBottom: 24 }}>
         <TouchableOpacity
-          onPress={() => fetchForecast()}
+          onPress={() => handleRefresh(true)}
           style={{
             backgroundColor: themeConfig.cardBg,
             borderRadius: 16,
@@ -594,7 +620,7 @@ export function DistrictsForecastCard() {
         </View>
 
         <TouchableOpacity
-          onPress={() => fetchForecast(true)}
+          onPress={() => handleRefresh(true)}
           activeOpacity={0.6}
           style={{
             flexDirection: "row",

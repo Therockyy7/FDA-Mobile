@@ -11,6 +11,8 @@ export interface AreaSatelliteState {
   startedAt?: string;
   /** Area name for display in the pill */
   areaName?: string;
+  /** Date.now() when a successful result was stored — used for client-side TTL cache */
+  cachedAt?: number;
 }
 
 interface SatelliteAnalysisStore {

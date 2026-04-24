@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -30,8 +30,7 @@ import {
 } from "~/features/prediction/components/PredictionHeroHeader";
 import { SatelliteVerificationCard } from "~/features/prediction/components/SatelliteVerificationCard";
 import { StationsCard } from "~/features/prediction/components/StationsCard";
-import { PredictionService } from "~/features/prediction/services/prediction.service";
-import { PredictionResponse } from "~/features/prediction/types/prediction.types";
+import { usePredictionQuery } from "~/features/prediction/hooks/queries/usePredictionQuery";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function PredictionScreen() {
@@ -42,10 +41,14 @@ export default function PredictionScreen() {
   const insets = useSafeAreaInsets();
   const { isDarkColorScheme } = useColorScheme();
 
-  const [prediction, setPrediction] = useState<PredictionResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const predictionQuery = usePredictionQuery(id);
+  const prediction = predictionQuery.data ?? null;
+  const loading = predictionQuery.isLoading;
+  const refreshing =
+    predictionQuery.isFetching && !predictionQuery.isLoading;
+  const error = predictionQuery.error
+    ? (predictionQuery.error as Error).message || "Không thể tải dự báo rủi ro."
+    : null;
 
   // ── Look up admin area geometry for satellite flood clipping ─────────────
   const adminAreasQuery = useAdminAreasQuery();
@@ -87,27 +90,6 @@ export default function PredictionScreen() {
     }, []),
   );
 
-  const loadPrediction = useCallback(async (areaId: string) => {
-    try {
-      setError(null);
-      const data = await PredictionService.getFloodRiskPrediction(areaId);
-      setPrediction(data);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Không thể tải dự báo rủi ro.");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (id) {
-      setLoading(true);
-      loadPrediction(id);
-    }
-  }, [id, loadPrediction]);
-
   // ── Auto-scroll to SatelliteVerificationCard when coming from pill ─────────
   useEffect(() => {
     if (
@@ -129,10 +111,9 @@ export default function PredictionScreen() {
 
   const onRefresh = useCallback(() => {
     if (id) {
-      setRefreshing(true);
-      loadPrediction(id);
+      predictionQuery.refetch();
     }
-  }, [id, loadPrediction]);
+  }, [id, predictionQuery]);
 
   const bgColor = isDarkColorScheme ? "#0B1A33" : "#F1F5F9";
 

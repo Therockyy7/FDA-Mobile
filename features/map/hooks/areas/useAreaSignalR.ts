@@ -97,18 +97,29 @@ export function useAreaSignalR(areaIds: string[]) {
           areaIds,
         );
 
-        areaIds.forEach((id) => {
-          conn
-            .invoke("SubscribeToArea", id)
-            .then(() =>
-              console.log(`✅ [AreaSignalR] SubscribeToArea OK: ${id}`),
-            )
-            .catch((err) =>
-              console.error(
-                `❌ [AreaSignalR] SubscribeToArea failed: ${id}`,
-                err,
-              ),
-            );
+        const subscribeAll = () => {
+          if (cleaned) return;
+          areaIds.forEach((id) => {
+            conn
+              .invoke("SubscribeToArea", id)
+              .then(() =>
+                console.log(`✅ [AreaSignalR] SubscribeToArea OK: ${id}`),
+              )
+              .catch((err) =>
+                console.error(
+                  `❌ [AreaSignalR] SubscribeToArea failed: ${id}`,
+                  err,
+                ),
+              );
+          });
+        };
+
+        subscribeAll();
+
+        // Re-subscribe after reconnect — server forgets per-client subscriptions on disconnect
+        conn.onreconnected(() => {
+          console.log("🔄 [AreaSignalR] Reconnected — re-subscribing to areas:", areaIds);
+          subscribeAll();
         });
       })
       .catch(() => {});

@@ -76,7 +76,7 @@ export function FloodHistoryChart({
       }
 
       return {
-        value: Math.round(value * 100) / 100,
+        value: Math.round(value * 100),
         label,
         dataPointColor: getSeverityColor(value),
         labelTextStyle: {
@@ -161,7 +161,7 @@ export function FloodHistoryChart({
                 color: SEVERITY_COLORS.critical,
               }}
             >
-              {Math.round(stats.max * 100)}cm
+              {Math.round(stats.max)}cm
             </Text>
           </View>
           <View style={{ alignItems: "center" }}>
@@ -169,7 +169,7 @@ export function FloodHistoryChart({
             <Text
               style={{ fontSize: 13, fontWeight: "700", color: colors.text }}
             >
-              {Math.round(stats.avg * 100)}cm
+              {Math.round(stats.avg)}cm
             </Text>
           </View>
         </View>
@@ -206,7 +206,7 @@ export function FloodHistoryChart({
           yAxisTextStyle={{ color: colors.subtext, fontSize: 10 }}
           xAxisLabelTextStyle={{ color: colors.subtext, fontSize: 9 }}
           noOfSections={4}
-          maxValue={Math.ceil(stats.max + 0.5)}
+          maxValue={Math.ceil((stats.max + 50) / 40) * 40}
           rulesType="solid"
           rulesColor={colors.grid}
           curved
@@ -217,8 +217,8 @@ export function FloodHistoryChart({
           startOpacity={0.25}
           endOpacity={0.02}
           areaChart
-          yAxisLabelSuffix="m"
-          yAxisLabelWidth={35}
+          yAxisLabelSuffix="cm"
+          yAxisLabelWidth={45}
           pointerConfig={{
             pointerStripHeight: height - 120,
             pointerStripColor: "#007AFF",
@@ -252,7 +252,7 @@ export function FloodHistoryChart({
                       color: colors.text,
                     }}
                   >
-                    {Math.round(items[0]?.value * 100)}cm
+                    {Math.round(items[0]?.value)}cm
                   </Text>
                 </View>
               );

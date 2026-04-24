@@ -235,6 +235,18 @@ export default function SignInScreen() {
                 <Controller
                   control={control}
                   name="identifier"
+                  rules={{
+                    required: t("auth.error.identifierRequired"),
+                    validate: (value) => {
+                      const trimmed = value?.trim();
+                      if (!trimmed) return t("auth.error.identifierRequired");
+                      const isPhone = /^[+]?\d[\d\s-]{7,14}$/.test(trimmed);
+                      if (isPhone) return true;
+                      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+                      if (!isEmail) return t("auth.error.emailInvalid");
+                      return true;
+                    },
+                  }}
                   render={({
                     field: { onChange, value },
                     fieldState: { error },

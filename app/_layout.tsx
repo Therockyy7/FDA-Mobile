@@ -101,27 +101,26 @@ function RootStack() {
     dispatch(initializeAuth());
   }, [dispatch]);
 
+  // Use refs to avoid re-running initFCM when callbacks change identity
+  const navigateRef = React.useRef(navigateToNotification);
+  const triggerRef = React.useRef(triggerNotification);
+  React.useEffect(() => {
+    navigateRef.current = navigateToNotification;
+  }, [navigateToNotification]);
+  React.useEffect(() => {
+    triggerRef.current = triggerNotification;
+  }, [triggerNotification]);
+
   useEffect(() => {
     return initFCM(
       (data) => {
-        navigateToNotification(data);
+        navigateRef.current(data);
       },
       (data) => {
-        console.log("🔥 [DEBUG] _layout -> foreground message:", data);
-
-        // if (Platform.OS === "android") {
-        //   ToastAndroid.show(
-        //     "Có thông báo mới (Foreground)!",
-        //     ToastAndroid.LONG,
-        //   );
-        // } else {
-        //   Alert.alert("Có thông báo mới (Foreground)!", data.title ?? "");
-        // }
-
-        triggerNotification(data);
+        triggerRef.current(data);
       },
     );
-  }, [navigateToNotification, triggerNotification]);
+  }, []);
 
   if (!isColorSchemeLoaded || authLoading) {
     return (

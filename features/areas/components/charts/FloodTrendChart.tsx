@@ -58,22 +58,6 @@ export function FloodTrendChart({
         value: Math.round(point.maxLevel * 100) / 100,
         label: showLabel ? `${dayNum}` : "",
         frontColor: SEVERITY_COLORS[point.peakSeverity] || SEVERITY_COLORS.safe,
-        topLabelComponent: () =>
-          point.floodHours > 0 ? (
-            <View
-              style={{
-                backgroundColor: "rgba(239, 68, 68, 0.9)",
-                borderRadius: 8,
-                paddingHorizontal: 4,
-                paddingVertical: 1,
-                marginBottom: 2,
-              }}
-            >
-              <Text style={{ fontSize: 8, color: "#FFF", fontWeight: "700" }}>
-                {point.floodHours}h
-              </Text>
-            </View>
-          ) : null,
         labelTextStyle: {
           color: colors.subtext,
           fontSize: 9,
@@ -113,10 +97,20 @@ export function FloodTrendChart({
     );
   }
 
-  // Comparison indicator
+  // Comparison indicator - show actual values for clarity
   const comparison = data.comparison;
   const avgChange = comparison?.avgLevelChange ?? 0;
   const floodHoursChange = comparison?.floodHoursChange ?? 0;
+
+  // Format change values for display
+  const formatChangeLabel = (value: number, suffix: string) => {
+    const absVal = Math.abs(value);
+    const sign = value > 0 ? "+" : value < 0 ? "-" : "";
+    if (absVal >= 1000) {
+      return `${sign}${(absVal / 100).toFixed(0)}x ${suffix}`;
+    }
+    return `${sign}${absVal.toFixed(0)}% ${suffix}`;
+  };
 
   return (
     <View
@@ -156,32 +150,29 @@ export function FloodTrendChart({
 
       {/* Comparison badges */}
       {comparison && (
-        <View style={{ flexDirection: "row", gap: 12, marginBottom: 16 }}>
+        <View style={{ flexDirection: "row", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
           <View
             style={{
               flexDirection: "row",
               alignItems: "center",
-              gap: 4,
-              backgroundColor:
-                avgChange > 0
-                  ? "#FEE2E2"
-                  : avgChange < 0
-                    ? "#D1FAE5"
-                    : colors.border,
+              gap: 5,
+              backgroundColor: isDark
+                ? avgChange > 0 ? "rgba(239,68,68,0.15)" : avgChange < 0 ? "rgba(16,185,129,0.15)" : "rgba(148,163,184,0.1)"
+                : avgChange > 0 ? "#FEE2E2" : avgChange < 0 ? "#D1FAE5" : colors.border,
               paddingHorizontal: 10,
-              paddingVertical: 5,
-              borderRadius: 8,
+              paddingVertical: 6,
+              borderRadius: 10,
             }}
           >
             <Ionicons
               name={
                 avgChange > 0
-                  ? "trending-up"
+                  ? "arrow-up-circle"
                   : avgChange < 0
-                    ? "trending-down"
-                    : "remove"
+                    ? "arrow-down-circle"
+                    : "remove-circle"
               }
-              size={14}
+              size={16}
               color={
                 avgChange > 0
                   ? colors.negative
@@ -192,8 +183,8 @@ export function FloodTrendChart({
             />
             <Text
               style={{
-                fontSize: 11,
-                fontWeight: "600",
+                fontSize: 12,
+                fontWeight: "700",
                 color:
                   avgChange > 0
                     ? colors.negative
@@ -202,8 +193,7 @@ export function FloodTrendChart({
                       : colors.subtext,
               }}
             >
-              {avgChange > 0 ? "+" : ""}
-              {avgChange.toFixed(0)}% {t("chart.trend.waterLevel")}
+              {formatChangeLabel(avgChange, t("chart.trend.waterLevel"))}
             </Text>
           </View>
 
@@ -211,21 +201,18 @@ export function FloodTrendChart({
             style={{
               flexDirection: "row",
               alignItems: "center",
-              gap: 4,
-              backgroundColor:
-                floodHoursChange > 0
-                  ? "#FEE2E2"
-                  : floodHoursChange < 0
-                    ? "#D1FAE5"
-                    : colors.border,
+              gap: 5,
+              backgroundColor: isDark
+                ? floodHoursChange > 0 ? "rgba(239,68,68,0.15)" : floodHoursChange < 0 ? "rgba(16,185,129,0.15)" : "rgba(148,163,184,0.1)"
+                : floodHoursChange > 0 ? "#FEE2E2" : floodHoursChange < 0 ? "#D1FAE5" : colors.border,
               paddingHorizontal: 10,
-              paddingVertical: 5,
-              borderRadius: 8,
+              paddingVertical: 6,
+              borderRadius: 10,
             }}
           >
             <Ionicons
               name="time-outline"
-              size={12}
+              size={14}
               color={
                 floodHoursChange > 0
                   ? colors.negative
@@ -236,8 +223,8 @@ export function FloodTrendChart({
             />
             <Text
               style={{
-                fontSize: 11,
-                fontWeight: "600",
+                fontSize: 12,
+                fontWeight: "700",
                 color:
                   floodHoursChange > 0
                     ? colors.negative
@@ -246,8 +233,7 @@ export function FloodTrendChart({
                       : colors.subtext,
               }}
             >
-              {floodHoursChange > 0 ? "+" : ""}
-              {floodHoursChange.toFixed(0)}% {t("chart.trend.floodHours")}
+              {formatChangeLabel(floodHoursChange, t("chart.trend.floodHours"))}
             </Text>
           </View>
         </View>
@@ -263,26 +249,26 @@ export function FloodTrendChart({
       >
         <BarChart
           data={chartData}
-          width={screenWidth - 100}
-          height={height - 160}
-          barWidth={Math.max(12, (screenWidth - 140) / chartData.length - 8)}
-          spacing={Math.max(4, (screenWidth - 140) / chartData.length / 4)}
+          width={screenWidth - 110}
+          height={height - 120}
+          barWidth={Math.max(14, (screenWidth - 150) / chartData.length - 8)}
+          spacing={Math.max(4, (screenWidth - 150) / chartData.length / 4)}
           initialSpacing={10}
           endSpacing={10}
-          noOfSections={4}
-          maxValue={Math.ceil(Math.max(...chartData.map((d) => d.value)) + 0.5)}
+          noOfSections={5}
+          maxValue={Math.ceil((Math.max(...chartData.map((d) => d.value)) * 1.25) / 10) * 10}
           xAxisColor={colors.grid}
           yAxisColor={colors.grid}
-          yAxisTextStyle={{ color: colors.subtext, fontSize: 10 }}
+          yAxisTextStyle={{ color: colors.subtext, fontSize: 9 }}
           xAxisLabelTextStyle={{ color: colors.subtext, fontSize: 9 }}
           rulesType="solid"
           rulesColor={colors.grid}
-          barBorderRadius={4}
+          barBorderRadius={5}
           showGradient
-          gradientColor="rgba(59, 130, 246, 0.2)"
+          gradientColor="rgba(59, 130, 246, 0.15)"
           frontColor="#007AFF"
-          yAxisLabelSuffix=" Cm"
-          yAxisLabelWidth={35}
+          yAxisLabelSuffix=" cm"
+          yAxisLabelWidth={50}
           renderTooltip={(item: { value: number }, index: number) => {
             const point =
               data.dataPoints[

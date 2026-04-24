@@ -1,5 +1,4 @@
 // features/home/hooks/useHomeWeatherData.ts
-import * as Location from "expo-location";
 import { useCallback, useEffect, useState } from "react";
 import { AreaService } from "~/features/areas/services/area.service";
 import { WeatherService } from "../services/weather.service";
@@ -66,8 +65,6 @@ function getEmptyForecast(): RainfallForecastItem[] {
   });
 }
 
-
-
 /* ────────── hook ────────── */
 
 let _cachedHomeWeather: HomeWeatherState | null = null;
@@ -133,28 +130,28 @@ export function useHomeWeatherData() {
       let rainfallForecast: RainfallForecastItem[] = getEmptyForecast();
       let aiRisk: AiRiskSummary | null = null;
 
-      if (userArea) {
-        const { latitude, longitude } = userArea;
+      // if (userArea) {
+      //   const { latitude, longitude } = userArea;
 
-        // Tầng 2: getFloodHistory và reverseGeocodeAsync đều cần userArea nhưng độc lập nhau — song song
-        const [historyResult, geoResult] = await Promise.allSettled([
-          AreaService.getFloodHistory({
-            areaId: userArea.id,
-            granularity: "hourly",
-            limit: 6,
-          }),
-          Location.reverseGeocodeAsync({ latitude, longitude }),
-        ]);
+        // // Tầng 2: getFloodHistory và reverseGeocodeAsync đều cần userArea nhưng độc lập nhau — song song
+        // const [historyResult, geoResult] = await Promise.allSettled([
+        //   AreaService.getFloodHistory({
+        //     areaId: userArea.id,
+        //     granularity: "hourly",
+        //     limit: 6,
+        //   }),
+        //   Location.reverseGeocodeAsync({ latitude, longitude }),
+        // ]);
 
-        if (historyResult.status === "fulfilled") {
-          rainfallForecast = deriveRainfallForecast(historyResult.value);
-        } else {
-          console.warn("⚠️ Could not fetch flood history for rainfall");
-        }
+        // if (historyResult.status === "fulfilled") {
+        //   rainfallForecast = deriveRainfallForecast(historyResult.value);
+        // } else {
+        //   console.warn("⚠️ Could not fetch flood history for rainfall");
+        // }
 
         // Note: AI prediction is handled by DistrictsForecastCard independently
         // to avoid duplicate API calls with potentially different area matches
-      }
+      // }
 
       const newState = {
         meteo,

@@ -1,7 +1,7 @@
 // features/map/hooks/flood/useFloodData.ts
 // Merges REST flood data (React Query) with SignalR real-time updates (Zustand)
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useFloodRealtimeStore } from "../../stores/useFloodRealtimeStore";
 import type {
   FloodSeverityFeature,
@@ -10,20 +10,14 @@ import type {
   FloodZoneFeature,
   SensorUpdateData,
 } from "../../types/map-layers.types";
-import { SEVERITY_COLORS } from "../../types/map-layers.types";
 import { useFloodSeverityQuery } from "../queries/useFloodSeverityQuery";
-
-// Map sensor severity → floodZone fillColor (same palette as SEVERITY_COLORS)
-const FLOOD_ZONE_SEVERITY_COLORS: Record<string, string> = {
-  warning: SEVERITY_COLORS.warning, // "#F97316"
-  critical: SEVERITY_COLORS.critical, // "#EF4444"
-};
 
 /**
  * Merges real-time Zustand updates into the GeoJSON REST response.
- * - Existing stations are updated in-place (realtime wins over REST).
- * - New stations (not in REST result) are appended.
- * This is a pure function extracted from the old Redux applyRealtimeUpdate reducer.
+ * - Point features: updated in-place (realtime wins over REST).
+ * - Polygon features: upserted from floodZone payload (geometry + properties replaced),
+ *   or removed when floodZone is null (station back to safe/caution).
+ * - New stations/polygons not in REST data are appended.
  */
 function mergeRealtimeIntoGeoJSON(
   base: FloodSeverityGeoJSON | null | undefined,
@@ -32,70 +26,114 @@ function mergeRealtimeIntoGeoJSON(
   if (!base) return null;
   if (Object.keys(updates).length === 0) return base;
 
-  const updatedFeatures = base.features.map((feature) => {
-    // Update FloodZone polygon color when its station's severity changes
-    if (feature.geometry.type === "Polygon") {
-      const zone = feature as FloodZoneFeature;
-      const update = updates[zone.properties.stationId];
-      if (!update) return feature;
+  // stationIds whose polygon should be removed (floodZone === null)
+  const removePolygonIds = new Set(
+    Object.values(updates)
+      .filter((u) => u.floodZone === null)
+      .map((u) => u.stationId),
+  );
 
-      // If severity dropped below warning, remove the polygon immediately
-      // instead of waiting for the next REST fetch.
-      if (update.severity === "safe" || update.severity === "caution") {
-        return null;
+  // stationId → FloodZonePayload for upsert (floodZone !== null)
+  const upsertPolygons = new Map(
+    Object.values(updates)
+      .filter((u) => u.floodZone !== null)
+      .map((u) => [u.stationId, u.floodZone!]),
+  );
+
+  const existingPolygonIds = new Set(
+    base.features
+      .filter((f): f is FloodZoneFeature => f.geometry.type === "Polygon")
+      .map((f) => f.properties.stationId),
+  );
+
+  // Process existing features
+  const updatedFeatures = base.features
+    .map((feature) => {
+      if (feature.geometry.type === "Polygon") {
+        const zone = feature as FloodZoneFeature;
+        const stationId = zone.properties.stationId;
+
+        if (removePolygonIds.has(stationId)) return null;
+
+        const upsert = upsertPolygons.get(stationId);
+        if (upsert) {
+          return {
+            type: "Feature",
+            geometry: upsert.geometry,
+            properties: {
+              featureType: "floodZone" as const,
+              stationId: upsert.stationId,
+              stationCode: upsert.stationCode,
+              stationName: upsert.stationName,
+              severity: upsert.severity,
+              severityLevel: upsert.severityLevel,
+              waterLevel: upsert.waterLevel,
+              fillColor: upsert.fillColor,
+              fillOpacity: upsert.fillOpacity,
+            },
+          } as FloodZoneFeature;
+        }
+
+        return feature;
       }
 
-      const newFillColor =
-        FLOOD_ZONE_SEVERITY_COLORS[update.severity] ??
-        zone.properties.fillColor;
+      const f = feature as FloodSeverityFeature;
+      const update = updates[f.properties.stationId];
+      if (!update) return feature;
 
       return {
-        ...zone,
-        properties: {
-          ...zone.properties,
-          severity:
-            update.severity as FloodZoneFeature["properties"]["severity"],
-          severityLevel: update.severityLevel,
-          waterLevel: update.waterLevel,
-          fillColor: newFillColor,
+        ...f,
+        geometry: {
+          ...f.geometry,
+          coordinates: [update.longitude, update.latitude] as [number, number],
         },
-      } as FloodZoneFeature;
+        properties: {
+          ...f.properties,
+          waterLevel: update.waterLevel,
+          distance: update.distance,
+          sensorHeight: update.sensorHeight,
+          unit: update.unit,
+          severity: update.severity,
+          severityLevel: update.severityLevel,
+          markerColor: update.markerColor,
+          alertLevel: update.alertLevel,
+          measuredAt: update.measuredAt,
+          stationStatus: update.stationStatus,
+        },
+      } as FloodSeverityFeature;
+    })
+    .filter((f) => f !== null);
+
+  // Append new polygons for stations not yet in REST data
+  const newPolygons: FloodZoneFeature[] = [];
+  upsertPolygons.forEach((upsert, stationId) => {
+    if (!existingPolygonIds.has(stationId)) {
+      newPolygons.push({
+        type: "Feature",
+        geometry: upsert.geometry,
+        properties: {
+          featureType: "floodZone" as const,
+          stationId: upsert.stationId,
+          stationCode: upsert.stationCode,
+          stationName: upsert.stationName,
+          severity: upsert.severity,
+          severityLevel: upsert.severityLevel,
+          waterLevel: upsert.waterLevel,
+          fillColor: upsert.fillColor,
+          fillOpacity: upsert.fillOpacity,
+        },
+      });
     }
-
-    const f = feature as FloodSeverityFeature;
-    const update = updates[f.properties.stationId];
-    if (!update) return feature;
-
-    return {
-      ...f,
-      geometry: {
-        ...f.geometry,
-        coordinates: [update.longitude, update.latitude] as [number, number],
-      },
-      properties: {
-        ...f.properties,
-        waterLevel: update.waterLevel,
-        distance: update.distance,
-        sensorHeight: update.sensorHeight,
-        unit: update.unit,
-        severity: update.severity,
-        severityLevel: update.severityLevel,
-        markerColor: update.markerColor,
-        alertLevel: update.alertLevel,
-        measuredAt: update.measuredAt,
-        stationStatus: update.stationStatus,
-      },
-    } as FloodSeverityFeature;
   });
 
-  // Append new stations not present in REST data
-  const knownIds = new Set(
+  // Append new station Point features not present in REST data
+  const knownStationIds = new Set(
     base.features
       .filter((f): f is FloodSeverityFeature => f.geometry.type === "Point")
       .map((f) => f.properties.stationId),
   );
-  const newFeatures: FloodSeverityFeature[] = Object.values(updates)
-    .filter((u) => !knownIds.has(u.stationId))
+  const newStations: FloodSeverityFeature[] = Object.values(updates)
+    .filter((u) => !knownStationIds.has(u.stationId))
     .map((update) => ({
       type: "Feature",
       geometry: {
@@ -124,10 +162,10 @@ function mergeRealtimeIntoGeoJSON(
 
   return {
     ...base,
-    features: [...updatedFeatures.filter((f) => f !== null), ...newFeatures],
+    features: [...updatedFeatures, ...newPolygons, ...newStations],
     metadata: {
       ...base.metadata,
-      totalStations: base.metadata.totalStations + newFeatures.length,
+      totalStations: base.metadata.totalStations + newStations.length,
     },
   };
 }
@@ -145,28 +183,6 @@ export function useFloodData(
     fetchStatus,
   } = useFloodSeverityQuery(params ?? null, enabled);
   const realtimeUpdates = useFloodRealtimeStore((s) => s.updates);
-
-  // Khi station lên warning/critical qua realtime nhưng chưa có Polygon trong REST cache
-  // → trigger refetch để server trả về polygon geometry mới
-  useEffect(() => {
-    if (!restData || Object.keys(realtimeUpdates).length === 0) return;
-
-    const knownPolygonIds = new Set(
-      restData.features
-        .filter((f): f is FloodZoneFeature => f.geometry.type === "Polygon")
-        .map((f) => f.properties.stationId),
-    );
-
-    const hasNewFloodZone = Object.values(realtimeUpdates).some(
-      (u) =>
-        (u.severity === "warning" || u.severity === "critical") &&
-        !knownPolygonIds.has(u.stationId),
-    );
-
-    if (hasNewFloodZone) {
-      refetch();
-    }
-  }, [realtimeUpdates, restData, refetch]);
 
   const floodSeverity = useMemo(
     () => mergeRealtimeIntoGeoJSON(restData, realtimeUpdates),

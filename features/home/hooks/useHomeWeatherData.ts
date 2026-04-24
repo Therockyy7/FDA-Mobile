@@ -2,12 +2,9 @@
 import { useCallback, useEffect, useState } from "react";
 import * as Location from "expo-location";
 import { AreaService } from "~/features/areas/services/area.service";
-import { PredictionService } from "~/features/prediction/services/prediction.service";
-import type { PredictionResponse } from "~/features/prediction/types/prediction.types";
 import { WeatherService } from "../services/weather.service";
 import type { AiRiskSummary, RainfallForecastItem } from "../types/home-types";
 import type { OpenMeteoResponse } from "../types/open-meteo.types";
-import type { Area } from "~/features/map/types/map-layers.types";
 
 export interface HomeWeatherState {
   meteo: OpenMeteoResponse | null;
@@ -69,71 +66,7 @@ function getEmptyForecast(): RainfallForecastItem[] {
   });
 }
 
-/** Convert PredictionResponse to AiRiskSummary */
-function predictionToRiskSummary(pred: PredictionResponse): AiRiskSummary {
-  const ai = pred.forecast?.aiPrediction;
-  const prob = Math.round((ai?.ensembleProbability ?? 0) * 100);
 
-  let riskLevel: AiRiskSummary["riskLevel"] = "low";
-  let riskLabelVn = "Rủi ro thấp";
-
-  const apiLevel = ai?.riskLevel?.toLowerCase() || "";
-  if (
-    apiLevel.includes("critical") ||
-    apiLevel.includes("very high") ||
-    apiLevel.includes("rất cao") ||
-    apiLevel.includes("nguy hiểm")
-  ) {
-    riskLevel = "critical";
-    riskLabelVn = "Cực kỳ nguy hiểm";
-  } else if (apiLevel.includes("high") || apiLevel.includes("cao")) {
-    riskLevel = "high";
-    riskLabelVn = "Rủi ro cao";
-  } else if (
-    apiLevel.includes("medium") ||
-    apiLevel.includes("moderate") ||
-    apiLevel.includes("trung bình")
-  ) {
-    riskLevel = "medium";
-    riskLabelVn = "Rủi ro trung bình";
-  } else {
-    riskLevel = "low";
-    riskLabelVn = "Rủi ro thấp";
-  }
-
-  // Dominant factor from AI components
-  let dominantFactor = "water_level";
-  let dominantFactorVn = "Mực nước";
-
-  if (ai?.components) {
-    const { weather, saturation, terrain } = ai.components;
-    const scores = [
-      { name: "rainfall", val: weather?.contribution ?? 0, label: "Lượng mưa" },
-      { name: "saturation", val: saturation?.saturation_level ?? 0, label: "Độ bão hòa" },
-      { name: "terrain", val: terrain?.drainage_risk ?? 0, label: "Địa hình" },
-    ];
-    scores.sort((a, b) => b.val - a.val);
-    dominantFactor = scores[0].name;
-    dominantFactorVn = scores[0].label;
-  }
-
-  const now = new Date();
-
-  return {
-    riskLevel,
-    riskLabelVn,
-    probability: prob,
-    dominantFactor,
-    dominantFactorVn,
-    recommendation:
-      ai?.impact?.recommendation ||
-      pred.summary ||
-      "Theo dõi các bản tin cập nhật để nắm bắt tình hình.",
-    areaId: pred.administrativeAreaId,
-    areaName: pred.administrativeArea?.name || "Khu vực của bạn",
-    updatedAt: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
-  };
-}
 
 /* ────────── hook ────────── */
 
@@ -209,54 +142,8 @@ export function useHomeWeatherData() {
           console.warn("⚠️ Could not fetch flood history for rainfall");
         }
 
-        // Tầng 3: Gom tất cả từ khóa tìm kiếm (geo + fallback, loại trùng) rồi bắn song song
-        let geoCandidates: string[] = [];
-        if (geoResult.status === "fulfilled" && geoResult.value.length > 0) {
-          const geo = geoResult.value[0];
-          geoCandidates = [
-            geo.district, // Often maps to ward level in expo-location VN
-            geo.name,
-            geo.city,
-            geo.subregion,
-          ].filter(Boolean) as string[];
-        } else {
-          console.warn("⚠️ Reverse geocoding failed for prediction mapping");
-        }
-
-        const seen = new Set(geoCandidates);
-        const fallbackTerms = [userArea.addressText, userArea.name]
-          .filter(Boolean)
-          .filter((t) => !seen.has(t)) as string[];
-        const allCandidates = [...geoCandidates, ...fallbackTerms];
-
-        let adminAreaId: string | null = null;
-        if (allCandidates.length > 0) {
-          const adminResults = await Promise.allSettled(
-            allCandidates.map((term) =>
-              AreaService.getAdminAreas({ searchTerm: term, pageSize: 5 })
-            )
-          );
-
-          // Duyệt theo thứ tự ưu tiên gốc: geo candidates trước, fallback sau
-          for (const result of adminResults) {
-            if (
-              result.status === "fulfilled" &&
-              result.value.administrativeAreas.length > 0
-            ) {
-              adminAreaId = result.value.administrativeAreas[0].id;
-              break;
-            }
-          }
-        }
-
-        // Tầng 4: Phải chờ adminAreaId — tuần tự
-        try {
-          const targetPredictionId = adminAreaId || userArea.id;
-          const prediction = await PredictionService.getFloodRiskPrediction(targetPredictionId);
-          aiRisk = predictionToRiskSummary(prediction);
-        } catch (err) {
-          console.warn("⚠️ Could not fetch AI prediction:", err);
-        }
+        // Note: AI prediction is handled by DistrictsForecastCard independently
+        // to avoid duplicate API calls with potentially different area matches
       }
 
       const newState = {

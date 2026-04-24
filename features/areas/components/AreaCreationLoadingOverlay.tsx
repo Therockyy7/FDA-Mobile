@@ -21,7 +21,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { LoadingDot } from "./LoadingDot";
+// import { LoadingDot } from "./LoadingDot";
 import { useTranslation } from "~/features/i18n";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";

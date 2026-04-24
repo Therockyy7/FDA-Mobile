@@ -225,6 +225,23 @@ export interface CreateAreaResponse {
 
 // ==================== SIGNALR TYPES ====================
 
+/** FloodZone polygon payload embedded in SensorUpdateData */
+export interface FloodZonePayload {
+  featureType: "floodZone";
+  stationId: string;
+  stationCode: string;
+  stationName: string;
+  severity: "warning" | "critical";
+  severityLevel: 2 | 3;
+  waterLevel: number;
+  fillColor: string;
+  fillOpacity: number;
+  geometry: {
+    type: "Polygon";
+    coordinates: [number, number][][];
+  };
+}
+
 /** Data payload from SignalR sensor update events */
 export interface SensorUpdateData {
   stationId: string;
@@ -242,6 +259,7 @@ export interface SensorUpdateData {
   markerColor: string;
   alertLevel: "SAFE" | "CAUTION" | "WARNING" | "CRITICAL";
   measuredAt: string;
+  floodZone: FloodZonePayload | null;
 }
 
 /** Wrapper payload from SignalR ReceiveSensorUpdate / ReceiveStationUpdate */

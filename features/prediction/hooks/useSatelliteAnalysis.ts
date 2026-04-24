@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { SatelliteService } from "../services/satellite.service";
 import type { SatelliteAnalysisResponse } from "../types/satellite.types";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
@@ -22,6 +22,8 @@ const PLATFORM_COLORS: Record<string, string> = {
   "Sentinel-2": "#0EA5E9", // sky    — optical
   fusion:       "#10B981", // emerald — combined
 };
+
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 export function useSatelliteAnalysis(areaId: string): UseSatelliteAnalysisReturn {
   const {
@@ -61,6 +63,16 @@ export function useSatelliteAnalysis(areaId: string): UseSatelliteAnalysisReturn
       captureMode?: "square" | "polygon" | "circle",
       includePermanentWater = false,
     ) => {
+      // Guard: return cached result if still fresh (within TTL)
+      const cached = results[areaId];
+      if (
+        cached?.state === "success" &&
+        cached.cachedAt &&
+        Date.now() - cached.cachedAt < CACHE_TTL_MS
+      ) {
+        return;
+      }
+
       const now = new Date().toISOString();
 
       setResult(areaId, {
@@ -85,7 +97,7 @@ export function useSatelliteAnalysis(areaId: string): UseSatelliteAnalysisReturn
           include_permanent_water: includePermanentWater,
         });
 
-        setResult(areaId, { data: result, state: "success" });
+        setResult(areaId, { data: result, state: "success", cachedAt: Date.now() });
 
         // ── Push flood polygons into the global map store ──────────────────
         const layers = result.individual_results
@@ -115,7 +127,7 @@ export function useSatelliteAnalysis(areaId: string): UseSatelliteAnalysisReturn
         stopTicker();
       }
     },
-    [areaId, setResult, clearFloodStore, setLayers, setActiveLoadingAreaId, startTicker, stopTicker],
+    [areaId, results, setResult, clearFloodStore, setLayers, setActiveLoadingAreaId, startTicker, stopTicker],
   );
 
   return { data, state, error, elapsedSeconds, runAnalysis, reset };

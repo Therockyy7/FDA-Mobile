@@ -1,6 +1,6 @@
 // features/home/hooks/useHomeWeatherData.ts
-import { useCallback, useEffect, useState } from "react";
 import * as Location from "expo-location";
+import { useCallback, useEffect, useState } from "react";
 import { AreaService } from "~/features/areas/services/area.service";
 import { WeatherService } from "../services/weather.service";
 import type { AiRiskSummary, RainfallForecastItem } from "../types/home-types";
@@ -76,7 +76,10 @@ const HOME_WEATHER_CACHE_TTL_MS = 5 * 60 * 1000;
 
 export function useHomeWeatherData() {
   const [state, setState] = useState<HomeWeatherState>(() => {
-    if (_cachedHomeWeather && Date.now() - _homeWeatherTimestamp < HOME_WEATHER_CACHE_TTL_MS) {
+    if (
+      _cachedHomeWeather &&
+      Date.now() - _homeWeatherTimestamp < HOME_WEATHER_CACHE_TTL_MS
+    ) {
       return _cachedHomeWeather;
     }
     return {
@@ -89,7 +92,11 @@ export function useHomeWeatherData() {
   });
 
   const fetchData = useCallback(async (forceRefresh = false) => {
-    if (!forceRefresh && _cachedHomeWeather && Date.now() - _homeWeatherTimestamp < HOME_WEATHER_CACHE_TTL_MS) {
+    if (
+      !forceRefresh &&
+      _cachedHomeWeather &&
+      Date.now() - _homeWeatherTimestamp < HOME_WEATHER_CACHE_TTL_MS
+    ) {
       setState(_cachedHomeWeather);
       return;
     }
@@ -115,7 +122,10 @@ export function useHomeWeatherData() {
       let meteo: OpenMeteoResponse | null = null;
       if (meteoResult.status === "fulfilled") {
         meteo = meteoResult.value;
-        console.log("🌦 Open-Meteo data loaded:", meteo.current.temperature_2m + "°C");
+        console.log(
+          "🌦 Open-Meteo data loaded:",
+          meteo.current.temperature_2m + "°C",
+        );
       } else {
         console.warn("⚠️ Could not fetch Open-Meteo weather");
       }

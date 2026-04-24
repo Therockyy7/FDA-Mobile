@@ -1,5 +1,5 @@
 // features/map/hooks/queries/useCommunityReportsQuery.ts
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
   CommunityService,
   type NearbyFloodReport,
@@ -24,5 +24,6 @@ export function useCommunityReportsQuery(
     networkMode: "offlineFirst",
     refetchInterval: 120_000,   // Background refresh every 2 min (was 60s — halved to reduce load)
     refetchOnWindowFocus: false, // Don't refetch on app focus — prevents burst on tab switch
+    placeholderData: keepPreviousData, // Keep previous markers visible while fetching for new viewport
   });
 }

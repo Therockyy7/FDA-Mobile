@@ -3,7 +3,7 @@
 // Reduces prop-drilling across MapScreen → child components.
 
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   NearbyFloodReport,
   NearbyFloodReportsParams,
@@ -270,6 +270,20 @@ export function useMapScreenState(): MapScreenState {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gridLat, gridLng, gridZoom]); // only update when grid cell or zoom tier changes
 
+  // Debounce community params 500ms so rapid zoom gestures don't trigger an API call per frame.
+  // keepPreviousData in the query keeps old markers visible during the wait.
+  const [debouncedCommunityParams, setDebouncedCommunityParams] = useState(communityParams);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedCommunityParams(communityParams);
+    }, 500);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [communityParams]);
+
   // Data hooks — pass dynamic params so community markers load for current viewport
   const {
     settings,
@@ -281,7 +295,7 @@ export function useMapScreenState(): MapScreenState {
     refreshAreas,
     refreshNearbyFloodReports,
     refreshCommunityReports,
-  } = useMapData(communityParams);
+  } = useMapData(debouncedCommunityParams);
 
   // Safe route
   const safeRoute = useSafeRoute();

@@ -26,6 +26,8 @@ interface Props {
   areaName?: string;
   /** EWKB hex geometry of the admin area — used to clip satellite flood polygons */
   areaGeometry?: string | null;
+  /** Called after satellite analysis succeeds — used to trigger prediction refetch */
+  onSatelliteSuccess?: () => void;
 }
 
 // ─── Helper: format acquisition date ─────────────────────────────────────────
@@ -704,7 +706,7 @@ function PlatformResultCard({
 }
 
 // ─── Main exported component ──────────────────────────────────────────────────
-export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Props) {
+export function SatelliteVerificationCard({ areaId, areaName, areaGeometry, onSatelliteSuccess }: Props) {
   const { isDarkColorScheme: isDark } = useColorScheme();
   const router = useRouter();
   const { data, state, error, elapsedSeconds, runAnalysis, reset } =
@@ -726,7 +728,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry }: Pr
   const isError = state === "error";
 
   const handleRun = () => {
-    runAnalysis(useBbox, useFusion);
+    runAnalysis(useBbox, useFusion, onSatelliteSuccess);
   };
 
   // ── Idle / Config UI ──

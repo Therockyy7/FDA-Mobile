@@ -1,8 +1,8 @@
 import { useCallback } from "react";
-import { SatelliteService } from "../services/satellite.service";
-import type { SatelliteAnalysisResponse } from "../types/satellite.types";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
+import { SatelliteService } from "../services/satellite.service";
 import { useSatelliteAnalysisStore } from "../stores/useSatelliteAnalysisStore";
+import type { SatelliteAnalysisResponse } from "../types/satellite.types";
 
 export type SatelliteAnalysisState = "idle" | "loading" | "success" | "error";
 
@@ -12,7 +12,11 @@ export interface UseSatelliteAnalysisReturn {
   error: string | null;
   /** Elapsed seconds since analysis started */
   elapsedSeconds: number;
-  runAnalysis: (useBbox?: boolean, useFusion?: boolean) => Promise<void>;
+  runAnalysis: (
+    useBbox?: boolean,
+    useFusion?: boolean,
+    onSuccess?: () => void,
+  ) => Promise<void>;
   reset: () => void;
 }
 
@@ -20,12 +24,14 @@ export interface UseSatelliteAnalysisReturn {
 const PLATFORM_COLORS: Record<string, string> = {
   "Sentinel-1": "#8B5CF6", // violet — SAR radar
   "Sentinel-2": "#0EA5E9", // sky    — optical
-  fusion:       "#10B981", // emerald — combined
+  fusion: "#10B981", // emerald — combined
 };
 
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
-export function useSatelliteAnalysis(areaId: string): UseSatelliteAnalysisReturn {
+export function useSatelliteAnalysis(
+  areaId: string,
+): UseSatelliteAnalysisReturn {
   const {
     results,
     setResult,
@@ -54,14 +60,19 @@ export function useSatelliteAnalysis(areaId: string): UseSatelliteAnalysisReturn
     clearFloodStore();
     setActiveLoadingAreaId(null);
     stopTicker();
-  }, [areaId, clearResult, clearFloodStore, setActiveLoadingAreaId, stopTicker]);
+  }, [
+    areaId,
+    clearResult,
+    clearFloodStore,
+    setActiveLoadingAreaId,
+    stopTicker,
+  ]);
 
   const runAnalysis = useCallback(
     async (
       useBbox = true,
       useFusion = true,
-      captureMode?: "square" | "polygon" | "circle",
-      includePermanentWater = false,
+      onSuccess?: () => void,
     ) => {
       // Guard: return cached result if still fresh (within TTL)
       const cached = results[areaId];
@@ -93,11 +104,16 @@ export function useSatelliteAnalysis(areaId: string): UseSatelliteAnalysisReturn
           area_id: areaId,
           use_bbox: useBbox,
           use_fusion: useFusion,
-          capture_mode: captureMode,
-          include_permanent_water: includePermanentWater,
+          capture_mode: undefined,
+          include_permanent_water: false,
         });
 
-        setResult(areaId, { data: result, state: "success", cachedAt: Date.now() });
+        setResult(areaId, {
+          data: result,
+          state: "success",
+          cachedAt: Date.now(),
+        });
+        onSuccess?.();
 
         // ── Push flood polygons into the global map store ──────────────────
         const layers = result.individual_results
@@ -127,7 +143,16 @@ export function useSatelliteAnalysis(areaId: string): UseSatelliteAnalysisReturn
         stopTicker();
       }
     },
-    [areaId, results, setResult, clearFloodStore, setLayers, setActiveLoadingAreaId, startTicker, stopTicker],
+    [
+      areaId,
+      results,
+      setResult,
+      clearFloodStore,
+      setLayers,
+      setActiveLoadingAreaId,
+      startTicker,
+      stopTicker,
+    ],
   );
 
   return { data, state, error, elapsedSeconds, runAnalysis, reset };

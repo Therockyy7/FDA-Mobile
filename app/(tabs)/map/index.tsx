@@ -450,6 +450,7 @@ export default function MapScreen() {
               onClearAdminArea={() => {
                 s.setSelectedAdminArea(null);
                 s.setShowAdminAreaConfirmModal(false);
+                useSatelliteFloodStore.getState().clear();
               }}
             />
           )}

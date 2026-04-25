@@ -249,6 +249,7 @@ export default function PredictionScreen() {
                   areaId={prediction.administrativeAreaId}
                   areaName={prediction.administrativeArea?.name}
                   areaGeometry={areaGeometry}
+                  onSatelliteSuccess={handleForceRefresh}
                 />
               </View>
 

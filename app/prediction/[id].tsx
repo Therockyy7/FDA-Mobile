@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -30,7 +31,7 @@ import {
 } from "~/features/prediction/components/PredictionHeroHeader";
 import { SatelliteVerificationCard } from "~/features/prediction/components/SatelliteVerificationCard";
 import { StationsCard } from "~/features/prediction/components/StationsCard";
-import { usePredictionQuery } from "~/features/prediction/hooks/queries/usePredictionQuery";
+import { usePredictionQuery, predictionQueryKey } from "~/features/prediction/hooks/queries/usePredictionQuery";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function PredictionScreen() {
@@ -40,6 +41,7 @@ export default function PredictionScreen() {
   }>();
   const insets = useSafeAreaInsets();
   const { isDarkColorScheme } = useColorScheme();
+  const queryClient = useQueryClient();
 
   const predictionQuery = usePredictionQuery(id);
   const prediction = predictionQuery.data ?? null;
@@ -114,6 +116,12 @@ export default function PredictionScreen() {
       predictionQuery.refetch();
     }
   }, [id, predictionQuery]);
+
+  const handleForceRefresh = useCallback(() => {
+    if (!id) return;
+    queryClient.invalidateQueries({ queryKey: predictionQueryKey(id) });
+    predictionQuery.refetch();
+  }, [id, queryClient, predictionQuery]);
 
   const bgColor = isDarkColorScheme ? "#0B1A33" : "#F1F5F9";
 
@@ -282,7 +290,7 @@ export default function PredictionScreen() {
 
         {/* Absolute header — sits on top of ScrollView */}
         {prediction && (
-          <PredictionHeroHeader prediction={prediction} scrollY={scrollY} />
+          <PredictionHeroHeader prediction={prediction} scrollY={scrollY} onRefresh={handleForceRefresh} />
         )}
 
         {/* ── Loading overlay — full-screen centered, above everything ── */}

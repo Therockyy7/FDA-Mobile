@@ -62,9 +62,11 @@ interface Props {
   prediction: PredictionResponse;
   /** Reanimated SharedValue driven by useAnimatedScrollHandler */
   scrollY?: SharedValue<number>;
+  /** Force-refetch callback — bypasses React Query cache */
+  onRefresh?: () => void;
 }
 
-export function PredictionHeroHeader({ prediction, scrollY }: Props) {
+export function PredictionHeroHeader({ prediction, scrollY, onRefresh }: Props) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isDarkColorScheme } = useColorScheme();
@@ -260,7 +262,8 @@ export function PredictionHeroHeader({ prediction, scrollY }: Props) {
           <Animated.View
             style={[
               {
-                flex: 1,
+                flexShrink: 1,
+                flexGrow: 1,
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "flex-end",
@@ -296,6 +299,28 @@ export function PredictionHeroHeader({ prediction, scrollY }: Props) {
               </Text>
             </View>
           </Animated.View>
+
+          {onRefresh && (
+            <TouchableOpacity
+              onPress={onRefresh}
+              activeOpacity={0.7}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                borderRadius: 20,
+                backgroundColor: "rgba(0,0,0,0.2)",
+                marginLeft: 8,
+              }}
+            >
+              <Ionicons name="refresh-outline" size={16} color="#fff" />
+              <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>
+                Làm mới
+              </Text>
+            </TouchableOpacity>
+          )}
         </Animated.View>
 
         {/* ── Full info — fades + shrinks on scroll ─────────────────────── */}

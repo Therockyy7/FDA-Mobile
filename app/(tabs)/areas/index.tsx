@@ -2,17 +2,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
+import { useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-    Alert,
-    Platform,
-    RefreshControl,
-    ScrollView,
-    StatusBar,
-    TouchableOpacity,
-    View,
+  Alert,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StatusBar,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useOfflineBannerPadding } from "~/components/OfflineBanner";
@@ -24,15 +25,17 @@ import { ConfirmDeleteModal } from "~/features/areas/components/ConfirmDeleteMod
 import { EditAreaSheet } from "~/features/areas/components/EditAreaSheet";
 import { ErrorModal } from "~/features/areas/components/ErrorModal";
 import { WaterLevelAreaCard } from "~/features/areas/components/WaterLevelAreaCard";
-import { useQueryClient } from "@tanstack/react-query";
 import { AreaService } from "~/features/areas/services/area.service";
-import { ADMIN_AREAS_QUERY_KEY, useAdminAreasQuery } from "~/features/map/hooks/queries/useAdminAreasQuery";
+import { useTranslation } from "~/features/i18n";
+import {
+  ADMIN_AREAS_QUERY_KEY,
+  useAdminAreasQuery,
+} from "~/features/map/hooks/queries/useAdminAreasQuery";
 import type {
-    Area,
-    AreaStatusResponse,
+  Area,
+  AreaStatusResponse,
 } from "~/features/map/types/map-layers.types";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { useTranslation } from "~/features/i18n";
 
 // Areas with their status
 interface AreaWithStatus {
@@ -159,9 +162,9 @@ export default function AreasScreen() {
     if (activeTab === "my-areas") {
       fetchAreas(false);
     } else {
-      queryClient.invalidateQueries({ queryKey: [ADMIN_AREAS_QUERY_KEY] }).finally(() =>
-        setRefreshing(false),
-      );
+      queryClient
+        .invalidateQueries({ queryKey: [ADMIN_AREAS_QUERY_KEY] })
+        .finally(() => setRefreshing(false));
     }
   }, [fetchAreas, activeTab, queryClient]);
 
@@ -280,9 +283,9 @@ export default function AreasScreen() {
   );
 
   // Navigate to alert history
-  const handleAlertHistory = useCallback(() => {
-    router.push("/alerts/history");
-  }, [router]);
+  // const handleAlertHistory = useCallback(() => {
+  //   router.push("/alerts/history");
+  // }, [router]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -350,7 +353,7 @@ export default function AreasScreen() {
           </View>
 
           {/* Header actions */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          {/* <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <TouchableOpacity onPress={handleAlertHistory} activeOpacity={0.8}>
               <View
                 style={{
@@ -377,7 +380,7 @@ export default function AreasScreen() {
                 </Text>
               </View>
             </TouchableOpacity>
-          </View>
+          </View> */}
         </View>
 
         {/* Tab Switcher */}

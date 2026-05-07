@@ -106,6 +106,7 @@ export interface MapScreenState {
   focusOnRoute: any;
   // Navigation
   nav: ReturnType<typeof useNavigation>;
+  onArrivedRef: React.RefObject<(() => void) | null>;
   // Street view
   streetViewLocation: any;
   setStreetViewLocation: any;
@@ -322,10 +323,15 @@ export function useMapScreenState(): MapScreenState {
   const stableOnOffRoute = useRef(async () => {
     await onOffRouteRef.current?.();
   });
+  const onArrivedRef = useRef<(() => void) | null>(null);
+  const stableOnArrived = useRef(() => {
+    onArrivedRef.current?.();
+  });
   const nav = useNavigation({
     route: safeRoute.getSelectedRoute(),
     mapRef,
     onOffRoute: stableOnOffRoute.current,
+    onArrived: stableOnArrived.current,
   });
 
   // Street view
@@ -531,6 +537,7 @@ export function useMapScreenState(): MapScreenState {
     goToMyLocation,
     focusOnRoute,
     nav,
+    onArrivedRef,
     streetViewLocation,
     setStreetViewLocation,
     openStreetView,

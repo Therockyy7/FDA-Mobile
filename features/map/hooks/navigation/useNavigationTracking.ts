@@ -32,6 +32,7 @@ interface TrackingParams {
   state: ReturnType<typeof useNavigationState>;
   voice: ReturnType<typeof useNavigationVoice>;
   onOffRoute?: () => Promise<void>;
+  onArrived?: () => void;
   stopNavigation: () => void;
 }
 
@@ -42,6 +43,7 @@ export function useNavigationTracking({
   state,
   voice,
   onOffRoute,
+  onArrived,
   stopNavigation,
 }: TrackingParams) {
   return useCallback(
@@ -96,6 +98,7 @@ export function useNavigationTracking({
       if (stepIdx >= route.instructions.length - 1 && dist < 20 && remDist < 30) {
         voice.speak("Bạn đã đến nơi.");
         stopNavigation();
+        onArrived?.();
         return;
       }
 

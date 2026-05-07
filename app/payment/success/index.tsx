@@ -22,7 +22,7 @@ import { plansSubscriptionCurrentQueryKey } from "~/features/plans/constants/que
 import { useColorScheme } from "~/lib/useColorScheme";
 
 const POLL_INTERVAL_MS = 3000;
-const MAX_POLL_ATTEMPTS = 60; // 60 × 3s = 3 minutes
+const MAX_POLL_ATTEMPTS = 20; // 20 × 3s = 60 seconds
 
 export default function PaymentSuccessScreen() {
   const router = useRouter();
@@ -40,6 +40,9 @@ export default function PaymentSuccessScreen() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mountedRef = useRef(true);
   const subscriptionInvalidatedRef = useRef(false);
+
+  // Track poll count for countdown display
+  const [currentPollCount, setCurrentPollCount] = useState(0);
 
   useEffect(() => {
     WebBrowser.maybeCompleteAuthSession();
@@ -76,6 +79,7 @@ export default function PaymentSuccessScreen() {
 
       // Still pending
       pollCountRef.current += 1;
+      if (mountedRef.current) setCurrentPollCount(pollCountRef.current);
       if (pollCountRef.current >= MAX_POLL_ATTEMPTS) {
         setResultState("timeout");
         if (intervalRef.current) {
@@ -137,8 +141,26 @@ export default function PaymentSuccessScreen() {
   };
 
   const handleGoBack = () => {
+    // Stop polling when leaving
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     router.replace("/plans" as any);
   };
+
+  const handleStopPolling = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setResultState("timeout");
+  };
+
+  const remainingSeconds = Math.max(
+    0,
+    Math.ceil(((MAX_POLL_ATTEMPTS - currentPollCount) * POLL_INTERVAL_MS) / 1000)
+  );
 
   return (
     <SafeAreaView
@@ -199,6 +221,52 @@ export default function PaymentSuccessScreen() {
                   style={{ marginRight: 6 }}
                 />
                 <Text style={styles.primaryBtnText}>
+                  Quay lại chọn gói
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {/* Pending/Loading: show action buttons so user is never stuck */}
+          {(resultState === "loading" || resultState === "pending") && (
+            <>
+              <Text
+                style={[
+                  styles.countdownText,
+                  { color: colors.subtext },
+                ]}
+              >
+                Tự động kiểm tra... còn {remainingSeconds}s
+              </Text>
+
+              <TouchableOpacity
+                style={[styles.outlineBtn, { borderColor: "#EF4444" }]}
+                onPress={handleStopPolling}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="close-circle-outline"
+                  size={18}
+                  color="#EF4444"
+                  style={{ marginRight: 6 }}
+                />
+                <Text style={[styles.secondaryBtnText, { color: "#EF4444" }]}>
+                  Dừng kiểm tra
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.secondaryBtn, { borderColor: colors.border }]}
+                onPress={handleGoBack}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="arrow-back-outline"
+                  size={18}
+                  color={colors.subtext}
+                  style={{ marginRight: 6 }}
+                />
+                <Text style={[styles.secondaryBtnText, { color: colors.subtext }]}>
                   Quay lại chọn gói
                 </Text>
               </TouchableOpacity>
@@ -274,5 +342,19 @@ const styles = StyleSheet.create({
   secondaryBtnText: {
     fontSize: 15,
     fontWeight: "600",
+  },
+  countdownText: {
+    fontSize: 13,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  outlineBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 14,
+    paddingVertical: 14,
+    borderWidth: 1,
   },
 });

@@ -5,6 +5,10 @@ import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { BillingCycle, PricingPlan, UserSubscription } from "../types/plans-types";
 import PricingBadge from "./premium/PricingBadge";
+import {
+  calculateTotalPrice,
+  DURATION_OPTIONS,
+} from "~/features/payment/utils/payment-utils";
 
 type Props = {
   plan: PricingPlan;
@@ -44,7 +48,12 @@ const PricingCard: React.FC<Props> = ({
 
   const upperCode = (plan.code || "").toUpperCase();
   const iconName = PLAN_ICONS[upperCode] || "cube";
-  const price = billingCycle === "monthly" ? plan.priceMonth : plan.priceYear;
+  // Yearly = 12 tháng + discount 20% (tính từ priceMonth)
+  const yearlyDiscount = DURATION_OPTIONS.find((o) => o.months === 12)!.discountPercent;
+  const price =
+    billingCycle === "monthly"
+      ? plan.priceMonth
+      : calculateTotalPrice(plan.priceMonth, 12, yearlyDiscount);
 
   const isPremium = upperCode === "PREMIUM";
   const isMonitor = upperCode === "MONITOR";

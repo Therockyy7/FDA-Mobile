@@ -13,6 +13,7 @@ export interface CreatePaymentRequest {
   durationMonths: DurationMonths;
   returnUrl: string;
   cancelUrl: string;
+  discountPercent?: number; // 0–100, optional — BE default = 0
 }
 
 export interface DowngradeSubscriptionRequest {

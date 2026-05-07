@@ -16,9 +16,18 @@ class PaymentService {
   async createPaymentLink(
     payload: CreatePaymentRequest,
   ): Promise<CreatePaymentResponse> {
+    console.log(
+      "💳 [PaymentService] createPaymentLink - payload:",
+      JSON.stringify(payload),
+    );
     const response = await apiClient.post<CreatePaymentResponse>(
       "/api/v1/payment/create",
       payload,
+    );
+    console.log(
+      "💳 [PaymentService] createPaymentLink - response:",
+      response.status,
+      JSON.stringify(response.data),
     );
     return response.data;
   }

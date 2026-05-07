@@ -5,6 +5,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ProfileService } from "~/features/profile/services/profile.service";
 import { AuthService } from "../../services/auth.service";
 import { clearAuthData } from "../../lib/auth-helpers";
+import { queryClient } from "~/lib/query-persister";
 
 /**
  * Sign out - clears session and storage.
@@ -24,5 +25,9 @@ export const signOut = createAsyncThunk("auth/signOut", async () => {
     // Ignore logout errors - always clear local state
   }
   await clearAuthData();
+  
+  // Clear React Query cache so the next user doesn't see old data
+  queryClient.clear();
+  
   return;
 });

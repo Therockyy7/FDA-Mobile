@@ -30,7 +30,7 @@ import { useNotificationNavigation } from "~/features/notifications/lib/useNotif
 import { SatelliteLoadingPill } from "~/features/prediction/components/SatelliteLoadingPill";
 import { OfflineBanner } from "~/components/OfflineBanner";
 
-import { QUERY_GC_TIME, persistOptions } from "~/lib/query-persister";
+import { QUERY_GC_TIME, persistOptions, queryClient } from "~/lib/query-persister";
 import { useOfflineSync } from "~/lib/hooks/useOfflineSync";
 import { NAV_THEME } from "~/lib/constants";
 import { useColorScheme } from "~/lib/useColorScheme";
@@ -48,14 +48,7 @@ const DARK_THEME: Theme = {
 
 export { ErrorBoundary } from "expo-router";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      gcTime: QUERY_GC_TIME,
-      networkMode: "offlineFirst",
-    },
-  },
-});
+
 
 const useIsomorphicLayoutEffect =
   Platform.OS === "web" && typeof window === "undefined"

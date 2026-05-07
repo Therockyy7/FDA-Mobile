@@ -61,4 +61,6 @@ export interface RouteDirectionPanelProps {
   onFindRoute: () => void;
   isLoading?: boolean;
   error?: string | null;
+  /** Seconds remaining in rate-limit cooldown (null = no cooldown) */
+  rateLimitSeconds?: number | null;
 }

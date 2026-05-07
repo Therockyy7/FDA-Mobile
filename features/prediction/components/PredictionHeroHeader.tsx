@@ -64,9 +64,16 @@ interface Props {
   scrollY?: SharedValue<number>;
   /** Force-refetch callback — bypasses React Query cache */
   onRefresh?: () => void;
+  /** Disable the refresh button (e.g. during a rate-limit cooldown) */
+  refreshDisabled?: boolean;
 }
 
-export function PredictionHeroHeader({ prediction, scrollY, onRefresh }: Props) {
+export function PredictionHeroHeader({
+  prediction,
+  scrollY,
+  onRefresh,
+  refreshDisabled,
+}: Props) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isDarkColorScheme } = useColorScheme();
@@ -303,6 +310,7 @@ export function PredictionHeroHeader({ prediction, scrollY, onRefresh }: Props) 
           {onRefresh && (
             <TouchableOpacity
               onPress={onRefresh}
+              disabled={refreshDisabled}
               activeOpacity={0.7}
               style={{
                 flexDirection: "row",
@@ -313,6 +321,7 @@ export function PredictionHeroHeader({ prediction, scrollY, onRefresh }: Props) 
                 borderRadius: 20,
                 backgroundColor: "rgba(0,0,0,0.2)",
                 marginLeft: 8,
+                opacity: refreshDisabled ? 0.4 : 1,
               }}
             >
               <Ionicons name="refresh-outline" size={16} color="#fff" />

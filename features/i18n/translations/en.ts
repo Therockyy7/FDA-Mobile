@@ -292,7 +292,7 @@ export const en: TranslationDict = {
   "areas.radius": "Radius",
   "areas.status.safe": "Safe",
   "areas.status.warning": "Warning",
-  "areas.status.danger": "Danger",
+  "areas.status.critical": "Critical",
   "areas.status.unknown": "No data",
   "areas.premium.title": "Upgrade plan",
   "areas.premium.desc":
@@ -302,6 +302,38 @@ export const en: TranslationDict = {
   "areas.creation.error": "Unable to create area",
   "areas.myAreas": "My areas",
   "areas.systemAreas": "System areas",
+
+  // ── Area error modal (create / update) ─────────────
+  "areas.error.create.title": "Cannot create area",
+  "areas.error.update.title": "Cannot update area",
+  "areas.error.general.message": "An error occurred. Please try again later.",
+  "areas.error.detail.label": "Error details",
+  "areas.error.duplicate.title": "Area already exists",
+  "areas.error.duplicate.label": "Duplicate location",
+  "areas.error.duplicate.message":
+    "An area \"{name}\" already exists within {distance}m of this location.\n\nPlease choose a different location or edit the existing area.",
+  "areas.error.duplicateName.title": "Name already in use",
+  "areas.error.duplicateName.label": "Duplicate name",
+  "areas.error.duplicateName.message":
+    "You already have an area named \"{name}\". Please choose a different name.",
+  "areas.error.duplicateName.messageGeneric":
+    "You already have an area with this name. Please choose a different name.",
+  "areas.error.noStations.message":
+    "No active monitoring stations found within the specified radius. Please choose a location with station coverage.",
+  "areas.error.understood": "Got it",
+  "areas.error.changeLocation": "Change location",
+  "areas.error.tip.moveAway": "Move to a location more than 50m away",
+  "areas.error.tip.editExisting": "Or edit the existing area \"{name}\"",
+
+  // ── Premium limit modal ────────────────────────────
+  "areas.premiumLimit.title": "Limit reached!",
+  "areas.premiumLimit.description":
+    "You have created {current}/{max} free monitored areas.\nUpgrade to Premium for unlimited areas!",
+  "areas.premiumLimit.benefit.unlimited": "Unlimited monitored areas",
+  "areas.premiumLimit.benefit.priorityAlerts": "Priority notifications",
+  "areas.premiumLimit.benefit.analytics": "Detailed analytics",
+  "areas.premiumLimit.cta": "Upgrade to Premium",
+  "areas.premiumLimit.later": "Maybe later",
 
   // ── Map ────────────────────────────────────────────
   "map.title": "Map",
@@ -489,8 +521,30 @@ export const en: TranslationDict = {
   "prediction.conclusion": "Conclusion",
   "prediction.satellite": "Satellite analysis",
   "prediction.satellite.loading": "Analyzing satellite data...",
+  "satellite.error.title": "Analysis failed",
+  "satellite.error.retry": "Try again",
+  "satellite.error.timeout":
+    "The analysis took too long. This area may not have recent satellite imagery, or no flooding was detected. Please try again in a few minutes.",
+  "satellite.error.rateLimit":
+    "Too many requests at once. Please wait 1–2 minutes and try again.",
+  "satellite.error.network":
+    "Network connection lost. Please check your Internet and try again.",
+  "satellite.error.server":
+    "The satellite service is currently unavailable. Please try again in a few minutes.",
+  "satellite.error.generic":
+    "Could not analyse the satellite data. This area may not have recent imagery, or no flooding was detected. Please try again.",
   "prediction.valid": "Valid",
   "prediction.expired": "Expired",
+  "prediction.rateLimit.message":
+    "The system is receiving too many AI prediction requests. Please wait a moment before trying again.",
+  "route.rateLimit.message":
+    "The system is receiving too many route requests. Please wait a moment before trying again.",
+  "common.rateLimit.title": "Too many requests",
+  "common.rateLimit.message":
+    "The system is receiving too many requests. Please wait a moment before trying again.",
+  "common.rateLimit.retryIn": "Retry in {seconds}s",
+  "common.rateLimit.retryNow": "Retry now",
+  "common.rateLimit.close": "Close",
 
   // ── Onboarding ─────────────────────────────────────
   "onboarding.skip": "Skip",

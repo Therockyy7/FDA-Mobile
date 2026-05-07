@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { Text } from "~/components/ui/text";
+import { useTranslation } from "~/features/i18n/hooks/useTranslation";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 interface PremiumLimitModalProps {
@@ -31,6 +32,7 @@ export function PremiumLimitModal({
   maxCount = 5,
 }: PremiumLimitModalProps) {
   const { isDarkColorScheme } = useColorScheme();
+  const { t } = useTranslation();
 
   const colors = {
     cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
@@ -78,18 +80,35 @@ export function PremiumLimitModal({
 
           {/* Title */}
           <Text style={[styles.title, { color: colors.text }]}>
-            Đã đạt giới hạn!
+            {t("areas.premiumLimit.title")}
           </Text>
 
-          {/* Description */}
-          <Text style={[styles.description, { color: colors.subtext }]}>
-            Bạn đã tạo{" "}
-            <Text style={{ color: colors.gold, fontWeight: "800" }}>
-              {currentCount}/{maxCount}
-            </Text>{" "}
-            vùng theo dõi miễn phí.{"\n"}
-            Nâng cấp Premium để tạo không giới hạn!
-          </Text>
+          {/* Description — split on the count token so we can highlight
+              "{current}/{max}" inline regardless of translation. */}
+          {(() => {
+            const countToken = `${currentCount}/${maxCount}`;
+            const desc = t("areas.premiumLimit.description", {
+              current: currentCount,
+              max: maxCount,
+            });
+            const idx = desc.indexOf(countToken);
+            if (idx === -1) {
+              return (
+                <Text style={[styles.description, { color: colors.subtext }]}>
+                  {desc}
+                </Text>
+              );
+            }
+            return (
+              <Text style={[styles.description, { color: colors.subtext }]}>
+                {desc.slice(0, idx)}
+                <Text style={{ color: colors.gold, fontWeight: "800" }}>
+                  {countToken}
+                </Text>
+                {desc.slice(idx + countToken.length)}
+              </Text>
+            );
+          })()}
 
           {/* Progress Bar */}
           <View
@@ -112,9 +131,18 @@ export function PremiumLimitModal({
           {/* Benefits List */}
           <View style={styles.benefitsList}>
             {[
-              { icon: "infinite", text: "Không giới hạn vùng theo dõi" },
-              { icon: "notifications", text: "Thông báo ưu tiên" },
-              { icon: "analytics", text: "Phân tích chi tiết" },
+              {
+                icon: "infinite",
+                text: t("areas.premiumLimit.benefit.unlimited"),
+              },
+              {
+                icon: "notifications",
+                text: t("areas.premiumLimit.benefit.priorityAlerts"),
+              },
+              {
+                icon: "analytics",
+                text: t("areas.premiumLimit.benefit.analytics"),
+              },
             ].map((benefit, index) => (
               <View key={index} style={styles.benefitItem}>
                 <View
@@ -149,14 +177,16 @@ export function PremiumLimitModal({
               style={styles.upgradeButton}
             >
               <MaterialCommunityIcons name="crown" size={22} color="white" />
-              <Text style={styles.upgradeText}>Nâng cấp Premium</Text>
+              <Text style={styles.upgradeText}>
+                {t("areas.premiumLimit.cta")}
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
 
           {/* Maybe Later */}
           <TouchableOpacity onPress={onClose} style={styles.laterButton}>
             <Text style={[styles.laterText, { color: colors.subtext }]}>
-              Để sau
+              {t("areas.premiumLimit.later")}
             </Text>
           </TouchableOpacity>
         </View>

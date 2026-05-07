@@ -5,7 +5,7 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import { Text } from "~/components/ui/text";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { getManeuverIcon } from "~/features/map/lib/navigation-utils";
+import { getManeuverIcon, translateInstruction } from "~/features/map/lib/instruction-translator";
 import type { GeoJsonInstruction } from "~/features/map/types/safe-route.types";
 import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
 
@@ -26,7 +26,8 @@ export function TopInstructionCard({
 }: TopInstructionCardProps) {
   const { isDarkColorScheme } = useColorScheme();
   const isDark = isDarkColorScheme;
-  const iconName = instruction ? (getManeuverIcon(instruction.text) as any) : "navigate";
+  const translatedText = instruction ? translateInstruction(instruction.text) : null;
+  const iconName = translatedText ? (getManeuverIcon(translatedText) as any) : "navigate";
   const isClose = distanceToNextTurn < 100;
 
   // Glassmorphism dark bg for nav card
@@ -61,7 +62,7 @@ export function TopInstructionCard({
                   ]}
                   numberOfLines={2}
                 >
-                  {instruction.text}
+                  {translatedText}
                 </Text>
                 <Text
                   style={[
@@ -81,10 +82,10 @@ export function TopInstructionCard({
             {nextInstruction && (
               <View style={[styles.nextRow, { borderTopColor: dividerColor }]}>
                 <View style={[styles.miniIcon, { backgroundColor: iconBoxBg }]}>
-                  <Ionicons name={getManeuverIcon(nextInstruction.text) as any} size={14} color="white" />
+                  <Ionicons name={getManeuverIcon(translateInstruction(nextInstruction.text)) as any} size={14} color="white" />
                 </View>
                 <Text style={[styles.nextText, { color: nextTextColor }]} numberOfLines={1}>
-                  Sau đó: {nextInstruction.text}
+                  Sau đó: {translateInstruction(nextInstruction.text)}
                 </Text>
               </View>
             )}

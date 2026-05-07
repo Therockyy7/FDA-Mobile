@@ -3,6 +3,7 @@
 
 import { useCallback, useRef } from "react";
 import { SpeechHapticsService } from "../../services/speech-haptics.service";
+import { translateInstruction } from "../../lib/instruction-translator";
 import type { GeoJsonInstruction } from "../../types/safe-route.types";
 import type { VoiceLevel } from "../../types/navigation.types";
 
@@ -23,15 +24,16 @@ export function useNavigationVoice() {
       if (levels.has(level)) return;
       levels.add(level);
 
+      const translated = translateInstruction(instruction.text);
       switch (level) {
         case "early":
-          speak(`Sau 500 mét, ${instruction.text}`);
+          speak(`Sau 500 mét, ${translated}`);
           break;
         case "approach":
-          speak(instruction.text);
+          speak(translated);
           break;
         case "now":
-          speak(`${instruction.text} ngay bây giờ`);
+          speak(`${translated} ngay bây giờ`);
           break;
       }
     },

@@ -1,6 +1,7 @@
 // features/map/lib/navigation-utils.ts
 
 import type { GeoJsonInstruction, LatLng } from "../types/safe-route.types";
+export { translateInstruction, getManeuverIcon } from "./instruction-translator";
 
 const EARTH_RADIUS = 6371000; // meters
 
@@ -165,21 +166,6 @@ export function getDistanceToNextTurn(
 ): number {
   if (stepIndex >= boundaries.length) return 0;
   return Math.max(0, boundaries[stepIndex] - progressMeters);
-}
-
-/**
- * Parse Vietnamese instruction text to determine maneuver icon (Ionicons name).
- */
-export function getManeuverIcon(instructionText: string): string {
-  const text = instructionText.toLowerCase();
-  if (text.includes("rẽ trái") || text.includes("re trái")) return "arrow-back";
-  if (text.includes("rẽ phải") || text.includes("re phải")) return "arrow-forward";
-  if (text.includes("quay đầu") || text.includes("u-turn")) return "return-down-back";
-  if (text.includes("vòng xuyến") || text.includes("vòng xoay"))
-    return "refresh-circle";
-  if (text.includes("đến nơi") || text.includes("điểm đến")) return "flag";
-  if (text.includes("thẳng") || text.includes("tiếp tục")) return "arrow-up";
-  return "navigate";
 }
 
 /**

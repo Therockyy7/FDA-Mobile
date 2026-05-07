@@ -2,8 +2,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { Image } from "expo-image";
+import * as WebBrowser from "expo-web-browser";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +14,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import RenderHtml from "react-native-render-html";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
 import { useMarkNewsRead } from "~/features/news/hooks/useMarkNewsRead";
 import { useNewsDetail } from "~/features/news/hooks/useNewsDetail";
@@ -34,17 +36,36 @@ const getPriorityConfig = (priority: NewsPriority) => {
   }
 };
 
+const extractSourceUrlFromHtml = (html: string) => {
+  if (!html) return { cleanHtml: html, sourceUrl: undefined as string | undefined };
+
+  // Matches: "Nguon:" / "Nguồn:" followed by a URL-ish token
+  const re =
+    /(Nguon|Nguồn)\s*:\s*((https?:\/\/|www\.)[^\s<]+)\s*/i;
+  const match = html.match(re);
+  if (!match) return { cleanHtml: html, sourceUrl: undefined as string | undefined };
+
+  let sourceUrl = match[2]?.trim() ?? "";
+  sourceUrl = sourceUrl.replace(/[)\].,;]+$/, "");
+  if (sourceUrl && sourceUrl.startsWith("www.")) sourceUrl = `https://${sourceUrl}`;
+
+  const cleanHtml = html.replace(re, "").trim();
+  return { cleanHtml, sourceUrl: sourceUrl || undefined };
+};
+
 export default function NewsDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { isDarkColorScheme } = useColorScheme();
   const { width } = useWindowDimensions();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   const newsId = typeof id === "string" ? id : id?.[0] || "";
 
   const { data, isLoading } = useNewsDetail(newsId);
   const markReadMutation = useMarkNewsRead();
+  const article = data?.data;
 
   // Mark as read when entering the page if it's not read yet
   const [hasMarkedRead, setHasMarkedRead] = useState(false);
@@ -67,6 +88,10 @@ export default function NewsDetailScreen() {
     buttonBg: isDarkColorScheme ? "#1E293B" : "#F3F4F6",
   };
 
+  const { cleanHtml, sourceUrl } = useMemo(() => {
+    return extractSourceUrlFromHtml(article?.content || "");
+  }, [article?.content]);
+
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background }}>
@@ -75,8 +100,6 @@ export default function NewsDetailScreen() {
       </View>
     );
   }
-
-  const article = data?.data;
 
   if (!article) {
     return (
@@ -142,7 +165,7 @@ export default function NewsDetailScreen() {
       lineHeight: 24,
     },
     p: {
-      marginBottom: 16,
+      marginBottom: 12,
     },
     a: {
       color: "#007AFF",
@@ -162,14 +185,21 @@ export default function NewsDetailScreen() {
         <View
           style={{
             backgroundColor: colors.headerBg,
-            paddingTop: 60,
-            paddingBottom: 20,
+            paddingTop: insets.top + 12,
+            paddingBottom: 12,
             paddingHorizontal: 20,
             borderBottomWidth: 1,
             borderBottomColor: colors.border,
           }}
         >
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 10,
+            }}
+          >
             <TouchableOpacity
               onPress={() => router.back()}
               style={{
@@ -184,49 +214,35 @@ export default function NewsDetailScreen() {
               <Ionicons name="arrow-back" size={22} color={colors.text} />
             </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => {}} // share or options
+            <View
               style={{
-                width: 44,
-                height: 44,
-                borderRadius: 14,
-                backgroundColor: colors.buttonBg,
-                justifyContent: "center",
-                alignItems: "center",
+                backgroundColor: priorityConfig.color + "20",
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: colors.border,
               }}
             >
-              <Ionicons name="ellipsis-horizontal" size={22} color={colors.text} />
-            </TouchableOpacity>
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: "800",
+                  color: priorityConfig.color,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.4,
+                }}
+              >
+                {priorityConfig.label} PRIORITY
+              </Text>
+            </View>
           </View>
 
-          {/* Priority Badge */}
-          <View
-            style={{
-              alignSelf: "flex-start",
-              backgroundColor: priorityConfig.color + "20",
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderRadius: 8,
-              marginBottom: 12,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "800",
-                color: priorityConfig.color,
-                textTransform: "uppercase",
-              }}
-            >
-              {priorityConfig.label} PRIORITY
-            </Text>
-          </View>
-
-          <Text style={{ fontSize: 24, fontWeight: "800", color: colors.text, lineHeight: 32, marginBottom: 12 }}>
+          <Text style={{ fontSize: 22, fontWeight: "800", color: colors.text, lineHeight: 30, marginBottom: 10 }}>
             {article.title}
           </Text>
 
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 8 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 6 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <Ionicons name="calendar-outline" size={14} color={colors.subtext} />
               <Text style={{ fontSize: 14, fontWeight: "500", color: colors.subtext }}>
@@ -245,21 +261,69 @@ export default function NewsDetailScreen() {
 
         {/* Feature Image */}
         {!!article.imageUrl && (
-          <Image
-            source={article.imageUrl}
-            style={{ width: "100%", height: width * 0.55 }}
-            contentFit="cover"
-            transition={200}
-          />
+          <View
+            style={{
+              marginHorizontal: 20,
+              marginTop: 12,
+              borderRadius: 16,
+              overflow: "hidden",
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: colors.cardBg,
+            }}
+          >
+            <Image
+              source={article.imageUrl}
+              style={{ width: "100%", aspectRatio: 16 / 9, maxHeight: 240 }}
+              contentFit="cover"
+              transition={200}
+            />
+          </View>
         )}
 
         {/* Content Body */}
         <View style={{ padding: 20 }}>
           <RenderHtml
             contentWidth={width - 40}
-            source={{ html: article.content || "" }}
+            source={{ html: cleanHtml }}
             tagsStyles={htmlTagsStyles}
           />
+
+          {!!sourceUrl && (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={async () => {
+                const url = sourceUrl.trim();
+                console.log("[NewsSourceUrl]", url);
+                try {
+                  await WebBrowser.openBrowserAsync(url, {
+                    presentationStyle: WebBrowser.WebBrowserPresentationStyle.FULL_SCREEN,
+                    showTitle: true,
+                    enableBarCollapsing: true,
+                  });
+                } catch {
+                  Alert.alert(
+                    t("common.error"),
+                    `Không mở được link. Bạn copy link này và thử trên trình duyệt khác:\n\n${url}`
+                  );
+                }
+              }}
+              style={{
+                marginTop: 14,
+                paddingVertical: 10,
+                paddingHorizontal: 12,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: colors.cardBg,
+              }}
+            >
+              <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 4 }}>Nguồn</Text>
+              <Text style={{ fontSize: 13, fontWeight: "700", color: "#007AFF" }} numberOfLines={2}>
+                {sourceUrl}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Attachments */}

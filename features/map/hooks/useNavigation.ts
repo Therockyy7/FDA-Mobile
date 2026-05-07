@@ -14,6 +14,7 @@ import {
   lerpAngle,
   snapToPolyline,
 } from "../lib/navigation-utils";
+import { translateInstruction } from "../lib/instruction-translator";
 import { useNavigationState } from "./navigation/useNavigationState";
 import { useNavigationVoice } from "./navigation/useNavigationVoice";
 import { useGPSWatcher } from "./navigation/useGPSWatcher";
@@ -131,7 +132,7 @@ export function useNavigation({ route, mapRef }: UseNavigationParams) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     if (route.instructions.length > 0) {
-      voice.speak(route.instructions[0].text);
+      voice.speak(translateInstruction(route.instructions[0].text));
     }
 
     const started = await gps.startWatching(onLocationUpdate);

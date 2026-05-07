@@ -18,6 +18,8 @@ import {
   SafeRoutePolylines,
   WaterFlowRoute,
 } from "~/features/map/components/routes";
+import { NavigationPolyline } from "~/features/map/components/routes/polylines/NavigationPolyline";
+import type { DecodedRoute } from "~/features/map/types/safe-route.types";
 import { SatelliteFloodOverlay } from "~/features/map/components/satellite/SatelliteFloodOverlay";
 import {
   FloodSeverityMarkers,
@@ -78,6 +80,10 @@ interface Props {
   onAdminAreaPress: (area: any) => void;
   onSafeRoutePress: (index: number) => void;
   onDraftAreaCenterChange: (center: any) => void;
+  isNavigating?: boolean;
+  navigationRoute?: DecodedRoute | null;
+  navigationProgressMeters?: number;
+  navigationSegmentCumulativeDist?: number[];
 }
 
 export function MapContent({
@@ -122,6 +128,10 @@ export function MapContent({
   openStreetView,
   onAdminAreaPress,
   onDraftAreaCenterChange,
+  isNavigating = false,
+  navigationRoute,
+  navigationProgressMeters = 0,
+  navigationSegmentCumulativeDist = [],
 }: Props) {
   const { isDarkColorScheme } = useColorScheme();
   const isDark = isDarkColorScheme;
@@ -198,13 +208,19 @@ export function MapContent({
         ))}
 
       {/* Safe Route */}
-      {safeRoute.hasResults && (
+      {safeRoute.hasResults && isNavigating && navigationRoute && navigationSegmentCumulativeDist.length > 0 ? (
+        <NavigationPolyline
+          route={navigationRoute}
+          progressMeters={navigationProgressMeters}
+          segmentCumulativeDist={navigationSegmentCumulativeDist}
+        />
+      ) : safeRoute.hasResults ? (
         <SafeRoutePolylines
           routes={safeRoute.getAllRoutes()}
           selectedIndex={safeRoute.selectedRouteIndex}
           onRoutePress={onSafeRoutePress}
         />
-      )}
+      ) : null}
       {safeRoute.hasResults && (
         <FloodWarningMarkers warnings={safeRoute.floodWarnings} />
       )}

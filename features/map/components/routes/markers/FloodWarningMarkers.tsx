@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View } from "react-native";
 import { useColorScheme } from "~/lib/useColorScheme";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Marker, Polygon } from "react-native-maps";
 import type { FloodWarningDto } from "~/features/map/types/safe-route.types";
 import { CARD_SHADOW } from "~/features/map/lib/map-ui-utils";
@@ -46,15 +47,15 @@ export function FloodWarningMarkers({ warnings }: FloodWarningMarkersProps) {
 
         return (
           <React.Fragment key={warning.stationId}>
-            {warning.polygonCoordinates.length > 0 && (
+            {/* Polygon bị tắt vì FloodZonePolygons (realtime store) đã render — tránh chồng 2 polygon */}
+            {/* {warning.polygonCoordinates.length > 0 && (
               <Polygon
                 coordinates={warning.polygonCoordinates}
                 fillColor={c.fill}
                 strokeColor={c.stroke}
                 strokeWidth={2}
               />
-            )}
-
+            )} */}
             <Marker
               coordinate={{
                 latitude: warning.latitude,

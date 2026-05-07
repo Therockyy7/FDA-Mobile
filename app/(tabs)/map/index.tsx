@@ -3,7 +3,7 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   InteractionManager,
@@ -37,6 +37,7 @@ import { MapHeaderSwitch } from "~/features/map/components/MapHeaderSwitch";
 import { MapSheets } from "~/features/map/components/MapSheets";
 import { useMapScreen } from "~/features/map/hooks/useMapScreen";
 import { useMapScreenState } from "~/features/map/hooks/useMapScreenState";
+import { useNavigationStationMonitor } from "~/features/map/hooks/navigation/useNavigationStationMonitor";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
 
 
@@ -123,6 +124,18 @@ export default function MapScreen() {
       };
     }, [setSelectedStationId]),
   );
+
+  const [routeWarning, setRouteWarning] = useState<string | null>(null);
+  useNavigationStationMonitor({
+    nearbyStationIds: s.safeRoute.metadata?.nearbyStationIds ?? [],
+    isActive: s.safeRoute.hasResults,
+    onSeverityIncreased: (stationName, alertLevel) => {
+      if (s.nav.isNavigating) {
+        setRouteWarning(`Cảnh báo: Trạm ${stationName} vừa chuyển sang ${alertLevel}`);
+      }
+      handleFindRoute();
+    },
+  });
 
   /**
    * Đổi phương tiện và tự động tìm lại tuyến đường ngay — không cần quay lại màn hình chọn.
@@ -337,6 +350,7 @@ export default function MapScreen() {
             remainingTime={s.nav.remainingTime}
             isOffRoute={s.nav.isOffRoute}
             isFollowingUser={s.nav.isFollowingUser}
+            routeWarning={routeWarning}
             onExit={handleStopNavigation}
             onRecenter={s.nav.recenterCamera}
           />
@@ -396,6 +410,10 @@ export default function MapScreen() {
           }}
           onSafeRoutePress={handleSelectRoute}
           onDraftAreaCenterChange={s.setDraftAreaCenter}
+          isNavigating={s.nav.isNavigating}
+          navigationRoute={s.safeRoute.getSelectedRoute()}
+          navigationProgressMeters={s.nav.progressMeters.current}
+          navigationSegmentCumulativeDist={s.nav.segmentCumulativeDist.current}
         />
 
         {/* Static center crosshair and radius overlay used while adjusting radius */}

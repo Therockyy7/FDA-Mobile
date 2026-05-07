@@ -4,10 +4,12 @@
 
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useIsAuthenticated } from "~/features/auth/hooks/useAuth";
 import type {
   NearbyFloodReport,
   NearbyFloodReportsParams,
 } from "~/features/community/services/community.service";
+import { DANANG_CENTER } from "~/features/map/constants/map-data";
 
 import { useControlArea } from "~/features/areas/hooks/useControlArea";
 import { useRoutingUI, useSafeRoute } from "~/features/map/hooks/routing";
@@ -267,12 +269,13 @@ export function useMapScreenState(): MapScreenState {
       radiusMeters: Math.min(radiusMeters, 50000), // cap at 50km
       hours: 720,
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gridLat, gridLng, gridZoom]); // only update when grid cell or zoom tier changes
 
   // Debounce community params 500ms so rapid zoom gestures don't trigger an API call per frame.
   // keepPreviousData in the query keeps old markers visible during the wait.
-  const [debouncedCommunityParams, setDebouncedCommunityParams] = useState(communityParams);
+  const [debouncedCommunityParams, setDebouncedCommunityParams] =
+    useState(communityParams);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -312,8 +315,18 @@ export function useMapScreenState(): MapScreenState {
   const { location: userLocation, permissionGranted: locationPermission } =
     useUserLocation();
 
-  // Navigation
-  const nav = useNavigation({ route: safeRoute.getSelectedRoute(), mapRef });
+  // Navigation — onOffRoute uses a stable ref wrapper so routing state
+  // (endCoord, transportMode) declared later can be captured without hook order issues.
+  const isAuthenticated = useIsAuthenticated();
+  const onOffRouteRef = useRef<(() => Promise<void>) | null>(null);
+  const stableOnOffRoute = useRef(async () => {
+    await onOffRouteRef.current?.();
+  });
+  const nav = useNavigation({
+    route: safeRoute.getSelectedRoute(),
+    mapRef,
+    onOffRoute: stableOnOffRoute.current,
+  });
 
   // Street view
   const {
@@ -351,6 +364,22 @@ export function useMapScreenState(): MapScreenState {
     swapOriginDestination,
     resetRouting,
   } = useRoutingUI();
+
+  // Wire off-route refetch now that endCoord and transportMode are available
+  onOffRouteRef.current = async () => {
+    const start = userLocation ?? {
+      latitude: DANANG_CENTER.latitude,
+      longitude: DANANG_CENTER.longitude,
+    };
+    if (!endCoord) return;
+    await safeRoute.findRoute(
+      start,
+      endCoord,
+      transportMode,
+      2,
+      isAuthenticated,
+    );
+  };
 
   // Map display
   const {

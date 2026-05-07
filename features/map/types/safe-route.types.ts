@@ -115,6 +115,7 @@ export interface SafeRouteApiResponse {
     generatedAt: string;
     startInFloodZone: boolean;
     endInFloodZone: boolean;
+    nearbyStationIds?: string[];
   };
 }
 
@@ -170,4 +171,5 @@ export interface RouteMetadata {
   generatedAt: string;
   startInFloodZone: boolean;
   endInFloodZone: boolean;
+  nearbyStationIds: string[];
 }

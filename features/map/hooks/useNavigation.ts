@@ -1,25 +1,18 @@
 // features/map/hooks/useNavigation.ts
-// Composition hook: navigation state + voice + GPS watcher.
+// Composition hook: wires navigation state, voice, GPS, and location tracking.
 
 import * as Haptics from "expo-haptics";
 import { useCallback, useEffect, useRef } from "react";
-import type { GeoJsonInstruction, LatLng } from "../types/safe-route.types";
+import type { GeoJsonInstruction } from "../types/safe-route.types";
 import type { UseNavigationParams } from "../types/navigation.types";
-import {
-  buildInstructionBoundaries,
-  buildSegmentCumulativeDist,
-  computeBearing,
-  getCurrentStepIndex,
-  getDistanceToNextTurn,
-  lerpAngle,
-  snapToPolyline,
-} from "../lib/navigation-utils";
+import { buildInstructionBoundaries, buildSegmentCumulativeDist } from "../lib/navigation-utils";
 import { translateInstruction } from "../lib/instruction-translator";
 import { useNavigationState } from "./navigation/useNavigationState";
 import { useNavigationVoice } from "./navigation/useNavigationVoice";
 import { useGPSWatcher } from "./navigation/useGPSWatcher";
+import { useNavigationTracking } from "./navigation/useNavigationTracking";
 
-export function useNavigation({ route, mapRef }: UseNavigationParams) {
+export function useNavigation({ route, mapRef, onOffRoute }: UseNavigationParams) {
   const state = useNavigationState();
   const voice = useNavigationVoice();
   const gps = useGPSWatcher();
@@ -29,85 +22,31 @@ export function useNavigation({ route, mapRef }: UseNavigationParams) {
   const lastHeadingRef = useRef(0);
   const offRouteAlertedRef = useRef(false);
   const isNavigatingRef = useRef(false);
+  const progressMetersRef = useRef(0);
 
-  const onLocationUpdate = useCallback(
-    (location: import("expo-location").LocationObject) => {
-      if (!route || !isNavigatingRef.current) return;
+  const stopNavigation = useCallback(() => {
+    gps.stopWatching();
+    isNavigatingRef.current = false;
+    voice.speak("");
+    state.reset();
+  }, [gps, voice, state]);
 
-      const pos: LatLng = {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      };
-      state.setUserPosition(pos);
-
-      const polyline = route.coordinates;
-      const segCumDist = segmentCumulativeDistRef.current;
-      const boundaries = instructionBoundariesRef.current;
-
-      const snap = snapToPolyline(pos, polyline, segCumDist);
-
-      // Off-route check
-      if (snap.distanceFromRoute > 50) {
-        state.setIsOffRoute(true);
-        if (!offRouteAlertedRef.current) {
-          offRouteAlertedRef.current = true;
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-          voice.speak("Bạn đã lạc đường. Hãy quay lại tuyến đường.");
-        }
-      } else {
-        state.setIsOffRoute(false);
-        offRouteAlertedRef.current = false;
-      }
-
-      const stepIdx = getCurrentStepIndex(snap.progressMeters, boundaries);
-      const dist = getDistanceToNextTurn(snap.progressMeters, boundaries, stepIdx);
-
-      state.setCurrentStepIndex(stepIdx);
-      state.setDistanceToNextTurn(dist);
-
-      const remDist = Math.max(0, route.distance - snap.progressMeters);
-      state.setRemainingDistance(remDist);
-      state.setRemainingTime(
-        route.distance > 0 ? (remDist / route.distance) * route.time : 0,
-      );
-
-      // Voice announcements (3-level)
-      if (stepIdx < route.instructions.length) {
-        const inst = route.instructions[stepIdx];
-        if (dist < 30) {
-          voice.announceForStep(stepIdx, "now", inst);
-        } else if (dist < 150) {
-          voice.announceForStep(stepIdx, "approach", inst);
-        } else if (dist < 500) {
-          voice.announceForStep(stepIdx, "early", inst);
-        }
-      }
-
-      // Destination reached
-      if (stepIdx >= route.instructions.length - 1 && dist < 20 && remDist < 30) {
-        voice.speak("Bạn đã đến nơi.");
-        stopNavigation();
-        return;
-      }
-
-      // Heading & camera
-      const nextPointIdx = Math.min(snap.segmentIndex + 1, polyline.length - 1);
-      const rawHeading = computeBearing(pos, polyline[nextPointIdx]);
-      const smoothed = lerpAngle(lastHeadingRef.current, rawHeading, 0.15);
-      lastHeadingRef.current = smoothed;
-      state.setHeading(smoothed);
-
-      if (state.isFollowingUser && mapRef.current) {
-        const pitch = dist < 200 ? 20 : 45;
-        mapRef.current.animateCamera(
-          { center: pos, heading: smoothed, pitch, zoom: 17, altitude: 300 },
-          { duration: 500 },
-        );
-      }
+  const onLocationUpdate = useNavigationTracking({
+    route,
+    mapRef,
+    refs: {
+      instructionBoundariesRef,
+      segmentCumulativeDistRef,
+      lastHeadingRef,
+      offRouteAlertedRef,
+      isNavigatingRef,
+      progressMetersRef,
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [route, mapRef, state.isFollowingUser, voice],
-  );
+    state,
+    voice,
+    onOffRoute,
+    stopNavigation,
+  });
 
   const startNavigation = useCallback(async () => {
     if (!route || route.coordinates.length < 2) return;
@@ -117,6 +56,7 @@ export function useNavigation({ route, mapRef }: UseNavigationParams) {
     voice.resetAnnounced();
     offRouteAlertedRef.current = false;
     lastHeadingRef.current = 0;
+    progressMetersRef.current = 0;
 
     state.setCurrentStepIndex(0);
     state.setDistanceToNextTurn(
@@ -142,30 +82,16 @@ export function useNavigation({ route, mapRef }: UseNavigationParams) {
     }
   }, [route, onLocationUpdate, voice, gps, state]);
 
-  const stopNavigation = useCallback(() => {
-    gps.stopWatching();
-    isNavigatingRef.current = false;
-    voice.speak("");  // clears queue via SpeechHapticsService.stop()
-    state.reset();
-  }, [gps, voice, state]);
-
   const recenterCamera = useCallback(() => {
     state.setIsFollowingUser(true);
     if (state.userPosition && mapRef.current) {
       mapRef.current.animateCamera(
-        {
-          center: state.userPosition,
-          heading: lastHeadingRef.current,
-          pitch: 45,
-          zoom: 17,
-          altitude: 300,
-        },
+        { center: state.userPosition, heading: lastHeadingRef.current, pitch: 45, zoom: 17, altitude: 300 },
         { duration: 500 },
       );
     }
   }, [state.userPosition, mapRef]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       gps.stopWatching();
@@ -199,5 +125,7 @@ export function useNavigation({ route, mapRef }: UseNavigationParams) {
     setIsFollowingUser: state.setIsFollowingUser,
     userPosition: state.userPosition,
     heading: state.heading,
+    progressMeters: progressMetersRef,
+    segmentCumulativeDist: segmentCumulativeDistRef,
   };
 }

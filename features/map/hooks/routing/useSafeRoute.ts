@@ -1,10 +1,10 @@
 // features/map/hooks/routing/useSafeRoute.ts
 import { useCallback, useState } from "react";
-import type { TransportMode } from "../../types/routing.types";
 import { FloodRoute, FloodZone } from "../../constants/map-data";
 import { parseRouteResponse } from "../../lib/polyline-utils";
 import { BasicRouteService } from "../../services/basic-route.service";
 import { SafeRouteService } from "../../services/safe-route.service";
+import type { TransportMode } from "../../types/routing.types";
 import type {
   BasicRouteRequest,
   DecodedRoute,

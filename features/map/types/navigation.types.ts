@@ -10,4 +10,5 @@ export type VoiceLevel = "early" | "approach" | "now";
 export interface UseNavigationParams {
   route: DecodedRoute | null;
   mapRef: React.RefObject<MapView | null>;
+  onOffRoute?: () => Promise<void>;
 }

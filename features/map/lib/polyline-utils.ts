@@ -3,9 +3,9 @@
 import type {
   DecodedRoute,
   FloodWarningDto,
-  RouteFloodZoneProperties,
   LatLng,
   RouteFeatureProperties,
+  RouteFloodZoneProperties,
   RouteMetadata,
   RouteSafetyStatus,
   SafeRouteApiResponse,
@@ -59,7 +59,7 @@ export function parseRouteResponse(response: SafeRouteApiResponse): {
       const routeProps = props as RouteFeatureProperties;
       primaryRoute = {
         coordinates: geoJsonCoordsToLatLng(
-          feature.geometry.coordinates as number[][]
+          feature.geometry.coordinates as number[][],
         ),
         distance: routeProps.distanceMeters,
         time: routeProps.durationSeconds * 1000, // convert to ms
@@ -76,7 +76,7 @@ export function parseRouteResponse(response: SafeRouteApiResponse): {
       const routeProps = props as RouteFeatureProperties;
       alternativeRoutes.push({
         coordinates: geoJsonCoordsToLatLng(
-          feature.geometry.coordinates as number[][]
+          feature.geometry.coordinates as number[][],
         ),
         distance: routeProps.distanceMeters,
         time: routeProps.durationSeconds * 1000,
@@ -114,6 +114,7 @@ export function parseRouteResponse(response: SafeRouteApiResponse): {
     generatedAt: response.metadata.generatedAt,
     startInFloodZone: response.metadata.startInFloodZone ?? false,
     endInFloodZone: response.metadata.endInFloodZone ?? false,
+    nearbyStationIds: response.metadata.nearbyStationIds ?? [],
   };
 
   return { primaryRoute, alternativeRoutes, floodWarnings, metadata };
@@ -124,7 +125,7 @@ export function parseRouteResponse(response: SafeRouteApiResponse): {
  */
 export function getRouteBounds(
   coordinates: LatLng[],
-  padding = 0.01
+  padding = 0.01,
 ): {
   latitude: number;
   longitude: number;

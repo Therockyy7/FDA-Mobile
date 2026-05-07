@@ -18,6 +18,7 @@ import { DurationMonths } from "~/features/payment/types/payment-types";
 import {
   PAYMENT_CANCEL_URL,
   PAYMENT_RETURN_URL,
+  DURATION_OPTIONS,
 } from "~/features/payment/utils/payment-utils";
 
 const getPlanRank = (code: string): number => {
@@ -95,12 +96,50 @@ const PricingPlansList: React.FC<Props> = ({
     if (plan.code === "FREE") {
       setDowngradeDialogVisible(true);
     } else {
-      setSelectedPlan(plan);
-      setDurationModalVisible(true);
+      if (billingCycle === "yearly") {
+        // Yearly = 12 tháng + discount 20% → gọi thẳng API
+        handleYearlyPayment(plan);
+      } else {
+        // Monthly → mở modal chọn duration
+        setSelectedPlan(plan);
+        setDurationModalVisible(true);
+      }
     }
   };
 
-  const handleUpgradeConfirm = async (durationMonths: DurationMonths) => {
+  // ── Yearly: bypass modal, dùng 12 tháng + discount 20% ──
+  const handleYearlyPayment = async (plan: PricingPlan) => {
+    const yearlyOption = DURATION_OPTIONS.find((o) => o.months === 12)!;
+    setPaymentLoading(true);
+    try {
+      const response = await paymentService.createPaymentLink({
+        planCode: plan.code as "PREMIUM" | "MONITOR",
+        durationMonths: 12,
+        returnUrl: PAYMENT_RETURN_URL,
+        cancelUrl: PAYMENT_CANCEL_URL,
+        discountPercent: yearlyOption.discountPercent,
+      });
+
+      if (response.success && response.data?.paymentUrl) {
+        router.push({
+          pathname: "/payment/processing" as any,
+          params: {
+            paymentUrl: response.data.paymentUrl,
+            orderCode: String(response.data.orderCode),
+          },
+        });
+      } else {
+        Alert.alert(t("common.error"), response.message || t("plans.payment.createError"));
+      }
+    } catch {
+      Alert.alert(t("common.error"), t("common.error.generic"));
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  // ── Monthly: modal chọn duration → truyền discountPercent ──
+  const handleUpgradeConfirm = async (durationMonths: DurationMonths, discountPercent: number) => {
     if (!selectedPlan) return;
     setPaymentLoading(true);
     try {
@@ -109,6 +148,7 @@ const PricingPlansList: React.FC<Props> = ({
         durationMonths,
         returnUrl: PAYMENT_RETURN_URL,
         cancelUrl: PAYMENT_CANCEL_URL,
+        discountPercent,
       });
 
       setDurationModalVisible(false);

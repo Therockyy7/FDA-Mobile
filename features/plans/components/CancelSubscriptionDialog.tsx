@@ -1,6 +1,6 @@
 // features/plans/components/CancelSubscriptionDialog.tsx
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -9,7 +9,6 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   Keyboard,
   ScrollView,
   View,
@@ -35,6 +34,7 @@ const CancelSubscriptionDialog: React.FC<Props> = ({
 }) => {
   const { isDarkColorScheme } = useColorScheme();
   const [reason, setReason] = useState("");
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const isDark = isDarkColorScheme;
   const colors = {
@@ -64,7 +64,7 @@ const CancelSubscriptionDialog: React.FC<Props> = ({
       statusBarTranslucent
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={[styles.overlay, { backgroundColor: colors.overlay }]}
       >
         <TouchableOpacity
@@ -74,12 +74,12 @@ const CancelSubscriptionDialog: React.FC<Props> = ({
         />
         <View style={[styles.container, { backgroundColor: colors.bg }]}>
           <ScrollView
+            ref={scrollViewRef}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: Platform.OS === "ios" ? 40 : 20 }}
           >
-            <TouchableWithoutFeedback>
-              <View>
+            <View>
                 {/* Header */}
                 <View style={[styles.header, { backgroundColor: colors.headerBg, borderBottomColor: colors.border }]}>
                   <View style={[styles.iconContainer, { backgroundColor: colors.dangerBg }]}>
@@ -142,6 +142,12 @@ const CancelSubscriptionDialog: React.FC<Props> = ({
                       value={reason}
                       onChangeText={setReason}
                       maxLength={200}
+                      onFocus={() => {
+                        // Auto-scroll to input so user can see what they type
+                        setTimeout(() => {
+                          scrollViewRef.current?.scrollToEnd({ animated: true });
+                        }, 300);
+                      }}
                     />
                   </View>
                 </View>
@@ -168,8 +174,7 @@ const CancelSubscriptionDialog: React.FC<Props> = ({
                     )}
                   </TouchableOpacity>
                 </View>
-              </View>
-            </TouchableWithoutFeedback>
+            </View>
           </ScrollView>
         </View>
       </KeyboardAvoidingView>

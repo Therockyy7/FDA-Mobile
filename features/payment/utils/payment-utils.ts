@@ -14,9 +14,11 @@ export const formatVND = (amount: number): string => {
 // ─── Calculate total price for a given duration ─────────────────────────────
 export const calculateTotalPrice = (
   pricePerMonth: number,
-  durationMonths: number
+  durationMonths: number,
+  discountPercent: number = 0
 ): number => {
-  return pricePerMonth * durationMonths;
+  const base = pricePerMonth * durationMonths;
+  return Math.round(base * (1 - discountPercent / 100));
 };
 
 // ─── Map payment status to UI tone ──────────────────────────────────────────
@@ -102,13 +104,14 @@ export interface DurationOption {
   months: 1 | 3 | 6 | 12;
   label: string;
   badge?: string;
+  discountPercent: number; // 0, 5, 10, 20
 }
 
 export const DURATION_OPTIONS: DurationOption[] = [
-  { months: 1, label: "1 tháng" },
-  { months: 3, label: "3 tháng", badge: "−5%" },
-  { months: 6, label: "6 tháng", badge: "−10%" },
-  { months: 12, label: "12 tháng", badge: "−20%" },
+  { months: 1,  label: "1 tháng",  discountPercent: 0 },
+  { months: 3,  label: "3 tháng",  discountPercent: 5,  badge: "−5%" },
+  { months: 6,  label: "6 tháng",  discountPercent: 10, badge: "−10%" },
+  { months: 12, label: "12 tháng", discountPercent: 20, badge: "−20%" },
 ];
 
 // ─── Vietnamese status label for raw API status ─────────────────────────────

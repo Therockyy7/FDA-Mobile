@@ -19,7 +19,7 @@ import {
 type Props = {
   visible: boolean;
   onClose: () => void;
-  onConfirm: (durationMonths: DurationMonths) => void;
+  onConfirm: (durationMonths: DurationMonths, discountPercent: number) => void;
   planName: string;
   planCode: string;
   pricePerMonth: number;
@@ -39,6 +39,8 @@ const DurationSelectionModal: React.FC<Props> = ({
 }) => {
   const { isDarkColorScheme } = useColorScheme();
   const [selected, setSelected] = useState<DurationMonths>(1);
+
+  const selectedOption = DURATION_OPTIONS.find((o) => o.months === selected)!;
 
   const colors = {
     overlay: "rgba(0, 0, 0, 0.5)",
@@ -157,7 +159,7 @@ const DurationSelectionModal: React.FC<Props> = ({
                       { color: isSelected ? BRAND : colors.subtext },
                     ]}
                   >
-                    {formatVND(calculateTotalPrice(pricePerMonth, option.months))}
+                    {formatVND(calculateTotalPrice(pricePerMonth, option.months, option.discountPercent))}
                   </Text>
                 </TouchableOpacity>
               );
@@ -173,7 +175,7 @@ const DurationSelectionModal: React.FC<Props> = ({
               Tổng thanh toán
             </Text>
             <Text style={[styles.totalValue, { color: BRAND }]}>
-              {formatVND(calculateTotalPrice(pricePerMonth, selected))}
+              {formatVND(calculateTotalPrice(pricePerMonth, selected, selectedOption.discountPercent))}
             </Text>
           </View>
 
@@ -183,7 +185,7 @@ const DurationSelectionModal: React.FC<Props> = ({
               styles.ctaBtn,
               { backgroundColor: BRAND, opacity: loading ? 0.7 : 1 },
             ]}
-            onPress={() => onConfirm(selected)}
+            onPress={() => onConfirm(selected, selectedOption.discountPercent)}
             activeOpacity={0.8}
             disabled={loading}
           >

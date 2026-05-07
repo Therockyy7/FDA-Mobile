@@ -292,7 +292,7 @@ export const en: TranslationDict = {
   "areas.radius": "Radius",
   "areas.status.safe": "Safe",
   "areas.status.warning": "Warning",
-  "areas.status.danger": "Danger",
+  "areas.status.critical": "Critical",
   "areas.status.unknown": "No data",
   "areas.premium.title": "Upgrade plan",
   "areas.premium.desc":
@@ -521,6 +521,18 @@ export const en: TranslationDict = {
   "prediction.conclusion": "Conclusion",
   "prediction.satellite": "Satellite analysis",
   "prediction.satellite.loading": "Analyzing satellite data...",
+  "satellite.error.title": "Analysis failed",
+  "satellite.error.retry": "Try again",
+  "satellite.error.timeout":
+    "The analysis took too long. This area may not have recent satellite imagery, or no flooding was detected. Please try again in a few minutes.",
+  "satellite.error.rateLimit":
+    "Too many requests at once. Please wait 1–2 minutes and try again.",
+  "satellite.error.network":
+    "Network connection lost. Please check your Internet and try again.",
+  "satellite.error.server":
+    "The satellite service is currently unavailable. Please try again in a few minutes.",
+  "satellite.error.generic":
+    "Could not analyse the satellite data. This area may not have recent imagery, or no flooding was detected. Please try again.",
   "prediction.valid": "Valid",
   "prediction.expired": "Expired",
   "prediction.rateLimit.message":

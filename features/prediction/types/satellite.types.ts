@@ -66,7 +66,8 @@ export interface SatelliteResultData {
   filter_stats: FilterStats;
   visuals: SatelliteVisuals;
   geojson: GeoJsonCollection;
-  geo_coordinates: number[][][];
+  /** Stripped at the service boundary — duplicates geojson.coordinates and is unused. */
+  geo_coordinates?: number[][][];
   timestamp: string;
 }
 

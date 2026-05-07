@@ -34,6 +34,7 @@ export const SatelliteService = {
    */
   runSatelliteAnalysis: async (
     params: SatelliteAnalysisParams,
+    signal?: AbortSignal,
   ): Promise<SatelliteAnalysisResponse> => {
     const { area_id, use_bbox = true, use_fusion = true, capture_mode, include_permanent_water = false } = params;
 
@@ -41,8 +42,8 @@ export const SatelliteService = {
       // API expects use_bbox & use_fusion as query string params, not body
       const response = await predictionClient.post<SatelliteAnalysisResponse>(
         `/api/v1/area/${area_id}/verify/satellite-analysis`,
-        null,                          
-        { params: { use_bbox, use_fusion, capture_mode, include_permanent_water } },
+        null,
+        { params: { use_bbox, use_fusion, capture_mode, include_permanent_water }, signal },
       );
 
       if (response.data.status !== "success" && response.data.status !== "no_flood_detected") {
@@ -51,7 +52,18 @@ export const SatelliteService = {
         );
       }
 
-      return response.data;
+      // Drop `geo_coordinates` — it duplicates `geojson.coordinates` and is never read.
+      // Keeping both spikes the JS heap and trips the RN bridge OOM after a few runs.
+      const data = response.data;
+      if (data.individual_results) {
+        for (const item of data.individual_results) {
+          if (item.result?.data) {
+            delete (item.result.data as { geo_coordinates?: unknown }).geo_coordinates;
+          }
+        }
+      }
+
+      return data;
     } catch (error: any) {
       console.error("❌ Satellite analysis failed:", error?.message);
       throw error;

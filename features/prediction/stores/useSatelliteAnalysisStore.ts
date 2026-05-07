@@ -50,20 +50,19 @@ export const useSatelliteAnalysisStore = create<SatelliteAnalysisStore>((set) =>
     const origin = new Date(startedAt).getTime();
     _globalTickerRef = setInterval(() => {
       const elapsed = Math.floor((Date.now() - origin) / 1000);
-      set((state) => ({
-        results: {
-          ...state.results,
-          [areaId]: {
-            ...(state.results[areaId] || {
-              state: "loading",
-              data: null,
-              error: null,
-              elapsedSeconds: 0,
-            }),
-            elapsedSeconds: elapsed,
+      set((state) => {
+        const previous = state.results[areaId] || {
+          state: "loading" as const,
+          data: null,
+          error: null,
+          elapsedSeconds: 0,
+        };
+        return {
+          results: {
+            [areaId]: { ...previous, elapsedSeconds: elapsed },
           },
-        },
-      }));
+        };
+      });
     }, 1000);
   },
 
@@ -72,20 +71,21 @@ export const useSatelliteAnalysisStore = create<SatelliteAnalysisStore>((set) =>
   },
 
   setResult: (areaId, payload) =>
-    set((state) => ({
-      results: {
-        ...state.results,
-        [areaId]: {
-          ...(state.results[areaId] || {
-            state: "idle",
-            data: null,
-            error: null,
-            elapsedSeconds: 0,
-          }),
-          ...payload,
+    set((state) => {
+      // Cap to a single area at a time — drop any other entries so multiple
+      // runs across different areas don't stack large GeoJSON payloads in JS heap.
+      const previous = state.results[areaId] || {
+        state: "idle" as const,
+        data: null,
+        error: null,
+        elapsedSeconds: 0,
+      };
+      return {
+        results: {
+          [areaId]: { ...previous, ...payload },
         },
-      },
-    })),
+      };
+    }),
 
   clearResult: (areaId) =>
     set((state) => {

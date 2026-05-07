@@ -292,7 +292,7 @@ export const vi: TranslationDict = {
   "areas.radius": "Bán kính",
   "areas.status.safe": "An toàn",
   "areas.status.warning": "Cảnh báo",
-  "areas.status.danger": "Nguy hiểm",
+  "areas.status.critical": "Nguy hiểm",
   "areas.status.unknown": "Chưa có dữ liệu",
   "areas.premium.title": "Nâng cấp gói",
   "areas.premium.desc": "Bạn đã đạt giới hạn khu vực. Nâng cấp để thêm nhiều hơn.",
@@ -519,6 +519,18 @@ export const vi: TranslationDict = {
   "prediction.conclusion": "Kết luận",
   "prediction.satellite": "Phân tích vệ tinh",
   "prediction.satellite.loading": "Đang phân tích vệ tinh...",
+  "satellite.error.title": "Phân tích thất bại",
+  "satellite.error.retry": "Thử lại",
+  "satellite.error.timeout":
+    "Hệ thống xử lý quá lâu. Có thể vùng này chưa có ảnh vệ tinh mới hoặc không phát hiện vùng ngập. Vui lòng thử lại sau ít phút.",
+  "satellite.error.rateLimit":
+    "Quá nhiều yêu cầu cùng lúc. Vui lòng đợi 1–2 phút rồi thử lại.",
+  "satellite.error.network":
+    "Mất kết nối mạng. Hãy kiểm tra Internet rồi thử lại.",
+  "satellite.error.server":
+    "Máy chủ vệ tinh đang gặp sự cố. Vui lòng thử lại sau ít phút.",
+  "satellite.error.generic":
+    "Không thể phân tích vệ tinh. Có thể vùng này chưa có ảnh mới hoặc không phát hiện vùng ngập. Vui lòng thử lại.",
   "prediction.valid": "Có hiệu lực",
   "prediction.expired": "Hết hạn",
   "prediction.rateLimit.message":

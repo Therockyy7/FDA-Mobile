@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
 import { SatelliteService } from "../services/satellite.service";
 import { useSatelliteAnalysisStore } from "../stores/useSatelliteAnalysisStore";
@@ -51,11 +51,31 @@ export function useSatelliteAnalysis(
   const { data, state, error, elapsedSeconds } = currentState;
   const { setLayers, clear: clearFloodStore } = useSatelliteFloodStore();
 
+  // AbortController for the in-flight request — lets us cancel on unmount
+  // so a 180s satellite analysis doesn't keep references alive after the
+  // user leaves the screen.
+  const abortRef = useRef<AbortController | null>(null);
+
   // When this component unmounts, do NOT stop the ticker —
   // it must keep running in the background so the pill stays updated.
   // The ticker is only stopped when the API call finishes or reset() is called.
+  // We DO abort any in-flight request so a 180s satellite call can't keep
+  // references alive after the user leaves the screen.
+  // NOTE: we deliberately do NOT clear `useSatelliteFloodStore` here — the
+  // "View on Map" button stages layers there immediately before navigating,
+  // and clearing on unmount would race that flow. The flood store is already
+  // wiped at the start of each new runAnalysis (see clearFloodStore() below),
+  // so it stays bounded to ~one analysis worth of layers across runs.
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+      abortRef.current = null;
+    };
+  }, []);
 
   const reset = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
     clearResult(areaId);
     clearFloodStore();
     setActiveLoadingAreaId(null);
@@ -99,14 +119,22 @@ export function useSatelliteAnalysis(
       // Start the global ticker — persists even after this component unmounts
       startTicker(areaId, now);
 
+      // Cancel any previous in-flight request before starting a new one.
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
       try {
-        const result = await SatelliteService.runSatelliteAnalysis({
-          area_id: areaId,
-          use_bbox: useBbox,
-          use_fusion: useFusion,
-          capture_mode: undefined,
-          include_permanent_water: false,
-        });
+        const result = await SatelliteService.runSatelliteAnalysis(
+          {
+            area_id: areaId,
+            use_bbox: useBbox,
+            use_fusion: useFusion,
+            capture_mode: undefined,
+            include_permanent_water: false,
+          },
+          controller.signal,
+        );
 
         setResult(areaId, {
           data: result,
@@ -116,7 +144,9 @@ export function useSatelliteAnalysis(
         onSuccess?.();
 
         // ── Push flood polygons into the global map store ──────────────────
-        const layers = result.individual_results
+        // Guard: server may omit `individual_results` when status is
+        // "no_flood_detected" or under certain partial-response conditions.
+        const layers = (result.individual_results ?? [])
           .filter((item) => item.result?.data?.geojson?.features?.length)
           .map((item) => ({
             id: `${item.platform}-${Date.now()}`,
@@ -132,13 +162,48 @@ export function useSatelliteAnalysis(
         }
         // ──────────────────────────────────────────────────────────────────
       } catch (err: any) {
-        const msg =
-          err?.response?.data?.error ||
-          err?.message ||
-          "Không thể phân tích vệ tinh. Vui lòng thử lại.";
-        setResult(areaId, { error: msg, state: "error" });
+        // Aborted requests (component unmounted / new run started) are not errors.
+        const aborted =
+          controller.signal.aborted ||
+          err?.name === "CanceledError" ||
+          err?.name === "AbortError" ||
+          err?.code === "ERR_CANCELED";
+        if (aborted) {
+          setActiveLoadingAreaId(null);
+          return;
+        }
+
+        // Classify into a stable i18n key so the UI can render a
+        // user-friendly message in either language. The raw axios/JS
+        // message (e.g. "Cannot read property 'filter' of undefined" or
+        // "Request failed with status code 504") is not shown to users.
+        const status: number | undefined = err?.response?.status;
+        const code: string | undefined = err?.code;
+        const rawMsg: string = err?.message ?? "";
+        const isTimeout =
+          status === 504 ||
+          status === 408 ||
+          code === "ECONNABORTED" ||
+          /timeout/i.test(rawMsg);
+        const isNetwork =
+          !err?.response &&
+          (code === "ERR_NETWORK" || /network/i.test(rawMsg));
+        const isRateLimit = status === 429;
+        const isServerError = typeof status === "number" && status >= 500;
+
+        let key: string;
+        if (isTimeout) key = "satellite.error.timeout";
+        else if (isRateLimit) key = "satellite.error.rateLimit";
+        else if (isNetwork) key = "satellite.error.network";
+        else if (isServerError) key = "satellite.error.server";
+        else key = "satellite.error.generic";
+
+        setResult(areaId, { error: key, state: "error" });
         setActiveLoadingAreaId(null);
       } finally {
+        // Only clear our ref if it still points at this run (a newer run may
+        // have already replaced it).
+        if (abortRef.current === controller) abortRef.current = null;
         // Stop the global ticker — API call is complete
         stopTicker();
       }

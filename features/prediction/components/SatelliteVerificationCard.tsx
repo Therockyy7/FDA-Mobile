@@ -13,6 +13,7 @@ import MapView, { Polygon, PROVIDER_GOOGLE } from "react-native-maps";
 import { Text } from "~/components/ui/text";
 import { useSatelliteFloodStore } from "~/features/map/stores/useSatelliteFloodStore";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { useTranslation } from "~/features/i18n";
 import { useSatelliteAnalysis } from "../hooks/useSatelliteAnalysis";
 import type {
   IndividualSatelliteResult,
@@ -709,6 +710,7 @@ function PlatformResultCard({
 export function SatelliteVerificationCard({ areaId, areaName, areaGeometry, onSatelliteSuccess }: Props) {
   const { isDarkColorScheme: isDark } = useColorScheme();
   const router = useRouter();
+  const { t } = useTranslation();
   const { data, state, error, elapsedSeconds, runAnalysis, reset } =
     useSatelliteAnalysis(areaId);
   const { visible: mapLayerVisible, toggleVisible } = useSatelliteFloodStore();
@@ -1227,7 +1229,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry, onSa
             textAlign: "center",
           }}
         >
-          Phân tích thất bại
+          {t("satellite.error.title")}
         </Text>
         <Text
           style={{
@@ -1237,7 +1239,11 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry, onSa
             lineHeight: 18,
           }}
         >
-          {error}
+          {/* `error` is an i18n key set by the hook (e.g. "satellite.error.timeout").
+              If the key is missing for any reason, fall back to the generic message. */}
+          {error?.startsWith("satellite.error.")
+            ? t(error as any)
+            : t("satellite.error.generic")}
         </Text>
         <TouchableOpacity
           onPress={reset}
@@ -1253,7 +1259,7 @@ export function SatelliteVerificationCard({ areaId, areaName, areaGeometry, onSa
         >
           <Ionicons name="refresh" size={14} color="#FFFFFF" />
           <Text style={{ fontSize: 13, fontWeight: "700", color: "#FFFFFF" }}>
-            Thử lại
+            {t("satellite.error.retry")}
           </Text>
         </TouchableOpacity>
       </View>

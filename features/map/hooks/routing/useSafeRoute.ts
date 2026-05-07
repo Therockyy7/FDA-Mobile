@@ -4,7 +4,7 @@ import type { TransportMode } from "../../types/routing.types";
 import { FloodRoute, FloodZone } from "../../constants/map-data";
 import { parseRouteResponse } from "../../lib/polyline-utils";
 import { BasicRouteService } from "../../services/basic-route.service";
-import { SafeRouteService } from "../../services/safe-route.service";
+import { SafeRouteRateLimitError, SafeRouteService } from "../../services/safe-route.service";
 import type {
   BasicRouteRequest,
   DecodedRoute,
@@ -26,6 +26,7 @@ export function useSafeRoute() {
   const [metadata, setMetadata] = useState<RouteMetadata | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rateLimitSeconds, setRateLimitSeconds] = useState<number | null>(null);
 
   // Flood map selection (merged from useFloodSelection)
   const [selectedZone, setSelectedZone] = useState<FloodZone | null>(null);
@@ -44,6 +45,7 @@ export function useSafeRoute() {
     ) => {
       setIsLoading(true);
       setError(null);
+      setRateLimitSeconds(null);
 
       try {
         const profile = TRANSPORT_MODE_TO_PROFILE[transportMode];
@@ -99,13 +101,18 @@ export function useSafeRoute() {
         setFloodWarnings(parsed.floodWarnings);
         setMetadata(parsed.metadata);
       } catch (err: any) {
-        const status = err?.status;
-        if (status === 422) {
-          setError("Không tìm được đường. Khu vực có thể bị chặn.");
-        } else if (status === 503) {
-          setError("Dịch vụ tìm đường tạm thời không khả dụng.");
+        if (err instanceof SafeRouteRateLimitError) {
+          setRateLimitSeconds(err.retryAfterSeconds);
+          // Don't set error string — modal handles this UX
         } else {
-          setError(err?.message || "Lỗi kết nối. Vui lòng thử lại.");
+          const status = err?.status;
+          if (status === 422) {
+            setError("Không tìm được đường. Khu vực có thể bị chặn.");
+          } else if (status === 503) {
+            setError("Dịch vụ tìm đường tạm thời không khả dụng.");
+          } else {
+            setError(err?.message || "Lỗi kết nối. Vui lòng thử lại.");
+          }
         }
       } finally {
         setIsLoading(false);
@@ -128,6 +135,10 @@ export function useSafeRoute() {
     return [primaryRoute, ...alternativeRoutes];
   }, [primaryRoute, alternativeRoutes]);
 
+  const clearRateLimit = useCallback(() => {
+    setRateLimitSeconds(null);
+  }, []);
+
   const clearRoutes = useCallback(() => {
     setPrimaryRoute(null);
     setAlternativeRoutes([]);
@@ -136,6 +147,7 @@ export function useSafeRoute() {
     setFloodWarnings([]);
     setMetadata(null);
     setError(null);
+    setRateLimitSeconds(null);
   }, []);
 
   const clearSelection = useCallback(() => {
@@ -153,6 +165,8 @@ export function useSafeRoute() {
     metadata,
     isLoading,
     error,
+    rateLimitSeconds,
+    clearRateLimit,
     hasResults,
     findRoute,
     selectRoute,

@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { Text } from "~/components/ui/text";
 import type { AreaError } from "~/features/areas/hooks/useControlArea";
+import { useTranslation } from "~/features/i18n/hooks/useTranslation";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 interface AreaCreationErrorModalProps {
@@ -32,6 +33,7 @@ export function AreaCreationErrorModal({
   onChangeLocation,
 }: AreaCreationErrorModalProps) {
   const { isDarkColorScheme } = useColorScheme();
+  const { t } = useTranslation();
 
   const colors = {
     cardBg: isDarkColorScheme ? "#1E293B" : "#FFFFFF",
@@ -205,7 +207,11 @@ export function AreaCreationErrorModal({
                 color={accentColor}
               />
               <Text style={[styles.messageLabel, { color: accentColor }]}>
-                {isDuplicateError ? "Vị trí trùng lặp" : "Chi tiết lỗi"}
+                {isDuplicateError
+                  ? t("areas.error.duplicate.label")
+                  : error?.type === "duplicateName"
+                    ? t("areas.error.duplicateName.label")
+                    : t("areas.error.detail.label")}
               </Text>
             </View>
             <Text style={[styles.messageText, { color: colors.subtext }]}>
@@ -231,7 +237,7 @@ export function AreaCreationErrorModal({
                 <Text
                   style={[styles.secondaryButtonText, { color: colors.text }]}
                 >
-                  Đổi vị trí
+                  {t("areas.error.changeLocation")}
                 </Text>
               </TouchableOpacity>
             )}
@@ -253,7 +259,9 @@ export function AreaCreationErrorModal({
                 style={styles.primaryButtonGradient}
               >
                 <Ionicons name="checkmark-circle" size={18} color="white" />
-                <Text style={styles.primaryButtonText}>Đã hiểu</Text>
+                <Text style={styles.primaryButtonText}>
+                  {t("areas.error.understood")}
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -266,7 +274,7 @@ export function AreaCreationErrorModal({
                   style={[styles.tipBullet, { backgroundColor: accentColor }]}
                 />
                 <Text style={[styles.tipText, { color: colors.subtext }]}>
-                  Di chuyển đến vị trí khác cách xa hơn 50m
+                  {t("areas.error.tip.moveAway")}
                 </Text>
               </View>
               <View style={styles.tipRow}>
@@ -274,8 +282,9 @@ export function AreaCreationErrorModal({
                   style={[styles.tipBullet, { backgroundColor: accentColor }]}
                 />
                 <Text style={[styles.tipText, { color: colors.subtext }]}>
-                  Hoặc chỉnh sửa vùng &quot;{error.existingAreaName}&quot; hiện
-                  có
+                  {t("areas.error.tip.editExisting", {
+                    name: error.existingAreaName ?? "",
+                  })}
                 </Text>
               </View>
             </View>

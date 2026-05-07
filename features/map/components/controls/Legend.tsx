@@ -11,7 +11,7 @@ const SEVERITY_LEVELS = [
   {
     key: "safe",
     label: "An toàn",
-    range: "< 10 cm",
+    range: "0-5 cm",
     color: "#22C55E",
     bgColor: "#DCFCE7",
     icon: "checkmark-circle" as const,
@@ -19,7 +19,7 @@ const SEVERITY_LEVELS = [
   {
     key: "caution",
     label: "Chú ý",
-    range: "10-20 cm",
+    range: "11-15 cm",
     color: "#EAB308",
     bgColor: "#FEF9C3",
     icon: "information-circle" as const,
@@ -27,7 +27,7 @@ const SEVERITY_LEVELS = [
   {
     key: "warning",
     label: "Cảnh báo",
-    range: "20-40 cm",
+    range: "21-35 cm",
     color: "#F97316",
     bgColor: "#FFEDD5",
     icon: "alert-circle" as const,

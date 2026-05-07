@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 import {
   PredictionApiResponse,
   PredictionResponse,
@@ -8,6 +8,30 @@ import type { DistrictsForecastResponse } from "../types/districts-forecast.type
 const PREDICTION_BASE_URL =
   process.env.EXPO_PUBLIC_PREDICTION_API_BASE || "https://ai.fda.id.vn";
 const PREDICTION_API_KEY = process.env.EXPO_PUBLIC_PREDICTION_API_KEY || "";
+
+const DEFAULT_RATE_LIMIT_COOLDOWN_SECONDS = 60;
+
+export class PredictionRateLimitError extends Error {
+  constructor(
+    public readonly retryAfterSeconds: number = DEFAULT_RATE_LIMIT_COOLDOWN_SECONDS,
+    public readonly requestId?: string,
+  ) {
+    super("RATE_LIMITED");
+    this.name = "PredictionRateLimitError";
+  }
+}
+
+const generateRequestId = () =>
+  `req-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+
+const parseRetryAfterSeconds = (header: unknown): number => {
+  if (typeof header !== "string" && typeof header !== "number") {
+    return DEFAULT_RATE_LIMIT_COOLDOWN_SECONDS;
+  }
+  const n = Number(header);
+  if (Number.isFinite(n) && n > 0) return Math.ceil(n);
+  return DEFAULT_RATE_LIMIT_COOLDOWN_SECONDS;
+};
 
 const predictionClient = axios.create({
   baseURL: PREDICTION_BASE_URL,
@@ -29,9 +53,12 @@ export const PredictionService = {
   getFloodRiskPrediction: async (
     areaId: string,
   ): Promise<PredictionResponse> => {
+    const requestId = generateRequestId();
     try {
       const response = await predictionClient.post<PredictionApiResponse>(
         `/api/v1/area/${areaId}/predict-flood-assemble`,
+        undefined,
+        { headers: { "X-Request-ID": requestId } },
       );
       console.log("Prediction API response :", areaId);
       if (!response.data.success) {
@@ -42,6 +69,15 @@ export const PredictionService = {
 
       return response.data.data;
     } catch (error) {
+      if (isAxiosError(error) && error.response?.status === 429) {
+        const retryAfter = parseRetryAfterSeconds(
+          error.response.headers?.["retry-after"],
+        );
+        console.warn(
+          `⏱️ Rate limited (429) for area ${areaId} — retry in ${retryAfter}s — requestId=${requestId}`,
+        );
+        throw new PredictionRateLimitError(retryAfter, requestId);
+      }
       console.error("❌ Failed to fetch prediction:" + `${areaId}`, error);
       throw error;
     }

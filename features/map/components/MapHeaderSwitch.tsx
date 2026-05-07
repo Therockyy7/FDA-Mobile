@@ -32,6 +32,7 @@ interface Props {
   onFindRoute: () => void;
   safeRouteIsLoading: boolean;
   safeRouteError: string | null;
+  safeRouteRateLimitSeconds?: number | null;
   onCloseRouting: () => void;
   userLocation: LatLng | null;
   selectGPSAsDestination: (loc: LatLng) => void;
@@ -63,6 +64,7 @@ export function MapHeaderSwitch({
   onFindRoute,
   safeRouteIsLoading,
   safeRouteError,
+  safeRouteRateLimitSeconds,
   onCloseRouting,
   userLocation,
   selectGPSAsDestination,
@@ -120,6 +122,7 @@ export function MapHeaderSwitch({
       onFindRoute={onFindRoute}
       isLoading={safeRouteIsLoading}
       error={safeRouteError}
+      rateLimitSeconds={safeRouteRateLimitSeconds}
       user={user ?? null}
       onProfilePress={() => router.push("/(tabs)/profile")}
       isGuest={isGuest}

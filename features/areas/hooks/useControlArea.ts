@@ -1,16 +1,23 @@
 // features/areas/hooks/useControlArea.ts
 // Hook to manage all area-related operations for map screen
 import * as Location from "expo-location";
+import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Alert } from "react-native";
 import type MapView from "react-native-maps";
 import type { MapPressEvent, Region } from "react-native-maps";
 import { AreaService } from "~/features/areas/services/area.service";
+import { useTranslation } from "~/features/i18n/hooks/useTranslation";
 import type { AreaWithStatus } from "~/features/map/types/map-layers.types";
 import { useCurrentSubscription } from "~/features/plans/hooks/useCurrentSubscription";
 
 // Error types for better UX
-export type AreaErrorType = "duplicate" | "general" | null;
+export type AreaErrorType =
+  | "duplicate"
+  | "duplicateName"
+  | "noStations"
+  | "general"
+  | null;
 
 export interface AreaError {
   type: AreaErrorType;
@@ -44,6 +51,8 @@ export function useControlArea({
   onAreaSubscribe,
   onAreaUnsubscribe,
 }: UseControlAreaParams) {
+  const { t } = useTranslation();
+  const router = useRouter();
   // Subscription check — Premium/Monitor bypasses the free 5-area limit
   const { data: subscriptionData } = useCurrentSubscription();
   const tierCode = subscriptionData?.subscription?.tierCode;
@@ -379,33 +388,81 @@ export function useControlArea({
     setEditingArea(null);
   }, []);
 
-  // Parse error message to detect duplicate area error
+  // Parse error message into a localized + typed AreaError.
   const parseAreaError = useCallback(
     (errorMessage: string, isUpdate: boolean): AreaError => {
-      // Check for duplicate area error pattern: "An area 'AreaName' already exists within X meters"
-      const duplicateMatch = errorMessage.match(
+      // Duplicate-by-location:
+      //   "An area 'AreaName' already exists within X meters"
+      const duplicateLocationMatch = errorMessage.match(
         /An area '([^']+)' already exists within (\d+) meters/i,
       );
-
-      if (duplicateMatch) {
-        const existingAreaName = duplicateMatch[1];
-        const distance = duplicateMatch[2];
+      if (duplicateLocationMatch) {
+        const existingAreaName = duplicateLocationMatch[1];
+        const distance = duplicateLocationMatch[2];
         return {
           type: "duplicate",
-          title: "Vùng đã tồn tại",
-          message: `Đã có vùng "${existingAreaName}" trong bán kính ${distance}m tại vị trí này.\n\nVui lòng chọn vị trí khác hoặc chỉnh sửa vùng hiện có.`,
+          title: t("areas.error.duplicate.title"),
+          message: t("areas.error.duplicate.message", {
+            name: existingAreaName,
+            distance,
+          }),
           existingAreaName,
         };
       }
 
-      // General error
+      // Duplicate name. BE phrasings vary, so cover the common ones:
+      //   "You already have an area named 'X'. Please choose a different name."
+      //   "An area with name 'X' already exists"
+      //   "Area name 'X' is already taken/used"
+      //   "Duplicate area name"
+      //   "Tên vùng đã tồn tại" / "trùng tên"
+      const duplicateNamedMatch = errorMessage.match(
+        /(?:you\s+already\s+have\s+an?\s+area|an?\s+area\s+with\s+(?:the\s+)?name)\s+(?:named\s+)?['"]([^'"]+)['"]/i,
+      );
+      const isDuplicateName =
+        !!duplicateNamedMatch ||
+        /(?:area\s+)?name\s+['"]?[^'"]*['"]?\s+(?:is\s+)?(?:already\s+)?(?:exists?|taken|used|in\s+use)/i.test(
+          errorMessage,
+        ) ||
+        /duplicate\s+(?:area\s+)?name/i.test(errorMessage) ||
+        /choose\s+a\s+different\s+name/i.test(errorMessage) ||
+        /tên.{0,30}(?:đã\s+tồn\s+tại|trùng|đã\s+sử\s+dụng)/i.test(
+          errorMessage,
+        ) ||
+        /trùng\s+tên/i.test(errorMessage);
+
+      if (isDuplicateName) {
+        const capturedName = duplicateNamedMatch?.[1];
+        return {
+          type: "duplicateName",
+          title: t("areas.error.duplicateName.title"),
+          message: capturedName
+            ? t("areas.error.duplicateName.message", { name: capturedName })
+            : t("areas.error.duplicateName.messageGeneric"),
+          existingAreaName: capturedName,
+        };
+      }
+
+      // No active monitoring stations within radius
+      if (/no active monitoring stations/i.test(errorMessage)) {
+        return {
+          type: "noStations",
+          title: t("areas.error.create.title"),
+          message: t("areas.error.noStations.message"),
+        };
+      }
+
+      // General fallback — note: raw `errorMessage` from the BE may be in
+      // English, but at least the title comes through localized.
       return {
         type: "general",
-        title: isUpdate ? "Không thể cập nhật" : "Không thể tạo vùng",
-        message: errorMessage || "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
+        title: isUpdate
+          ? t("areas.error.update.title")
+          : t("areas.error.create.title"),
+        message: errorMessage || t("areas.error.general.message"),
       };
     },
-    [],
+    [t],
   );
 
   // Close error modal
@@ -451,8 +508,19 @@ export function useControlArea({
         setEditingArea(null);
       } catch (error: any) {
         console.error("Failed to save area:", error);
-        // Show custom error modal instead of Alert
         const parsedError = parseAreaError(error?.message || "", !!editingArea);
+        // Location-related errors (no station coverage / area at this location
+        // already exists) cannot be fixed by changing the name — close the
+        // sheet and return to the radius-adjust step so user can pick another
+        // spot after dismissing the error modal.
+        if (
+          !editingArea &&
+          (parsedError.type === "noStations" ||
+            parsedError.type === "duplicate")
+        ) {
+          setShowCreateAreaSheet(false);
+          setIsAdjustingRadius(true);
+        }
         setAreaError(parsedError);
       } finally {
         setIsCreatingArea(false);
@@ -562,16 +630,11 @@ export function useControlArea({
     setShowPremiumLimitModal(false);
   }, []);
 
-  // Handle premium upgrade (placeholder for future implementation)
+  // Navigate to the existing Premium plans screen
   const handleUpgradePremium = useCallback(() => {
     setShowPremiumLimitModal(false);
-    // TODO: Navigate to premium upgrade screen
-    Alert.alert(
-      "Nâng cấp Premium",
-      "Tính năng Premium sẽ sớm ra mắt. Hãy theo dõi để cập nhật!",
-      [{ text: "OK" }],
-    );
-  }, []);
+    router.push("/plans" as any);
+  }, [router]);
 
   return {
     // State

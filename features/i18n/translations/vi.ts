@@ -302,6 +302,38 @@ export const vi: TranslationDict = {
   "areas.myAreas": "Khu vực của tôi",
   "areas.systemAreas": "Khu vực hệ thống",
 
+  // ── Area error modal (create / update) ─────────────
+  "areas.error.create.title": "Không thể tạo vùng",
+  "areas.error.update.title": "Không thể cập nhật",
+  "areas.error.general.message": "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
+  "areas.error.detail.label": "Chi tiết lỗi",
+  "areas.error.duplicate.title": "Vùng đã tồn tại",
+  "areas.error.duplicate.label": "Vị trí trùng lặp",
+  "areas.error.duplicate.message":
+    "Đã có vùng \"{name}\" trong bán kính {distance}m tại vị trí này.\n\nVui lòng chọn vị trí khác hoặc chỉnh sửa vùng hiện có.",
+  "areas.error.duplicateName.title": "Tên vùng đã tồn tại",
+  "areas.error.duplicateName.label": "Trùng tên",
+  "areas.error.duplicateName.message":
+    "Bạn đã có một vùng tên \"{name}\". Vui lòng chọn tên khác.",
+  "areas.error.duplicateName.messageGeneric":
+    "Bạn đã có một vùng với tên này. Vui lòng chọn tên khác.",
+  "areas.error.noStations.message":
+    "Không tìm thấy trạm quan trắc đang hoạt động trong bán kính đã chọn. Vui lòng chọn vị trí khác có trạm quan trắc.",
+  "areas.error.understood": "Đã hiểu",
+  "areas.error.changeLocation": "Đổi vị trí",
+  "areas.error.tip.moveAway": "Di chuyển đến vị trí khác cách xa hơn 50m",
+  "areas.error.tip.editExisting": "Hoặc chỉnh sửa vùng \"{name}\" hiện có",
+
+  // ── Premium limit modal ────────────────────────────
+  "areas.premiumLimit.title": "Đã đạt giới hạn!",
+  "areas.premiumLimit.description":
+    "Bạn đã tạo {current}/{max} vùng theo dõi miễn phí.\nNâng cấp Premium để tạo không giới hạn!",
+  "areas.premiumLimit.benefit.unlimited": "Không giới hạn vùng theo dõi",
+  "areas.premiumLimit.benefit.priorityAlerts": "Thông báo ưu tiên",
+  "areas.premiumLimit.benefit.analytics": "Phân tích chi tiết",
+  "areas.premiumLimit.cta": "Nâng cấp Premium",
+  "areas.premiumLimit.later": "Để sau",
+
   // ── Map ────────────────────────────────────────────
   "map.title": "Bản đồ",
   "map.search.placeholder": "Tìm kiếm địa điểm...",
@@ -489,6 +521,16 @@ export const vi: TranslationDict = {
   "prediction.satellite.loading": "Đang phân tích vệ tinh...",
   "prediction.valid": "Có hiệu lực",
   "prediction.expired": "Hết hạn",
+  "prediction.rateLimit.message":
+    "Hệ thống đang nhận quá nhiều yêu cầu dự báo AI. Vui lòng chờ trong giây lát rồi thử lại.",
+  "route.rateLimit.message":
+    "Hệ thống đang nhận quá nhiều yêu cầu tìm đường. Vui lòng chờ trong giây lát rồi thử lại.",
+  "common.rateLimit.title": "Quá nhiều yêu cầu",
+  "common.rateLimit.message":
+    "Hệ thống đang nhận quá nhiều yêu cầu. Vui lòng chờ trong giây lát rồi thử lại.",
+  "common.rateLimit.retryIn": "Thử lại sau {seconds}s",
+  "common.rateLimit.retryNow": "Thử lại ngay",
+  "common.rateLimit.close": "Đóng",
 
   // ── Onboarding ─────────────────────────────────────
   "onboarding.skip": "Bỏ qua",

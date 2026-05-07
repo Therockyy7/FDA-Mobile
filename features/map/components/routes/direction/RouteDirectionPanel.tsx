@@ -49,6 +49,7 @@ export function RouteDirectionPanel({
   onFindRoute,
   isLoading,
   error,
+  rateLimitSeconds,
   user,
   onProfilePress,
   isGuest = false,
@@ -61,7 +62,8 @@ export function RouteDirectionPanel({
   if (!visible) return null;
 
   const hasDestination = isUsingGPSDest || hasDestinationCoord || destinationText.trim().length > 0;
-  const isDisabled = isLoading || !hasDestination;
+  const isRateLimited = !!rateLimitSeconds && rateLimitSeconds > 0;
+  const isDisabled = isLoading || !hasDestination || isRateLimited;
   const isReady = isExpanded;
 
   const handleBack = () => {
@@ -433,7 +435,7 @@ export function RouteDirectionPanel({
             activeOpacity={0.8}
             style={{
               flex: 1,
-              backgroundColor: isDisabled ? "#93C5FD" : "#2563EB",
+              backgroundColor: isRateLimited ? "#D97706" : isDisabled ? "#93C5FD" : "#2563EB",
               borderRadius: 999,
               paddingVertical: 11,
               alignItems: "center",
@@ -444,11 +446,13 @@ export function RouteDirectionPanel({
           >
             {isLoading ? (
               <ActivityIndicator size="small" color="white" />
+            ) : isRateLimited ? (
+              <Ionicons name="time-outline" size={15} color="white" />
             ) : (
               <Ionicons name="navigate" size={15} color="white" />
             )}
             <Text style={{ color: "white", fontWeight: "700", fontSize: 13 }}>
-              {isLoading ? "Đang tìm..." : "Tìm đường"}
+              {isLoading ? "Đang tìm..." : isRateLimited ? `Thử lại sau ${rateLimitSeconds}s` : "Tìm đường"}
             </Text>
           </TouchableOpacity>
         </View>

@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -29,9 +29,11 @@ import {
   PREDICTION_HEADER_MAX_HEIGHT,
   PredictionHeroHeader,
 } from "~/features/prediction/components/PredictionHeroHeader";
+import { RateLimitModal } from "~/components/RateLimitModal";
 import { SatelliteVerificationCard } from "~/features/prediction/components/SatelliteVerificationCard";
 import { StationsCard } from "~/features/prediction/components/StationsCard";
 import { usePredictionQuery, predictionQueryKey } from "~/features/prediction/hooks/queries/usePredictionQuery";
+import { PredictionRateLimitError } from "~/features/prediction/services/prediction.service";
 import { useColorScheme } from "~/lib/useColorScheme";
 
 export default function PredictionScreen() {
@@ -42,15 +44,22 @@ export default function PredictionScreen() {
   const insets = useSafeAreaInsets();
   const { isDarkColorScheme } = useColorScheme();
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const predictionQuery = usePredictionQuery(id);
   const prediction = predictionQuery.data ?? null;
   const loading = predictionQuery.isLoading;
   const refreshing =
     predictionQuery.isFetching && !predictionQuery.isLoading;
-  const error = predictionQuery.error
-    ? (predictionQuery.error as Error).message || "Không thể tải dự báo rủi ro."
-    : null;
+  const isRateLimited =
+    predictionQuery.error instanceof PredictionRateLimitError;
+  const rateLimitRetryAfter = isRateLimited
+    ? (predictionQuery.error as PredictionRateLimitError).retryAfterSeconds
+    : 60;
+  const error =
+    predictionQuery.error && !isRateLimited
+      ? (predictionQuery.error as Error).message || "Không thể tải dự báo rủi ro."
+      : null;
 
   // ── Look up admin area geometry for satellite flood clipping ─────────────
   const adminAreasQuery = useAdminAreasQuery();
@@ -291,8 +300,23 @@ export default function PredictionScreen() {
 
         {/* Absolute header — sits on top of ScrollView */}
         {prediction && (
-          <PredictionHeroHeader prediction={prediction} scrollY={scrollY} onRefresh={handleForceRefresh} />
+          <PredictionHeroHeader
+            prediction={prediction}
+            scrollY={scrollY}
+            onRefresh={handleForceRefresh}
+            refreshDisabled={isRateLimited || refreshing}
+          />
         )}
+
+        {/* Rate-limit modal (429) — countdown + gated retry */}
+        <RateLimitModal
+          visible={isRateLimited}
+          retryAfterSeconds={rateLimitRetryAfter}
+          onClose={() => {
+            if (router.canGoBack()) router.back();
+          }}
+          onRetry={handleForceRefresh}
+        />
 
         {/* ── Loading overlay — full-screen centered, above everything ── */}
         {loading && !refreshing && (

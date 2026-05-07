@@ -28,6 +28,7 @@ import { DANANG_CENTER } from "~/features/map/constants/map-data";
 import type { TransportMode } from "~/features/map/types/routing.types";
 
 import { ConfirmDeleteModal } from "~/features/areas/components/ConfirmDeleteModal";
+import { RateLimitModal } from "~/components/RateLimitModal";
 import { useIsAuthenticated } from "~/features/auth/hooks/useAuth";
 import { StaticAreaTarget } from "~/features/map/components/areas/overlays/StaticAreaTarget";
 import { MapContent } from "~/features/map/components/MapContent";
@@ -236,6 +237,7 @@ export default function MapScreen() {
           onFindRoute={handleFindRoute}
           safeRouteIsLoading={s.safeRoute.isLoading}
           safeRouteError={s.safeRoute.error}
+          safeRouteRateLimitSeconds={s.safeRoute.rateLimitSeconds}
           onCloseRouting={handleCloseRouting}
           userLocation={s.userLocation}
           selectGPSAsDestination={s.selectGPSAsDestination}
@@ -578,6 +580,15 @@ export default function MapScreen() {
           isDeleting={s.isDeletingArea}
           onConfirm={s.handleConfirmDelete}
           onCancel={s.handleCancelDelete}
+        />
+
+        {/* Safe Route Rate Limit Modal */}
+        <RateLimitModal
+          visible={s.safeRoute.rateLimitSeconds !== null}
+          retryAfterSeconds={s.safeRoute.rateLimitSeconds ?? 60}
+          message={"Hệ thống đang nhận quá nhiều yêu cầu tìm đường. Vui lòng chờ trong giây lát rồi thử lại."}
+          onClose={s.safeRoute.clearRateLimit}
+          onRetry={handleFindRoute}
         />
       </View>
     </View>

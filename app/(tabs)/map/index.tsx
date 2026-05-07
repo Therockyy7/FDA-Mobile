@@ -114,6 +114,9 @@ export default function MapScreen() {
     floodSeverity: s.floodSeverity,
   });
 
+  // Wire onArrived → handleStopNavigation để UI restore đúng khi đến nơi
+  s.onArrivedRef.current = handleStopNavigation;
+
   // Reset station card khi user rời khỏi tab map
   const { setSelectedStationId } = s;
   useFocusEffect(

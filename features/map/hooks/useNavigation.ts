@@ -12,7 +12,7 @@ import { useNavigationVoice } from "./navigation/useNavigationVoice";
 import { useGPSWatcher } from "./navigation/useGPSWatcher";
 import { useNavigationTracking } from "./navigation/useNavigationTracking";
 
-export function useNavigation({ route, mapRef, onOffRoute }: UseNavigationParams) {
+export function useNavigation({ route, mapRef, onOffRoute, onArrived }: UseNavigationParams) {
   const state = useNavigationState();
   const voice = useNavigationVoice();
   const gps = useGPSWatcher();
@@ -45,8 +45,14 @@ export function useNavigation({ route, mapRef, onOffRoute }: UseNavigationParams
     state,
     voice,
     onOffRoute,
+    onArrived,
     stopNavigation,
   });
+
+  // Keep a ref to the latest callback so GPS watcher always calls the newest version
+  // (route can change mid-navigation after off-route recalculation).
+  const onLocationUpdateRef = useRef(onLocationUpdate);
+  onLocationUpdateRef.current = onLocationUpdate;
 
   const startNavigation = useCallback(async () => {
     if (!route || route.coordinates.length < 2) return;
@@ -75,7 +81,7 @@ export function useNavigation({ route, mapRef, onOffRoute }: UseNavigationParams
       voice.speak(translateInstruction(route.instructions[0].text));
     }
 
-    const started = await gps.startWatching(onLocationUpdate);
+    const started = await gps.startWatching((loc) => onLocationUpdateRef.current(loc));
     if (!started) {
       state.setIsNavigating(false);
       isNavigatingRef.current = false;
@@ -91,6 +97,21 @@ export function useNavigation({ route, mapRef, onOffRoute }: UseNavigationParams
       );
     }
   }, [state.userPosition, mapRef]);
+
+  // When route changes mid-navigation (off-route recalculation), rebuild geometry data
+  // and clear the offRoute flag so tracking resumes on the new polyline.
+  useEffect(() => {
+    if (!isNavigatingRef.current || !route || route.coordinates.length < 2) return;
+    segmentCumulativeDistRef.current = buildSegmentCumulativeDist(route.coordinates);
+    instructionBoundariesRef.current = buildInstructionBoundaries(route.instructions);
+    offRouteAlertedRef.current = false;
+    progressMetersRef.current = 0;
+    voice.resetAnnounced();
+    state.setIsOffRoute(false);
+    state.setCurrentStepIndex(0);
+    state.setRemainingDistance(route.distance);
+    state.setRemainingTime(route.time);
+  }, [route]);
 
   useEffect(() => {
     return () => {
